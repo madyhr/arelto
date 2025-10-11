@@ -1,5 +1,6 @@
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
 #include <iostream>
 #include <SDL2/SDL.h>
@@ -28,6 +29,21 @@ int main(int argc, char* args[]){
 		SDL_Quit();
 		return 1;
 	}
+
+	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+	if (renderer == NULL) {
+		std::cerr << "Renderer could not be created: " << SDL_GetError() << std::endl;
+		SDL_Quit();
+		return 1;
+	}
+
+	SDL_Rect boxRect = {
+		200, // x pos
+		150, // y pos
+		50, // width
+		50 // height
+	};
 	
 	bool quit = false;
 	SDL_Event e;
@@ -57,8 +73,20 @@ int main(int argc, char* args[]){
 				}
 			}
 		}
+
+		SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
+		SDL_RenderClear(renderer);
+	
+		SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0x00);
+
+		SDL_RenderFillRect(renderer, &boxRect);
+
+		SDL_RenderPresent(renderer);
+
+
 	}
 
+	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 

@@ -93,6 +93,8 @@ game_executable_EXTERNAL_OBJECTS =
 game_executable: CMakeFiles/game_executable.dir/src/main.cpp.o
 game_executable: CMakeFiles/game_executable.dir/build.make
 game_executable: /usr/lib/x86_64-linux-gnu/libSDL2.so
+game_executable: /usr/lib/x86_64-linux-gnu/libSDL2_image.so
+game_executable: /usr/lib/x86_64-linux-gnu/libSDL2_ttf.so
 game_executable: CMakeFiles/game_executable.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/madyhr/my_cpp_game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable game_executable"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/game_executable.dir/link.txt --verbose=$(VERBOSE)

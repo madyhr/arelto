@@ -2,30 +2,37 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_image.h>
 #include <iostream>
 #include <SDL2/SDL.h>
 
 
-const float BOX_INIT_X = 400.0f;
-const float BOX_INIT_Y = 300.0f;
+const float kBoxInitX = 400.0f;
+const float kBoxInitY = 300.0f;
 
-const float BOX_VELOCITY = 1.0f;
+const float kBoxSpeed = 200.0f;
 
-const int BOX_HEIGHT = 50;
-const int BOX_WIDTH = 50;
+const int kBoxHeight = 75;
+const int kBoxWidth = 75;
 
-const int SCREEN_SIZE_HEIGHT = 600;
-const int SCREEN_SIZE_WIDTH = 800;
+const int kWindowHeight = 600;
+const int kWindowWidth = 800;
 
 struct Position {
 	float x;
 	float y;
 };
 
-Position boxState = {BOX_INIT_X, BOX_INIT_Y};
+Position boxState = {kBoxInitX, kBoxInitY};
 
+struct StateChange {
+	float x;
+	float y;
+};
+
+StateChange boxStateChange = {0.0f,0.0f};
 
 int main(int argc, char* args[]){
 
@@ -39,8 +46,8 @@ int main(int argc, char* args[]){
 		"My_CPP_Game",
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
-		SCREEN_SIZE_WIDTH,
-		SCREEN_SIZE_HEIGHT,
+		kWindowWidth,
+		kWindowHeight,
 		SDL_WINDOW_SHOWN
 	);
 
@@ -76,22 +83,24 @@ int main(int argc, char* args[]){
 	}	
 
 
-	int box_width_local;
-	int box_height_local;
-
-	SDL_QueryTexture(boxTexture, NULL, NULL, &box_width_local, &box_height_local);
 
 	SDL_Rect boxRect = {
 		(int)boxState.x, // x pos
 		(int)boxState.y, // y pos
-		box_width_local, // width
-		box_height_local// height
+		kBoxWidth, // width
+		kBoxHeight// height
 	};
 	
 	bool quit = false;
 	SDL_Event e;
 
+	Uint32 previous_time = SDL_GetTicks();
+
 	while (!quit){
+
+		Uint32 current_time = SDL_GetTicks(); 
+		float dt = (current_time - previous_time)/1000.0f;
+
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
 				quit = true;
@@ -108,15 +117,31 @@ int main(int argc, char* args[]){
 		}
 
 
+		StateChange direction = {0.0f, 0.0f}; 
 		const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
-		if (currentKeyStates[SDL_SCANCODE_W]) { boxState.y-= BOX_VELOCITY; }
-		if (currentKeyStates[SDL_SCANCODE_S]) { boxState.y+= BOX_VELOCITY; }
-		if (currentKeyStates[SDL_SCANCODE_A]) { boxState.x-= BOX_VELOCITY; }
-		if (currentKeyStates[SDL_SCANCODE_D]) { boxState.x+= BOX_VELOCITY; }
+		if (currentKeyStates[SDL_SCANCODE_W]) { direction.y-= 1.0f; }
+		if (currentKeyStates[SDL_SCANCODE_S]) { direction.y+= 1.0f; }
+		if (currentKeyStates[SDL_SCANCODE_A]) { direction.x-= 1.0f; }
+		if (currentKeyStates[SDL_SCANCODE_D]) { direction.x+= 1.0f; }
+
+		float magnitude = std::sqrt(
+			direction.x * direction.x + direction.y * direction.y
+		);
+
+		if (magnitude > 1.0f){
+			direction.x /= magnitude;
+			direction.y /= magnitude;
+		}
+
+		boxState.x += direction.x * kBoxSpeed * dt;
+		boxState.y += direction.y * kBoxSpeed * dt;
 
 		boxRect.x = (int)boxState.x;
 		boxRect.y = (int)boxState.y;
 
+		previous_time = current_time;
+		boxStateChange.x = 0.0f;
+		boxStateChange.y = 0.0f;
 		// Init renderer
 		SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
 		SDL_RenderClear(renderer);

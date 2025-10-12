@@ -29,7 +29,9 @@ file(COPY "${CMAKE_SOURCE_DIR}/textures/wizard.png"
 file(COPY "${CMAKE_SOURCE_DIR}/textures/goblin.png"
     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
 )
-
+file(COPY "${CMAKE_SOURCE_DIR}/textures/grassy_plains.png"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
+)
 # Link the SDL libraries to the executable
 # Using PRIVATE linkage and the modern imported targets exclusively.
 # SDL2::Main is still included in the linking step for proper SDL entry point handling.

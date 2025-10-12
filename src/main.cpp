@@ -23,9 +23,8 @@ const float kEnemySpeed = 40.0f;
 const int kEnemyHeight = 50;
 const int kEnemyWidth = 50;
 
-
-const int kWindowHeight = 600;
-const int kWindowWidth = 800;
+const int kWindowHeight = 720;
+const int kWindowWidth = 1280;
 
 struct Position {
 	float x;
@@ -35,7 +34,7 @@ struct Position {
 Position playerState = {kPlayerInitX, kPlayerInitY};
 Position enemyState = {kEnemyInitX, kEnemyInitY};
 
-struct StateChange {
+struct Vector2D {
 	float x;
 	float y;
 };
@@ -77,6 +76,7 @@ int main(int argc, char* args[]){
 		return 1;
 	}	
 
+	SDL_Texture* mapTexture = IMG_LoadTexture(renderer, "grassy_plains.png");
 	SDL_Texture* playerTexture = IMG_LoadTexture(renderer, "wizard.png");
 	SDL_Texture* enemyTexture = IMG_LoadTexture(renderer, "goblin.png");
 
@@ -90,6 +90,15 @@ int main(int argc, char* args[]){
 	}	
 
 	if (enemyTexture == NULL) {
+		std::cerr << "Texture could not be loaded: " << SDL_GetError() << std::endl;
+		SDL_DestroyRenderer(renderer);
+		SDL_DestroyWindow(window);
+		IMG_Quit();
+		SDL_Quit();
+		return 1;
+	}	
+
+	if (mapTexture == NULL) {
 		std::cerr << "Texture could not be loaded: " << SDL_GetError() << std::endl;
 		SDL_DestroyRenderer(renderer);
 		SDL_DestroyWindow(window);
@@ -112,10 +121,20 @@ int main(int argc, char* args[]){
 		kEnemyHeight// height
 	};
 
+	SDL_Rect mapLayout = {
+		(int)0, // x pos
+		(int)0, // y pos
+		1280, // width
+		720// height
+	};
+
 	bool quit = false;
 	SDL_Event e;
 
 	Uint32 previous_time = SDL_GetTicks();
+	
+	// Init renderer
+	// Render texture 
 
 	while (!quit){
 
@@ -136,18 +155,20 @@ int main(int argc, char* args[]){
 				}
 			}
 		}
-		StateChange enemyDirection = {0.0f, 0.0f};
+		Vector2D enemyDirection = {0.0f, 0.0f};
 
 		float enemyPlayerDistance = std::hypot(playerState.x - enemyState.x, playerState.y - enemyState.y);
+
 		enemyDirection.x = (playerState.x - enemyState.x)/enemyPlayerDistance;
 		enemyDirection.y = (playerState.y - enemyState.y)/enemyPlayerDistance;
+
 		enemyState.x += enemyDirection.x * kEnemySpeed * dt;
 		enemyState.y += enemyDirection.y * kEnemySpeed * dt;
 
 		enemyHitBox.x = (int)enemyState.x;
 		enemyHitBox.y = (int)enemyState.y;
 
-		StateChange playerDirection = {0.0f, 0.0f}; 
+		Vector2D playerDirection = {0.0f, 0.0f}; 
 
 		const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
 		if (currentKeyStates[SDL_SCANCODE_W]) { playerDirection.y-= 1.0f; }
@@ -168,16 +189,11 @@ int main(int argc, char* args[]){
 		playerHitBox.x = (int)playerState.x;
 		playerHitBox.y = (int)playerState.y;
 
-
-		
 		previous_time = current_time;
-		// Init renderer
+
 		SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
 		SDL_RenderClear(renderer);
-		// Set player color	
-		// SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0x00);
-		// SDL_RenderFillRect(renderer, &playerHitBox);
-		// Render texture 
+		SDL_RenderCopy(renderer, mapTexture, NULL,&mapLayout);
 		SDL_RenderCopy(renderer, playerTexture, NULL, &playerHitBox);
 		SDL_RenderCopy(renderer, enemyTexture, NULL, &enemyHitBox);
 		SDL_RenderPresent(renderer);

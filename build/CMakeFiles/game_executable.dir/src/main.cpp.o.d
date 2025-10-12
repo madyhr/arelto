@@ -125,13 +125,13 @@ CMakeFiles/game_executable.dir/src/main.cpp.o: \
  /usr/include/SDL2/SDL_gamecontroller.h /usr/include/SDL2/SDL_sensor.h \
  /usr/include/SDL2/SDL_quit.h /usr/include/SDL2/SDL_gesture.h \
  /usr/include/SDL2/SDL_touch.h /usr/include/SDL2/SDL_keyboard.h \
- /usr/include/SDL2/SDL_render.h /usr/include/SDL2/SDL_timer.h \
- /usr/include/SDL2/SDL_video.h /usr/include/SDL2/SDL_image.h \
- /usr/include/SDL2/SDL.h /usr/include/SDL2/SDL_main.h \
- /usr/include/SDL2/SDL_assert.h /usr/include/SDL2/SDL_atomic.h \
- /usr/include/SDL2/SDL_platform.h /usr/include/SDL2/SDL_audio.h \
- /usr/include/SDL2/SDL_thread.h /usr/include/SDL2/SDL_clipboard.h \
- /usr/include/SDL2/SDL_cpuinfo.h \
+ /usr/include/SDL2/SDL_rect.h /usr/include/SDL2/SDL_render.h \
+ /usr/include/SDL2/SDL_timer.h /usr/include/SDL2/SDL_video.h \
+ /usr/include/SDL2/SDL_image.h /usr/include/SDL2/SDL.h \
+ /usr/include/SDL2/SDL_main.h /usr/include/SDL2/SDL_assert.h \
+ /usr/include/SDL2/SDL_atomic.h /usr/include/SDL2/SDL_platform.h \
+ /usr/include/SDL2/SDL_audio.h /usr/include/SDL2/SDL_thread.h \
+ /usr/include/SDL2/SDL_clipboard.h /usr/include/SDL2/SDL_cpuinfo.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/immintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/x86gprintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/ia32intrin.h \

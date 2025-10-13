@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/madyhr/my_cpp_game
+CMAKE_SOURCE_DIR = /home/madyhr/rl2
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/madyhr/my_cpp_game/build
+CMAKE_BINARY_DIR = /home/madyhr/rl2/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/game.exe.dir/depend.make
@@ -69,36 +69,52 @@ include CMakeFiles/game.exe.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/game.exe.dir/flags.make
 
+CMakeFiles/game.exe.dir/src/game.cpp.o: CMakeFiles/game.exe.dir/flags.make
+CMakeFiles/game.exe.dir/src/game.cpp.o: /home/madyhr/rl2/src/game.cpp
+CMakeFiles/game.exe.dir/src/game.cpp.o: CMakeFiles/game.exe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/madyhr/rl2/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/game.exe.dir/src/game.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/game.exe.dir/src/game.cpp.o -MF CMakeFiles/game.exe.dir/src/game.cpp.o.d -o CMakeFiles/game.exe.dir/src/game.cpp.o -c /home/madyhr/rl2/src/game.cpp
+
+CMakeFiles/game.exe.dir/src/game.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/game.exe.dir/src/game.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/madyhr/rl2/src/game.cpp > CMakeFiles/game.exe.dir/src/game.cpp.i
+
+CMakeFiles/game.exe.dir/src/game.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/game.exe.dir/src/game.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/madyhr/rl2/src/game.cpp -o CMakeFiles/game.exe.dir/src/game.cpp.s
+
 CMakeFiles/game.exe.dir/src/main.cpp.o: CMakeFiles/game.exe.dir/flags.make
-CMakeFiles/game.exe.dir/src/main.cpp.o: /home/madyhr/my_cpp_game/src/main.cpp
+CMakeFiles/game.exe.dir/src/main.cpp.o: /home/madyhr/rl2/src/main.cpp
 CMakeFiles/game.exe.dir/src/main.cpp.o: CMakeFiles/game.exe.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/madyhr/my_cpp_game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/game.exe.dir/src/main.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/game.exe.dir/src/main.cpp.o -MF CMakeFiles/game.exe.dir/src/main.cpp.o.d -o CMakeFiles/game.exe.dir/src/main.cpp.o -c /home/madyhr/my_cpp_game/src/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/madyhr/rl2/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/game.exe.dir/src/main.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/game.exe.dir/src/main.cpp.o -MF CMakeFiles/game.exe.dir/src/main.cpp.o.d -o CMakeFiles/game.exe.dir/src/main.cpp.o -c /home/madyhr/rl2/src/main.cpp
 
 CMakeFiles/game.exe.dir/src/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/game.exe.dir/src/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/madyhr/my_cpp_game/src/main.cpp > CMakeFiles/game.exe.dir/src/main.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/madyhr/rl2/src/main.cpp > CMakeFiles/game.exe.dir/src/main.cpp.i
 
 CMakeFiles/game.exe.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/game.exe.dir/src/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/madyhr/my_cpp_game/src/main.cpp -o CMakeFiles/game.exe.dir/src/main.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/madyhr/rl2/src/main.cpp -o CMakeFiles/game.exe.dir/src/main.cpp.s
 
 # Object files for target game.exe
 game_exe_OBJECTS = \
+"CMakeFiles/game.exe.dir/src/game.cpp.o" \
 "CMakeFiles/game.exe.dir/src/main.cpp.o"
 
 # External object files for target game.exe
 game_exe_EXTERNAL_OBJECTS =
 
+game.exe: CMakeFiles/game.exe.dir/src/game.cpp.o
 game.exe: CMakeFiles/game.exe.dir/src/main.cpp.o
 game.exe: CMakeFiles/game.exe.dir/build.make
 game.exe: /usr/lib/x86_64-linux-gnu/libSDL2.so
 game.exe: /usr/lib/x86_64-linux-gnu/libSDL2_image.so
 game.exe: /usr/lib/x86_64-linux-gnu/libSDL2_ttf.so
 game.exe: CMakeFiles/game.exe.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/madyhr/my_cpp_game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable game.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/madyhr/rl2/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable game.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/game.exe.dir/link.txt --verbose=$(VERBOSE)
-	/usr/bin/cmake -E copy_directory /home/madyhr/my_cpp_game/assets /home/madyhr/my_cpp_game/build/assets
+	/usr/bin/cmake -E copy_directory /home/madyhr/rl2/assets /home/madyhr/rl2/build/assets
 
 # Rule to build all files generated by this target.
 CMakeFiles/game.exe.dir/build: game.exe
@@ -109,6 +125,6 @@ CMakeFiles/game.exe.dir/clean:
 .PHONY : CMakeFiles/game.exe.dir/clean
 
 CMakeFiles/game.exe.dir/depend:
-	cd /home/madyhr/my_cpp_game/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/madyhr/my_cpp_game /home/madyhr/my_cpp_game /home/madyhr/my_cpp_game/build /home/madyhr/my_cpp_game/build /home/madyhr/my_cpp_game/build/CMakeFiles/game.exe.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/madyhr/rl2/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/madyhr/rl2 /home/madyhr/rl2 /home/madyhr/rl2/build /home/madyhr/rl2/build /home/madyhr/rl2/build/CMakeFiles/game.exe.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/game.exe.dir/depend
 

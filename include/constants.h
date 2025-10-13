@@ -1,6 +1,8 @@
-// include/Constants.h
-#pragma once
+// include/constants.h
+#ifndef RL2_CONSTANTS_H_
+#define RL2_CONSTANTS_H_
 
+namespace rl2 {
 // Window constants
 const int kWindowHeight = 720;
 const int kWindowWidth = 1280;
@@ -19,4 +21,5 @@ const float kEnemySpeed = 40.0f;
 const int kEnemyHeight = 50;
 const int kEnemyWidth = 50;
 
-
+} // namespace rl2
+#endif

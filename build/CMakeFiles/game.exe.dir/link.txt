@@ -1,1 +1,1 @@
-/usr/bin/c++ CMakeFiles/game.exe.dir/src/main.cpp.o -o game.exe  /usr/lib/x86_64-linux-gnu/libSDL2.so /usr/lib/x86_64-linux-gnu/libSDL2_image.so /usr/lib/x86_64-linux-gnu/libSDL2_ttf.so 
+/usr/bin/c++ CMakeFiles/game.exe.dir/src/game.cpp.o CMakeFiles/game.exe.dir/src/main.cpp.o -o game.exe  /usr/lib/x86_64-linux-gnu/libSDL2.so /usr/lib/x86_64-linux-gnu/libSDL2_image.so /usr/lib/x86_64-linux-gnu/libSDL2_ttf.so 

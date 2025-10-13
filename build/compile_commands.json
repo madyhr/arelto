@@ -1,8 +1,14 @@
 [
 {
-  "directory": "/home/madyhr/my_cpp_game/build",
-  "command": "/usr/bin/c++  -I/home/madyhr/my_cpp_game/include -isystem /usr/include/SDL2 -std=gnu++20 -o CMakeFiles/game.exe.dir/src/main.cpp.o -c /home/madyhr/my_cpp_game/src/main.cpp",
-  "file": "/home/madyhr/my_cpp_game/src/main.cpp",
+  "directory": "/home/madyhr/rl2/build",
+  "command": "/usr/bin/c++  -I/home/madyhr/rl2/include -isystem /usr/include/SDL2 -std=gnu++20 -o CMakeFiles/game.exe.dir/src/game.cpp.o -c /home/madyhr/rl2/src/game.cpp",
+  "file": "/home/madyhr/rl2/src/game.cpp",
+  "output": "CMakeFiles/game.exe.dir/src/game.cpp.o"
+},
+{
+  "directory": "/home/madyhr/rl2/build",
+  "command": "/usr/bin/c++  -I/home/madyhr/rl2/include -isystem /usr/include/SDL2 -std=gnu++20 -o CMakeFiles/game.exe.dir/src/main.cpp.o -c /home/madyhr/rl2/src/main.cpp",
+  "file": "/home/madyhr/rl2/src/main.cpp",
   "output": "CMakeFiles/game.exe.dir/src/main.cpp.o"
 }
 ]

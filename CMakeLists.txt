@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # The name of your project
-project(MyCppGame VERSION 1.0)
+project(rl2 VERSION 1.0)
 
 # Set the C++ standard to use (essential for modern C++)
 set(CMAKE_CXX_STANDARD 20)

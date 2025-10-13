@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/madyhr/my_cpp_game/build",
+  "command": "/usr/bin/c++  -I/home/madyhr/my_cpp_game/include -isystem /usr/include/SDL2 -std=gnu++20 -o CMakeFiles/game.exe.dir/src/main.cpp.o -c /home/madyhr/my_cpp_game/src/main.cpp",
+  "file": "/home/madyhr/my_cpp_game/src/main.cpp",
+  "output": "CMakeFiles/game.exe.dir/src/main.cpp.o"
+}
+]

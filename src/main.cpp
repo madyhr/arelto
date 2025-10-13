@@ -9,36 +9,8 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <cmath>
-
-// Player constants
-const float kPlayerInitX = 400.0f;
-const float kPlayerInitY = 300.0f;
-const float kPlayerSpeed = 200.0f;
-const int kPlayerHeight = 75;
-const int kPlayerWidth = 75;
-// Enemy constants
-const float kEnemyInitX = 100.0f;
-const float kEnemyInitY = 100.0f;
-const float kEnemySpeed = 40.0f;
-const int kEnemyHeight = 50;
-const int kEnemyWidth = 50;
-
-const int kWindowHeight = 720;
-const int kWindowWidth = 1280;
-
-struct Position {
-	float x;
-	float y;
-};
-
-Position playerState = {kPlayerInitX, kPlayerInitY};
-Position enemyState = {kEnemyInitX, kEnemyInitY};
-
-struct Vector2D {
-	float x;
-	float y;
-};
-
+#include "Constants.h"
+#include "GameMath.h"
 
 int main(int argc, char* args[]){
 
@@ -106,6 +78,9 @@ int main(int argc, char* args[]){
 		SDL_Quit();
 		return 1;
 	}	
+
+	Vector2D playerState = {kPlayerInitX, kPlayerInitY};
+	Vector2D enemyState = {kEnemyInitX, kEnemyInitY};
 
 	SDL_Rect playerHitBox = {
 		(int)playerState.x, // x pos
@@ -204,7 +179,6 @@ int main(int argc, char* args[]){
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-
 
 	return 0;
 }

@@ -8,35 +8,46 @@ project(MyCppGame VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# --- CORRECTED PACKAGE FINDING ---
-# Find the required SDL2 base library.
-# Removed 'COMPONENTS Main' to avoid configuration errors on some systems.
+# --- FIND EXTERNAL LIBRARIES ---
+# Find the required SDL2 base library and its extensions
+# Note: SDL2_ttf isn't used in your current code, but we keep it for convention.
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED COMPONENTS PNG) 
 find_package(SDL2_ttf REQUIRED) 
 
-# Add the executable target. This tells CMake to compile main.cpp
-add_executable(game_executable src/main.cpp)
+# --- GATHER PROJECT FILES ---
+# 1. Collect all implementation files from the src directory
+file(GLOB_RECURSE GAME_SOURCES "src/*.cpp")
 
-# --- RESOURCE COPYING STEP ---
-# The source directory of your project is ${CMAKE_SOURCE_DIR}.
-# The directory where the executable is built is ${CMAKE_CURRENT_BINARY_DIR}.
+# 2. Add the executable target using all source files
+# This now includes src/main.cpp, src/Game.cpp, src/Player.cpp, src/Enemy.cpp, etc.
+add_executable(game.exe ${GAME_SOURCES})
 
-# Copy the resource file from the source directory to the build directory.
-file(COPY "${CMAKE_SOURCE_DIR}/textures/wizard.png"
-    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
+# --- CONFIGURATION FOR COMPILER AND LINKER ---
+
+# 3. Tell the compiler where to find *your* header files.
+# The 'include' directory is the public interface for your classes.
+# INTERFACE means this is only used for compilation and not linking.
+target_include_directories(game.exe 
+	PUBLIC 
+	"${CMAKE_SOURCE_DIR}/include"
 )
-file(COPY "${CMAKE_SOURCE_DIR}/textures/goblin.png"
-    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
+
+# 4. Link the SDL libraries to the executable
+# Using PRIVATE linkage and the modern imported targets.
+target_link_libraries(game.exe PRIVATE
+  SDL2::SDL2              # Base SDL library
+  SDL2_image::SDL2_image  # Image loading
+  SDL2_ttf::SDL2_ttf      # Font/text loading (kept for completeness)
 )
-file(COPY "${CMAKE_SOURCE_DIR}/textures/grassy_plains.png"
-    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
-)
-# Link the SDL libraries to the executable
-# Using PRIVATE linkage and the modern imported targets exclusively.
-# SDL2::Main is still included in the linking step for proper SDL entry point handling.
-target_link_libraries(game_executable PRIVATE
-  SDL2::SDL2 # Base SDL library
-  SDL2_image::SDL2_image # Image loading
-  SDL2_ttf::SDL2_ttf # Font/text loading
+
+# --- RESOURCE COPYING STEP (Simplified) ---
+# Better to copy entire 'assets' folder rather than individual files.
+# You'd copy the contents of your 'assets' directory to the build directory.
+file(GLOB_RECURSE ASSETS_TO_COPY "assets/*")
+
+add_custom_command(TARGET game.exe POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${CMAKE_SOURCE_DIR}/assets"
+		"$<TARGET_FILE_DIR:game.exe>/assets"
 )

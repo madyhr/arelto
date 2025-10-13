@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named game_executable
+# Target rules for targets named game.exe
 
 # Build rule for target.
-game_executable: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 game_executable
-.PHONY : game_executable
+game.exe: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 game.exe
+.PHONY : game.exe
 
 # fast build rule for target.
-game_executable/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_executable.dir/build.make CMakeFiles/game_executable.dir/build
-.PHONY : game_executable/fast
+game.exe/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.exe.dir/build.make CMakeFiles/game.exe.dir/build
+.PHONY : game.exe/fast
 
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
 # target to build an object file
 src/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_executable.dir/build.make CMakeFiles/game_executable.dir/src/main.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.exe.dir/build.make CMakeFiles/game.exe.dir/src/main.cpp.o
 .PHONY : src/main.cpp.o
 
 src/main.i: src/main.cpp.i
@@ -142,7 +142,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_executable.dir/build.make CMakeFiles/game_executable.dir/src/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.exe.dir/build.make CMakeFiles/game.exe.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -150,7 +150,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/game_executable.dir/build.make CMakeFiles/game_executable.dir/src/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/game.exe.dir/build.make CMakeFiles/game.exe.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 # Help Target
@@ -161,7 +161,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... game_executable"
+	@echo "... game.exe"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

@@ -307,5 +307,5 @@ CMakeFiles/game.exe.dir/src/game.cpp.o: /home/madyhr/rl2/src/game.cpp \
  /usr/include/SDL2/SDL_misc.h /usr/include/SDL2/SDL_image.h \
  /usr/include/SDL2/SDL.h /usr/include/c++/13/cstdint \
  /home/madyhr/rl2/include/entity.h /home/madyhr/rl2/include/game_math.h \
- /home/madyhr/rl2/include/constants.h \
- /home/madyhr/rl2/include/constants.h
+ /home/madyhr/rl2/include/constants.h /usr/include/c++/13/array \
+ /home/madyhr/rl2/include/constants.h /home/madyhr/rl2/include/random.h

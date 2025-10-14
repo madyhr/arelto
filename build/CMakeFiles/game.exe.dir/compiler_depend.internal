@@ -61,6 +61,7 @@ CMakeFiles/game.exe.dir/src/game.cpp.o
  /usr/include/alloca.h
  /usr/include/asm-generic/errno-base.h
  /usr/include/asm-generic/errno.h
+ /usr/include/c++/13/array
  /usr/include/c++/13/backward/binders.h
  /usr/include/c++/13/bit
  /usr/include/c++/13/bits/alloc_traits.h
@@ -441,6 +442,7 @@ CMakeFiles/game.exe.dir/src/main.cpp.o
  /usr/include/SDL2/begin_code.h
  /usr/include/SDL2/close_code.h
  /usr/include/alloca.h
+ /usr/include/c++/13/array
  /usr/include/c++/13/bit
  /usr/include/c++/13/bits/concept_check.h
  /usr/include/c++/13/bits/cpp_type_traits.h
@@ -451,6 +453,7 @@ CMakeFiles/game.exe.dir/src/main.cpp.o
  /usr/include/c++/13/bits/move.h
  /usr/include/c++/13/bits/predefined_ops.h
  /usr/include/c++/13/bits/ptr_traits.h
+ /usr/include/c++/13/bits/range_access.h
  /usr/include/c++/13/bits/ranges_cmp.h
  /usr/include/c++/13/bits/requires_hosted.h
  /usr/include/c++/13/bits/specfun.h
@@ -471,6 +474,7 @@ CMakeFiles/game.exe.dir/src/main.cpp.o
  /usr/include/c++/13/debug/debug.h
  /usr/include/c++/13/ext/numeric_traits.h
  /usr/include/c++/13/ext/type_traits.h
+ /usr/include/c++/13/initializer_list
  /usr/include/c++/13/limits
  /usr/include/c++/13/math.h
  /usr/include/c++/13/new

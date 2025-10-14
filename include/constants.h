@@ -11,15 +11,17 @@ const int kWindowWidth = 1280;
 const float kPlayerInitX = 400.0f;
 const float kPlayerInitY = 300.0f;
 const float kPlayerSpeed = 200.0f;
-const int kPlayerHeight = 75;
-const int kPlayerWidth = 75;
+const int kPlayerHeight = 100;
+const int kPlayerWidth = 100;
 
 // Enemy constants
+const int kNumEnemies = 10;
+const int kEnemyHealth = 1;
 const float kEnemyInitX = 100.0f;
 const float kEnemyInitY = 100.0f;
 const float kEnemySpeed = 40.0f;
-const int kEnemyHeight = 50;
-const int kEnemyWidth = 50;
+const int kEnemyHeight = 75;
+const int kEnemyWidth = 75;
 
 } // namespace rl2
 #endif

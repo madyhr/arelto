@@ -3,6 +3,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/game.exe.dir/src/game.cpp.o.d"
   "CMakeFiles/game.exe.dir/src/main.cpp.o"
   "CMakeFiles/game.exe.dir/src/main.cpp.o.d"
+  "CMakeFiles/game.exe.dir/src/random.cpp.o"
+  "CMakeFiles/game.exe.dir/src/random.cpp.o.d"
   "game.exe"
   "game.exe.pdb"
 )

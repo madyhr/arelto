@@ -97,22 +97,38 @@ CMakeFiles/game.exe.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/game.exe.dir/src/main.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/madyhr/rl2/src/main.cpp -o CMakeFiles/game.exe.dir/src/main.cpp.s
 
+CMakeFiles/game.exe.dir/src/random.cpp.o: CMakeFiles/game.exe.dir/flags.make
+CMakeFiles/game.exe.dir/src/random.cpp.o: /home/madyhr/rl2/src/random.cpp
+CMakeFiles/game.exe.dir/src/random.cpp.o: CMakeFiles/game.exe.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/madyhr/rl2/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/game.exe.dir/src/random.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/game.exe.dir/src/random.cpp.o -MF CMakeFiles/game.exe.dir/src/random.cpp.o.d -o CMakeFiles/game.exe.dir/src/random.cpp.o -c /home/madyhr/rl2/src/random.cpp
+
+CMakeFiles/game.exe.dir/src/random.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/game.exe.dir/src/random.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/madyhr/rl2/src/random.cpp > CMakeFiles/game.exe.dir/src/random.cpp.i
+
+CMakeFiles/game.exe.dir/src/random.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/game.exe.dir/src/random.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/madyhr/rl2/src/random.cpp -o CMakeFiles/game.exe.dir/src/random.cpp.s
+
 # Object files for target game.exe
 game_exe_OBJECTS = \
 "CMakeFiles/game.exe.dir/src/game.cpp.o" \
-"CMakeFiles/game.exe.dir/src/main.cpp.o"
+"CMakeFiles/game.exe.dir/src/main.cpp.o" \
+"CMakeFiles/game.exe.dir/src/random.cpp.o"
 
 # External object files for target game.exe
 game_exe_EXTERNAL_OBJECTS =
 
 game.exe: CMakeFiles/game.exe.dir/src/game.cpp.o
 game.exe: CMakeFiles/game.exe.dir/src/main.cpp.o
+game.exe: CMakeFiles/game.exe.dir/src/random.cpp.o
 game.exe: CMakeFiles/game.exe.dir/build.make
 game.exe: /usr/lib/x86_64-linux-gnu/libSDL2.so
 game.exe: /usr/lib/x86_64-linux-gnu/libSDL2_image.so
 game.exe: /usr/lib/x86_64-linux-gnu/libSDL2_ttf.so
 game.exe: CMakeFiles/game.exe.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/madyhr/rl2/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable game.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/madyhr/rl2/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable game.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/game.exe.dir/link.txt --verbose=$(VERBOSE)
 	/usr/bin/cmake -E copy_directory /home/madyhr/rl2/assets /home/madyhr/rl2/build/assets
 

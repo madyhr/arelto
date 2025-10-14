@@ -3,6 +3,7 @@
 #include <iostream>
 #include "game.h"
 #include "constants.h"
+#include "random.h"
 
 namespace rl2 {
 
@@ -20,7 +21,7 @@ bool Game::Initialize() {
 		return false;
 	}
 
-	resources.window = SDL_CreateWindow(
+	resources_.window = SDL_CreateWindow(
 		"RL2",
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
@@ -29,18 +30,18 @@ bool Game::Initialize() {
 		SDL_WINDOW_SHOWN
 	);
 
-	if (resources.window == nullptr) {
+	if (resources_.window == nullptr) {
 		std::cerr << "Window could not be created: " << SDL_GetError() << std::endl;
 		return false;
 	}
 
-	resources.renderer = SDL_CreateRenderer(
-		resources.window, 
+	resources_.renderer = SDL_CreateRenderer(
+		resources_.window, 
 		-1, 
 		SDL_RENDERER_ACCELERATED
 	);
 
-	if (resources.renderer == nullptr) {
+	if (resources_.renderer == nullptr) {
 		std::cerr << "Renderer could not be created: " << SDL_GetError() << std::endl;
 		return false;
 	}
@@ -51,11 +52,11 @@ bool Game::Initialize() {
 		return false;
 	}
 
-	resources.map_texture = IMG_LoadTexture(resources.renderer, "assets/textures/grassy_plains.png");
-	resources.player_texture = IMG_LoadTexture(resources.renderer, "assets/textures/wizard.png");
-	resources.enemy_texture = IMG_LoadTexture(resources.renderer, "assets/textures/goblin.png");
+	resources_.map_texture = IMG_LoadTexture(resources_.renderer, "assets/textures/grassy_plains.png");
+	resources_.player_texture = IMG_LoadTexture(resources_.renderer, "assets/textures/wizard.png");
+	resources_.enemy_texture = IMG_LoadTexture(resources_.renderer, "assets/textures/goblin.png");
 
-	if (resources.map_texture == nullptr || resources.player_texture == nullptr || resources.enemy_texture == nullptr) {
+	if (resources_.map_texture == nullptr || resources_.player_texture == nullptr || resources_.enemy_texture == nullptr) {
 		std::cerr << "One or more textures could not be loaded: " << SDL_GetError() << std::endl;
 		return false;
 	}
@@ -65,13 +66,17 @@ bool Game::Initialize() {
 	player_.stats.movement_speed = kPlayerSpeed;
 	player_.stats.size = {kPlayerWidth, kPlayerHeight};
 
-	// Initialize Enemy
-	enemy_.position = {kEnemyInitX, kEnemyInitY};
-	enemy_.stats.movement_speed = kEnemySpeed;
-	enemy_.stats.size = {kEnemyWidth, kEnemyHeight};
+	// Initialize Enemies
+	
+	std::fill(enemy_.movement_speed.begin(), enemy_.movement_speed.end(), kEnemySpeed);
+	std::fill(enemy_.size.begin(), enemy_.size.end(), Size {kEnemyHeight, kEnemyWidth});
+	for (int i = 0; i < kNumEnemies; ++i){
+		enemy_.position[i] ={kEnemyInitX + i*50, kEnemyInitY + i*50};
+		enemy_.movement_speed[i] += generate_random_int(1,100);
+	};
 
 	// Initialize game state
-	resources.map_layout = {0, 0, kWindowWidth, kWindowHeight};
+	resources_.map_layout = {0, 0, kWindowWidth, kWindowHeight};
 	ticks_count_ = SDL_GetTicks();
 	is_running_ = true;
 
@@ -130,61 +135,65 @@ void Game::UpdateGame() {
 	player_.position.y += player_.velocity.y * player_.stats.movement_speed * delta_time;
 
 	// Update Enemy
-	float distance_to_player = std::hypot(player_.position.x - enemy_.position.x, player_.position.y - enemy_.position.y);
-	enemy_.velocity.x = (player_.position.x - enemy_.position.x) / distance_to_player;
-	enemy_.velocity.y = (player_.position.y - enemy_.position.y) / distance_to_player;
-	enemy_.position.x += enemy_.velocity.x * enemy_.stats.movement_speed * delta_time;
-	enemy_.position.y += enemy_.velocity.y * enemy_.stats.movement_speed * delta_time;
+	for (int i = 0; i < kNumEnemies; ++i){
+		float distance_to_player = std::hypot(player_.position.x - enemy_.position[i].x, player_.position.y - enemy_.position[i].y);
+		enemy_.velocity[i].x = (player_.position.x - enemy_.position[i].x) / distance_to_player;
+		enemy_.velocity[i].y = (player_.position.y - enemy_.position[i].y) / distance_to_player;
+		enemy_.position[i].x += enemy_.velocity[i].x * enemy_.movement_speed[i] * delta_time;
+		enemy_.position[i].y += enemy_.velocity[i].y * enemy_.movement_speed[i] * delta_time;
+	}
 
 };
 
 void Game::GenerateOutput() {
-	SDL_SetRenderDrawColor(resources.renderer, 0x00, 0x00, 0x00, 0xFF);
-	SDL_RenderClear(resources.renderer);
-	SDL_RenderCopy(resources.renderer, resources.map_texture, NULL, &resources.map_layout);
+	SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
+	SDL_RenderClear(resources_.renderer);
+	SDL_RenderCopy(resources_.renderer, resources_.map_texture, NULL, &resources_.map_layout);
 	SDL_Rect player_render_box = {
 		(int)player_.position.x,
 		(int)player_.position.y,
 		(int)player_.stats.size.width,
 		(int)player_.stats.size.height
 	};
-	SDL_RenderCopy(resources.renderer, resources.player_texture, NULL, &player_render_box);
-	SDL_Rect enemy_render_box = {
-		(int)enemy_.position.x,
-		(int)enemy_.position.y,
-		(int)enemy_.stats.size.width,
-		(int)enemy_.stats.size.height
-	};
-	SDL_RenderCopy(resources.renderer, resources.enemy_texture, NULL, &enemy_render_box);
-	SDL_RenderPresent(resources.renderer);
+	SDL_RenderCopy(resources_.renderer, resources_.player_texture, NULL, &player_render_box);
+	for (int i = 0; i < kNumEnemies; ++i){
+		SDL_Rect enemy_render_box = {
+			(int)enemy_.position[i].x,
+			(int)enemy_.position[i].y,
+			(int)kEnemyWidth,
+			(int)kEnemyHeight
+		};
+		SDL_RenderCopy(resources_.renderer, resources_.enemy_texture, NULL, &enemy_render_box);
+	}
+	SDL_RenderPresent(resources_.renderer);
 };
 
 
 void Game::Shutdown() {
 
-    if (resources.map_texture) {
-        SDL_DestroyTexture(resources.map_texture);
-        resources.map_texture = nullptr;
+    if (resources_.map_texture) {
+        SDL_DestroyTexture(resources_.map_texture);
+        resources_.map_texture = nullptr;
     }
-    if (resources.player_texture) {
-        SDL_DestroyTexture(resources.player_texture);
-        resources.player_texture = nullptr;
+    if (resources_.player_texture) {
+        SDL_DestroyTexture(resources_.player_texture);
+        resources_.player_texture = nullptr;
     }
-    if (resources.enemy_texture) {
-        SDL_DestroyTexture(resources.enemy_texture);
-        resources.enemy_texture = nullptr;
+    if (resources_.enemy_texture) {
+        SDL_DestroyTexture(resources_.enemy_texture);
+        resources_.enemy_texture = nullptr;
     }
 
     IMG_Quit();
 
-    if (resources.renderer) {
-        SDL_DestroyRenderer(resources.renderer);
-        resources.renderer = nullptr;
+    if (resources_.renderer) {
+        SDL_DestroyRenderer(resources_.renderer);
+        resources_.renderer = nullptr;
     }
 
-    if (resources.window) {
-        SDL_DestroyWindow(resources.window);
-        resources.window = nullptr;
+    if (resources_.window) {
+        SDL_DestroyWindow(resources_.window);
+        resources_.window = nullptr;
     }
 
     SDL_Quit();

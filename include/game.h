@@ -19,11 +19,6 @@ struct GameResources {
 	SDL_Rect map_layout = {(int)0, (int)0, kWindowWidth, kWindowHeight};
 };
 
-struct GameEntities {
-	Entity* player = nullptr;
-	Entity* enemy = nullptr;
-};
-
 class Game{
 public:
 	Game();
@@ -32,9 +27,9 @@ public:
 	void RunGameLoop();
 	void Shutdown();
 private:
-	GameResources resources;
-	Entity player_;
-	Entity enemy_;
+	GameResources resources_;
+	Player player_;
+	Enemy enemy_;
 	void ProcessInput();
 	void UpdateGame();
 	void GenerateOutput();

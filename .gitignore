@@ -44,4 +44,4 @@ vcpkg_installed/
 Thumbs.db
 
 # Caches
-.cache/
+.cache/*

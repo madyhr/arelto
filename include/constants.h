@@ -1,27 +1,34 @@
-// include/constants.h
-#ifndef RL2_CONSTANTS_H_
-#define RL2_CONSTANTS_H_
+// include/constexprants.h
+#ifndef RL2_constexprANTS_H_
+#define RL2_constexprANTS_H_
 
 namespace rl2 {
-// Window constants
-const int kWindowHeight = 720;
-const int kWindowWidth = 1280;
+// Window constexprants
+constexpr int kWindowHeight = 720;
+constexpr int kWindowWidth = 1280;
 
-// Player constants
-const float kPlayerInitX = 400.0f;
-const float kPlayerInitY = 300.0f;
-const float kPlayerSpeed = 200.0f;
-const int kPlayerHeight = 100;
-const int kPlayerWidth = 100;
+// Player constexprants
+constexpr float kPlayerInitX = 400.0f;
+constexpr float kPlayerInitY = 300.0f;
+constexpr float kPlayerSpeed = 200.0f;
+constexpr int kPlayerHeight = 100;
+constexpr int kPlayerWidth = 100;
 
-// Enemy constants
-const int kNumEnemies = 10;
-const int kEnemyHealth = 1;
-const float kEnemyInitX = 100.0f;
-const float kEnemyInitY = 100.0f;
-const float kEnemySpeed = 40.0f;
-const int kEnemyHeight = 75;
-const int kEnemyWidth = 75;
+// Enemy constexprants
+constexpr int kNumEnemies = 10;
+constexpr int kEnemyHealth = 1;
+constexpr float kEnemyInitX = 100.0f;
+constexpr float kEnemyInitY = 100.0f;
+constexpr float kEnemySpeed = 40.0f;
+constexpr int kEnemyHeight = 75;
+constexpr int kEnemyWidth = 75;
+
+constexpr int kEnemyVertices = 6;
+constexpr int kTotalEnemyVertices = kEnemyVertices * kNumEnemies;
+constexpr float kTexCoordTop = 0.0f;
+constexpr float kTexCoordBottom = 1.0f;
+constexpr float kTexCoordLeft = 0.0f;
+constexpr float kTexCoordRight = 1.0f;
 
 } // namespace rl2
 #endif

@@ -30,9 +30,11 @@ private:
 	GameResources resources_;
 	Player player_;
 	Enemy enemy_;
+	SDL_Vertex enemy_vertices_[kTotalEnemyVertices];
 	void ProcessInput();
 	void UpdateGame();
 	void GenerateOutput();
+	void SetupEnemyGeometry();
 
 	bool is_running_;
 	uint32_t ticks_count_ = 0;

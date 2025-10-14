@@ -1,5 +1,6 @@
 // src/game.cpp
 #include <SDL2/SDL_timer.h>
+#include <SDL_render.h>
 #include <iostream>
 #include "game.h"
 #include "constants.h"
@@ -83,7 +84,6 @@ bool Game::Initialize() {
 	return true;
 }
 
-
 void Game::RunGameLoop() {
 	while (is_running_){
 		Game::ProcessInput();
@@ -145,6 +145,8 @@ void Game::UpdateGame() {
 
 };
 
+
+
 void Game::GenerateOutput() {
 	SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
 	SDL_RenderClear(resources_.renderer);
@@ -156,17 +158,75 @@ void Game::GenerateOutput() {
 		(int)player_.stats.size.height
 	};
 	SDL_RenderCopy(resources_.renderer, resources_.player_texture, NULL, &player_render_box);
-	for (int i = 0; i < kNumEnemies; ++i){
-		SDL_Rect enemy_render_box = {
-			(int)enemy_.position[i].x,
-			(int)enemy_.position[i].y,
-			(int)kEnemyWidth,
-			(int)kEnemyHeight
-		};
-		SDL_RenderCopy(resources_.renderer, resources_.enemy_texture, NULL, &enemy_render_box);
-	}
+
+	SetupEnemyGeometry();
+
+	SDL_RenderGeometry(resources_.renderer, resources_.enemy_texture, enemy_vertices_, kTotalEnemyVertices, nullptr, 0);
+	// for (int i = 0; i < kNumEnemies; ++i){
+	// 	SDL_Rect enemy_render_box = {
+	// 		(int)enemy_.position[i].x,
+	// 		(int)enemy_.position[i].y,
+	// 		(int)kEnemyWidth,
+	// 		(int)kEnemyHeight
+	// 	};
+	// 	SDL_RenderCopy(resources_.renderer, resources_.enemy_texture, NULL, &enemy_render_box);
+	// }
 	SDL_RenderPresent(resources_.renderer);
 };
+
+
+void Game::SetupEnemyGeometry(){
+	for (int i = 0; i < kNumEnemies; ++i) {
+		// Calculate the screen-space coordinates for this enemy
+		float x = enemy_.position[i].x;
+		float y = enemy_.position[i].y;
+		float w = (float)kEnemyWidth;  // Assumed to be float if positions are float
+		float h = (float)kEnemyHeight; // Assumed to be float
+
+		// The starting index in the combined vertex array for this enemy
+		int vertex_offset = i * kEnemyVertices;
+
+		// --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
+		
+		// 1. Top-Left
+		enemy_vertices_[vertex_offset + 0] = {
+		    {x, y},                             // Position (x, y)
+		    {255, 255, 255, 255},               // Color (white, opaque)
+		    {kTexCoordLeft, kTexCoordTop}       // Texture Coordinates (u, v)
+		};
+
+		// 2. Bottom-Left
+		enemy_vertices_[vertex_offset + 1] = {
+		    {x, y + h},
+		    {255, 255, 255, 255},
+		    {kTexCoordLeft, kTexCoordBottom}
+		};
+
+		// 3. Bottom-Right
+		enemy_vertices_[vertex_offset + 2] = {
+		    {x + w, y + h},
+		    {255, 255, 255, 255},
+		    {kTexCoordRight, kTexCoordBottom}
+		};
+
+		// --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
+		
+		// 4. Top-Left (Repeat)
+		enemy_vertices_[vertex_offset + 3] = enemy_vertices_[vertex_offset + 0]; // Same as vertex 1
+
+		// 5. Bottom-Right (Repeat)
+		enemy_vertices_[vertex_offset + 4] = enemy_vertices_[vertex_offset + 2]; // Same as vertex 3
+		
+		// 6. Top-Right
+		enemy_vertices_[vertex_offset + 5] = {
+		    {x + w, y},
+		    {255, 255, 255, 255},
+		    {kTexCoordRight, kTexCoordTop}
+		};
+	}
+};
+
+
 
 
 void Game::Shutdown() {

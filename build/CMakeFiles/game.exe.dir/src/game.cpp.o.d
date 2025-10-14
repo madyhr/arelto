@@ -113,7 +113,11 @@ CMakeFiles/game.exe.dir/src/game.cpp.o: /home/madyhr/rl2/src/game.cpp \
  /usr/include/c++/13/tr1/poly_laguerre.tcc \
  /usr/include/c++/13/tr1/riemann_zeta.tcc \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/float.h \
- /usr/include/SDL2/SDL_error.h /usr/include/c++/13/iostream \
+ /usr/include/SDL2/SDL_error.h /usr/include/SDL2/SDL_render.h \
+ /usr/include/SDL2/SDL_rect.h /usr/include/SDL2/SDL_pixels.h \
+ /usr/include/SDL2/SDL_endian.h /usr/include/SDL2/SDL_rwops.h \
+ /usr/include/SDL2/SDL_video.h /usr/include/SDL2/SDL_surface.h \
+ /usr/include/SDL2/SDL_blendmode.h /usr/include/c++/13/iostream \
  /usr/include/c++/13/ostream /usr/include/c++/13/ios \
  /usr/include/c++/13/iosfwd /usr/include/c++/13/bits/stringfwd.h \
  /usr/include/c++/13/bits/memoryfwd.h /usr/include/c++/13/bits/postypes.h \
@@ -191,8 +195,7 @@ CMakeFiles/game.exe.dir/src/game.cpp.o: /home/madyhr/rl2/src/game.cpp \
  /usr/include/SDL2/SDL.h /usr/include/SDL2/SDL_main.h \
  /usr/include/SDL2/SDL_assert.h /usr/include/SDL2/SDL_atomic.h \
  /usr/include/SDL2/SDL_platform.h /usr/include/SDL2/SDL_audio.h \
- /usr/include/SDL2/SDL_endian.h /usr/include/SDL2/SDL_mutex.h \
- /usr/include/SDL2/SDL_thread.h /usr/include/SDL2/SDL_rwops.h \
+ /usr/include/SDL2/SDL_mutex.h /usr/include/SDL2/SDL_thread.h \
  /usr/include/SDL2/SDL_clipboard.h /usr/include/SDL2/SDL_cpuinfo.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/immintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/x86gprintrin.h \
@@ -288,24 +291,22 @@ CMakeFiles/game.exe.dir/src/game.cpp.o: /home/madyhr/rl2/src/game.cpp \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/prfchwintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/keylockerintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/amxfp16intrin.h \
- /usr/include/SDL2/SDL_events.h /usr/include/SDL2/SDL_video.h \
- /usr/include/SDL2/SDL_pixels.h /usr/include/SDL2/SDL_rect.h \
- /usr/include/SDL2/SDL_surface.h /usr/include/SDL2/SDL_blendmode.h \
- /usr/include/SDL2/SDL_keyboard.h /usr/include/SDL2/SDL_keycode.h \
- /usr/include/SDL2/SDL_scancode.h /usr/include/SDL2/SDL_mouse.h \
- /usr/include/SDL2/SDL_joystick.h /usr/include/SDL2/SDL_guid.h \
- /usr/include/SDL2/SDL_gamecontroller.h /usr/include/SDL2/SDL_sensor.h \
- /usr/include/SDL2/SDL_quit.h /usr/include/SDL2/SDL_gesture.h \
- /usr/include/SDL2/SDL_touch.h /usr/include/SDL2/SDL_filesystem.h \
- /usr/include/SDL2/SDL_haptic.h /usr/include/SDL2/SDL_hidapi.h \
- /usr/include/SDL2/SDL_hints.h /usr/include/SDL2/SDL_loadso.h \
- /usr/include/SDL2/SDL_log.h /usr/include/SDL2/SDL_messagebox.h \
- /usr/include/SDL2/SDL_metal.h /usr/include/SDL2/SDL_power.h \
- /usr/include/SDL2/SDL_render.h /usr/include/SDL2/SDL_shape.h \
- /usr/include/SDL2/SDL_system.h /usr/include/SDL2/SDL_timer.h \
- /usr/include/SDL2/SDL_version.h /usr/include/SDL2/SDL_locale.h \
- /usr/include/SDL2/SDL_misc.h /usr/include/SDL2/SDL_image.h \
- /usr/include/SDL2/SDL.h /usr/include/c++/13/cstdint \
- /home/madyhr/rl2/include/entity.h /home/madyhr/rl2/include/game_math.h \
+ /usr/include/SDL2/SDL_events.h /usr/include/SDL2/SDL_keyboard.h \
+ /usr/include/SDL2/SDL_keycode.h /usr/include/SDL2/SDL_scancode.h \
+ /usr/include/SDL2/SDL_mouse.h /usr/include/SDL2/SDL_joystick.h \
+ /usr/include/SDL2/SDL_guid.h /usr/include/SDL2/SDL_gamecontroller.h \
+ /usr/include/SDL2/SDL_sensor.h /usr/include/SDL2/SDL_quit.h \
+ /usr/include/SDL2/SDL_gesture.h /usr/include/SDL2/SDL_touch.h \
+ /usr/include/SDL2/SDL_filesystem.h /usr/include/SDL2/SDL_haptic.h \
+ /usr/include/SDL2/SDL_hidapi.h /usr/include/SDL2/SDL_hints.h \
+ /usr/include/SDL2/SDL_loadso.h /usr/include/SDL2/SDL_log.h \
+ /usr/include/SDL2/SDL_messagebox.h /usr/include/SDL2/SDL_metal.h \
+ /usr/include/SDL2/SDL_power.h /usr/include/SDL2/SDL_render.h \
+ /usr/include/SDL2/SDL_shape.h /usr/include/SDL2/SDL_system.h \
+ /usr/include/SDL2/SDL_timer.h /usr/include/SDL2/SDL_version.h \
+ /usr/include/SDL2/SDL_locale.h /usr/include/SDL2/SDL_misc.h \
+ /usr/include/SDL2/SDL_image.h /usr/include/SDL2/SDL.h \
+ /usr/include/c++/13/cstdint /home/madyhr/rl2/include/entity.h \
+ /home/madyhr/rl2/include/game_math.h \
  /home/madyhr/rl2/include/constants.h /usr/include/c++/13/array \
  /home/madyhr/rl2/include/constants.h /home/madyhr/rl2/include/random.h

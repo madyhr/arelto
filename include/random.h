@@ -7,6 +7,6 @@ namespace rl2 {
 
 uint32_t generate_random_int(uint32_t min_val, uint32_t max_val);
 
-} // namespace rl2
+}  // namespace rl2
 
 #endif

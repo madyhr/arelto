@@ -30,5 +30,5 @@ constexpr float kTexCoordBottom = 1.0f;
 constexpr float kTexCoordLeft = 0.0f;
 constexpr float kTexCoordRight = 1.0f;
 
-} // namespace rl2
+}  // namespace rl2
 #endif

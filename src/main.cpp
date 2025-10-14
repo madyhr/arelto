@@ -2,11 +2,11 @@
 #include "game.h"
 
 int main(int argc, char* args[]) {
-	rl2::Game game;
+  rl2::Game game;
 
-	if (game.Initialize()) {
-		game.RunGameLoop();
-	}
+  if (game.Initialize()) {
+    game.RunGameLoop();
+  }
 
-	return 0;
+  return 0;
 }

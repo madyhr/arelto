@@ -132,8 +132,11 @@ void Game::UpdateGame() {
   float delta_time = (SDL_GetTicks() - ticks_count_) / 1000.0f;
 
   ticks_count_ = SDL_GetTicks();
+  Game::UpdatePlayerPosition(delta_time);
+  Game::UpdateEnemyPosition(delta_time);
+};
 
-  // Update Player
+void Game::UpdatePlayerPosition(float delta_time) {
   float player_velocity_magnitude =
       std::hypot(player_.velocity.x, player_.velocity.y);
   if (player_velocity_magnitude > 1.0f) {
@@ -144,16 +147,15 @@ void Game::UpdateGame() {
       player_.velocity.x * player_.stats.movement_speed * delta_time;
   player_.position.y +=
       player_.velocity.y * player_.stats.movement_speed * delta_time;
+};
 
-  // Update Enemy
+void Game::UpdateEnemyPosition(float delta_time) {
   for (int i = 0; i < kNumEnemies; ++i) {
-    float distance_to_player =
-        std::hypot(player_.position.x - enemy_.position[i].x,
-                   player_.position.y - enemy_.position[i].y);
-    enemy_.velocity[i].x =
-        (player_.position.x - enemy_.position[i].x) / distance_to_player;
-    enemy_.velocity[i].y =
-        (player_.position.y - enemy_.position[i].y) / distance_to_player;
+    float dx = player_.position.x - enemy_.position[i].x;
+    float dy = player_.position.y - enemy_.position[i].y;
+    float distance_to_player = std::hypot(dx, dy);
+    enemy_.velocity[i].x = dx / (distance_to_player+1e-6);
+    enemy_.velocity[i].y = dy / (distance_to_player+1e-6);
     enemy_.position[i].x +=
         enemy_.velocity[i].x * enemy_.movement_speed[i] * delta_time;
     enemy_.position[i].y +=

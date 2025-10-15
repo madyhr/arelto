@@ -36,6 +36,8 @@ class Game {
   void UpdateGame();
   void GenerateOutput();
   void SetupEnemyGeometry();
+  void UpdateEnemyPosition(float);
+  void UpdatePlayerPosition(float);
 
   bool is_running_;
   uint32_t ticks_count_ = 0;

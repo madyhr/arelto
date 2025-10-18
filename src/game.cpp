@@ -2,7 +2,9 @@
 #include "game.h"
 #include <SDL2/SDL_timer.h>
 #include <SDL_render.h>
+#include <cstdio>
 #include <iostream>
+#include <iomanip>
 #include "constants.h"
 #include "game_math.h"
 #include "random.h"
@@ -167,15 +169,27 @@ void Game::ProcessInput() {
 }
 
 void Game::Update() {
-  float dt = (SDL_GetTicks() - ticks_count_) / 1000.0f;
+  float dt = (SDL_GetTicks64() - ticks_count_) / 1000.0f;
 
   Game::UpdatePlayerPosition(dt);
   Game::UpdateEnemyPosition(dt);
   Game::HandleCollisions();
 
-  ticks_count_ = SDL_GetTicks();
-};
+  // Calculate FPS (add a small epsilon to avoid division by zero)
+  float fps = 1.0f / (dt + 1e-6f);
 
+  // 1. Print the text
+  // 2. Use \r (Carriage Return) instead of \n or std::endl
+  // 3. Use std::fixed and std::setprecision(1) for cleaner output (e.g., 60.1)
+
+  std::cout << "Current FPS: " << std::fixed << std::setprecision(1) << fps;
+
+  // Flush the output buffer to ensure the text is immediately displayed
+  // and the cursor is moved back to the start of the line.
+  std::cout << "\r" << std::flush;
+
+  ticks_count_ = SDL_GetTicks();
+}
 void Game::HandleCollisions() {
   rl2::resolve_collisions_sap(player_, enemy_);
 };

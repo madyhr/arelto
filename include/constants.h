@@ -11,16 +11,16 @@ constexpr int kWindowWidth = 1920;
 constexpr float kPlayerInitX = 960.0f;
 constexpr float kPlayerInitY = 540.0f;
 constexpr float kPlayerSpeed = 200.0f;
-constexpr int kPlayerWidth = 100;
+constexpr int kPlayerWidth = 40;
 constexpr int kPlayerHeight = (int)(kPlayerWidth*1.258);
 
 // Enemy constants
-constexpr int kNumEnemies = 20;
+constexpr int kNumEnemies = 100;
 constexpr int kEnemyHealth = 1;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;
 constexpr float kEnemySpeed = 40.0f;
-constexpr int kEnemyWidth = 75;
+constexpr int kEnemyWidth = 20;
 constexpr int kEnemyHeight = (int)(kEnemyWidth*1.04);
 
 constexpr int kEnemyMinimumInitialDistance = 500;

@@ -4,13 +4,13 @@
 #include <array>
 #include <cstdint>
 #include "constants.h"
-#include "game_math.h"
+#include "types.h"
 
 namespace rl2 {
 
 struct Size {
-  uint32_t height;
   uint32_t width;
+  uint32_t height;
 };
 
 struct Stats {
@@ -21,9 +21,11 @@ struct Stats {
 
 class Entity {
  public:
+  Stats stats;
   Vector2D position;
   Vector2D velocity;
-  Stats stats;
+  AABB aabb;
+  void update_aabb();
 };
 
 class Player : public Entity {};

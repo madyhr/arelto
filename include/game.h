@@ -32,15 +32,20 @@ class Game {
   Player player_;
   Enemy enemy_;
   SDL_Vertex enemy_vertices_[kTotalEnemyVertices];
-  void ProcessInput();
-  void UpdateGame();
-  void GenerateOutput();
-  void SetupEnemyGeometry();
-  void UpdateEnemyPosition(float);
-  void UpdatePlayerPosition(float);
-
   bool is_running_;
   uint32_t ticks_count_ = 0;
+  bool InitializeResources();
+  bool InitializePlayer();
+  bool InitializeEnemy();
+  void ProcessInput();
+  void Update();
+  void GenerateOutput();
+  void SetupEnemyGeometry();
+  void UpdateEnemyPosition(float dt);
+  void UpdatePlayerPosition(float dt);
+  void HandleCollisions();
+  void DetectCollisions(float dt);
+  void ResolveCollisions(float dt);
 };
 
 }  // namespace rl2

@@ -4,6 +4,7 @@
 #include <SDL_render.h>
 #include <iostream>
 #include "constants.h"
+#include "game_math.h"
 #include "random.h"
 
 namespace rl2 {
@@ -15,6 +16,23 @@ Game::~Game() {
 }
 
 bool Game::Initialize() {
+  if (!(Game::InitializeResources())) {
+    return true;
+  }
+  if (!(Game::InitializePlayer())) {
+    return true;
+  }
+  if (!(Game::InitializeEnemy())) {
+    return true;
+  }
+
+  ticks_count_ = SDL_GetTicks();
+  is_running_ = true;
+
+  return true;
+}
+
+bool Game::InitializeResources() {
 
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     std::cerr << "SDL could not initialize! SDL Error: " << SDL_GetError()
@@ -62,34 +80,54 @@ bool Game::Initialize() {
     return false;
   }
 
-  // Initialize Player
+  resources_.map_layout = {0, 0, kWindowWidth, kWindowHeight};
+  return true;
+};
+
+bool Game::InitializePlayer() {
+  player_.stats.size = {kPlayerWidth, kPlayerHeight};
   player_.position = {kPlayerInitX, kPlayerInitY};
   player_.stats.movement_speed = kPlayerSpeed;
-  player_.stats.size = {kPlayerWidth, kPlayerHeight};
+  return true;
+};
 
-  // Initialize Enemies
+bool Game::InitializeEnemy() {
   std::fill(enemy_.movement_speed.begin(), enemy_.movement_speed.end(),
             kEnemySpeed);
   std::fill(enemy_.size.begin(), enemy_.size.end(),
             Size{kEnemyHeight, kEnemyWidth});
   std::fill(enemy_.health.begin(), enemy_.health.end(), kEnemyHealth);
 
+  int max_x = kWindowWidth - kEnemyWidth;
+  int max_y = kWindowHeight - kEnemyHeight;
+
   for (int i = 0; i < kNumEnemies; ++i) {
-    enemy_.position[i] = {kEnemyInitX + i * 50, kEnemyInitY + i * 50};
+    Vector2D potential_pos;
+
+    do {
+      potential_pos = {(float)generate_random_int(0, max_x),
+                       (float)generate_random_int(0, max_y)};
+
+    } while (calculate_distance_vector2d(potential_pos, player_.position) <
+             kEnemyMinimumInitialDistance);
+
+    enemy_.position[i] = potential_pos;
     enemy_.movement_speed[i] += generate_random_int(1, 100);
+    enemy_.size[i].height += generate_random_int(1, 50);
+    enemy_.size[i].width += generate_random_int(1, 50);
   };
 
-  resources_.map_layout = {0, 0, kWindowWidth, kWindowHeight};
-  ticks_count_ = SDL_GetTicks();
-  is_running_ = true;
-
+  SDL_Color red = {255, 0, 0, 255};
+  for (int i = 0; i < kTotalEnemyVertices; ++i) {
+    enemy_vertices_[i].color = red;
+  }
   return true;
-}
+};
 
 void Game::RunGameLoop() {
   while (is_running_) {
     Game::ProcessInput();
-    Game::UpdateGame();
+    Game::Update();
     Game::GenerateOutput();
   }
 };
@@ -128,38 +166,48 @@ void Game::ProcessInput() {
   }
 }
 
-void Game::UpdateGame() {
-  float delta_time = (SDL_GetTicks() - ticks_count_) / 1000.0f;
+void Game::Update() {
+  float dt = (SDL_GetTicks() - ticks_count_) / 1000.0f;
+
+  Game::UpdatePlayerPosition(dt);
+  Game::UpdateEnemyPosition(dt);
+  Game::HandleCollisions();
 
   ticks_count_ = SDL_GetTicks();
-  Game::UpdatePlayerPosition(delta_time);
-  Game::UpdateEnemyPosition(delta_time);
 };
 
-void Game::UpdatePlayerPosition(float delta_time) {
-  float player_velocity_magnitude =
-      std::hypot(player_.velocity.x, player_.velocity.y);
+void Game::HandleCollisions() {
+  rl2::resolve_collisions_sap(player_, enemy_);
+};
+
+void Game::DetectCollisions(float dt) {
+
+};
+void Game::ResolveCollisions(float dt) {};
+
+void Game::UpdatePlayerPosition(float dt) {
+
+  float player_velocity_magnitude = get_length_vector2d(player_.velocity);
   if (player_velocity_magnitude > 1.0f) {
     player_.velocity.x /= player_velocity_magnitude;
     player_.velocity.y /= player_velocity_magnitude;
   }
-  player_.position.x +=
-      player_.velocity.x * player_.stats.movement_speed * delta_time;
-  player_.position.y +=
-      player_.velocity.y * player_.stats.movement_speed * delta_time;
+
+  player_.position.x += player_.velocity.x * player_.stats.movement_speed * dt;
+  player_.position.y += player_.velocity.y * player_.stats.movement_speed * dt;
 };
 
-void Game::UpdateEnemyPosition(float delta_time) {
+void Game::UpdateEnemyPosition(float dt) {
   for (int i = 0; i < kNumEnemies; ++i) {
     float dx = player_.position.x - enemy_.position[i].x;
     float dy = player_.position.y - enemy_.position[i].y;
     float distance_to_player = std::hypot(dx, dy);
-    enemy_.velocity[i].x = dx / (distance_to_player+1e-6);
-    enemy_.velocity[i].y = dy / (distance_to_player+1e-6);
+    enemy_.velocity[i].x = dx / (distance_to_player + 1e-6);
+    enemy_.velocity[i].y = dy / (distance_to_player + 1e-6);
     enemy_.position[i].x +=
-        enemy_.velocity[i].x * enemy_.movement_speed[i] * delta_time;
+        enemy_.velocity[i].x * enemy_.movement_speed[i] * dt;
     enemy_.position[i].y +=
-        enemy_.velocity[i].y * enemy_.movement_speed[i] * delta_time;
+        enemy_.velocity[i].y * enemy_.movement_speed[i] * dt;
   }
 };
 
@@ -169,15 +217,20 @@ void Game::GenerateOutput() {
   SDL_RenderCopy(resources_.renderer, resources_.map_texture, NULL,
                  &resources_.map_layout);
   SDL_Rect player_render_box = {
-      (int)player_.position.x, (int)player_.position.y,
+      (int)(player_.position.x), (int)(player_.position.y),
       (int)player_.stats.size.width, (int)player_.stats.size.height};
+
   SDL_RenderCopy(resources_.renderer, resources_.player_texture, NULL,
                  &player_render_box);
-
-  SetupEnemyGeometry();
   SDL_RenderGeometry(resources_.renderer, resources_.enemy_texture,
                      enemy_vertices_, kTotalEnemyVertices, nullptr, 0);
-
+  // For debugging render boxes
+  // SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 255);
+  // SDL_RenderFillRect(resources_.renderer, &player_render_box);
+  // SDL_RenderGeometry(resources_.renderer, nullptr, enemy_vertices_,
+  //                    kTotalEnemyVertices, nullptr, 0);
+  //
+  SetupEnemyGeometry();
   SDL_RenderPresent(resources_.renderer);
 };
 
@@ -185,8 +238,8 @@ void Game::SetupEnemyGeometry() {
   for (int i = 0; i < kNumEnemies; ++i) {
     float x = enemy_.position[i].x;
     float y = enemy_.position[i].y;
-    float w = (float)kEnemyWidth;
-    float h = (float)kEnemyHeight;
+    float w = enemy_.size[i].width;
+    float h = enemy_.size[i].height;
 
     int vertex_offset = i * kEnemyVertices;
 

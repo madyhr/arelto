@@ -53,7 +53,6 @@ void resolve_collisions_sap(Player& player, Enemy& enemy) {
       bool has_y_overlap = current_aabb.max_y > active_aabb->min_y &&
                            current_aabb.min_y < active_aabb->max_y;
       if (has_y_overlap) {
-
         collision_pairs.push_back(
             {current_aabb.entity_idx, active_aabb->entity_idx});
       };

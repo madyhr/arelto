@@ -31,6 +31,7 @@ class Entity {
 class Player : public Entity {};
 
 struct Enemy {
+  std::array<bool, kNumEnemies> is_alive;
   std::array<Vector2D, kNumEnemies> position;
   std::array<Vector2D, kNumEnemies> velocity;
   std::array<uint32_t, kNumEnemies> health;

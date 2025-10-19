@@ -7,6 +7,9 @@ namespace rl2 {
 constexpr int kWindowHeight = 1080;
 constexpr int kWindowWidth = 1920;
 
+// Game status constants
+constexpr int kFrameTimes = 1000;
+
 // Player constants
 constexpr float kPlayerInitX = 960.0f;
 constexpr float kPlayerInitY = 540.0f;

@@ -3,8 +3,8 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL_render.h>
 #include <cstdio>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include "constants.h"
 #include "game_math.h"
 #include "random.h"
@@ -28,7 +28,7 @@ bool Game::Initialize() {
     return true;
   }
 
-  ticks_count_ = SDL_GetTicks();
+  ticks_count_ = SDL_GetTicks64();
   is_running_ = true;
 
   return true;
@@ -126,6 +126,38 @@ bool Game::InitializeEnemy() {
   return true;
 };
 
+void FrameStats::update_frame_time_buffer(float new_value) {
+  float oldest_value = frame_time_buffer[head_index];
+  frame_time_sum = frame_time_sum - oldest_value + new_value;
+  frame_time_buffer[head_index] = new_value;
+
+  if (current_buffer_length < max_buffer_length) {
+    current_buffer_length++;
+  };
+
+  head_index = (head_index + 1) % max_buffer_length;
+};
+
+float FrameStats::get_average_frame_time() {
+  if (current_buffer_length == 0) {
+    return 0.0f;
+  }
+  return static_cast<float>(frame_time_sum / current_buffer_length);
+};
+
+void FrameStats::print_fps_running_average(float dt) {
+  static float accumulated_time = 0.0f;
+  update_frame_time_buffer(dt);
+  if (accumulated_time > 1.0f) {
+    float avg_frame_time = get_average_frame_time();
+    float average_fps = 1.0f / (avg_frame_time);
+    std::cout << "Current Avg FPS: " << std::fixed << average_fps;
+    std::cout << "\r" << std::flush;
+    accumulated_time -= 1.0f;
+  };
+  accumulated_time += dt;
+};
+
 void Game::RunGameLoop() {
   while (is_running_) {
     Game::ProcessInput();
@@ -169,35 +201,20 @@ void Game::ProcessInput() {
 }
 
 void Game::Update() {
-  float dt = (SDL_GetTicks64() - ticks_count_) / 1000.0f;
+  Uint64 current_ticks = SDL_GetTicks64();
+  float dt = (float)(current_ticks - ticks_count_) / 1000.0f;
 
   Game::UpdatePlayerPosition(dt);
   Game::UpdateEnemyPosition(dt);
   Game::HandleCollisions();
 
-  // Calculate FPS (add a small epsilon to avoid division by zero)
-  float fps = 1.0f / (dt + 1e-6f);
+  game_status_.frame_stats.print_fps_running_average(dt);
 
-  // 1. Print the text
-  // 2. Use \r (Carriage Return) instead of \n or std::endl
-  // 3. Use std::fixed and std::setprecision(1) for cleaner output (e.g., 60.1)
-
-  std::cout << "Current FPS: " << std::fixed << std::setprecision(1) << fps;
-
-  // Flush the output buffer to ensure the text is immediately displayed
-  // and the cursor is moved back to the start of the line.
-  std::cout << "\r" << std::flush;
-
-  ticks_count_ = SDL_GetTicks();
+  ticks_count_ = current_ticks;
 }
 void Game::HandleCollisions() {
   rl2::resolve_collisions_sap(player_, enemy_);
 };
-
-void Game::DetectCollisions(float dt) {
-
-};
-void Game::ResolveCollisions(float dt) {};
 
 void Game::UpdatePlayerPosition(float dt) {
 

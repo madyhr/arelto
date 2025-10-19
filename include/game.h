@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <array>
 #include <cstdint>
 #include "constants.h"
 #include "entity.h"
@@ -19,6 +20,22 @@ struct GameResources {
   SDL_Rect map_layout = {(int)0, (int)0, kWindowWidth, kWindowHeight};
 };
 
+class FrameStats {
+ public:
+  std::array<float, kFrameTimes> frame_time_buffer{};
+  float frame_time_sum = 0.0f;
+  int current_buffer_length = 0;
+  int max_buffer_length = 100;
+  int head_index = 0;
+  void update_frame_time_buffer(float dt);
+  float get_average_frame_time();
+  void print_fps_running_average(float dt);
+};
+
+struct GameStatus {
+  FrameStats frame_stats;
+};
+
 class Game {
  public:
   Game();
@@ -29,11 +46,12 @@ class Game {
 
  private:
   GameResources resources_;
+  GameStatus game_status_;
   Player player_;
   Enemy enemy_;
   SDL_Vertex enemy_vertices_[kTotalEnemyVertices];
   bool is_running_;
-  uint32_t ticks_count_ = 0;
+  uint64_t ticks_count_ = 0;
   bool InitializeResources();
   bool InitializePlayer();
   bool InitializeEnemy();

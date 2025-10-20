@@ -105,7 +105,7 @@ void resolve_collision_pairs_sap(Player& player, Enemy& enemy,
         enemy.position[enemy_idx].y += dy;
       }
     };
-    auto get_entity_centroid = [&](int idx, const AABB& box) -> Vector2D {
+    auto get_entity_centroid = [&](int idx) -> Vector2D {
       if (idx == 0) {
         return rl2::get_centroid(player.position, player.stats.size);
       } else {
@@ -115,16 +115,16 @@ void resolve_collision_pairs_sap(Player& player, Enemy& enemy,
       }
     };
     if (resolve_x) {
-      Vector2D centroid_a = get_entity_centroid(cp.index_a, a);
-      Vector2D centroid_b = get_entity_centroid(cp.index_b, b);
+      Vector2D centroid_a = get_entity_centroid(cp.index_a);
+      Vector2D centroid_b = get_entity_centroid(cp.index_b);
       // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
       float direction = (centroid_b.x - centroid_a.x >= 0.0f) ? 1.0f : -1.0f;
 
       move_entity(cp.index_a, -direction * overlap_x * push_factor, 0.0f);
       move_entity(cp.index_b, direction * overlap_x * push_factor, 0.0f);
     } else {
-      Vector2D centroid_a = get_entity_centroid(cp.index_a, a);
-      Vector2D centroid_b = get_entity_centroid(cp.index_b, b);
+      Vector2D centroid_a = get_entity_centroid(cp.index_a);
+      Vector2D centroid_b = get_entity_centroid(cp.index_b);
       // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
       float direction = (centroid_b.y - centroid_a.y >= 0.0f) ? 1.0f : -1.0f;
 

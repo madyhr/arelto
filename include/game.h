@@ -20,6 +20,11 @@ struct GameResources {
   SDL_Rect map_layout = {(int)0, (int)0, kWindowWidth, kWindowHeight};
 };
 
+class Camera {
+public:
+	Vector2D position;
+};
+
 class FrameStats {
  public:
   std::array<float, kFrameTimes> frame_time_buffer{};
@@ -49,18 +54,21 @@ class Game {
   GameStatus game_status_;
   Player player_;
   Enemy enemy_;
+  Camera camera_;
   SDL_Vertex enemy_vertices_[kTotalEnemyVertices];
   bool is_running_;
   uint64_t ticks_count_ = 0;
   bool InitializeResources();
   bool InitializePlayer();
   bool InitializeEnemy();
+  bool InitializeCamera();
   void ProcessInput();
   void Update();
   void GenerateOutput();
   void SetupEnemyGeometry();
   void UpdateEnemyPosition(float dt);
   void UpdatePlayerPosition(float dt);
+  void UpdateCameraPosition();
   void HandleCollisions();
   void DetectCollisions(float dt);
   void ResolveCollisions(float dt);

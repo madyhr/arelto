@@ -4,8 +4,12 @@
 
 namespace rl2 {
 // Window constants
-constexpr int kWindowHeight = 1080;
 constexpr int kWindowWidth = 1920;
+constexpr int kWindowHeight = 1080;
+
+// Map constants
+constexpr int kMapWidth = 10000;
+constexpr int kMapHeight = 10000;
 
 // Game status constants
 constexpr int kFrameTimes = 1000;
@@ -14,7 +18,7 @@ constexpr int kFrameTimes = 1000;
 constexpr float kPlayerInitX = 960.0f;
 constexpr float kPlayerInitY = 540.0f;
 constexpr float kPlayerSpeed = 200.0f;
-constexpr int kPlayerWidth = 40;
+constexpr int kPlayerWidth = 60;
 constexpr int kPlayerHeight = (int)(kPlayerWidth*1.258);
 
 // Enemy constants
@@ -23,7 +27,7 @@ constexpr int kEnemyHealth = 1;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;
 constexpr float kEnemySpeed = 40.0f;
-constexpr int kEnemyWidth = 20;
+constexpr int kEnemyWidth = 30;
 constexpr int kEnemyHeight = (int)(kEnemyWidth*1.04);
 
 constexpr int kEnemyMinimumInitialDistance = 500;

@@ -3,7 +3,6 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL_render.h>
 #include <cstdio>
-#include <iomanip>
 #include <iostream>
 #include "constants.h"
 #include "game_math.h"
@@ -25,6 +24,9 @@ bool Game::Initialize() {
     return true;
   }
   if (!(Game::InitializeEnemy())) {
+    return true;
+  }
+  if (!(Game::InitializeCamera())) {
     return true;
   }
 
@@ -82,7 +84,7 @@ bool Game::InitializeResources() {
     return false;
   }
 
-  resources_.map_layout = {0, 0, kWindowWidth, kWindowHeight};
+  resources_.map_layout = {0, 0, kMapWidth, kMapHeight};
   return true;
 };
 
@@ -100,8 +102,8 @@ bool Game::InitializeEnemy() {
             Size{kEnemyHeight, kEnemyWidth});
   std::fill(enemy_.health.begin(), enemy_.health.end(), kEnemyHealth);
 
-  int max_x = kWindowWidth - kEnemyWidth;
-  int max_y = kWindowHeight - kEnemyHeight;
+  int max_x = kMapWidth - kEnemyWidth;
+  int max_y = kMapHeight - kEnemyHeight;
 
   for (int i = 0; i < kNumEnemies; ++i) {
     Vector2D potential_pos;
@@ -123,6 +125,13 @@ bool Game::InitializeEnemy() {
   for (int i = 0; i < kTotalEnemyVertices; ++i) {
     enemy_vertices_[i].color = red;
   }
+  return true;
+};
+
+bool Game::InitializeCamera() {
+  camera_.position.x = player_.position.x - 0.5f * kWindowWidth;
+  camera_.position.y = player_.position.y - 0.5f * kWindowHeight;
+
   return true;
 };
 
@@ -208,6 +217,8 @@ void Game::Update() {
   Game::UpdateEnemyPosition(dt);
   Game::HandleCollisions();
 
+  Game::UpdateCameraPosition();
+
   game_status_.frame_stats.print_fps_running_average(dt);
 
   ticks_count_ = current_ticks;
@@ -242,14 +253,35 @@ void Game::UpdateEnemyPosition(float dt) {
   }
 };
 
+void Game::UpdateCameraPosition() {
+  camera_.position.x = player_.position.x - 0.5f * kWindowWidth;
+  camera_.position.y = player_.position.y - 0.5f * kWindowHeight;
+  if (camera_.position.x < 0) {
+    camera_.position.x = 0.0f;
+  };
+  if (camera_.position.y < 0) {
+    camera_.position.y = 0.0f;
+  };
+  if (camera_.position.x > (kMapWidth - kWindowWidth)) {
+    camera_.position.x = kMapWidth - kWindowWidth;
+  }
+  if (camera_.position.y > (kMapHeight - kWindowHeight)) {
+    camera_.position.y = kMapHeight - kWindowHeight;
+  }
+};
+
 void Game::GenerateOutput() {
   SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
   SDL_RenderClear(resources_.renderer);
+  SDL_Rect camera_render_box = {-(int)camera_.position.x,
+                                -(int)camera_.position.y, kWindowWidth,
+                                kWindowHeight};
   SDL_RenderCopy(resources_.renderer, resources_.map_texture, NULL,
-                 &resources_.map_layout);
-  SDL_Rect player_render_box = {
-      (int)(player_.position.x), (int)(player_.position.y),
-      (int)player_.stats.size.width, (int)player_.stats.size.height};
+                 &camera_render_box);
+  SDL_Rect player_render_box = {(int)(player_.position.x - camera_.position.x),
+                                (int)(player_.position.y - camera_.position.y),
+                                (int)player_.stats.size.width,
+                                (int)player_.stats.size.height};
 
   SDL_RenderCopy(resources_.renderer, resources_.player_texture, NULL,
                  &player_render_box);
@@ -267,8 +299,8 @@ void Game::GenerateOutput() {
 
 void Game::SetupEnemyGeometry() {
   for (int i = 0; i < kNumEnemies; ++i) {
-    float x = enemy_.position[i].x;
-    float y = enemy_.position[i].y;
+    float x = enemy_.position[i].x - camera_.position.x;
+    float y = enemy_.position[i].y - camera_.position.y;
     float w = enemy_.size[i].width;
     float h = enemy_.size[i].height;
 

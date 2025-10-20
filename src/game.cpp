@@ -213,7 +213,7 @@ void Game::Update() {
   ticks_count_ = current_ticks;
 }
 void Game::HandleCollisions() {
-  rl2::resolve_collisions_sap(player_, enemy_);
+  rl2::handle_collisions_sap(player_, enemy_);
 };
 
 void Game::UpdatePlayerPosition(float dt) {

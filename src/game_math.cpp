@@ -22,9 +22,11 @@ float calculate_distance_vector2d(Vector2D v0, Vector2D v1) {
   return distance;
 };
 
-void resolve_collisions_sap(Player& player, Enemy& enemy) {
-  std::vector<CollisionPair> collision_pairs;
+Vector2D get_centroid(Vector2D position, Size size) {
+  return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
+}
 
+void handle_collisions_sap(Player& player, Enemy& enemy) {
   std::array<AABB, kNumEntities> entity_aabb;
   player.update_aabb();
   entity_aabb[0] = player.aabb;
@@ -35,6 +37,17 @@ void resolve_collisions_sap(Player& player, Enemy& enemy) {
   }
 
   std::array<AABB, kNumEntities> sorted_aabb = entity_aabb;
+  std::sort(sorted_aabb.begin(), sorted_aabb.end(),
+            [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
+
+  std::vector<CollisionPair> collision_pairs =
+      get_collision_pairs_sap(sorted_aabb);
+  resolve_collision_pairs_sap(player, enemy, entity_aabb, collision_pairs);
+};
+
+std::vector<CollisionPair> get_collision_pairs_sap(
+    std::array<AABB, kNumEntities> sorted_aabb) {
+  std::vector<CollisionPair> collision_pairs;
   std::sort(sorted_aabb.begin(), sorted_aabb.end(),
             [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
   std::vector<const AABB*> active_list;
@@ -61,7 +74,13 @@ void resolve_collisions_sap(Player& player, Enemy& enemy) {
     // Add
     active_list.push_back(&current_aabb);
   }
-  // --- Narrowphase and resolution ---
+
+  return collision_pairs;
+};
+
+void resolve_collision_pairs_sap(Player& player, Enemy& enemy,
+                                 std::array<AABB, kNumEntities> entity_aabb,
+                                 std::vector<CollisionPair> collision_pairs) {
   for (const CollisionPair& cp : collision_pairs) {
     const AABB& a = entity_aabb[cp.index_a];
     const AABB& b = entity_aabb[cp.index_b];
@@ -86,48 +105,33 @@ void resolve_collisions_sap(Player& player, Enemy& enemy) {
         enemy.position[enemy_idx].y += dy;
       }
     };
+    auto get_entity_centroid = [&](int idx, const AABB& box) -> Vector2D {
+      if (idx == 0) {
+        return rl2::get_centroid(player.position, player.stats.size);
+      } else {
+        int enemy_idx = idx - 1;
+        return rl2::get_centroid(enemy.position[enemy_idx],
+                                 enemy.size[enemy_idx]);
+      }
+    };
     if (resolve_x) {
-      // Get current, live position/center for direction calculation
-      // Helper lambda to get the center of a live entity based on its index
-      auto get_center_x = [&](int idx, const AABB& box) -> float {
-        if (idx == 0) {
-          return player.position.x + player.stats.size.width * 0.5f;
-        } else {
-          int enemy_idx = idx - 1;
-          return enemy.position[enemy_idx].x +
-                 enemy.size[enemy_idx].width * 0.5f;
-        }
-      };
-
-      float center_a_x = get_center_x(cp.index_a, a);
-      float center_b_x = get_center_x(cp.index_b, b);
-
+      Vector2D centroid_a = get_entity_centroid(cp.index_a, a);
+      Vector2D centroid_b = get_entity_centroid(cp.index_b, b);
       // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
-      float direction = (center_b_x - center_a_x >= 0.0f) ? 1.0f : -1.0f;
+      float direction = (centroid_b.x - centroid_a.x >= 0.0f) ? 1.0f : -1.0f;
 
       move_entity(cp.index_a, -direction * overlap_x * push_factor, 0.0f);
       move_entity(cp.index_b, direction * overlap_x * push_factor, 0.0f);
     } else {
-      // Helper lambda to get the center of a live entity based on its index
-      auto get_center_y = [&](int idx, const AABB& box) -> float {
-        if (idx == 0) {
-          return player.position.y + player.stats.size.height * 0.5f;
-        } else {
-          int enemy_idx = idx - 1;
-          return enemy.position[enemy_idx].y +
-                 enemy.size[enemy_idx].height * 0.5f;
-        }
-      };
-
-      float center_a_y = get_center_y(cp.index_a, a);
-      float center_b_y = get_center_y(cp.index_b, b);
-
-      float direction = (center_b_y - center_a_y >= 0.0f) ? 1.0f : -1.0f;
+      Vector2D centroid_a = get_entity_centroid(cp.index_a, a);
+      Vector2D centroid_b = get_entity_centroid(cp.index_b, b);
+      // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
+      float direction = (centroid_b.y - centroid_a.y >= 0.0f) ? 1.0f : -1.0f;
 
       move_entity(cp.index_a, 0.0f, -direction * overlap_y * push_factor);
       move_entity(cp.index_b, 0.0f, direction * overlap_y * push_factor);
     }
   }
-}
+};
 
 }  // namespace rl2

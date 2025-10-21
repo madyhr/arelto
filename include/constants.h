@@ -19,7 +19,9 @@ constexpr float kPlayerInitX = 960.0f;
 constexpr float kPlayerInitY = 540.0f;
 constexpr float kPlayerSpeed = 200.0f;
 constexpr int kPlayerWidth = 60;
+// Derived from the generated wizard png
 constexpr int kPlayerHeight = (int)(kPlayerWidth*1.258);
+constexpr float kPlayerInvMass = 0.01f;
 
 // Enemy constants
 constexpr int kNumEnemies = 100;
@@ -28,7 +30,9 @@ constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;
 constexpr float kEnemySpeed = 40.0f;
 constexpr int kEnemyWidth = 30;
+// Derived from the generated goblin png
 constexpr int kEnemyHeight = (int)(kEnemyWidth*1.04);
+constexpr float kEnemyInvMass = 0.1f;
 
 constexpr int kEnemyMinimumInitialDistance = 500;
 constexpr int kEnemyVertices = 6;

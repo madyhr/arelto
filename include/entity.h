@@ -17,6 +17,7 @@ struct Stats {
   uint32_t health;
   float movement_speed;
   Size size;
+  float inv_mass;
 };
 
 class Entity {
@@ -37,6 +38,7 @@ struct Enemy {
   std::array<uint32_t, kNumEnemies> health;
   std::array<float, kNumEnemies> movement_speed;
   std::array<Size, kNumEnemies> size;
+  std::array<float, kNumEnemies> inv_mass;
 };
 
 }  // namespace rl2

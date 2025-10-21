@@ -93,7 +93,6 @@ void resolve_collision_pairs_sap(Player& player, Enemy& enemy,
 
     // Choose smaller axis
     bool resolve_x = (overlap_x < overlap_y);
-    const float push_factor = 0.5f;  // move both halves equally
 
     auto move_entity = [&](int idx, float dx, float dy) {
       if (idx == 0) {
@@ -114,13 +113,25 @@ void resolve_collision_pairs_sap(Player& player, Enemy& enemy,
                                  enemy.size[enemy_idx]);
       }
     };
+    auto get_entity_inv_mass = [&](int idx) -> float {
+      if (idx == 0) {
+        return player.stats.inv_mass;
+      } else {
+        int enemy_idx = idx - 1;
+        return enemy.inv_mass[enemy_idx];
+      }
+    };
+    float inv_mass_a = get_entity_inv_mass(cp.index_a);
+    float inv_mass_b = get_entity_inv_mass(cp.index_b);
+    float push_factor = inv_mass_b / (inv_mass_a + inv_mass_b);
+
     if (resolve_x) {
       Vector2D centroid_a = get_entity_centroid(cp.index_a);
       Vector2D centroid_b = get_entity_centroid(cp.index_b);
       // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
       float direction = (centroid_b.x - centroid_a.x >= 0.0f) ? 1.0f : -1.0f;
 
-      move_entity(cp.index_a, -direction * overlap_x * push_factor, 0.0f);
+      move_entity(cp.index_a, -direction * overlap_x * (1.0f - push_factor), 0.0f);
       move_entity(cp.index_b, direction * overlap_x * push_factor, 0.0f);
     } else {
       Vector2D centroid_a = get_entity_centroid(cp.index_a);
@@ -128,7 +139,7 @@ void resolve_collision_pairs_sap(Player& player, Enemy& enemy,
       // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
       float direction = (centroid_b.y - centroid_a.y >= 0.0f) ? 1.0f : -1.0f;
 
-      move_entity(cp.index_a, 0.0f, -direction * overlap_y * push_factor);
+      move_entity(cp.index_a, 0.0f, -direction * overlap_y * (1.0f-push_factor));
       move_entity(cp.index_b, 0.0f, direction * overlap_y * push_factor);
     }
   }

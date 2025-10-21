@@ -90,6 +90,7 @@ bool Game::InitializeResources() {
 
 bool Game::InitializePlayer() {
   player_.stats.size = {kPlayerWidth, kPlayerHeight};
+  player_.stats.inv_mass = kPlayerInvMass;
   player_.position = {kPlayerInitX, kPlayerInitY};
   player_.stats.movement_speed = kPlayerSpeed;
   return true;
@@ -101,6 +102,7 @@ bool Game::InitializeEnemy() {
   std::fill(enemy_.size.begin(), enemy_.size.end(),
             Size{kEnemyHeight, kEnemyWidth});
   std::fill(enemy_.health.begin(), enemy_.health.end(), kEnemyHealth);
+  std::fill(enemy_.inv_mass.begin(), enemy_.inv_mass.end(), kEnemyInvMass);
 
   int max_x = kMapWidth - kEnemyWidth;
   int max_y = kMapHeight - kEnemyHeight;

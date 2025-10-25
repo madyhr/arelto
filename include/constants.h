@@ -11,9 +11,10 @@ constexpr int kWindowHeight = 1080;
 // Map constants
 constexpr int kMapWidth = 10000;
 constexpr int kMapHeight = 10000;
-constexpr int kTileSize = 64;
-constexpr int kNumTilesX = ((kMapWidth + kTileSize - 1)/kTileSize);
-constexpr int kNumTilesY = ((kMapHeight + kTileSize - 1)/kTileSize);
+constexpr int kTileSize = 256;
+constexpr int kNumTileTypes = 16;
+constexpr int kNumTilesX = ((kMapWidth + kTileSize - 1) / kTileSize);
+constexpr int kNumTilesY = ((kMapHeight + kTileSize - 1) / kTileSize);
 
 // Game status constants
 constexpr int kFrameTimes = 1000;

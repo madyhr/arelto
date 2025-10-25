@@ -75,7 +75,7 @@ bool Game::InitializeResources() {
   resources_.tile_manager.setup_tiles();
   resources_.tile_manager.setup_tile_selector();
   resources_.tile_texture = resources_.tile_manager.get_tile_texture(
-      "assets/tiles.bmp", resources_.renderer);
+      "assets/grassy_tiles.bmp", resources_.renderer);
 
   // resources_.map_texture =
   //     IMG_LoadTexture(resources_.renderer, "assets/textures/grassy_plains.png");
@@ -310,8 +310,9 @@ void Game::GenerateOutput() {
 void Game::RenderTiledMap() {
   int top_left_tile_x = (int)(camera_.position.x / kTileSize);
   int top_left_tile_y = (int)(camera_.position.y / kTileSize);
+  // TODO: Fix rendering of right-most column. Adding +2 seems to solve it, but not a permanent solution.
   int bottom_right_tile_x =
-      (int)(top_left_tile_x + (kWindowWidth / (float)kTileSize)) + 1;
+      (int)std::ceil(top_left_tile_x + kWindowWidth / kTileSize) + 2;
   int bottom_right_tile_y =
       (int)std::ceil((camera_.position.y + kWindowHeight) / kTileSize);
   int start_x = std::max(0, top_left_tile_x);
@@ -329,28 +330,11 @@ void Game::RenderTiledMap() {
       SDL_Rect render_rect = resources_.tile_manager.tiles_[i][j];
       render_rect.x -= (int)camera_.position.x;
       render_rect.y -= (int)camera_.position.y;
-      switch (resources_.tile_manager.tile_map_[i][j]) {
-        case 1:
-          SDL_RenderCopy(resources_.renderer, resources_.tile_texture,
-                         &resources_.tile_manager.tile_selector_.select_tile_1,
-                         &render_rect);
-          break;
-        case 2:
-          SDL_RenderCopy(resources_.renderer, resources_.tile_texture,
-                         &resources_.tile_manager.tile_selector_.select_tile_2,
-                         &render_rect);
-          break;
-        case 3:
-          SDL_RenderCopy(resources_.renderer, resources_.tile_texture,
-                         &resources_.tile_manager.tile_selector_.select_tile_3,
-                         &render_rect);
-          break;
-        case 4:
-          SDL_RenderCopy(resources_.renderer, resources_.tile_texture,
-                         &resources_.tile_manager.tile_selector_.select_tile_4,
-                         &render_rect);
-          break;
-      }
+      int tile_id = resources_.tile_manager.tile_map_[i][j];
+      const SDL_Rect& source_rect =
+          resources_.tile_manager.select_tiles_[tile_id];
+      SDL_RenderCopy(resources_.renderer, resources_.tile_texture, &source_rect,
+                     &render_rect);
     }
   }
 };

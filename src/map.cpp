@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <SDL_render.h>
 #include <SDL_surface.h>
+#include <math.h>
 #include "constants.h"
 #include "random.h"
 
@@ -20,7 +21,7 @@ SDL_Texture* TileManager::get_tile_texture(const char* file,
 void TileManager::setup_tile_map() {
   for (int i = 0; i < kNumTilesX; ++i) {
     for (int j = 0; j < kNumTilesY; ++j) {
-      tile_map_[i][j] = generate_random_int(1, 4);
+      tile_map_[i][j] = generate_random_int(0, kNumTileTypes - 1);
     };
   };
 };
@@ -36,25 +37,19 @@ void TileManager::setup_tiles() {
 };
 void TileManager::setup_tile_selector() {
 
-  tile_selector_.select_tile_1.x = 0;
-  tile_selector_.select_tile_1.y = 0;
-  tile_selector_.select_tile_1.w = kTileSize;
-  tile_selector_.select_tile_1.h = kTileSize;
+  const int kTilesInRow = (int)std::sqrt(kNumTileTypes);
+  SDL_Rect selector;
+  for (int i = 0; i < kNumTileTypes; ++i) {
+    int col = i % kTilesInRow;
+    int row = i / kTilesInRow;
 
-  tile_selector_.select_tile_2.x = kTileSize;
-  tile_selector_.select_tile_2.y = 0;
-  tile_selector_.select_tile_2.w = kTileSize;
-  tile_selector_.select_tile_2.h = kTileSize;
+    selector.x = col * kTileSize;
+    selector.y = row * kTileSize;
+    selector.w = kTileSize;
+    selector.h = kTileSize;
 
-  tile_selector_.select_tile_3.x = 0;
-  tile_selector_.select_tile_3.y = kTileSize;
-  tile_selector_.select_tile_3.w = kTileSize;
-  tile_selector_.select_tile_3.h = kTileSize;
-
-  tile_selector_.select_tile_4.x = kTileSize;
-  tile_selector_.select_tile_4.y = kTileSize;
-  tile_selector_.select_tile_4.w = kTileSize;
-  tile_selector_.select_tile_4.h = kTileSize;
+    select_tiles_.push_back(selector);
+  }
 };
 
 }  // namespace rl2

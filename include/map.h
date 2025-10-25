@@ -3,16 +3,10 @@
 #define RL2_MAP_H_
 #include <SDL_render.h>
 #include <SDL_surface.h>
+#include <vector>
 #include "constants.h"
 
 namespace rl2 {
-
-struct TileSelector {
-  SDL_Rect select_tile_1;
-  SDL_Rect select_tile_2;
-  SDL_Rect select_tile_3;
-  SDL_Rect select_tile_4;
-};
 
 class TileManager {
  public:
@@ -20,7 +14,7 @@ class TileManager {
   SDL_Surface* tile_surface_;
   SDL_Rect tiles_[kNumTilesX][kNumTilesY];
   int tile_map_[kNumTilesX][kNumTilesY];
-  TileSelector tile_selector_;
+  std::vector<SDL_Rect> select_tiles_;
 
   SDL_Texture* get_tile_texture(const char* file, SDL_Renderer* renderer);
   void setup_tile_map();

@@ -4,10 +4,12 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL_render.h>
 #include <array>
 #include <cstdint>
 #include "constants.h"
 #include "entity.h"
+#include "map.h"
 
 namespace rl2 {
 // Struct to hold all the core resources
@@ -15,9 +17,11 @@ struct GameResources {
   SDL_Window* window = nullptr;
   SDL_Renderer* renderer = nullptr;
   SDL_Texture* map_texture = nullptr;
+  SDL_Texture* tile_texture = nullptr;
   SDL_Texture* player_texture = nullptr;
   SDL_Texture* enemy_texture = nullptr;
   SDL_Rect map_layout = {(int)0, (int)0, kWindowWidth, kWindowHeight};
+  TileManager tile_manager;
 };
 
 class Camera {
@@ -65,6 +69,7 @@ class Game {
   void ProcessInput();
   void Update();
   void GenerateOutput();
+  void RenderTiledMap();
   void SetupEnemyGeometry();
   void UpdateEnemyPosition(float dt);
   void UpdatePlayerPosition(float dt);

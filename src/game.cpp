@@ -2,11 +2,13 @@
 #include "game.h"
 #include <SDL2/SDL_timer.h>
 #include <SDL_render.h>
+#include <SDL_surface.h>
 #include <cstdio>
 #include <iostream>
 #include "constants.h"
 #include "game_math.h"
 #include "random.h"
+#include "types.h"
 
 namespace rl2 {
 
@@ -18,16 +20,16 @@ Game::~Game() {
 
 bool Game::Initialize() {
   if (!(Game::InitializeResources())) {
-    return true;
+    return false;
   }
   if (!(Game::InitializePlayer())) {
-    return true;
+    return false;
   }
   if (!(Game::InitializeEnemy())) {
-    return true;
+    return false;
   }
   if (!(Game::InitializeCamera())) {
-    return true;
+    return false;
   }
 
   ticks_count_ = SDL_GetTicks64();
@@ -69,14 +71,21 @@ bool Game::InitializeResources() {
     return false;
   }
 
-  resources_.map_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/grassy_plains.png");
+  resources_.tile_manager.setup_tile_map();
+  resources_.tile_manager.setup_tiles();
+  resources_.tile_manager.setup_tile_selector();
+  resources_.tile_texture = resources_.tile_manager.get_tile_texture(
+      "assets/tiles.bmp", resources_.renderer);
+
+  // resources_.map_texture =
+  //     IMG_LoadTexture(resources_.renderer, "assets/textures/grassy_plains.png");
   resources_.player_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/wizard.png");
   resources_.enemy_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/goblin.png");
 
-  if (resources_.map_texture == nullptr ||
+  if (
+      // resources_.map_texture == nullptr ||
       resources_.player_texture == nullptr ||
       resources_.enemy_texture == nullptr) {
     std::cerr << "One or more textures could not be loaded: " << SDL_GetError()
@@ -275,11 +284,9 @@ void Game::UpdateCameraPosition() {
 void Game::GenerateOutput() {
   SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
   SDL_RenderClear(resources_.renderer);
-  SDL_Rect camera_render_box = {-(int)camera_.position.x,
-                                -(int)camera_.position.y, kWindowWidth,
-                                kWindowHeight};
-  SDL_RenderCopy(resources_.renderer, resources_.map_texture, NULL,
-                 &camera_render_box);
+  RenderTiledMap();
+  // SDL_RenderCopy(resources_.renderer, resources_.map_texture, NULL,
+  //                &camera_render_box);
   SDL_Rect player_render_box = {(int)(player_.position.x - camera_.position.x),
                                 (int)(player_.position.y - camera_.position.y),
                                 (int)player_.stats.size.width,
@@ -287,6 +294,7 @@ void Game::GenerateOutput() {
 
   SDL_RenderCopy(resources_.renderer, resources_.player_texture, NULL,
                  &player_render_box);
+  SetupEnemyGeometry();
   SDL_RenderGeometry(resources_.renderer, resources_.enemy_texture,
                      enemy_vertices_, kTotalEnemyVertices, nullptr, 0);
   // For debugging render boxes
@@ -295,8 +303,56 @@ void Game::GenerateOutput() {
   // SDL_RenderGeometry(resources_.renderer, nullptr, enemy_vertices_,
   //                    kTotalEnemyVertices, nullptr, 0);
   //
-  SetupEnemyGeometry();
+  //
   SDL_RenderPresent(resources_.renderer);
+};
+
+void Game::RenderTiledMap() {
+  int top_left_tile_x = (int)(camera_.position.x / kTileSize);
+  int top_left_tile_y = (int)(camera_.position.y / kTileSize);
+  int bottom_right_tile_x =
+      (int)(top_left_tile_x + (kWindowWidth / (float)kTileSize)) + 1;
+  int bottom_right_tile_y =
+      (int)std::ceil((camera_.position.y + kWindowHeight) / kTileSize);
+  int start_x = std::max(0, top_left_tile_x);
+  int end_x =
+      std::min(kNumTilesX,
+               bottom_right_tile_x);  // kNumTilesX is the boundary (exclusive)
+
+  int start_y = std::max(0, top_left_tile_y);
+  int end_y =
+      std::min(kNumTilesY,
+               bottom_right_tile_y);  // kNumTilesY is the boundary (exclusive)
+
+  for (int i = start_x; i < end_x; ++i) {
+    for (int j = start_y; j < end_y; ++j) {
+      SDL_Rect render_rect = resources_.tile_manager.tiles_[i][j];
+      render_rect.x -= (int)camera_.position.x;
+      render_rect.y -= (int)camera_.position.y;
+      switch (resources_.tile_manager.tile_map_[i][j]) {
+        case 1:
+          SDL_RenderCopy(resources_.renderer, resources_.tile_texture,
+                         &resources_.tile_manager.tile_selector_.select_tile_1,
+                         &render_rect);
+          break;
+        case 2:
+          SDL_RenderCopy(resources_.renderer, resources_.tile_texture,
+                         &resources_.tile_manager.tile_selector_.select_tile_2,
+                         &render_rect);
+          break;
+        case 3:
+          SDL_RenderCopy(resources_.renderer, resources_.tile_texture,
+                         &resources_.tile_manager.tile_selector_.select_tile_3,
+                         &render_rect);
+          break;
+        case 4:
+          SDL_RenderCopy(resources_.renderer, resources_.tile_texture,
+                         &resources_.tile_manager.tile_selector_.select_tile_4,
+                         &render_rect);
+          break;
+      }
+    }
+  }
 };
 
 void Game::SetupEnemyGeometry() {
@@ -334,10 +390,10 @@ void Game::SetupEnemyGeometry() {
 
 void Game::Shutdown() {
 
-  if (resources_.map_texture) {
-    SDL_DestroyTexture(resources_.map_texture);
-    resources_.map_texture = nullptr;
-  }
+  // if (resources_.map_texture) {
+  //   SDL_DestroyTexture(resources_.map_texture);
+  //   resources_.map_texture = nullptr;
+  // }
   if (resources_.player_texture) {
     SDL_DestroyTexture(resources_.player_texture);
     resources_.player_texture = nullptr;

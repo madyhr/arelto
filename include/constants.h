@@ -1,6 +1,7 @@
-// include/constexprants.h
-#ifndef RL2_constexprANTS_H_
-#define RL2_constexprANTS_H_
+// include/constants.h
+#ifndef RL2_constants_H_
+#define RL2_constants_H_
+#include <cmath>
 
 namespace rl2 {
 // Window constants
@@ -10,17 +11,20 @@ constexpr int kWindowHeight = 1080;
 // Map constants
 constexpr int kMapWidth = 10000;
 constexpr int kMapHeight = 10000;
+constexpr int kTileSize = 64;
+constexpr int kNumTilesX = ((kMapWidth + kTileSize - 1)/kTileSize);
+constexpr int kNumTilesY = ((kMapHeight + kTileSize - 1)/kTileSize);
 
 // Game status constants
 constexpr int kFrameTimes = 1000;
 
 // Player constants
-constexpr float kPlayerInitX = 960.0f;
-constexpr float kPlayerInitY = 540.0f;
+constexpr float kPlayerInitX = 500.0f;
+constexpr float kPlayerInitY = 500.0f;
 constexpr float kPlayerSpeed = 200.0f;
 constexpr int kPlayerWidth = 60;
 // Derived from the generated wizard png
-constexpr int kPlayerHeight = (int)(kPlayerWidth*1.258);
+constexpr int kPlayerHeight = (int)(kPlayerWidth * 1.258);
 constexpr float kPlayerInvMass = 0.01f;
 
 // Enemy constants
@@ -31,7 +35,7 @@ constexpr float kEnemyInitY = 100.0f;
 constexpr float kEnemySpeed = 40.0f;
 constexpr int kEnemyWidth = 30;
 // Derived from the generated goblin png
-constexpr int kEnemyHeight = (int)(kEnemyWidth*1.04);
+constexpr int kEnemyHeight = (int)(kEnemyWidth * 1.04);
 constexpr float kEnemyInvMass = 0.1f;
 
 constexpr int kEnemyMinimumInitialDistance = 500;

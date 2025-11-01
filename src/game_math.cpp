@@ -41,12 +41,12 @@ void handle_collisions_sap(Player& player, Enemy& enemy) {
             [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
 
   std::vector<CollisionPair> collision_pairs =
-      get_collision_pairs_sap(sorted_aabb);
+    get_collision_pairs_sap(sorted_aabb);
   resolve_collision_pairs_sap(player, enemy, entity_aabb, collision_pairs);
 };
 
 std::vector<CollisionPair> get_collision_pairs_sap(
-    std::array<AABB, kNumEntities> sorted_aabb) {
+  std::array<AABB, kNumEntities> sorted_aabb) {
   std::vector<CollisionPair> collision_pairs;
   std::sort(sorted_aabb.begin(), sorted_aabb.end(),
             [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
@@ -67,7 +67,7 @@ std::vector<CollisionPair> get_collision_pairs_sap(
                            current_aabb.min_y < active_aabb->max_y;
       if (has_y_overlap) {
         collision_pairs.push_back(
-            {current_aabb.entity_idx, active_aabb->entity_idx});
+          {current_aabb.entity_idx, active_aabb->entity_idx});
       };
     }
 
@@ -131,7 +131,8 @@ void resolve_collision_pairs_sap(Player& player, Enemy& enemy,
       // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
       float direction = (centroid_b.x - centroid_a.x >= 0.0f) ? 1.0f : -1.0f;
 
-      move_entity(cp.index_a, -direction * overlap_x * (1.0f - push_factor), 0.0f);
+      move_entity(cp.index_a, -direction * overlap_x * (1.0f - push_factor),
+                  0.0f);
       move_entity(cp.index_b, direction * overlap_x * push_factor, 0.0f);
     } else {
       Vector2D centroid_a = get_entity_centroid(cp.index_a);
@@ -139,8 +140,43 @@ void resolve_collision_pairs_sap(Player& player, Enemy& enemy,
       // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
       float direction = (centroid_b.y - centroid_a.y >= 0.0f) ? 1.0f : -1.0f;
 
-      move_entity(cp.index_a, 0.0f, -direction * overlap_y * (1.0f-push_factor));
+      move_entity(cp.index_a, 0.0f,
+                  -direction * overlap_y * (1.0f - push_factor));
       move_entity(cp.index_b, 0.0f, direction * overlap_y * push_factor);
+    }
+  }
+};
+
+void handle_player_oob(Player& player) {
+  if (player.position.x < 0) {
+    player.position.x = 0;
+  }
+  if (player.position.y < 0) {
+    player.position.y = 0;
+  }
+  if ((player.position.x + player.stats.size.width) > kMapWidth) {
+    player.position.x = kMapWidth - player.stats.size.width;
+  }
+  if ((player.position.y + player.stats.size.height) > kMapHeight) {
+    player.position.y = kMapHeight - player.stats.size.height;
+  }
+};
+
+void handle_enemy_oob(Enemy& enemy) {
+  for (int i = 0; i < kNumEnemies; ++i) {
+    if (enemy.is_alive[i]) {
+      if (enemy.position[i].x < 0) {
+        enemy.position[i].x = 0;
+      }
+      if (enemy.position[i].y < 0) {
+        enemy.position[i].y = 0;
+      }
+      if ((enemy.position[i].x + enemy.size[i].width) > kMapWidth) {
+        enemy.position[i].x = kMapWidth - enemy.size[i].width;
+      }
+      if ((enemy.position[i].y + enemy.size[i].height) > kMapHeight) {
+        enemy.position[i].y = kMapHeight - enemy.size[i].height;
+      }
     }
   }
 };

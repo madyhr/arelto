@@ -47,8 +47,8 @@ bool Game::InitializeResources() {
   }
 
   resources_.window =
-      SDL_CreateWindow("RL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                       kWindowWidth, kWindowHeight, SDL_WINDOW_SHOWN);
+    SDL_CreateWindow("RL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                     kWindowWidth, kWindowHeight, SDL_WINDOW_SHOWN);
 
   if (resources_.window == nullptr) {
     std::cerr << "Window could not be created: " << SDL_GetError() << std::endl;
@@ -56,7 +56,7 @@ bool Game::InitializeResources() {
   }
 
   resources_.renderer =
-      SDL_CreateRenderer(resources_.window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_CreateRenderer(resources_.window, -1, SDL_RENDERER_ACCELERATED);
 
   if (resources_.renderer == nullptr) {
     std::cerr << "Renderer could not be created: " << SDL_GetError()
@@ -75,19 +75,19 @@ bool Game::InitializeResources() {
   resources_.tile_manager.setup_tiles();
   resources_.tile_manager.setup_tile_selector();
   resources_.tile_texture = resources_.tile_manager.get_tile_texture(
-      "assets/grassy_tiles.bmp", resources_.renderer);
+    "assets/grassy_tiles.bmp", resources_.renderer);
 
   // resources_.map_texture =
   //     IMG_LoadTexture(resources_.renderer, "assets/textures/grassy_plains.png");
   resources_.player_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/wizard.png");
+    IMG_LoadTexture(resources_.renderer, "assets/textures/wizard.png");
   resources_.enemy_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/goblin.png");
+    IMG_LoadTexture(resources_.renderer, "assets/textures/goblin.png");
 
   if (
-      // resources_.map_texture == nullptr ||
-      resources_.player_texture == nullptr ||
-      resources_.enemy_texture == nullptr) {
+    // resources_.map_texture == nullptr ||
+    resources_.player_texture == nullptr ||
+    resources_.enemy_texture == nullptr) {
     std::cerr << "One or more textures could not be loaded: " << SDL_GetError()
               << std::endl;
     return false;
@@ -106,6 +106,7 @@ bool Game::InitializePlayer() {
 };
 
 bool Game::InitializeEnemy() {
+  std::fill(enemy_.is_alive.begin(), enemy_.is_alive.end(), true);
   std::fill(enemy_.movement_speed.begin(), enemy_.movement_speed.end(),
             kEnemySpeed);
   std::fill(enemy_.size.begin(), enemy_.size.end(),
@@ -227,6 +228,7 @@ void Game::Update() {
   Game::UpdatePlayerPosition(dt);
   Game::UpdateEnemyPosition(dt);
   Game::HandleCollisions();
+  Game::HandleOutOfBounds();
 
   Game::UpdateCameraPosition();
 
@@ -236,6 +238,11 @@ void Game::Update() {
 }
 void Game::HandleCollisions() {
   rl2::handle_collisions_sap(player_, enemy_);
+};
+
+void Game::HandleOutOfBounds() {
+  rl2::handle_player_oob(player_);
+  rl2::handle_enemy_oob(enemy_);
 };
 
 void Game::UpdatePlayerPosition(float dt) {
@@ -258,9 +265,9 @@ void Game::UpdateEnemyPosition(float dt) {
     enemy_.velocity[i].x = dx / (distance_to_player + 1e-6);
     enemy_.velocity[i].y = dy / (distance_to_player + 1e-6);
     enemy_.position[i].x +=
-        enemy_.velocity[i].x * enemy_.movement_speed[i] * dt;
+      enemy_.velocity[i].x * enemy_.movement_speed[i] * dt;
     enemy_.position[i].y +=
-        enemy_.velocity[i].y * enemy_.movement_speed[i] * dt;
+      enemy_.velocity[i].y * enemy_.movement_speed[i] * dt;
   }
 };
 
@@ -312,18 +319,18 @@ void Game::RenderTiledMap() {
   int top_left_tile_y = (int)(camera_.position.y / kTileSize);
   // TODO: Fix rendering of right-most column. Adding +2 seems to solve it, but not a permanent solution.
   int bottom_right_tile_x =
-      (int)std::ceil(top_left_tile_x + kWindowWidth / kTileSize) + 2;
+    (int)std::ceil(top_left_tile_x + kWindowWidth / kTileSize) + 2;
   int bottom_right_tile_y =
-      (int)std::ceil((camera_.position.y + kWindowHeight) / kTileSize);
+    (int)std::ceil((camera_.position.y + kWindowHeight) / kTileSize);
   int start_x = std::max(0, top_left_tile_x);
   int end_x =
-      std::min(kNumTilesX,
-               bottom_right_tile_x);  // kNumTilesX is the boundary (exclusive)
+    std::min(kNumTilesX,
+             bottom_right_tile_x);  // kNumTilesX is the boundary (exclusive)
 
   int start_y = std::max(0, top_left_tile_y);
   int end_y =
-      std::min(kNumTilesY,
-               bottom_right_tile_y);  // kNumTilesY is the boundary (exclusive)
+    std::min(kNumTilesY,
+             bottom_right_tile_y);  // kNumTilesY is the boundary (exclusive)
 
   for (int i = start_x; i < end_x; ++i) {
     for (int j = start_y; j < end_y; ++j) {
@@ -332,7 +339,7 @@ void Game::RenderTiledMap() {
       render_rect.y -= (int)camera_.position.y;
       int tile_id = resources_.tile_manager.tile_map_[i][j];
       const SDL_Rect& source_rect =
-          resources_.tile_manager.select_tiles_[tile_id];
+        resources_.tile_manager.select_tiles_[tile_id];
       SDL_RenderCopy(resources_.renderer, resources_.tile_texture, &source_rect,
                      &render_rect);
     }
@@ -351,24 +358,23 @@ void Game::SetupEnemyGeometry() {
     // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
     // 1. Top-Left
     enemy_vertices_[vertex_offset + 0] = {
-        {x, y}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordTop}};
+      {x, y}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordTop}};
     // 2. Bottom-Left
     enemy_vertices_[vertex_offset + 1] = {
-        {x, y + h}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordBottom}};
+      {x, y + h}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordBottom}};
     // 3. Bottom-Right
-    enemy_vertices_[vertex_offset + 2] = {{x + w, y + h},
-                                          {255, 255, 255, 255},
-                                          {kTexCoordRight, kTexCoordBottom}};
+    enemy_vertices_[vertex_offset + 2] = {
+      {x + w, y + h}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordBottom}};
     // --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
     // 4. Top-Left (Repeat)
     enemy_vertices_[vertex_offset + 3] =
-        enemy_vertices_[vertex_offset + 0];  // Same as vertex 1
+      enemy_vertices_[vertex_offset + 0];  // Same as vertex 1
     // 5. Bottom-Right (Repeat)
     enemy_vertices_[vertex_offset + 4] =
-        enemy_vertices_[vertex_offset + 2];  // Same as vertex 3
+      enemy_vertices_[vertex_offset + 2];  // Same as vertex 3
     // 6. Top-Right
     enemy_vertices_[vertex_offset + 5] = {
-        {x + w, y}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordTop}};
+      {x + w, y}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordTop}};
   }
 };
 

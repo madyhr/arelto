@@ -75,8 +75,7 @@ class Game {
   void UpdatePlayerPosition(float dt);
   void UpdateCameraPosition();
   void HandleCollisions();
-  void DetectCollisions(float dt);
-  void ResolveCollisions(float dt);
+  void HandleOutOfBounds();
 };
 
 }  // namespace rl2

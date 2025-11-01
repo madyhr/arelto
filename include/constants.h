@@ -9,8 +9,8 @@ constexpr int kWindowWidth = 1920;
 constexpr int kWindowHeight = 1080;
 
 // Map constants
-constexpr int kMapWidth = 10000;
-constexpr int kMapHeight = 10000;
+constexpr int kMapWidth = 1000;
+constexpr int kMapHeight = 1000;
 constexpr int kTileSize = 256;
 constexpr int kNumTileTypes = 16;
 constexpr int kNumTilesX = ((kMapWidth + kTileSize - 1) / kTileSize);
@@ -29,7 +29,7 @@ constexpr int kPlayerHeight = (int)(kPlayerWidth * 1.258);
 constexpr float kPlayerInvMass = 0.01f;
 
 // Enemy constants
-constexpr int kNumEnemies = 100;
+constexpr int kNumEnemies = 10;
 constexpr int kEnemyHealth = 1;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;

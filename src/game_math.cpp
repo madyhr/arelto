@@ -1,5 +1,6 @@
 // src/game_math.cpp
 #include "game_math.h"
+#include <SDL_rect.h>
 #include <algorithm>
 #include <array>
 #include <cmath>

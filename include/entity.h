@@ -3,6 +3,7 @@
 #define RL2_ENTITY_H_
 #include <array>
 #include <cstdint>
+#include <vector>
 #include "constants.h"
 #include "types.h"
 
@@ -39,6 +40,27 @@ struct Enemy {
   std::array<float, kNumEnemies> movement_speed;
   std::array<Size, kNumEnemies> size;
   std::array<float, kNumEnemies> inv_mass;
+};
+
+struct ProjectileData {
+  int owner_id;
+  Vector2D position;
+  Vector2D velocity;
+  float speed;
+  Size size;
+  float inv_mass;
+};
+
+class Projectiles {
+  public:
+    std::vector<int> owner_id;
+    std::vector<Vector2D> position;
+    std::vector<Vector2D> velocity;
+    std::vector<float> speed;
+    std::vector<Size> size;
+    std::vector<float> inv_mass;
+    void add_projectile(ProjectileData proj);
+    void destroy_projectile(int idx);
 };
 
 }  // namespace rl2

@@ -22,23 +22,24 @@ Vector2D GetCentroid(Vector2D position, Size size) {
   return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
 }
 
-void HandleCollisionsSAP(Player& player, Enemy& enemy) {
-  std::array<AABB, kNumEntities> entity_aabb;
+void HandleCollisionsSAP(Player& player, Enemies& enemies) {
+  std::array<AABB, kNumEntities> entities_aabb;
   player.UpdateAABB();
-  entity_aabb[0] = player.aabb_;
+  entities_aabb[0] = player.aabb_;
   for (int i = 1; i < kNumEnemies + 1; ++i) {
-    entity_aabb[i] = {enemy.positions[i - 1].x, enemy.positions[i - 1].y,
-                      enemy.positions[i - 1].x + enemy.sizes[i - 1].width,
-                      enemy.positions[i - 1].y + enemy.sizes[i - 1].height, i};
+    entities_aabb[i] = {
+      enemies.positions[i - 1].x, enemies.positions[i - 1].y,
+      enemies.positions[i - 1].x + enemies.sizes[i - 1].width,
+      enemies.positions[i - 1].y + enemies.sizes[i - 1].height, i};
   }
 
-  std::array<AABB, kNumEntities> sorted_aabb = entity_aabb;
+  std::array<AABB, kNumEntities> sorted_aabb = entities_aabb;
   std::sort(sorted_aabb.begin(), sorted_aabb.end(),
             [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
 
   std::vector<CollisionPair> collision_pairs =
     GetCollisionPairsSAP(sorted_aabb);
-  ResolveCollisionPairsSAP(player, enemy, entity_aabb, collision_pairs);
+  ResolveCollisionPairsSAP(player, enemies, entities_aabb, collision_pairs);
 };
 
 std::vector<CollisionPair> GetCollisionPairsSAP(
@@ -74,12 +75,12 @@ std::vector<CollisionPair> GetCollisionPairsSAP(
   return collision_pairs;
 };
 
-void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
-                                 std::array<AABB, kNumEntities> entity_aabb,
-                                 std::vector<CollisionPair> collision_pairs) {
+void ResolveCollisionPairsSAP(Player& player, Enemies& enemies,
+                              std::array<AABB, kNumEntities> entities_aabb,
+                              std::vector<CollisionPair> collision_pairs) {
   for (const CollisionPair& cp : collision_pairs) {
-    const AABB& a = entity_aabb[cp.index_a];
-    const AABB& b = entity_aabb[cp.index_b];
+    const AABB& a = entities_aabb[cp.index_a];
+    const AABB& b = entities_aabb[cp.index_b];
 
     float overlap_x = std::min(a.max_x, b.max_x) - std::max(a.min_x, b.min_x);
     float overlap_y = std::min(a.max_y, b.max_y) - std::max(a.min_y, b.min_y);
@@ -96,8 +97,8 @@ void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
         player.position_.y += dy;
       } else {
         int enemy_idx = idx - 1;
-        enemy.positions[enemy_idx].x += dx;
-        enemy.positions[enemy_idx].y += dy;
+        enemies.positions[enemy_idx].x += dx;
+        enemies.positions[enemy_idx].y += dy;
       }
     };
     auto GetEntityCentroid = [&](int idx) -> Vector2D {
@@ -105,8 +106,8 @@ void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
         return rl2::GetCentroid(player.position_, player.stats_.size);
       } else {
         int enemy_idx = idx - 1;
-        return rl2::GetCentroid(enemy.positions[enemy_idx],
-                                 enemy.sizes[enemy_idx]);
+        return rl2::GetCentroid(enemies.positions[enemy_idx],
+                                enemies.sizes[enemy_idx]);
       }
     };
     auto GetEntityInvMass = [&](int idx) -> float {
@@ -114,7 +115,7 @@ void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
         return player.stats_.inv_mass;
       } else {
         int enemy_idx = idx - 1;
-        return enemy.inv_masses[enemy_idx];
+        return enemies.inv_masses[enemy_idx];
       }
     };
     float inv_mass_a = GetEntityInvMass(cp.index_a);
@@ -128,7 +129,7 @@ void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
       float direction = (centroid_b.x - centroid_a.x >= 0.0f) ? 1.0f : -1.0f;
 
       MoveEntity(cp.index_a, -direction * overlap_x * (1.0f - push_factor),
-                  0.0f);
+                 0.0f);
       MoveEntity(cp.index_b, direction * overlap_x * push_factor, 0.0f);
     } else {
       Vector2D centroid_a = GetEntityCentroid(cp.index_a);
@@ -137,7 +138,7 @@ void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
       float direction = (centroid_b.y - centroid_a.y >= 0.0f) ? 1.0f : -1.0f;
 
       MoveEntity(cp.index_a, 0.0f,
-                  -direction * overlap_y * (1.0f - push_factor));
+                 -direction * overlap_y * (1.0f - push_factor));
       MoveEntity(cp.index_b, 0.0f, direction * overlap_y * push_factor);
     }
   }
@@ -158,21 +159,44 @@ void HandlePlayerOOB(Player& player) {
   }
 };
 
-void HandleEnemyOOB(Enemy& enemy) {
+void HandleEnemyOOB(Enemies& enemies) {
   for (int i = 0; i < kNumEnemies; ++i) {
-    if (enemy.are_alive[i]) {
-      if (enemy.positions[i].x < 0) {
-        enemy.positions[i].x = 0;
+    if (enemies.are_alive[i]) {
+      if (enemies.positions[i].x < 0) {
+        enemies.positions[i].x = 0;
       }
-      if (enemy.positions[i].y < 0) {
-        enemy.positions[i].y = 0;
+      if (enemies.positions[i].y < 0) {
+        enemies.positions[i].y = 0;
       }
-      if ((enemy.positions[i].x + enemy.sizes[i].width) > kMapWidth) {
-        enemy.positions[i].x = kMapWidth - enemy.sizes[i].width;
+      if ((enemies.positions[i].x + enemies.sizes[i].width) > kMapWidth) {
+        enemies.positions[i].x = kMapWidth - enemies.sizes[i].width;
       }
-      if ((enemy.positions[i].y + enemy.sizes[i].height) > kMapHeight) {
-        enemy.positions[i].y = kMapHeight - enemy.sizes[i].height;
+      if ((enemies.positions[i].y + enemies.sizes[i].height) > kMapHeight) {
+        enemies.positions[i].y = kMapHeight - enemies.sizes[i].height;
       }
+    }
+  }
+};
+
+void HandleProjectileOOB(Projectiles& projectiles) {
+  size_t num_projectiles = projectiles.GetNumProjectiles();
+  if (num_projectiles == 0) {
+    return;
+  }
+  for (int i = 0; i < num_projectiles; ++i) {
+    if (projectiles.positions_[i].x < 0) {
+      projectiles.DestroyProjectile(i);
+    }
+    if (projectiles.positions_[i].y < 0) {
+      projectiles.DestroyProjectile(i);
+    }
+    if ((projectiles.positions_[i].x + projectiles.sizes_[i].width) >
+        kMapWidth) {
+      projectiles.DestroyProjectile(i);
+    }
+    if ((projectiles.positions_[i].y + projectiles.sizes_[i].height) >
+        kMapHeight) {
+      projectiles.DestroyProjectile(i);
     }
   }
 };

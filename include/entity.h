@@ -32,7 +32,7 @@ class Entity {
 
 class Player : public Entity {};
 
-struct Enemy {
+struct Enemies {
   std::array<bool, kNumEnemies> are_alive;
   std::array<Vector2D, kNumEnemies> positions;
   std::array<Vector2D, kNumEnemies> velocities;
@@ -59,6 +59,7 @@ class Projectiles {
     std::vector<float> speeds_;
     std::vector<Size> sizes_;
     std::vector<float> inv_masses_;
+    size_t GetNumProjectiles(){return owner_ids_.size();};
     void AddProjectile(ProjectileData proj);
     void DestroyProjectile(int idx);
 };

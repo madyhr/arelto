@@ -17,6 +17,7 @@ struct VertexData {
   SDL_Vertex vertex;
 };
 
+// entity idx is used during collisions to handle each type of entity differently
 struct AABB {
   float min_x, min_y, max_x, max_y;
   int entity_idx;

@@ -16,15 +16,16 @@ Vector2D GetCentroid(Vector2D position, Size size);
 std::vector<CollisionPair> FindCollisionsSAP(
   Vector2D player_position, std::array<Vector2D, kNumEnemies> enemy_position);
 
-void HandleCollisionsSAP(Player& player, Enemy& enemy);
+void HandleCollisionsSAP(Player& player, Enemies& enemy);
 std::vector<CollisionPair> GetCollisionPairsSAP(
   std::array<AABB, kNumEntities> sorted_aabb);
-void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
+void ResolveCollisionPairsSAP(Player& player, Enemies& enemy,
                               std::array<AABB, kNumEntities> entity_aabb,
                               std::vector<CollisionPair> collision_pairs);
 
 void HandlePlayerOOB(Player& player);
-void HandleEnemyOOB(Enemy& enemy);
+void HandleEnemyOOB(Enemies& enemy);
+void HandleProjectileOOB(Projectiles& projectiles);
 
 }  // namespace rl2
 

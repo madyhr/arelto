@@ -7,6 +7,7 @@
 #include <SDL_render.h>
 #include <array>
 #include <cstdint>
+#include <vector>
 #include "constants.h"
 #include "entity.h"
 #include "map.h"
@@ -20,6 +21,7 @@ struct GameResources {
   SDL_Texture* tile_texture = nullptr;
   SDL_Texture* player_texture = nullptr;
   SDL_Texture* enemy_texture = nullptr;
+  SDL_Texture* projectile_texture = nullptr;
   SDL_Rect map_layout = {(int)0, (int)0, kWindowWidth, kWindowHeight};
   TileManager tile_manager;
 };
@@ -57,14 +59,16 @@ class Game {
   GameResources resources_;
   GameStatus game_status_;
   Player player_;
-  Enemy enemy_;
+  Enemies enemy_;
+  Projectiles projectiles_;
   Camera camera_;
-  SDL_Vertex enemy_vertices_[kTotalEnemyVertices];
+  SDL_Vertex enemies_vertices_[kTotalEnemyVertices];
+  std::vector<SDL_Vertex> projectiles_vertices_;
   bool is_running_;
   uint64_t ticks_count_ = 0;
   bool InitializeResources();
   bool InitializePlayer();
-  bool InitializeEnemy();
+  bool InitializeEnemies();
   bool InitializeCamera();
   void ProcessInput();
   void ProcessPlayerInput();
@@ -72,8 +76,10 @@ class Game {
   void GenerateOutput();
   void RenderTiledMap();
   void SetupEnemyGeometry();
+  void SetupProjectileGeometry();
   void UpdateEnemyPosition(float dt);
   void UpdatePlayerPosition(float dt);
+  void UpdateProjectilePosition(float dt);
   void UpdateCameraPosition();
   void HandleCollisions();
   void HandleOutOfBounds();

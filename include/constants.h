@@ -47,6 +47,11 @@ constexpr float kTexCoordBottom = 1.0f;
 constexpr float kTexCoordLeft = 0.0f;
 constexpr float kTexCoordRight = 1.0f;
 
+// Projectiles constants
+constexpr int kProjectileVertices = 6;
+constexpr int kFireballWidth = 50;
+constexpr int kFireballHeight = 50;
+
 // Entity constants
 constexpr int kNumEntities = kNumEnemies + 1;
 }  // namespace rl2

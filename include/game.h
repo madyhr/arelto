@@ -26,7 +26,7 @@ struct GameResources {
 
 class Camera {
 public:
-	Vector2D position;
+	Vector2D position_;
 };
 
 class FrameStats {
@@ -67,6 +67,7 @@ class Game {
   bool InitializeEnemy();
   bool InitializeCamera();
   void ProcessInput();
+  void ProcessPlayerInput();
   void Update();
   void GenerateOutput();
   void RenderTiledMap();

@@ -11,30 +11,25 @@
 
 namespace rl2 {
 
-float get_length_vector2d(Vector2D vector) {
-  float length = std::hypot(vector.x, vector.y);
-  return length;
-};
-
-float calculate_distance_vector2d(Vector2D v0, Vector2D v1) {
+float CalculateVector2dDistance(Vector2D v0, Vector2D v1) {
   float dx = v1.x - v0.x;
   float dy = v1.y - v0.y;
   float distance = std::hypot(dx, dy);
   return distance;
 };
 
-Vector2D get_centroid(Vector2D position, Size size) {
+Vector2D GetCentroid(Vector2D position, Size size) {
   return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
 }
 
-void handle_collisions_sap(Player& player, Enemy& enemy) {
+void HandleCollisionsSAP(Player& player, Enemy& enemy) {
   std::array<AABB, kNumEntities> entity_aabb;
-  player.update_aabb();
-  entity_aabb[0] = player.aabb;
+  player.UpdateAABB();
+  entity_aabb[0] = player.aabb_;
   for (int i = 1; i < kNumEnemies + 1; ++i) {
-    entity_aabb[i] = {enemy.position[i - 1].x, enemy.position[i - 1].y,
-                      enemy.position[i - 1].x + enemy.size[i - 1].width,
-                      enemy.position[i - 1].y + enemy.size[i - 1].height, i};
+    entity_aabb[i] = {enemy.positions[i - 1].x, enemy.positions[i - 1].y,
+                      enemy.positions[i - 1].x + enemy.sizes[i - 1].width,
+                      enemy.positions[i - 1].y + enemy.sizes[i - 1].height, i};
   }
 
   std::array<AABB, kNumEntities> sorted_aabb = entity_aabb;
@@ -42,11 +37,11 @@ void handle_collisions_sap(Player& player, Enemy& enemy) {
             [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
 
   std::vector<CollisionPair> collision_pairs =
-    get_collision_pairs_sap(sorted_aabb);
-  resolve_collision_pairs_sap(player, enemy, entity_aabb, collision_pairs);
+    GetCollisionPairsSAP(sorted_aabb);
+  ResolveCollisionPairsSAP(player, enemy, entity_aabb, collision_pairs);
 };
 
-std::vector<CollisionPair> get_collision_pairs_sap(
+std::vector<CollisionPair> GetCollisionPairsSAP(
   std::array<AABB, kNumEntities> sorted_aabb) {
   std::vector<CollisionPair> collision_pairs;
   std::sort(sorted_aabb.begin(), sorted_aabb.end(),
@@ -79,7 +74,7 @@ std::vector<CollisionPair> get_collision_pairs_sap(
   return collision_pairs;
 };
 
-void resolve_collision_pairs_sap(Player& player, Enemy& enemy,
+void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
                                  std::array<AABB, kNumEntities> entity_aabb,
                                  std::vector<CollisionPair> collision_pairs) {
   for (const CollisionPair& cp : collision_pairs) {
@@ -95,88 +90,88 @@ void resolve_collision_pairs_sap(Player& player, Enemy& enemy,
     // Choose smaller axis
     bool resolve_x = (overlap_x < overlap_y);
 
-    auto move_entity = [&](int idx, float dx, float dy) {
+    auto MoveEntity = [&](int idx, float dx, float dy) {
       if (idx == 0) {
-        player.position.x += dx;
-        player.position.y += dy;
+        player.position_.x += dx;
+        player.position_.y += dy;
       } else {
         int enemy_idx = idx - 1;
-        enemy.position[enemy_idx].x += dx;
-        enemy.position[enemy_idx].y += dy;
+        enemy.positions[enemy_idx].x += dx;
+        enemy.positions[enemy_idx].y += dy;
       }
     };
-    auto get_entity_centroid = [&](int idx) -> Vector2D {
+    auto GetEntityCentroid = [&](int idx) -> Vector2D {
       if (idx == 0) {
-        return rl2::get_centroid(player.position, player.stats.size);
+        return rl2::GetCentroid(player.position_, player.stats_.size);
       } else {
         int enemy_idx = idx - 1;
-        return rl2::get_centroid(enemy.position[enemy_idx],
-                                 enemy.size[enemy_idx]);
+        return rl2::GetCentroid(enemy.positions[enemy_idx],
+                                 enemy.sizes[enemy_idx]);
       }
     };
-    auto get_entity_inv_mass = [&](int idx) -> float {
+    auto GetEntityInvMass = [&](int idx) -> float {
       if (idx == 0) {
-        return player.stats.inv_mass;
+        return player.stats_.inv_mass;
       } else {
         int enemy_idx = idx - 1;
-        return enemy.inv_mass[enemy_idx];
+        return enemy.inv_masses[enemy_idx];
       }
     };
-    float inv_mass_a = get_entity_inv_mass(cp.index_a);
-    float inv_mass_b = get_entity_inv_mass(cp.index_b);
+    float inv_mass_a = GetEntityInvMass(cp.index_a);
+    float inv_mass_b = GetEntityInvMass(cp.index_b);
     float push_factor = inv_mass_b / (inv_mass_a + inv_mass_b);
 
     if (resolve_x) {
-      Vector2D centroid_a = get_entity_centroid(cp.index_a);
-      Vector2D centroid_b = get_entity_centroid(cp.index_b);
+      Vector2D centroid_a = GetEntityCentroid(cp.index_a);
+      Vector2D centroid_b = GetEntityCentroid(cp.index_b);
       // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
       float direction = (centroid_b.x - centroid_a.x >= 0.0f) ? 1.0f : -1.0f;
 
-      move_entity(cp.index_a, -direction * overlap_x * (1.0f - push_factor),
+      MoveEntity(cp.index_a, -direction * overlap_x * (1.0f - push_factor),
                   0.0f);
-      move_entity(cp.index_b, direction * overlap_x * push_factor, 0.0f);
+      MoveEntity(cp.index_b, direction * overlap_x * push_factor, 0.0f);
     } else {
-      Vector2D centroid_a = get_entity_centroid(cp.index_a);
-      Vector2D centroid_b = get_entity_centroid(cp.index_b);
+      Vector2D centroid_a = GetEntityCentroid(cp.index_a);
+      Vector2D centroid_b = GetEntityCentroid(cp.index_b);
       // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
       float direction = (centroid_b.y - centroid_a.y >= 0.0f) ? 1.0f : -1.0f;
 
-      move_entity(cp.index_a, 0.0f,
+      MoveEntity(cp.index_a, 0.0f,
                   -direction * overlap_y * (1.0f - push_factor));
-      move_entity(cp.index_b, 0.0f, direction * overlap_y * push_factor);
+      MoveEntity(cp.index_b, 0.0f, direction * overlap_y * push_factor);
     }
   }
 };
 
-void handle_player_oob(Player& player) {
-  if (player.position.x < 0) {
-    player.position.x = 0;
+void HandlePlayerOOB(Player& player) {
+  if (player.position_.x < 0) {
+    player.position_.x = 0;
   }
-  if (player.position.y < 0) {
-    player.position.y = 0;
+  if (player.position_.y < 0) {
+    player.position_.y = 0;
   }
-  if ((player.position.x + player.stats.size.width) > kMapWidth) {
-    player.position.x = kMapWidth - player.stats.size.width;
+  if ((player.position_.x + player.stats_.size.width) > kMapWidth) {
+    player.position_.x = kMapWidth - player.stats_.size.width;
   }
-  if ((player.position.y + player.stats.size.height) > kMapHeight) {
-    player.position.y = kMapHeight - player.stats.size.height;
+  if ((player.position_.y + player.stats_.size.height) > kMapHeight) {
+    player.position_.y = kMapHeight - player.stats_.size.height;
   }
 };
 
-void handle_enemy_oob(Enemy& enemy) {
+void HandleEnemyOOB(Enemy& enemy) {
   for (int i = 0; i < kNumEnemies; ++i) {
-    if (enemy.is_alive[i]) {
-      if (enemy.position[i].x < 0) {
-        enemy.position[i].x = 0;
+    if (enemy.are_alive[i]) {
+      if (enemy.positions[i].x < 0) {
+        enemy.positions[i].x = 0;
       }
-      if (enemy.position[i].y < 0) {
-        enemy.position[i].y = 0;
+      if (enemy.positions[i].y < 0) {
+        enemy.positions[i].y = 0;
       }
-      if ((enemy.position[i].x + enemy.size[i].width) > kMapWidth) {
-        enemy.position[i].x = kMapWidth - enemy.size[i].width;
+      if ((enemy.positions[i].x + enemy.sizes[i].width) > kMapWidth) {
+        enemy.positions[i].x = kMapWidth - enemy.sizes[i].width;
       }
-      if ((enemy.position[i].y + enemy.size[i].height) > kMapHeight) {
-        enemy.position[i].y = kMapHeight - enemy.size[i].height;
+      if ((enemy.positions[i].y + enemy.sizes[i].height) > kMapHeight) {
+        enemy.positions[i].y = kMapHeight - enemy.sizes[i].height;
       }
     }
   }

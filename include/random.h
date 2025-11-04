@@ -5,7 +5,7 @@
 #include <cstdint>
 namespace rl2 {
 
-uint32_t generate_random_int(uint32_t min_val, uint32_t max_val);
+uint32_t GenerateRandomInt(uint32_t min_val, uint32_t max_val);
 
 }  // namespace rl2
 

@@ -64,17 +64,17 @@ bool Game::InitializeResources() {
     return false;
   }
 
-  int imgFlags = IMG_INIT_PNG;
-  if (!(IMG_Init(imgFlags) & imgFlags)) {
+  int img_flags = IMG_INIT_PNG;
+  if (!(IMG_Init(img_flags) & img_flags)) {
     std::cerr << "SDL Images could not be initialized: " << SDL_GetError()
               << std::endl;
     return false;
   }
 
-  resources_.tile_manager.setup_tile_map();
-  resources_.tile_manager.setup_tiles();
-  resources_.tile_manager.setup_tile_selector();
-  resources_.tile_texture = resources_.tile_manager.get_tile_texture(
+  resources_.tile_manager.SetupTileMap();
+  resources_.tile_manager.SetupTiles();
+  resources_.tile_manager.SetupTileSelector();
+  resources_.tile_texture = resources_.tile_manager.GetTileTexture(
     "assets/grassy_tiles.bmp", resources_.renderer);
 
   // resources_.map_texture =
@@ -98,21 +98,21 @@ bool Game::InitializeResources() {
 };
 
 bool Game::InitializePlayer() {
-  player_.stats.size = {kPlayerWidth, kPlayerHeight};
-  player_.stats.inv_mass = kPlayerInvMass;
-  player_.position = {kPlayerInitX, kPlayerInitY};
-  player_.stats.movement_speed = kPlayerSpeed;
+  player_.stats_.size = {kPlayerWidth, kPlayerHeight};
+  player_.stats_.inv_mass = kPlayerInvMass;
+  player_.position_ = {kPlayerInitX, kPlayerInitY};
+  player_.stats_.movement_speed = kPlayerSpeed;
   return true;
 };
 
 bool Game::InitializeEnemy() {
-  std::fill(enemy_.is_alive.begin(), enemy_.is_alive.end(), true);
-  std::fill(enemy_.movement_speed.begin(), enemy_.movement_speed.end(),
+  std::fill(enemy_.are_alive.begin(), enemy_.are_alive.end(), true);
+  std::fill(enemy_.movement_speeds.begin(), enemy_.movement_speeds.end(),
             kEnemySpeed);
-  std::fill(enemy_.size.begin(), enemy_.size.end(),
+  std::fill(enemy_.sizes.begin(), enemy_.sizes.end(),
             Size{kEnemyHeight, kEnemyWidth});
-  std::fill(enemy_.health.begin(), enemy_.health.end(), kEnemyHealth);
-  std::fill(enemy_.inv_mass.begin(), enemy_.inv_mass.end(), kEnemyInvMass);
+  std::fill(enemy_.health_points.begin(), enemy_.health_points.end(), kEnemyHealth);
+  std::fill(enemy_.inv_masses.begin(), enemy_.inv_masses.end(), kEnemyInvMass);
 
   int max_x = kMapWidth - kEnemyWidth;
   int max_y = kMapHeight - kEnemyHeight;
@@ -121,16 +121,16 @@ bool Game::InitializeEnemy() {
     Vector2D potential_pos;
 
     do {
-      potential_pos = {(float)generate_random_int(0, max_x),
-                       (float)generate_random_int(0, max_y)};
+      potential_pos = {(float)GenerateRandomInt(0, max_x),
+                       (float)GenerateRandomInt(0, max_y)};
 
-    } while (calculate_distance_vector2d(potential_pos, player_.position) <
+    } while (CalculateVector2dDistance(potential_pos, player_.position_) <
              kEnemyMinimumInitialDistance);
 
-    enemy_.position[i] = potential_pos;
-    enemy_.movement_speed[i] += generate_random_int(1, 100);
-    enemy_.size[i].height += generate_random_int(1, 50);
-    enemy_.size[i].width += generate_random_int(1, 50);
+    enemy_.positions[i] = potential_pos;
+    enemy_.movement_speeds[i] += GenerateRandomInt(1, 100);
+    enemy_.sizes[i].height += GenerateRandomInt(1, 50);
+    enemy_.sizes[i].width += GenerateRandomInt(1, 50);
   };
 
   SDL_Color red = {255, 0, 0, 255};
@@ -141,8 +141,8 @@ bool Game::InitializeEnemy() {
 };
 
 bool Game::InitializeCamera() {
-  camera_.position.x = player_.position.x - 0.5f * kWindowWidth;
-  camera_.position.y = player_.position.y - 0.5f * kWindowHeight;
+  camera_.position_.x = player_.position_.x - 0.5f * kWindowWidth;
+  camera_.position_.y = player_.position_.y - 0.5f * kWindowHeight;
 
   return true;
 };
@@ -204,20 +204,23 @@ void Game::ProcessInput() {
       }
     }
   }
+  Game::ProcessPlayerInput();
+}
 
-  player_.velocity = {0.0f, 0.0f};
+void Game::ProcessPlayerInput() {
+  player_.velocity_ = {0.0f, 0.0f};
   const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
   if (currentKeyStates[SDL_SCANCODE_W]) {
-    player_.velocity.y -= 1.0f;
+    player_.velocity_.y -= 1.0f;
   }
   if (currentKeyStates[SDL_SCANCODE_S]) {
-    player_.velocity.y += 1.0f;
+    player_.velocity_.y += 1.0f;
   }
   if (currentKeyStates[SDL_SCANCODE_A]) {
-    player_.velocity.x -= 1.0f;
+    player_.velocity_.x -= 1.0f;
   }
   if (currentKeyStates[SDL_SCANCODE_D]) {
-    player_.velocity.x += 1.0f;
+    player_.velocity_.x += 1.0f;
   }
 }
 
@@ -237,54 +240,54 @@ void Game::Update() {
   ticks_count_ = current_ticks;
 }
 void Game::HandleCollisions() {
-  rl2::handle_collisions_sap(player_, enemy_);
+  rl2::HandleCollisionsSAP(player_, enemy_);
 };
 
 void Game::HandleOutOfBounds() {
-  rl2::handle_player_oob(player_);
-  rl2::handle_enemy_oob(enemy_);
+  rl2::HandlePlayerOOB(player_);
+  rl2::HandleEnemyOOB(enemy_);
 };
 
 void Game::UpdatePlayerPosition(float dt) {
 
-  float player_velocity_magnitude = get_length_vector2d(player_.velocity);
+  float player_velocity_magnitude = player_.velocity_.Norm();
   if (player_velocity_magnitude > 1.0f) {
-    player_.velocity.x /= player_velocity_magnitude;
-    player_.velocity.y /= player_velocity_magnitude;
+    player_.velocity_.x /= player_velocity_magnitude;
+    player_.velocity_.y /= player_velocity_magnitude;
   }
 
-  player_.position.x += player_.velocity.x * player_.stats.movement_speed * dt;
-  player_.position.y += player_.velocity.y * player_.stats.movement_speed * dt;
+  player_.position_.x += player_.velocity_.x * player_.stats_.movement_speed * dt;
+  player_.position_.y += player_.velocity_.y * player_.stats_.movement_speed * dt;
 };
 
 void Game::UpdateEnemyPosition(float dt) {
   for (int i = 0; i < kNumEnemies; ++i) {
-    float dx = player_.position.x - enemy_.position[i].x;
-    float dy = player_.position.y - enemy_.position[i].y;
+    float dx = player_.position_.x - enemy_.positions[i].x;
+    float dy = player_.position_.y - enemy_.positions[i].y;
     float distance_to_player = std::hypot(dx, dy);
-    enemy_.velocity[i].x = dx / (distance_to_player + 1e-6);
-    enemy_.velocity[i].y = dy / (distance_to_player + 1e-6);
-    enemy_.position[i].x +=
-      enemy_.velocity[i].x * enemy_.movement_speed[i] * dt;
-    enemy_.position[i].y +=
-      enemy_.velocity[i].y * enemy_.movement_speed[i] * dt;
+    enemy_.velocities[i].x = dx / (distance_to_player + 1e-6);
+    enemy_.velocities[i].y = dy / (distance_to_player + 1e-6);
+    enemy_.positions[i].x +=
+      enemy_.velocities[i].x * enemy_.movement_speeds[i] * dt;
+    enemy_.positions[i].y +=
+      enemy_.velocities[i].y * enemy_.movement_speeds[i] * dt;
   }
 };
 
 void Game::UpdateCameraPosition() {
-  camera_.position.x = player_.position.x - 0.5f * kWindowWidth;
-  camera_.position.y = player_.position.y - 0.5f * kWindowHeight;
-  if (camera_.position.x < 0) {
-    camera_.position.x = 0.0f;
+  camera_.position_.x = player_.position_.x - 0.5f * kWindowWidth;
+  camera_.position_.y = player_.position_.y - 0.5f * kWindowHeight;
+  if (camera_.position_.x < 0) {
+    camera_.position_.x = 0.0f;
   };
-  if (camera_.position.y < 0) {
-    camera_.position.y = 0.0f;
+  if (camera_.position_.y < 0) {
+    camera_.position_.y = 0.0f;
   };
-  if (camera_.position.x > (kMapWidth - kWindowWidth)) {
-    camera_.position.x = kMapWidth - kWindowWidth;
+  if (camera_.position_.x > (kMapWidth - kWindowWidth)) {
+    camera_.position_.x = kMapWidth - kWindowWidth;
   }
-  if (camera_.position.y > (kMapHeight - kWindowHeight)) {
-    camera_.position.y = kMapHeight - kWindowHeight;
+  if (camera_.position_.y > (kMapHeight - kWindowHeight)) {
+    camera_.position_.y = kMapHeight - kWindowHeight;
   }
 };
 
@@ -294,10 +297,10 @@ void Game::GenerateOutput() {
   RenderTiledMap();
   // SDL_RenderCopy(resources_.renderer, resources_.map_texture, NULL,
   //                &camera_render_box);
-  SDL_Rect player_render_box = {(int)(player_.position.x - camera_.position.x),
-                                (int)(player_.position.y - camera_.position.y),
-                                (int)player_.stats.size.width,
-                                (int)player_.stats.size.height};
+  SDL_Rect player_render_box = {(int)(player_.position_.x - camera_.position_.x),
+                                (int)(player_.position_.y - camera_.position_.y),
+                                (int)player_.stats_.size.width,
+                                (int)player_.stats_.size.height};
 
   SDL_RenderCopy(resources_.renderer, resources_.player_texture, NULL,
                  &player_render_box);
@@ -315,13 +318,13 @@ void Game::GenerateOutput() {
 };
 
 void Game::RenderTiledMap() {
-  int top_left_tile_x = (int)(camera_.position.x / kTileSize);
-  int top_left_tile_y = (int)(camera_.position.y / kTileSize);
+  int top_left_tile_x = (int)(camera_.position_.x / kTileSize);
+  int top_left_tile_y = (int)(camera_.position_.y / kTileSize);
   // TODO: Fix rendering of right-most column. Adding +2 seems to solve it, but not a permanent solution.
   int bottom_right_tile_x =
     (int)std::ceil(top_left_tile_x + kWindowWidth / kTileSize) + 2;
   int bottom_right_tile_y =
-    (int)std::ceil((camera_.position.y + kWindowHeight) / kTileSize);
+    (int)std::ceil((camera_.position_.y + kWindowHeight) / kTileSize);
   int start_x = std::max(0, top_left_tile_x);
   int end_x =
     std::min(kNumTilesX,
@@ -335,8 +338,8 @@ void Game::RenderTiledMap() {
   for (int i = start_x; i < end_x; ++i) {
     for (int j = start_y; j < end_y; ++j) {
       SDL_Rect render_rect = resources_.tile_manager.tiles_[i][j];
-      render_rect.x -= (int)camera_.position.x;
-      render_rect.y -= (int)camera_.position.y;
+      render_rect.x -= (int)camera_.position_.x;
+      render_rect.y -= (int)camera_.position_.y;
       int tile_id = resources_.tile_manager.tile_map_[i][j];
       const SDL_Rect& source_rect =
         resources_.tile_manager.select_tiles_[tile_id];
@@ -348,10 +351,10 @@ void Game::RenderTiledMap() {
 
 void Game::SetupEnemyGeometry() {
   for (int i = 0; i < kNumEnemies; ++i) {
-    float x = enemy_.position[i].x - camera_.position.x;
-    float y = enemy_.position[i].y - camera_.position.y;
-    float w = enemy_.size[i].width;
-    float h = enemy_.size[i].height;
+    float x = enemy_.positions[i].x - camera_.position_.x;
+    float y = enemy_.positions[i].y - camera_.position_.y;
+    float w = enemy_.sizes[i].width;
+    float h = enemy_.sizes[i].height;
 
     int vertex_offset = i * kEnemyVertices;
 

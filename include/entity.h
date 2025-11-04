@@ -23,23 +23,23 @@ struct Stats {
 
 class Entity {
  public:
-  Stats stats;
-  Vector2D position;
-  Vector2D velocity;
-  AABB aabb;
-  void update_aabb();
+  Stats stats_;
+  Vector2D position_;
+  Vector2D velocity_;
+  AABB aabb_;
+  void UpdateAABB();
 };
 
 class Player : public Entity {};
 
 struct Enemy {
-  std::array<bool, kNumEnemies> is_alive;
-  std::array<Vector2D, kNumEnemies> position;
-  std::array<Vector2D, kNumEnemies> velocity;
-  std::array<uint32_t, kNumEnemies> health;
-  std::array<float, kNumEnemies> movement_speed;
-  std::array<Size, kNumEnemies> size;
-  std::array<float, kNumEnemies> inv_mass;
+  std::array<bool, kNumEnemies> are_alive;
+  std::array<Vector2D, kNumEnemies> positions;
+  std::array<Vector2D, kNumEnemies> velocities;
+  std::array<uint32_t, kNumEnemies> health_points;
+  std::array<float, kNumEnemies> movement_speeds;
+  std::array<Size, kNumEnemies> sizes;
+  std::array<float, kNumEnemies> inv_masses;
 };
 
 struct ProjectileData {
@@ -53,14 +53,14 @@ struct ProjectileData {
 
 class Projectiles {
   public:
-    std::vector<int> owner_id;
-    std::vector<Vector2D> position;
-    std::vector<Vector2D> velocity;
-    std::vector<float> speed;
-    std::vector<Size> size;
-    std::vector<float> inv_mass;
-    void add_projectile(ProjectileData proj);
-    void destroy_projectile(int idx);
+    std::vector<int> owner_ids_;
+    std::vector<Vector2D> positions_;
+    std::vector<Vector2D> velocities_;
+    std::vector<float> speeds_;
+    std::vector<Size> sizes_;
+    std::vector<float> inv_masses_;
+    void AddProjectile(ProjectileData proj);
+    void DestroyProjectile(int idx);
 };
 
 }  // namespace rl2

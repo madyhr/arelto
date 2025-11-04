@@ -10,22 +10,21 @@
 
 namespace rl2 {
 
-float get_length_vector2d(Vector2D vector);
-float calculate_distance_vector2d(Vector2D v0, Vector2D v1);
-Vector2D get_centroid(Vector2D position, Size size);
+float CalculateVector2dDistance(Vector2D v0, Vector2D v1);
+Vector2D GetCentroid(Vector2D position, Size size);
 
-std::vector<CollisionPair> find_collisions_sap(
-    Vector2D player_position, std::array<Vector2D, kNumEnemies> enemy_position);
+std::vector<CollisionPair> FindCollisionsSAP(
+  Vector2D player_position, std::array<Vector2D, kNumEnemies> enemy_position);
 
-void handle_collisions_sap(Player& player, Enemy& enemy);
-std::vector<CollisionPair> get_collision_pairs_sap(
-    std::array<AABB, kNumEntities> sorted_aabb);
-void resolve_collision_pairs_sap(Player& player, Enemy& enemy,
-                                 std::array<AABB, kNumEntities> entity_aabb,
-                                 std::vector<CollisionPair> collision_pairs);
+void HandleCollisionsSAP(Player& player, Enemy& enemy);
+std::vector<CollisionPair> GetCollisionPairsSAP(
+  std::array<AABB, kNumEntities> sorted_aabb);
+void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
+                              std::array<AABB, kNumEntities> entity_aabb,
+                              std::vector<CollisionPair> collision_pairs);
 
-void handle_player_oob(Player& player);
-void handle_enemy_oob(Enemy& enemy);
+void HandlePlayerOOB(Player& player);
+void HandleEnemyOOB(Enemy& enemy);
 
 }  // namespace rl2
 

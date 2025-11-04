@@ -16,10 +16,10 @@ class TileManager {
   int tile_map_[kNumTilesX][kNumTilesY];
   std::vector<SDL_Rect> select_tiles_;
 
-  SDL_Texture* get_tile_texture(const char* file, SDL_Renderer* renderer);
-  void setup_tile_map();
-  void setup_tiles();
-  void setup_tile_selector();
+  SDL_Texture* GetTileTexture(const char* file, SDL_Renderer* renderer);
+  void SetupTileMap();
+  void SetupTiles();
+  void SetupTileSelector();
 };
 
 }  // namespace rl2

@@ -9,7 +9,7 @@
 
 namespace rl2 {
 
-SDL_Texture* TileManager::get_tile_texture(const char* file,
+SDL_Texture* TileManager::GetTileTexture(const char* file,
                                            SDL_Renderer* renderer) {
   SDL_Surface* tile_map_surface = SDL_LoadBMP(file);
   SDL_Texture* tile_texture =
@@ -18,14 +18,14 @@ SDL_Texture* TileManager::get_tile_texture(const char* file,
   return tile_texture;
 };
 
-void TileManager::setup_tile_map() {
+void TileManager::SetupTileMap() {
   for (int i = 0; i < kNumTilesX; ++i) {
     for (int j = 0; j < kNumTilesY; ++j) {
-      tile_map_[i][j] = generate_random_int(0, kNumTileTypes - 1);
+      tile_map_[i][j] = GenerateRandomInt(0, kNumTileTypes - 1);
     };
   };
 };
-void TileManager::setup_tiles() {
+void TileManager::SetupTiles() {
   for (int i = 0; i < kNumTilesX; ++i) {
     for (int j = 0; j < kNumTilesY; ++j) {
       tiles_[i][j].x = i * kTileSize;
@@ -35,7 +35,7 @@ void TileManager::setup_tiles() {
     };
   };
 };
-void TileManager::setup_tile_selector() {
+void TileManager::SetupTileSelector() {
 
   const int kTilesInRow = (int)std::sqrt(kNumTileTypes);
   SDL_Rect selector;

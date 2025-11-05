@@ -51,6 +51,7 @@ constexpr float kTexCoordRight = 1.0f;
 constexpr int kProjectileVertices = 6;
 constexpr int kFireballWidth = 50;
 constexpr int kFireballHeight = 50;
+constexpr int kFireballSpeed = 350.0f;
 
 // Entity constants
 constexpr int kNumEntities = kNumEnemies + 1;

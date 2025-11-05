@@ -33,7 +33,7 @@ bool Game::Initialize() {
     return false;
   }
 
-  ticks_count_ = SDL_GetTicks64();
+  time_ = (float)(SDL_GetTicks64() / 1000.0f);
   is_running_ = true;
 
   return true;
@@ -186,9 +186,14 @@ void FrameStats::print_fps_running_average(float dt) {
 
 void Game::RunGameLoop() {
   while (is_running_) {
+    float current_time = (float)(SDL_GetTicks64() / 1000.0f);
+    dt = current_time - time_;
+
     Game::ProcessInput();
     Game::Update();
     Game::GenerateOutput();
+
+    time_ = current_time;
   }
 };
 
@@ -228,23 +233,25 @@ void Game::ProcessPlayerInput() {
     player_.velocity_.x += 1.0f;
   }
   if (currentKeyStates[SDL_SCANCODE_F]) {
-    Vector2D fireball_velocity = player_.velocity_;
-    if (player_.velocity_.Norm() < 1e-3) {
-      fireball_velocity = {1.0f, 1.0f};
+    bool fireball_is_ready = time_ >= player_.fireball_.GetCDTime();
+    if (fireball_is_ready) {
+      Vector2D fireball_velocity = player_.velocity_;
+      if (player_.velocity_.Norm() < 1e-3) {
+        fireball_velocity = {1.0f, 1.0f};
+      }
+      ProjectileData fireball = {0,
+                                 player_.position_,
+                                 fireball_velocity,
+                                 kFireballSpeed,
+                                 {kFireballWidth, kFireballHeight},
+                                 0.0f};
+      projectiles_.AddProjectile(fireball);
+      player_.fireball_.time_of_last_use = time_;
     }
-    ProjectileData fireball = {0,
-                               player_.position_,
-                               fireball_velocity,
-                               200.0f,
-                               {kFireballWidth, kFireballHeight},
-                               0.0f};
-    projectiles_.AddProjectile(fireball);
   }
 }
 
 void Game::Update() {
-  Uint64 current_ticks = SDL_GetTicks64();
-  float dt = (float)(current_ticks - ticks_count_) / 1000.0f;
 
   Game::UpdatePlayerPosition(dt);
   Game::UpdateEnemyPosition(dt);
@@ -255,8 +262,6 @@ void Game::Update() {
   Game::UpdateCameraPosition();
 
   game_status_.frame_stats.print_fps_running_average(dt);
-
-  ticks_count_ = current_ticks;
 }
 
 void Game::UpdatePlayerPosition(float dt) {

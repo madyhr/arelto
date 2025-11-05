@@ -6,6 +6,7 @@
 #include <vector>
 #include "constants.h"
 #include "types.h"
+#include "abilities.h"
 
 namespace rl2 {
 
@@ -30,7 +31,12 @@ class Entity {
   void UpdateAABB();
 };
 
-class Player : public Entity {};
+class Player : public Entity {
+
+  public:
+    Fireball fireball_ = {0.5f, 0.0f};
+
+};
 
 struct Enemies {
   std::array<bool, kNumEnemies> are_alive;

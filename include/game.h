@@ -65,7 +65,8 @@ class Game {
   SDL_Vertex enemies_vertices_[kTotalEnemyVertices];
   std::vector<SDL_Vertex> projectiles_vertices_;
   bool is_running_;
-  uint64_t ticks_count_ = 0;
+  float time_ = 0.0f;
+  float dt = 0;
   bool InitializeResources();
   bool InitializePlayer();
   bool InitializeEnemies();

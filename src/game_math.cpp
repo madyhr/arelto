@@ -11,6 +11,12 @@
 
 namespace rl2 {
 
+Vector2D NormalizeVector2D(Vector2D vector) {
+  vector.x = vector.x / vector.Norm();
+  vector.y = vector.y / vector.Norm();
+  return vector;
+};
+
 float CalculateVector2dDistance(Vector2D v0, Vector2D v1) {
   float dx = v1.x - v0.x;
   float dy = v1.y - v0.y;

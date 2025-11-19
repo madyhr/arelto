@@ -12,4 +12,9 @@ uint32_t GenerateRandomInt(uint32_t min_val, uint32_t max_val) {
   return distrib(s_generator);
 };
 
+float GenerateRandomFloat(float min_val, float max_val) {
+  std::uniform_real_distribution<float> distrib(min_val, max_val);
+  return distrib(s_generator);
+};
+
 }  // namespace rl2

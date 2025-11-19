@@ -11,7 +11,7 @@ struct Spell {
   float cooldown;
   float time_of_last_use;
 
-  float GetCDTime() const { return cooldown + time_of_last_use; };
+  float GetReadyTime() const { return cooldown + time_of_last_use; };
 };
 
 struct Fireball : Spell {

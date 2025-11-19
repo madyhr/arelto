@@ -233,11 +233,13 @@ void Game::ProcessPlayerInput() {
     player_.velocity_.x += 1.0f;
   }
   if (currentKeyStates[SDL_SCANCODE_F]) {
-    bool fireball_is_ready = time_ >= player_.fireball_.GetCDTime();
+    bool fireball_is_ready = time_ >= player_.fireball_.GetReadyTime();
     if (fireball_is_ready) {
-      Vector2D fireball_velocity = player_.velocity_;
+      Vector2D fireball_velocity = NormalizeVector2D(player_.velocity_);
       if (player_.velocity_.Norm() < 1e-3) {
-        fireball_velocity = {1.0f, 1.0f};
+        fireball_velocity.x = GenerateRandomFloat(-1.0f, 1.0f) * kFireballSpeed;
+        fireball_velocity.y = GenerateRandomFloat(-1.0f, 1.0f) * kFireballSpeed;
+        fireball_velocity = NormalizeVector2D(fireball_velocity);
       }
       ProjectileData fireball = {0,
                                  player_.position_,
@@ -370,20 +372,15 @@ void Game::GenerateOutput() {
 void Game::RenderTiledMap() {
   int top_left_tile_x = (int)(camera_.position_.x / kTileSize);
   int top_left_tile_y = (int)(camera_.position_.y / kTileSize);
-  // TODO: Fix rendering of right-most column. Adding +2 seems to solve it, but not a permanent solution.
   int bottom_right_tile_x =
-    (int)std::ceil(top_left_tile_x + kWindowWidth / kTileSize) + 2;
+    (int)std::ceil((camera_.position_.x + kWindowWidth) / kTileSize);
   int bottom_right_tile_y =
     (int)std::ceil((camera_.position_.y + kWindowHeight) / kTileSize);
   int start_x = std::max(0, top_left_tile_x);
-  int end_x =
-    std::min(kNumTilesX,
-             bottom_right_tile_x);  // kNumTilesX is the boundary (exclusive)
+  int end_x = std::min(kNumTilesX, bottom_right_tile_x);
 
   int start_y = std::max(0, top_left_tile_y);
-  int end_y =
-    std::min(kNumTilesY,
-             bottom_right_tile_y);  // kNumTilesY is the boundary (exclusive)
+  int end_y = std::min(kNumTilesY, bottom_right_tile_y);
 
   for (int i = start_x; i < end_x; ++i) {
     for (int j = start_y; j < end_y; ++j) {

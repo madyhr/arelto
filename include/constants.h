@@ -9,8 +9,8 @@ constexpr int kWindowWidth = 1920;
 constexpr int kWindowHeight = 1080;
 
 // Map constants
-constexpr int kMapWidth = 1000;
-constexpr int kMapHeight = 1000;
+constexpr int kMapWidth = 3000;
+constexpr int kMapHeight = 3000;
 constexpr int kTileSize = 256;
 constexpr int kNumTileTypes = 16;
 constexpr int kNumTilesX = ((kMapWidth + kTileSize - 1) / kTileSize);

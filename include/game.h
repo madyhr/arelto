@@ -27,8 +27,8 @@ struct GameResources {
 };
 
 class Camera {
-public:
-	Vector2D position_;
+ public:
+  Vector2D position_;
 };
 
 class FrameStats {

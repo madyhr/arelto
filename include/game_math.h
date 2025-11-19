@@ -7,8 +7,11 @@
 #include <array>
 #include <vector>
 #include "entity.h"
+#include "types.h"
 
 namespace rl2 {
+
+Vector2D NormalizeVector2D(Vector2D vector);
 
 float CalculateVector2dDistance(Vector2D v0, Vector2D v1);
 Vector2D GetCentroid(Vector2D position, Size size);

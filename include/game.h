@@ -6,7 +6,6 @@
 #include <SDL2/SDL_image.h>
 #include <SDL_render.h>
 #include <array>
-#include <cstdint>
 #include <vector>
 #include "constants.h"
 #include "entity.h"
@@ -66,7 +65,7 @@ class Game {
   std::vector<SDL_Vertex> projectiles_vertices_;
   bool is_running_;
   float time_ = 0.0f;
-  float dt = 0;
+  float dt = 0.0f;
   bool InitializeResources();
   bool InitializePlayer();
   bool InitializeEnemies();
@@ -74,16 +73,16 @@ class Game {
   void ProcessInput();
   void ProcessPlayerInput();
   void Update();
-  void GenerateOutput();
-  void RenderTiledMap();
-  void SetupEnemyGeometry();
-  void SetupProjectileGeometry();
   void UpdateEnemyPosition(float dt);
   void UpdatePlayerPosition(float dt);
   void UpdateProjectilePosition(float dt);
   void UpdateCameraPosition();
   void HandleCollisions();
   void HandleOutOfBounds();
+  void GenerateOutput();
+  void RenderTiledMap();
+  void SetupEnemyGeometry();
+  void SetupProjectileGeometry();
 };
 
 }  // namespace rl2

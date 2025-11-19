@@ -4,9 +4,9 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+#include "abilities.h"
 #include "constants.h"
 #include "types.h"
-#include "abilities.h"
 
 namespace rl2 {
 
@@ -31,11 +31,33 @@ class Entity {
   void UpdateAABB();
 };
 
+struct ProjectileData {
+  int owner_id;
+  Vector2D position;
+  Vector2D velocity;
+  float speed;
+  Size size;
+  float inv_mass;
+};
+
+class Projectiles {
+ public:
+  std::vector<int> owner_ids_;
+  std::vector<Vector2D> positions_;
+  std::vector<Vector2D> velocities_;
+  std::vector<float> speeds_;
+  std::vector<Size> sizes_;
+  std::vector<float> inv_masses_;
+  size_t GetNumProjectiles() { return owner_ids_.size(); };
+  void AddProjectile(ProjectileData proj);
+  void DestroyProjectile(int idx);
+};
+
 class Player : public Entity {
 
-  public:
-    Fireball fireball_ = {0.5f, 0.0f};
-
+ public:
+  Fireball fireball_ = {0.5f, 0.0f};
+  ProjectileData CastSpell();
 };
 
 struct Enemies {
@@ -47,29 +69,6 @@ struct Enemies {
   std::array<Size, kNumEnemies> sizes;
   std::array<float, kNumEnemies> inv_masses;
 };
-
-struct ProjectileData {
-  int owner_id;
-  Vector2D position;
-  Vector2D velocity;
-  float speed;
-  Size size;
-  float inv_mass;
-};
-
-class Projectiles {
-  public:
-    std::vector<int> owner_ids_;
-    std::vector<Vector2D> positions_;
-    std::vector<Vector2D> velocities_;
-    std::vector<float> speeds_;
-    std::vector<Size> sizes_;
-    std::vector<float> inv_masses_;
-    size_t GetNumProjectiles(){return owner_ids_.size();};
-    void AddProjectile(ProjectileData proj);
-    void DestroyProjectile(int idx);
-};
-
 }  // namespace rl2
 
 #endif

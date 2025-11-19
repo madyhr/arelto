@@ -48,8 +48,8 @@ bool Game::InitializeResources() {
   }
 
   resources_.window =
-    SDL_CreateWindow("RL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                     kWindowWidth, kWindowHeight, SDL_WINDOW_SHOWN);
+      SDL_CreateWindow("RL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                       kWindowWidth, kWindowHeight, SDL_WINDOW_SHOWN);
 
   if (resources_.window == nullptr) {
     std::cerr << "Window could not be created: " << SDL_GetError() << std::endl;
@@ -57,7 +57,7 @@ bool Game::InitializeResources() {
   }
 
   resources_.renderer =
-    SDL_CreateRenderer(resources_.window, -1, SDL_RENDERER_ACCELERATED);
+      SDL_CreateRenderer(resources_.window, -1, SDL_RENDERER_ACCELERATED);
 
   if (resources_.renderer == nullptr) {
     std::cerr << "Renderer could not be created: " << SDL_GetError()
@@ -75,23 +75,20 @@ bool Game::InitializeResources() {
   resources_.tile_manager.SetupTileMap();
   resources_.tile_manager.SetupTiles();
   resources_.tile_manager.SetupTileSelector();
+
   resources_.tile_texture = resources_.tile_manager.GetTileTexture(
-    "assets/grassy_tiles.bmp", resources_.renderer);
-
-  // resources_.map_texture =
-  //     IMG_LoadTexture(resources_.renderer, "assets/textures/grassy_plains.png");
+      "assets/grassy_tiles.bmp", resources_.renderer);
   resources_.player_texture =
-    IMG_LoadTexture(resources_.renderer, "assets/textures/wizard.png");
+      IMG_LoadTexture(resources_.renderer, "assets/textures/wizard.png");
   resources_.enemy_texture =
-    IMG_LoadTexture(resources_.renderer, "assets/textures/goblin.png");
+      IMG_LoadTexture(resources_.renderer, "assets/textures/goblin.png");
   resources_.projectile_texture =
-    IMG_LoadTexture(resources_.renderer, "assets/textures/fireball.png");
+      IMG_LoadTexture(resources_.renderer, "assets/textures/fireball.png");
 
-  if (
-    // resources_.map_texture == nullptr ||
-    resources_.player_texture == nullptr ||
-    resources_.enemy_texture == nullptr ||
-    resources_.projectile_texture == nullptr) {
+  if (resources_.tile_texture == nullptr ||
+      resources_.player_texture == nullptr ||
+      resources_.enemy_texture == nullptr ||
+      resources_.projectile_texture == nullptr) {
     std::cerr << "One or more textures could not be loaded: " << SDL_GetError()
               << std::endl;
     return false;
@@ -275,9 +272,9 @@ void Game::UpdatePlayerPosition(float dt) {
   }
 
   player_.position_.x +=
-    player_.velocity_.x * player_.stats_.movement_speed * dt;
+      player_.velocity_.x * player_.stats_.movement_speed * dt;
   player_.position_.y +=
-    player_.velocity_.y * player_.stats_.movement_speed * dt;
+      player_.velocity_.y * player_.stats_.movement_speed * dt;
 };
 
 void Game::UpdateEnemyPosition(float dt) {
@@ -288,9 +285,9 @@ void Game::UpdateEnemyPosition(float dt) {
     enemy_.velocities[i].x = dx / (distance_to_player + 1e-6);
     enemy_.velocities[i].y = dy / (distance_to_player + 1e-6);
     enemy_.positions[i].x +=
-      enemy_.velocities[i].x * enemy_.movement_speeds[i] * dt;
+        enemy_.velocities[i].x * enemy_.movement_speeds[i] * dt;
     enemy_.positions[i].y +=
-      enemy_.velocities[i].y * enemy_.movement_speeds[i] * dt;
+        enemy_.velocities[i].y * enemy_.movement_speeds[i] * dt;
   }
 };
 
@@ -302,9 +299,9 @@ void Game::UpdateProjectilePosition(float dt) {
 
   for (int i = 0; i < num_projectiles; ++i) {
     projectiles_.positions_[i].x +=
-      projectiles_.velocities_[i].x * projectiles_.speeds_[i] * dt;
+        projectiles_.velocities_[i].x * projectiles_.speeds_[i] * dt;
     projectiles_.positions_[i].y +=
-      projectiles_.velocities_[i].y * projectiles_.speeds_[i] * dt;
+        projectiles_.velocities_[i].y * projectiles_.speeds_[i] * dt;
   };
 };
 
@@ -339,12 +336,10 @@ void Game::GenerateOutput() {
   SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
   SDL_RenderClear(resources_.renderer);
   RenderTiledMap();
-  // SDL_RenderCopy(resources_.renderer, resources_.map_texture, NULL,
-  //                &camera_render_box);
   SDL_Rect player_render_box = {
-    (int)(player_.position_.x - camera_.position_.x),
-    (int)(player_.position_.y - camera_.position_.y),
-    (int)player_.stats_.size.width, (int)player_.stats_.size.height};
+      (int)(player_.position_.x - camera_.position_.x),
+      (int)(player_.position_.y - camera_.position_.y),
+      (int)player_.stats_.size.width, (int)player_.stats_.size.height};
 
   SDL_RenderCopy(resources_.renderer, resources_.player_texture, NULL,
                  &player_render_box);
@@ -373,9 +368,9 @@ void Game::RenderTiledMap() {
   int top_left_tile_x = (int)(camera_.position_.x / kTileSize);
   int top_left_tile_y = (int)(camera_.position_.y / kTileSize);
   int bottom_right_tile_x =
-    (int)std::ceil((camera_.position_.x + kWindowWidth) / kTileSize);
+      (int)std::ceil((camera_.position_.x + kWindowWidth) / kTileSize);
   int bottom_right_tile_y =
-    (int)std::ceil((camera_.position_.y + kWindowHeight) / kTileSize);
+      (int)std::ceil((camera_.position_.y + kWindowHeight) / kTileSize);
   int start_x = std::max(0, top_left_tile_x);
   int end_x = std::min(kNumTilesX, bottom_right_tile_x);
 
@@ -389,7 +384,7 @@ void Game::RenderTiledMap() {
       render_rect.y -= (int)camera_.position_.y;
       int tile_id = resources_.tile_manager.tile_map_[i][j];
       const SDL_Rect& source_rect =
-        resources_.tile_manager.select_tiles_[tile_id];
+          resources_.tile_manager.select_tiles_[tile_id];
       SDL_RenderCopy(resources_.renderer, resources_.tile_texture, &source_rect,
                      &render_rect);
     }
@@ -408,23 +403,24 @@ void Game::SetupEnemyGeometry() {
     // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
     // 1. Top-Left
     enemies_vertices_[vertex_offset + 0] = {
-      {x, y}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordTop}};
+        {x, y}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordTop}};
     // 2. Bottom-Left
     enemies_vertices_[vertex_offset + 1] = {
-      {x, y + h}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordBottom}};
+        {x, y + h}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordBottom}};
     // 3. Bottom-Right
-    enemies_vertices_[vertex_offset + 2] = {
-      {x + w, y + h}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordBottom}};
+    enemies_vertices_[vertex_offset + 2] = {{x + w, y + h},
+                                            {255, 255, 255, 255},
+                                            {kTexCoordRight, kTexCoordBottom}};
     // --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
     // 4. Top-Left (Repeat)
     enemies_vertices_[vertex_offset + 3] =
-      enemies_vertices_[vertex_offset + 0];  // Same as vertex 1
+        enemies_vertices_[vertex_offset + 0];  // Same as vertex 1
     // 5. Bottom-Right (Repeat)
     enemies_vertices_[vertex_offset + 4] =
-      enemies_vertices_[vertex_offset + 2];  // Same as vertex 3
+        enemies_vertices_[vertex_offset + 2];  // Same as vertex 3
     // 6. Top-Right
     enemies_vertices_[vertex_offset + 5] = {
-      {x + w, y}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordTop}};
+        {x + w, y}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordTop}};
   }
 };
 
@@ -448,23 +444,25 @@ void Game::SetupProjectileGeometry() {
     // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
     // 1. Top-Left
     projectiles_vertices_[vertex_offset + 0] = {
-      {x, y}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordTop}};
+        {x, y}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordTop}};
     // 2. Bottom-Left
     projectiles_vertices_[vertex_offset + 1] = {
-      {x, y + h}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordBottom}};
+        {x, y + h}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordBottom}};
     // 3. Bottom-Right
     projectiles_vertices_[vertex_offset + 2] = {
-      {x + w, y + h}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordBottom}};
+        {x + w, y + h},
+        {255, 255, 255, 255},
+        {kTexCoordRight, kTexCoordBottom}};
     // --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
     // 4. Top-Left (Repeat)
     projectiles_vertices_[vertex_offset + 3] =
-      projectiles_vertices_[vertex_offset + 0];  // Same as vertex 1
-                                                 // 5. Bottom-Right (Repeat)
+        projectiles_vertices_[vertex_offset + 0];  // Same as vertex 1
+                                                   // 5. Bottom-Right (Repeat)
     projectiles_vertices_[vertex_offset + 4] =
-      projectiles_vertices_[vertex_offset + 2];  // Same as vertex 3
+        projectiles_vertices_[vertex_offset + 2];  // Same as vertex 3
     // 6. Top-Right
     projectiles_vertices_[vertex_offset + 5] = {
-      {x + w, y}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordTop}};
+        {x + w, y}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordTop}};
   }
 };
 

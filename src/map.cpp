@@ -10,7 +10,7 @@
 namespace rl2 {
 
 SDL_Texture* TileManager::GetTileTexture(const char* file,
-                                           SDL_Renderer* renderer) {
+                                         SDL_Renderer* renderer) {
   SDL_Surface* tile_map_surface = SDL_LoadBMP(file);
   SDL_Texture* tile_texture =
       SDL_CreateTextureFromSurface(renderer, tile_map_surface);

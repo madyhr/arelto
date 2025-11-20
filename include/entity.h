@@ -38,6 +38,7 @@ struct ProjectileData {
   float speed;
   Size size;
   float inv_mass;
+  int texture_id;
 };
 
 class Projectiles {
@@ -48,6 +49,7 @@ class Projectiles {
   std::vector<float> speeds_;
   std::vector<Size> sizes_;
   std::vector<float> inv_masses_;
+  std::vector<int> texture_ids_;
   size_t GetNumProjectiles() { return owner_ids_.size(); };
   void AddProjectile(ProjectileData proj);
   void DestroyProjectile(int idx);
@@ -57,6 +59,7 @@ class Player : public Entity {
 
  public:
   Fireball fireball_ = {0.5f, 0.0f};
+  Frostbolt frostbolt_ = {0.5, 0.0f};
   ProjectileData CastSpell();
 };
 

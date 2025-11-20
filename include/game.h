@@ -7,6 +7,7 @@
 #include <SDL_render.h>
 #include <array>
 #include <vector>
+#include <map>
 #include "constants.h"
 #include "entity.h"
 #include "map.h"
@@ -20,7 +21,7 @@ struct GameResources {
   SDL_Texture* tile_texture = nullptr;
   SDL_Texture* player_texture = nullptr;
   SDL_Texture* enemy_texture = nullptr;
-  SDL_Texture* projectile_texture = nullptr;
+  std::vector<SDL_Texture*> projectile_textures;
   SDL_Rect map_layout = {(int)0, (int)0, kWindowWidth, kWindowHeight};
   TileManager tile_manager;
 };
@@ -36,8 +37,7 @@ class FrameStats {
   float frame_time_sum = 0.0f;
   int current_buffer_length = 0;
   int max_buffer_length = 100;
-  int head_index = 0;
-  void update_frame_time_buffer(float dt);
+  int head_index = 0; void update_frame_time_buffer(float dt);
   float get_average_frame_time();
   void print_fps_running_average(float dt);
 };
@@ -62,7 +62,7 @@ class Game {
   Projectiles projectiles_;
   Camera camera_;
   SDL_Vertex enemies_vertices_[kTotalEnemyVertices];
-  std::vector<SDL_Vertex> projectiles_vertices_;
+  std::map<int, std::vector<SDL_Vertex>> grouped_projectiles_vertices_;
   bool is_running_;
   float time_ = 0.0f;
   float dt = 0.0f;
@@ -83,6 +83,7 @@ class Game {
   void RenderTiledMap();
   void SetupEnemyGeometry();
   void SetupProjectileGeometry();
+  void RenderProjectiles();
 };
 
 }  // namespace rl2

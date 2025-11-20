@@ -3,6 +3,7 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL_render.h>
 #include <SDL_surface.h>
+#include <algorithm>
 #include <cstdio>
 #include <iostream>
 #include "constants.h"
@@ -82,13 +83,20 @@ bool Game::InitializeResources() {
       IMG_LoadTexture(resources_.renderer, "assets/textures/wizard.png");
   resources_.enemy_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/goblin.png");
-  resources_.projectile_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/fireball.png");
+  // resources_.projectile_texture =
+  //     IMG_LoadTexture(resources_.renderer, "assets/textures/fireball.png");
+  resources_.projectile_textures.push_back(
+      IMG_LoadTexture(resources_.renderer, "assets/textures/fireball.png"));
+  resources_.projectile_textures.push_back(
+      IMG_LoadTexture(resources_.renderer, "assets/textures/frostbolt.png"));
 
   if (resources_.tile_texture == nullptr ||
       resources_.player_texture == nullptr ||
       resources_.enemy_texture == nullptr ||
-      resources_.projectile_texture == nullptr) {
+      std::any_of(
+          resources_.projectile_textures.begin(),
+          resources_.projectile_textures.end(),
+          [](SDL_Texture* sdl_texture) { return sdl_texture == nullptr; })) {
     std::cerr << "One or more textures could not be loaded: " << SDL_GetError()
               << std::endl;
     return false;
@@ -243,9 +251,32 @@ void Game::ProcessPlayerInput() {
                                  fireball_velocity,
                                  kFireballSpeed,
                                  {kFireballWidth, kFireballHeight},
-                                 0.0f};
+                                 0.0f,
+                                 0};
       projectiles_.AddProjectile(fireball);
       player_.fireball_.time_of_last_use = time_;
+    }
+  }
+  if (currentKeyStates[SDL_SCANCODE_I]) {
+    bool frostbolt_is_ready = time_ >= player_.frostbolt_.GetReadyTime();
+    if (frostbolt_is_ready) {
+      Vector2D frostbolt_velocity = NormalizeVector2D(player_.velocity_);
+      if (player_.velocity_.Norm() < 1e-3) {
+        frostbolt_velocity.x =
+            GenerateRandomFloat(-1.0f, 1.0f) * kFrostboltSpeed;
+        frostbolt_velocity.y =
+            GenerateRandomFloat(-1.0f, 1.0f) * kFrostboltSpeed;
+        frostbolt_velocity = NormalizeVector2D(frostbolt_velocity);
+      }
+      ProjectileData frostbolt = {0,
+                                  player_.position_,
+                                  frostbolt_velocity,
+                                  kFrostboltSpeed,
+                                  {kFrostboltWidth, kFrostboltHeight},
+                                  0.0f,
+                                  1};
+      projectiles_.AddProjectile(frostbolt);
+      player_.frostbolt_.time_of_last_use = time_;
     }
   }
 }
@@ -349,11 +380,13 @@ void Game::GenerateOutput() {
 
   SetupProjectileGeometry();
 
-  size_t num_projectiles = projectiles_.GetNumProjectiles();
-  int num_proj_vertices = num_projectiles * kProjectileVertices;
-  SDL_RenderGeometry(resources_.renderer, resources_.projectile_texture,
-                     projectiles_vertices_.data(), num_proj_vertices, nullptr,
-                     0);
+  RenderProjectiles();
+  //
+  // size_t num_projectiles = projectiles_.GetNumProjectiles();
+  // int num_proj_vertices = num_projectiles * kProjectileVertices;
+  // SDL_RenderGeometry(resources_.renderer, resources_.projectile_textures[0],
+  //                    grouped_projectiles_vertices_, num_proj_vertices, nullptr,
+  //                    0);
   // For debugging render boxes
   // SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 255);
   // SDL_RenderFillRect(resources_.renderer, &player_render_box);
@@ -430,40 +463,53 @@ void Game::SetupProjectileGeometry() {
     return;
   }
 
-  size_t required_vertices = num_projectiles * kProjectileVertices;
-  projectiles_vertices_.resize(required_vertices);
+  grouped_projectiles_vertices_.clear();
 
   for (int i = 0; i < num_projectiles; ++i) {
     float x = projectiles_.positions_[i].x - camera_.position_.x;
     float y = projectiles_.positions_[i].y - camera_.position_.y;
     float w = projectiles_.sizes_[i].width;
     float h = projectiles_.sizes_[i].height;
+    int texture_id = projectiles_.texture_ids_[i];
 
-    int vertex_offset = i * kProjectileVertices;
+    SDL_Vertex vertices[kProjectileVertices];
 
     // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
     // 1. Top-Left
-    projectiles_vertices_[vertex_offset + 0] = {
-        {x, y}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordTop}};
+    vertices[0] = {{x, y}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordTop}};
     // 2. Bottom-Left
-    projectiles_vertices_[vertex_offset + 1] = {
+    vertices[1] = {
         {x, y + h}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordBottom}};
     // 3. Bottom-Right
-    projectiles_vertices_[vertex_offset + 2] = {
-        {x + w, y + h},
-        {255, 255, 255, 255},
-        {kTexCoordRight, kTexCoordBottom}};
+    vertices[2] = {{x + w, y + h},
+                   {255, 255, 255, 255},
+                   {kTexCoordRight, kTexCoordBottom}};
     // --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
     // 4. Top-Left (Repeat)
-    projectiles_vertices_[vertex_offset + 3] =
-        projectiles_vertices_[vertex_offset + 0];  // Same as vertex 1
-                                                   // 5. Bottom-Right (Repeat)
-    projectiles_vertices_[vertex_offset + 4] =
-        projectiles_vertices_[vertex_offset + 2];  // Same as vertex 3
+    vertices[3] = vertices[0];  // Same as vertex 1
+                                // 5. Bottom-Right (Repeat)
+    vertices[4] = vertices[2];  // Same as vertex 3
     // 6. Top-Right
-    projectiles_vertices_[vertex_offset + 5] = {
+    vertices[5] = {
         {x + w, y}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordTop}};
+
+    for (int j = 0; j < kProjectileVertices; ++j) {
+      grouped_projectiles_vertices_[texture_id].push_back(vertices[j]);
+    }
   }
+};
+
+void Game::RenderProjectiles() {
+
+  for (const auto& pair : grouped_projectiles_vertices_) {
+    int texture_id = pair.first;
+    const std::vector<SDL_Vertex>& vertices = pair.second;
+    if (texture_id >= 0 && texture_id < resources_.projectile_textures.size()) {
+      SDL_RenderGeometry(resources_.renderer,
+                         resources_.projectile_textures[texture_id],
+                         vertices.data(), (int)vertices.size(), nullptr, 0);
+    };
+  };
 };
 
 void Game::Shutdown() {

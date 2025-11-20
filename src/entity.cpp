@@ -16,6 +16,7 @@ void Projectiles::AddProjectile(ProjectileData proj) {
   speeds_.push_back(proj.speed);
   sizes_.push_back(proj.size);
   inv_masses_.push_back(proj.inv_mass);
+  texture_ids_.push_back(proj.texture_id);
 };
 
 void Projectiles::DestroyProjectile(int idx) {
@@ -27,6 +28,8 @@ void Projectiles::DestroyProjectile(int idx) {
     speeds_[idx] = std::move(speeds_[last_idx]);
     sizes_[idx] = std::move(sizes_[last_idx]);
     inv_masses_[idx] = std::move(inv_masses_[last_idx]);
+    texture_ids_[idx] = std::move(texture_ids_[last_idx]);
+
   };
   owner_ids_.pop_back();
   positions_.pop_back();
@@ -34,6 +37,7 @@ void Projectiles::DestroyProjectile(int idx) {
   speeds_.pop_back();
   sizes_.pop_back();
   inv_masses_.pop_back();
+  texture_ids_.pop_back();
 };
 
 }  // namespace rl2

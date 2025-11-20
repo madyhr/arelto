@@ -1,5 +1,7 @@
 // src/entity.cpp
 #include "entity.h"
+#include "game_math.h"
+#include "random.h"
 #include "types.h"
 
 namespace rl2 {
@@ -7,6 +9,30 @@ namespace rl2 {
 void Entity::UpdateAABB() {
   aabb_ = {position_.x, position_.y, position_.x + stats_.size.width,
            position_.y + stats_.size.height, 0};
+};
+
+std::optional<ProjectileData> Player::CastProjectileSpell(
+    BaseProjectileSpell& spell, float time) {
+
+  bool spell_is_ready = time >= spell.GetReadyTime();
+  if (spell_is_ready) {
+    Vector2D spell_direction = NormalizeVector2D(velocity_);
+    if (velocity_.Norm() < 1e-3) {
+      spell_direction.x = GenerateRandomFloat(-1.0f, 1.0f) * spell.base_speed;
+      spell_direction.y = GenerateRandomFloat(-1.0f, 1.0f) * spell.base_speed;
+      spell_direction = NormalizeVector2D(spell_direction);
+    }
+    ProjectileData projectile_spell = {0,
+                                       position_,
+                                       spell_direction,
+                                       spell.base_speed,
+                                       {spell.base_width, spell.base_height},
+                                       0.0f,
+                                       spell.id};
+    spell.time_of_last_use = time;
+    return projectile_spell;
+  }
+  return std::nullopt;
 };
 
 void Projectiles::AddProjectile(ProjectileData proj) {
@@ -29,7 +55,6 @@ void Projectiles::DestroyProjectile(int idx) {
     sizes_[idx] = std::move(sizes_[last_idx]);
     inv_masses_[idx] = std::move(inv_masses_[last_idx]);
     texture_ids_[idx] = std::move(texture_ids_[last_idx]);
-
   };
   owner_ids_.pop_back();
   positions_.pop_back();

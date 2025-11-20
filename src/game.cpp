@@ -238,45 +238,19 @@ void Game::ProcessPlayerInput() {
     player_.velocity_.x += 1.0f;
   }
   if (currentKeyStates[SDL_SCANCODE_F]) {
-    bool fireball_is_ready = time_ >= player_.fireball_.GetReadyTime();
-    if (fireball_is_ready) {
-      Vector2D fireball_velocity = NormalizeVector2D(player_.velocity_);
-      if (player_.velocity_.Norm() < 1e-3) {
-        fireball_velocity.x = GenerateRandomFloat(-1.0f, 1.0f) * kFireballSpeed;
-        fireball_velocity.y = GenerateRandomFloat(-1.0f, 1.0f) * kFireballSpeed;
-        fireball_velocity = NormalizeVector2D(fireball_velocity);
-      }
-      ProjectileData fireball = {0,
-                                 player_.position_,
-                                 fireball_velocity,
-                                 kFireballSpeed,
-                                 {kFireballWidth, kFireballHeight},
-                                 0.0f,
-                                 0};
-      projectiles_.AddProjectile(fireball);
-      player_.fireball_.time_of_last_use = time_;
+    std::optional<ProjectileData> fireball =
+        player_.CastProjectileSpell(player_.fireball_, time_);
+
+    if (fireball.has_value()) {
+      projectiles_.AddProjectile(*fireball);
     }
   }
   if (currentKeyStates[SDL_SCANCODE_I]) {
-    bool frostbolt_is_ready = time_ >= player_.frostbolt_.GetReadyTime();
-    if (frostbolt_is_ready) {
-      Vector2D frostbolt_velocity = NormalizeVector2D(player_.velocity_);
-      if (player_.velocity_.Norm() < 1e-3) {
-        frostbolt_velocity.x =
-            GenerateRandomFloat(-1.0f, 1.0f) * kFrostboltSpeed;
-        frostbolt_velocity.y =
-            GenerateRandomFloat(-1.0f, 1.0f) * kFrostboltSpeed;
-        frostbolt_velocity = NormalizeVector2D(frostbolt_velocity);
-      }
-      ProjectileData frostbolt = {0,
-                                  player_.position_,
-                                  frostbolt_velocity,
-                                  kFrostboltSpeed,
-                                  {kFrostboltWidth, kFrostboltHeight},
-                                  0.0f,
-                                  1};
-      projectiles_.AddProjectile(frostbolt);
-      player_.frostbolt_.time_of_last_use = time_;
+  std::optional<ProjectileData> frostbolt =
+        player_.CastProjectileSpell(player_.frostbolt_, time_);
+
+    if (frostbolt.has_value()) {
+      projectiles_.AddProjectile(*frostbolt);
     }
   }
 }
@@ -463,7 +437,7 @@ void Game::SetupProjectileGeometry() {
     return;
   }
 
-  grouped_projectiles_vertices_.clear();
+  projectile_vertices_grouped_.clear();
 
   for (int i = 0; i < num_projectiles; ++i) {
     float x = projectiles_.positions_[i].x - camera_.position_.x;
@@ -494,14 +468,14 @@ void Game::SetupProjectileGeometry() {
         {x + w, y}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordTop}};
 
     for (int j = 0; j < kProjectileVertices; ++j) {
-      grouped_projectiles_vertices_[texture_id].push_back(vertices[j]);
+      projectile_vertices_grouped_[texture_id].push_back(vertices[j]);
     }
   }
 };
 
 void Game::RenderProjectiles() {
 
-  for (const auto& pair : grouped_projectiles_vertices_) {
+  for (const auto& pair : projectile_vertices_grouped_) {
     int texture_id = pair.first;
     const std::vector<SDL_Vertex>& vertices = pair.second;
     if (texture_id >= 0 && texture_id < resources_.projectile_textures.size()) {

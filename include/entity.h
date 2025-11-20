@@ -3,6 +3,7 @@
 #define RL2_ENTITY_H_
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <vector>
 #include "abilities.h"
 #include "constants.h"
@@ -58,9 +59,9 @@ class Projectiles {
 class Player : public Entity {
 
  public:
-  Fireball fireball_ = {0.5f, 0.0f};
-  Frostbolt frostbolt_ = {0.5, 0.0f};
-  ProjectileData CastSpell();
+  Fireball fireball_;
+  Frostbolt frostbolt_;
+  std::optional<ProjectileData> CastProjectileSpell(BaseProjectileSpell& spell, float time);
 };
 
 struct Enemies {

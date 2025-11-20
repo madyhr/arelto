@@ -62,7 +62,7 @@ class Game {
   Projectiles projectiles_;
   Camera camera_;
   SDL_Vertex enemies_vertices_[kTotalEnemyVertices];
-  std::map<int, std::vector<SDL_Vertex>> grouped_projectiles_vertices_;
+  std::map<int, std::vector<SDL_Vertex>> projectile_vertices_grouped_;
   bool is_running_;
   float time_ = 0.0f;
   float dt = 0.0f;

@@ -1,7 +1,7 @@
 // src/entity.cpp
 #include "entity.h"
+#include "constants.h"
 #include "game_math.h"
-#include "random.h"
 #include "types.h"
 
 namespace rl2 {
@@ -11,23 +11,27 @@ void Entity::UpdateAABB() {
            position_.y + stats_.size.height, 0};
 };
 
+void UpdateEnemyStatus(Enemies& enemies) {
+  for (int i = 0; i < kNumEnemies; ++i) {
+    if (enemies.health_points[i] <= 0) {
+      enemies.is_alive[i] = false;
+    };
+  };
+};
+
 std::optional<ProjectileData> Player::CastProjectileSpell(
-    BaseProjectileSpell& spell, float time) {
+    BaseProjectileSpell& spell, float time, Vector2D cursor_position) {
 
   bool spell_is_ready = time >= spell.GetReadyTime();
   if (spell_is_ready) {
-    Vector2D spell_direction = NormalizeVector2D(velocity_);
-    if (velocity_.Norm() < 1e-3) {
-      spell_direction.x = GenerateRandomFloat(-1.0f, 1.0f) * spell.base_speed;
-      spell_direction.y = GenerateRandomFloat(-1.0f, 1.0f) * spell.base_speed;
-      spell_direction = NormalizeVector2D(spell_direction);
-    }
-    ProjectileData projectile_spell = {0,
+    Vector2D spell_direction = SubtractVector2D(cursor_position, position_);
+    spell_direction = NormalizeVector2D(spell_direction);
+    ProjectileData projectile_spell = {entity_id,
                                        position_,
                                        spell_direction,
-                                       spell.base_speed,
-                                       {spell.base_width, spell.base_height},
-                                       0.0f,
+                                       spell.speed,
+                                       {spell.width, spell.height},
+                                       spell.inv_mass,
                                        spell.id};
     spell.time_of_last_use = time;
     return projectile_spell;

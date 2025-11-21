@@ -11,9 +11,14 @@
 
 namespace rl2 {
 
+Vector2D SubtractVector2D(Vector2D v0, Vector2D v1){
+  return {v0.x - v1.x, v0.y - v1.y};
+}
+
 Vector2D NormalizeVector2D(Vector2D vector) {
-  vector.x = vector.x / vector.Norm();
-  vector.y = vector.y / vector.Norm();
+  float norm = vector.Norm();
+  vector.x = vector.x / norm;
+  vector.y = vector.y / norm;
   return vector;
 };
 
@@ -34,9 +39,9 @@ void HandleCollisionsSAP(Player& player, Enemies& enemies) {
   entities_aabb[0] = player.aabb_;
   for (int i = 1; i < kNumEnemies + 1; ++i) {
     entities_aabb[i] = {
-      enemies.positions[i - 1].x, enemies.positions[i - 1].y,
-      enemies.positions[i - 1].x + enemies.sizes[i - 1].width,
-      enemies.positions[i - 1].y + enemies.sizes[i - 1].height, i};
+      enemies.position[i - 1].x, enemies.position[i - 1].y,
+      enemies.position[i - 1].x + enemies.size[i - 1].width,
+      enemies.position[i - 1].y + enemies.size[i - 1].height, i};
   }
 
   std::array<AABB, kNumEntities> sorted_aabb = entities_aabb;
@@ -103,8 +108,8 @@ void ResolveCollisionPairsSAP(Player& player, Enemies& enemies,
         player.position_.y += dy;
       } else {
         int enemy_idx = idx - 1;
-        enemies.positions[enemy_idx].x += dx;
-        enemies.positions[enemy_idx].y += dy;
+        enemies.position[enemy_idx].x += dx;
+        enemies.position[enemy_idx].y += dy;
       }
     };
     auto GetEntityCentroid = [&](int idx) -> Vector2D {
@@ -112,8 +117,8 @@ void ResolveCollisionPairsSAP(Player& player, Enemies& enemies,
         return rl2::GetCentroid(player.position_, player.stats_.size);
       } else {
         int enemy_idx = idx - 1;
-        return rl2::GetCentroid(enemies.positions[enemy_idx],
-                                enemies.sizes[enemy_idx]);
+        return rl2::GetCentroid(enemies.position[enemy_idx],
+                                enemies.size[enemy_idx]);
       }
     };
     auto GetEntityInvMass = [&](int idx) -> float {
@@ -121,7 +126,7 @@ void ResolveCollisionPairsSAP(Player& player, Enemies& enemies,
         return player.stats_.inv_mass;
       } else {
         int enemy_idx = idx - 1;
-        return enemies.inv_masses[enemy_idx];
+        return enemies.inv_mass[enemy_idx];
       }
     };
     float inv_mass_a = GetEntityInvMass(cp.index_a);
@@ -167,18 +172,18 @@ void HandlePlayerOOB(Player& player) {
 
 void HandleEnemyOOB(Enemies& enemies) {
   for (int i = 0; i < kNumEnemies; ++i) {
-    if (enemies.are_alive[i]) {
-      if (enemies.positions[i].x < 0) {
-        enemies.positions[i].x = 0;
+    if (enemies.is_alive[i]) {
+      if (enemies.position[i].x < 0) {
+        enemies.position[i].x = 0;
       }
-      if (enemies.positions[i].y < 0) {
-        enemies.positions[i].y = 0;
+      if (enemies.position[i].y < 0) {
+        enemies.position[i].y = 0;
       }
-      if ((enemies.positions[i].x + enemies.sizes[i].width) > kMapWidth) {
-        enemies.positions[i].x = kMapWidth - enemies.sizes[i].width;
+      if ((enemies.position[i].x + enemies.size[i].width) > kMapWidth) {
+        enemies.position[i].x = kMapWidth - enemies.size[i].width;
       }
-      if ((enemies.positions[i].y + enemies.sizes[i].height) > kMapHeight) {
-        enemies.positions[i].y = kMapHeight - enemies.sizes[i].height;
+      if ((enemies.position[i].y + enemies.size[i].height) > kMapHeight) {
+        enemies.position[i].y = kMapHeight - enemies.size[i].height;
       }
     }
   }

@@ -11,6 +11,7 @@
 #include "constants.h"
 #include "entity.h"
 #include "map.h"
+#include "types.h"
 
 namespace rl2 {
 // Struct to hold all the core resources
@@ -61,9 +62,11 @@ class Game {
   Enemies enemy_;
   Projectiles projectiles_;
   Camera camera_;
+  Vector2D cursor_position_;
   SDL_Vertex enemies_vertices_[kTotalEnemyVertices];
   std::map<int, std::vector<SDL_Vertex>> projectile_vertices_grouped_;
   bool is_running_;
+  float last_kill_tick = 0.0f;
   float time_ = 0.0f;
   float dt = 0.0f;
   bool InitializeResources();
@@ -71,6 +74,7 @@ class Game {
   bool InitializeEnemies();
   bool InitializeCamera();
   void ProcessInput();
+  Vector2D GetCursorPositionWorld();
   void ProcessPlayerInput();
   void Update();
   void UpdateEnemyPosition(float dt);
@@ -81,9 +85,11 @@ class Game {
   void HandleOutOfBounds();
   void GenerateOutput();
   void RenderTiledMap();
-  void SetupEnemyGeometry();
+  int SetupEnemyGeometry();
+  void RenderEnemies(int num_vertices);
   void SetupProjectileGeometry();
   void RenderProjectiles();
+  void KillEnemiesSlowly();
 };
 
 }  // namespace rl2

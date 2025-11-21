@@ -115,14 +115,14 @@ bool Game::InitializePlayer() {
 };
 
 bool Game::InitializeEnemies() {
-  std::fill(enemy_.are_alive.begin(), enemy_.are_alive.end(), true);
-  std::fill(enemy_.movement_speeds.begin(), enemy_.movement_speeds.end(),
+  std::fill(enemy_.is_alive.begin(), enemy_.is_alive.end(), true);
+  std::fill(enemy_.movement_speed.begin(), enemy_.movement_speed.end(),
             kEnemySpeed);
-  std::fill(enemy_.sizes.begin(), enemy_.sizes.end(),
+  std::fill(enemy_.size.begin(), enemy_.size.end(),
             Size{kEnemyHeight, kEnemyWidth});
   std::fill(enemy_.health_points.begin(), enemy_.health_points.end(),
             kEnemyHealth);
-  std::fill(enemy_.inv_masses.begin(), enemy_.inv_masses.end(), kEnemyInvMass);
+  std::fill(enemy_.inv_mass.begin(), enemy_.inv_mass.end(), kEnemyInvMass);
 
   int max_x = kMapWidth - kEnemyWidth;
   int max_y = kMapHeight - kEnemyHeight;
@@ -137,10 +137,10 @@ bool Game::InitializeEnemies() {
     } while (CalculateVector2dDistance(potential_pos, player_.position_) <
              kEnemyMinimumInitialDistance);
 
-    enemy_.positions[i] = potential_pos;
-    enemy_.movement_speeds[i] += GenerateRandomInt(1, 100);
-    enemy_.sizes[i].height += GenerateRandomInt(1, 50);
-    enemy_.sizes[i].width += GenerateRandomInt(1, 50);
+    enemy_.position[i] = potential_pos;
+    enemy_.movement_speed[i] += GenerateRandomInt(1, 100);
+    enemy_.size[i].height += GenerateRandomInt(1, 50);
+    enemy_.size[i].width += GenerateRandomInt(1, 50);
   };
 
   SDL_Color red = {255, 0, 0, 255};
@@ -219,8 +219,18 @@ void Game::ProcessInput() {
       }
     }
   }
+  cursor_position_ = GetCursorPositionWorld();
   Game::ProcessPlayerInput();
 }
+
+Vector2D Game::GetCursorPositionWorld(){
+  int cursor_x, cursor_y;
+  uint32_t cursor_mask = SDL_GetMouseState(&cursor_x, &cursor_y);
+  
+  return {(float)(cursor_x + camera_.position_.x), (float)(cursor_y + camera_.position_.y)};
+};
+
+
 
 void Game::ProcessPlayerInput() {
   player_.velocity_ = {0.0f, 0.0f};
@@ -239,15 +249,15 @@ void Game::ProcessPlayerInput() {
   }
   if (currentKeyStates[SDL_SCANCODE_F]) {
     std::optional<ProjectileData> fireball =
-        player_.CastProjectileSpell(player_.fireball_, time_);
+        player_.CastProjectileSpell(player_.fireball_, time_, cursor_position_);
 
     if (fireball.has_value()) {
       projectiles_.AddProjectile(*fireball);
     }
   }
   if (currentKeyStates[SDL_SCANCODE_I]) {
-  std::optional<ProjectileData> frostbolt =
-        player_.CastProjectileSpell(player_.frostbolt_, time_);
+    std::optional<ProjectileData> frostbolt =
+        player_.CastProjectileSpell(player_.frostbolt_, time_, cursor_position_);
 
     if (frostbolt.has_value()) {
       projectiles_.AddProjectile(*frostbolt);
@@ -264,6 +274,12 @@ void Game::Update() {
   Game::HandleOutOfBounds();
 
   Game::UpdateCameraPosition();
+  // if (time_ >= last_kill_tick + 1.0f) {
+  //   last_kill_tick = time_;
+  //   Game::KillEnemiesSlowly();
+  //   std::cout << printf("I am dying!") << std::endl;
+  // };
+  rl2::UpdateEnemyStatus(enemy_);
 
   game_status_.frame_stats.print_fps_running_average(dt);
 }
@@ -284,15 +300,17 @@ void Game::UpdatePlayerPosition(float dt) {
 
 void Game::UpdateEnemyPosition(float dt) {
   for (int i = 0; i < kNumEnemies; ++i) {
-    float dx = player_.position_.x - enemy_.positions[i].x;
-    float dy = player_.position_.y - enemy_.positions[i].y;
-    float distance_to_player = std::hypot(dx, dy);
-    enemy_.velocities[i].x = dx / (distance_to_player + 1e-6);
-    enemy_.velocities[i].y = dy / (distance_to_player + 1e-6);
-    enemy_.positions[i].x +=
-        enemy_.velocities[i].x * enemy_.movement_speeds[i] * dt;
-    enemy_.positions[i].y +=
-        enemy_.velocities[i].y * enemy_.movement_speeds[i] * dt;
+    if (enemy_.is_alive[i]) {
+      float dx = player_.position_.x - enemy_.position[i].x;
+      float dy = player_.position_.y - enemy_.position[i].y;
+      float distance_to_player = std::hypot(dx, dy);
+      enemy_.velocity[i].x = dx / (distance_to_player + 1e-6);
+      enemy_.velocity[i].y = dy / (distance_to_player + 1e-6);
+      enemy_.position[i].x +=
+          enemy_.velocity[i].x * enemy_.movement_speed[i] * dt;
+      enemy_.position[i].y +=
+          enemy_.velocity[i].y * enemy_.movement_speed[i] * dt;
+    }
   }
 };
 
@@ -348,26 +366,19 @@ void Game::GenerateOutput() {
 
   SDL_RenderCopy(resources_.renderer, resources_.player_texture, NULL,
                  &player_render_box);
-  SetupEnemyGeometry();
-  SDL_RenderGeometry(resources_.renderer, resources_.enemy_texture,
-                     enemies_vertices_, kTotalEnemyVertices, nullptr, 0);
+
+  int num_enemy_vertices = SetupEnemyGeometry();
+  RenderEnemies(num_enemy_vertices);
 
   SetupProjectileGeometry();
-
   RenderProjectiles();
-  //
-  // size_t num_projectiles = projectiles_.GetNumProjectiles();
-  // int num_proj_vertices = num_projectiles * kProjectileVertices;
-  // SDL_RenderGeometry(resources_.renderer, resources_.projectile_textures[0],
-  //                    grouped_projectiles_vertices_, num_proj_vertices, nullptr,
-  //                    0);
+
   // For debugging render boxes
   // SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 255);
   // SDL_RenderFillRect(resources_.renderer, &player_render_box);
   // SDL_RenderGeometry(resources_.renderer, nullptr, enemy_vertices_,
   //                    kTotalEnemyVertices, nullptr, 0);
-  //
-  //
+
   SDL_RenderPresent(resources_.renderer);
 };
 
@@ -398,37 +409,56 @@ void Game::RenderTiledMap() {
   }
 };
 
-void Game::SetupEnemyGeometry() {
-  for (int i = 0; i < kNumEnemies; ++i) {
-    float x = enemy_.positions[i].x - camera_.position_.x;
-    float y = enemy_.positions[i].y - camera_.position_.y;
-    float w = enemy_.sizes[i].width;
-    float h = enemy_.sizes[i].height;
+int Game::SetupEnemyGeometry() {
+  // The return type is int as we need to know how many vertices to actually
+  // render when we call SDLRenderGeometry. So we traverse the enemies struct
+  // and keep count of the total number of active vertices.
 
-    int vertex_offset = i * kEnemyVertices;
+  int current_vertex_idx = 0;
+
+  for (int i = 0; i < kNumEnemies; ++i) {
+    if (!enemy_.is_alive[i]) {
+      continue;
+    };
+
+    float x = enemy_.position[i].x - camera_.position_.x;
+    float y = enemy_.position[i].y - camera_.position_.y;
+    float w = enemy_.size[i].width;
+    float h = enemy_.size[i].height;
 
     // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
     // 1. Top-Left
-    enemies_vertices_[vertex_offset + 0] = {
+    enemies_vertices_[current_vertex_idx + 0] = {
         {x, y}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordTop}};
     // 2. Bottom-Left
-    enemies_vertices_[vertex_offset + 1] = {
+    enemies_vertices_[current_vertex_idx + 1] = {
         {x, y + h}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordBottom}};
     // 3. Bottom-Right
-    enemies_vertices_[vertex_offset + 2] = {{x + w, y + h},
-                                            {255, 255, 255, 255},
-                                            {kTexCoordRight, kTexCoordBottom}};
+    enemies_vertices_[current_vertex_idx + 2] = {
+        {x + w, y + h},
+        {255, 255, 255, 255},
+        {kTexCoordRight, kTexCoordBottom}};
     // --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
     // 4. Top-Left (Repeat)
-    enemies_vertices_[vertex_offset + 3] =
-        enemies_vertices_[vertex_offset + 0];  // Same as vertex 1
+    enemies_vertices_[current_vertex_idx + 3] =
+        enemies_vertices_[current_vertex_idx + 0];  // Same as vertex 1
     // 5. Bottom-Right (Repeat)
-    enemies_vertices_[vertex_offset + 4] =
-        enemies_vertices_[vertex_offset + 2];  // Same as vertex 3
+    enemies_vertices_[current_vertex_idx + 4] =
+        enemies_vertices_[current_vertex_idx + 2];  // Same as vertex 3
     // 6. Top-Right
-    enemies_vertices_[vertex_offset + 5] = {
+    enemies_vertices_[current_vertex_idx + 5] = {
         {x + w, y}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordTop}};
+
+    current_vertex_idx += kEnemyVertices;
   }
+  return current_vertex_idx;
+};
+
+void Game::RenderEnemies(int num_vertices) {
+  // We use the number of vertices calculated during the setup of the enemy
+  // geometry to render the vertices.
+  SDL_RenderGeometry(resources_.renderer, resources_.enemy_texture,
+                     enemies_vertices_, num_vertices, nullptr, 0);
 };
 
 void Game::SetupProjectileGeometry() {
@@ -485,6 +515,12 @@ void Game::RenderProjectiles() {
     };
   };
 };
+
+void Game::KillEnemiesSlowly() {
+  for (int i = 0; i < kNumEnemies; ++i) {
+    enemy_.health_points[i] -= 1;
+  }
+}
 
 void Game::Shutdown() {
 

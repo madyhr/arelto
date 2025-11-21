@@ -30,7 +30,7 @@ constexpr float kPlayerInvMass = 0.01f;
 
 // Enemy constants
 constexpr int kNumEnemies = 10;
-constexpr int kEnemyHealth = 1;
+constexpr int kEnemyHealth = 5;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;
 constexpr float kEnemySpeed = 40.0f;

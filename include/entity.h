@@ -59,20 +59,26 @@ class Projectiles {
 class Player : public Entity {
 
  public:
+  int entity_id = 0;
   Fireball fireball_;
   Frostbolt frostbolt_;
-  std::optional<ProjectileData> CastProjectileSpell(BaseProjectileSpell& spell, float time);
+  std::optional<ProjectileData> CastProjectileSpell(BaseProjectileSpell& spell,
+                                                    float time,
+                                                    Vector2D cursor_position);
 };
 
 struct Enemies {
-  std::array<bool, kNumEnemies> are_alive;
-  std::array<Vector2D, kNumEnemies> positions;
-  std::array<Vector2D, kNumEnemies> velocities;
-  std::array<uint32_t, kNumEnemies> health_points;
-  std::array<float, kNumEnemies> movement_speeds;
-  std::array<Size, kNumEnemies> sizes;
-  std::array<float, kNumEnemies> inv_masses;
+  std::array<bool, kNumEnemies> is_alive;
+  std::array<Vector2D, kNumEnemies> position;
+  std::array<Vector2D, kNumEnemies> velocity;
+  std::array<int, kNumEnemies> health_points;
+  std::array<float, kNumEnemies> movement_speed;
+  std::array<Size, kNumEnemies> size;
+  std::array<float, kNumEnemies> inv_mass;
 };
+
+void UpdateEnemyStatus(Enemies& enemies);
+
 }  // namespace rl2
 
 #endif

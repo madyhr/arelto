@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <iostream>
 #include <vector>
 #include "constants.h"
 #include "entity.h"
@@ -11,7 +12,7 @@
 
 namespace rl2 {
 
-Vector2D SubtractVector2D(Vector2D v0, Vector2D v1){
+Vector2D SubtractVector2D(Vector2D v0, Vector2D v1) {
   return {v0.x - v1.x, v0.y - v1.y};
 }
 
@@ -33,33 +34,40 @@ Vector2D GetCentroid(Vector2D position, Size size) {
   return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
 }
 
-void HandleCollisionsSAP(Player& player, Enemies& enemies) {
-  std::array<AABB, kNumEntities> entities_aabb;
+void HandleCollisionsSAP(Player& player, Enemies& enemies,
+                         Projectiles& projectiles) {
+  std::vector<AABB> entities_aabb;
   player.UpdateAABB();
-  entities_aabb[0] = player.aabb_;
-  for (int i = 1; i < kNumEnemies + 1; ++i) {
-    entities_aabb[i] = {
-      enemies.position[i - 1].x, enemies.position[i - 1].y,
-      enemies.position[i - 1].x + enemies.size[i - 1].width,
-      enemies.position[i - 1].y + enemies.size[i - 1].height, i};
+  entities_aabb.push_back(player.aabb_);
+  for (int i = 0; i < kNumEnemies; ++i) {
+    entities_aabb.push_back({enemies.position[i].x, enemies.position[i].y,
+                             enemies.position[i].x + enemies.size[i].width,
+                             enemies.position[i].y + enemies.size[i].height,
+                             enemies.entity_type, i + 1});
   }
-
-  std::array<AABB, kNumEntities> sorted_aabb = entities_aabb;
+  for (int i = 0; i < projectiles.GetNumProjectiles(); ++i) {
+    entities_aabb.push_back(
+        {projectiles.position_[i].x, projectiles.position_[i].y,
+         projectiles.position_[i].x + projectiles.size_[i].width,
+         projectiles.position_[i].y + projectiles.size_[i].height,
+         projectiles.entity_type_, i + 1 + kNumEnemies});
+  }
+  std::vector<AABB> sorted_aabb = entities_aabb;
   std::sort(sorted_aabb.begin(), sorted_aabb.end(),
             [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
 
   std::vector<CollisionPair> collision_pairs =
-    GetCollisionPairsSAP(sorted_aabb);
-  ResolveCollisionPairsSAP(player, enemies, entities_aabb, collision_pairs);
+      GetCollisionPairsSAP(sorted_aabb);
+  ResolveCollisionPairsSAP(player, enemies, projectiles, entities_aabb,
+                           collision_pairs);
 };
 
-std::vector<CollisionPair> GetCollisionPairsSAP(
-  std::array<AABB, kNumEntities> sorted_aabb) {
+std::vector<CollisionPair> GetCollisionPairsSAP(std::vector<AABB> sorted_aabb) {
   std::vector<CollisionPair> collision_pairs;
-  std::sort(sorted_aabb.begin(), sorted_aabb.end(),
-            [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
+  // std::sort(sorted_aabb.begin(), sorted_aabb.end(),
+  //           [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
   std::vector<const AABB*> active_list;
-  for (int i = 0; i < kNumEntities; ++i) {
+  for (int i = 0; i < sorted_aabb.size(); ++i) {
     const AABB& current_aabb = sorted_aabb[i];
 
     // Prune
@@ -75,7 +83,8 @@ std::vector<CollisionPair> GetCollisionPairsSAP(
                            current_aabb.min_y < active_aabb->max_y;
       if (has_y_overlap) {
         collision_pairs.push_back(
-          {current_aabb.entity_idx, active_aabb->entity_idx});
+            {current_aabb.storage_index, active_aabb->storage_index,
+             current_aabb.entity_type, active_aabb->entity_type});
       };
     }
 
@@ -87,9 +96,12 @@ std::vector<CollisionPair> GetCollisionPairsSAP(
 };
 
 void ResolveCollisionPairsSAP(Player& player, Enemies& enemies,
-                              std::array<AABB, kNumEntities> entities_aabb,
+                              Projectiles& projectiles,
+                              std::vector<AABB> entities_aabb,
                               std::vector<CollisionPair> collision_pairs) {
   for (const CollisionPair& cp : collision_pairs) {
+    CollisionType collision_type = GetCollisionType(cp);
+
     const AABB& a = entities_aabb[cp.index_a];
     const AABB& b = entities_aabb[cp.index_b];
 
@@ -102,18 +114,19 @@ void ResolveCollisionPairsSAP(Player& player, Enemies& enemies,
     // Choose smaller axis
     bool resolve_x = (overlap_x < overlap_y);
 
-    auto MoveEntity = [&](int idx, float dx, float dy) {
-      if (idx == 0) {
+    auto MoveEntity = [&](EntityType entity_type, int idx, float dx, float dy) {
+      if (entity_type == EntityType::player) {
         player.position_.x += dx;
         player.position_.y += dy;
-      } else {
+      } else if (entity_type == EntityType::enemy) {
         int enemy_idx = idx - 1;
         enemies.position[enemy_idx].x += dx;
         enemies.position[enemy_idx].y += dy;
       }
     };
-    auto GetEntityCentroid = [&](int idx) -> Vector2D {
-      if (idx == 0) {
+
+    auto GetEntityCentroid = [&](EntityType entity_type, int idx) -> Vector2D {
+      if (entity_type == EntityType::player) {
         return rl2::GetCentroid(player.position_, player.stats_.size);
       } else {
         int enemy_idx = idx - 1;
@@ -121,37 +134,96 @@ void ResolveCollisionPairsSAP(Player& player, Enemies& enemies,
                                 enemies.size[enemy_idx]);
       }
     };
-    auto GetEntityInvMass = [&](int idx) -> float {
-      if (idx == 0) {
+    auto GetEntityInvMass = [&](EntityType entity_type, int idx) -> float {
+      if (entity_type == EntityType::player) {
         return player.stats_.inv_mass;
       } else {
         int enemy_idx = idx - 1;
         return enemies.inv_mass[enemy_idx];
       }
     };
-    float inv_mass_a = GetEntityInvMass(cp.index_a);
-    float inv_mass_b = GetEntityInvMass(cp.index_b);
-    float push_factor = inv_mass_b / (inv_mass_a + inv_mass_b);
 
-    if (resolve_x) {
-      Vector2D centroid_a = GetEntityCentroid(cp.index_a);
-      Vector2D centroid_b = GetEntityCentroid(cp.index_b);
-      // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
-      float direction = (centroid_b.x - centroid_a.x >= 0.0f) ? 1.0f : -1.0f;
+    if (collision_type == CollisionType::player_enemy) {
+      float inv_mass_a = GetEntityInvMass(cp.type_a, cp.index_a);
+      float inv_mass_b = GetEntityInvMass(cp.type_b, cp.index_b);
+      float push_factor = inv_mass_b / (inv_mass_a + inv_mass_b);
 
-      MoveEntity(cp.index_a, -direction * overlap_x * (1.0f - push_factor),
-                 0.0f);
-      MoveEntity(cp.index_b, direction * overlap_x * push_factor, 0.0f);
-    } else {
-      Vector2D centroid_a = GetEntityCentroid(cp.index_a);
-      Vector2D centroid_b = GetEntityCentroid(cp.index_b);
-      // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
-      float direction = (centroid_b.y - centroid_a.y >= 0.0f) ? 1.0f : -1.0f;
+      if (resolve_x) {
+        Vector2D centroid_a = GetEntityCentroid(cp.type_a, cp.index_a);
+        Vector2D centroid_b = GetEntityCentroid(cp.type_b, cp.index_b);
+        // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
+        float direction = (centroid_b.x - centroid_a.x >= 0.0f) ? 1.0f : -1.0f;
 
-      MoveEntity(cp.index_a, 0.0f,
-                 -direction * overlap_y * (1.0f - push_factor));
-      MoveEntity(cp.index_b, 0.0f, direction * overlap_y * push_factor);
-    }
+        MoveEntity(cp.type_a, cp.index_a,
+                   -direction * overlap_x * (1.0f - push_factor), 0.0f);
+        MoveEntity(cp.type_b, cp.index_b, direction * overlap_x * push_factor,
+                   0.0f);
+      } else {
+        Vector2D centroid_a = GetEntityCentroid(cp.type_a, cp.index_a);
+        Vector2D centroid_b = GetEntityCentroid(cp.type_b, cp.index_b);
+        // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
+        float direction = (centroid_b.y - centroid_a.y >= 0.0f) ? 1.0f : -1.0f;
+
+        MoveEntity(cp.type_a, cp.index_a, 0.0f,
+                   -direction * overlap_y * (1.0f - push_factor));
+        MoveEntity(cp.type_b, cp.index_b, 0.0f,
+                   direction * overlap_y * push_factor);
+      }
+
+    } else if (collision_type == CollisionType::enemy_enemy) {
+      float inv_mass_a = GetEntityInvMass(cp.type_a, cp.index_a);
+      float inv_mass_b = GetEntityInvMass(cp.type_b, cp.index_b);
+      float push_factor = inv_mass_b / (inv_mass_a + inv_mass_b);
+
+      if (resolve_x) {
+        Vector2D centroid_a = GetEntityCentroid(cp.type_a, cp.index_a);
+        Vector2D centroid_b = GetEntityCentroid(cp.type_b, cp.index_b);
+        // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
+        float direction = (centroid_b.x - centroid_a.x >= 0.0f) ? 1.0f : -1.0f;
+
+        MoveEntity(cp.type_a, cp.index_a,
+                   -direction * overlap_x * (1.0f - push_factor), 0.0f);
+        MoveEntity(cp.type_b, cp.index_b, direction * overlap_x * push_factor,
+                   0.0f);
+      } else {
+        Vector2D centroid_a = GetEntityCentroid(cp.type_a, cp.index_a);
+        Vector2D centroid_b = GetEntityCentroid(cp.type_b, cp.index_b);
+        // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
+        float direction = (centroid_b.y - centroid_a.y >= 0.0f) ? 1.0f : -1.0f;
+
+        MoveEntity(cp.type_a, cp.index_a, 0.0f,
+                   -direction * overlap_y * (1.0f - push_factor));
+        MoveEntity(cp.type_b, cp.index_b, 0.0f,
+                   direction * overlap_y * push_factor);
+      }
+
+    } else if (collision_type == CollisionType::enemy_projectile) {
+      // std::cout << printf("enemy was hit by a proj") << std::endl;
+      if (cp.type_a == EntityType::projectile) {
+        int proj_idx = cp.index_a - 1 - kNumEnemies;
+        projectiles.to_be_destroyed_.insert(proj_idx);
+      };
+    };
+  }
+};
+
+CollisionType GetCollisionType(CollisionPair cp) {
+  EntityType type_a = cp.type_a;
+  EntityType type_b = cp.type_b;
+
+  // Order the two types by smallest value first to simplify collison type check
+  if (type_a > type_b) {
+    std::swap(type_a, type_b);
+  };
+
+  if (type_a == EntityType::player && type_b == EntityType::enemy) {
+    return CollisionType::player_enemy;
+  } else if (type_a == EntityType::enemy && type_b == EntityType::enemy) {
+    return CollisionType::enemy_enemy;
+  } else if (type_a == EntityType::enemy && type_b == EntityType::projectile) {
+    return CollisionType::enemy_projectile;
+  } else {
+    return CollisionType::None;
   }
 };
 
@@ -195,19 +267,11 @@ void HandleProjectileOOB(Projectiles& projectiles) {
     return;
   }
   for (int i = 0; i < num_projectiles; ++i) {
-    if (projectiles.positions_[i].x < 0) {
-      projectiles.DestroyProjectile(i);
-    }
-    if (projectiles.positions_[i].y < 0) {
-      projectiles.DestroyProjectile(i);
-    }
-    if ((projectiles.positions_[i].x + projectiles.sizes_[i].width) >
-        kMapWidth) {
-      projectiles.DestroyProjectile(i);
-    }
-    if ((projectiles.positions_[i].y + projectiles.sizes_[i].height) >
-        kMapHeight) {
-      projectiles.DestroyProjectile(i);
+    if (projectiles.position_[i].x < 0 || projectiles.position_[i].y < 0 ||
+        (projectiles.position_[i].x + projectiles.size_[i].width) > kMapWidth ||
+        (projectiles.position_[i].y + projectiles.size_[i].height) >
+            kMapHeight) {
+      projectiles.to_be_destroyed_.insert(i);
     }
   }
 };

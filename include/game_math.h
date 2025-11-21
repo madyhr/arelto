@@ -18,18 +18,21 @@ float CalculateVector2dDistance(Vector2D v0, Vector2D v1);
 Vector2D GetCentroid(Vector2D position, Size size);
 
 std::vector<CollisionPair> FindCollisionsSAP(
-  Vector2D player_position, std::array<Vector2D, kNumEnemies> enemy_position);
+    Vector2D player_position, std::array<Vector2D, kNumEnemies> enemy_position);
 
-void HandleCollisionsSAP(Player& player, Enemies& enemy);
-std::vector<CollisionPair> GetCollisionPairsSAP(
-  std::array<AABB, kNumEntities> sorted_aabb);
+void HandleCollisionsSAP(Player& player, Enemies& enemy,
+                         Projectiles& projectiles);
+std::vector<CollisionPair> GetCollisionPairsSAP(std::vector<AABB> sorted_aabb);
+CollisionType GetCollisionType(CollisionPair cp);
 void ResolveCollisionPairsSAP(Player& player, Enemies& enemy,
-                              std::array<AABB, kNumEntities> entity_aabb,
+                              Projectiles& projectiles,
+                              std::vector<AABB> entity_aabb,
                               std::vector<CollisionPair> collision_pairs);
 
 void HandlePlayerOOB(Player& player);
 void HandleEnemyOOB(Enemies& enemy);
 void HandleProjectileOOB(Projectiles& projectiles);
+void DestroyProjectiles(Projectiles& projectiles);
 
 }  // namespace rl2
 

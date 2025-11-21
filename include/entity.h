@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <unordered_set>
 #include <vector>
 #include "abilities.h"
 #include "constants.h"
@@ -25,6 +26,8 @@ struct Stats {
 
 class Entity {
  public:
+  // TODO: Replace entity type such that only player has this type
+  EntityType entity_type = EntityType::player;
   Stats stats_;
   Vector2D position_;
   Vector2D velocity_;
@@ -44,22 +47,24 @@ struct ProjectileData {
 
 class Projectiles {
  public:
-  std::vector<int> owner_ids_;
-  std::vector<Vector2D> positions_;
-  std::vector<Vector2D> velocities_;
-  std::vector<float> speeds_;
-  std::vector<Size> sizes_;
-  std::vector<float> inv_masses_;
-  std::vector<int> texture_ids_;
-  size_t GetNumProjectiles() { return owner_ids_.size(); };
+  std::vector<int> owner_id_;
+  std::vector<Vector2D> position_;
+  std::vector<Vector2D> direction_;
+  std::vector<float> speed_;
+  std::vector<Size> size_;
+  std::vector<float> inv_mass_;
+  std::vector<int> texture_id_;
+  std::unordered_set<int> to_be_destroyed_;
+  EntityType entity_type_ = EntityType::projectile;
+  size_t GetNumProjectiles() { return owner_id_.size(); };
   void AddProjectile(ProjectileData proj);
   void DestroyProjectile(int idx);
+  void DestroyProjectiles();
 };
 
 class Player : public Entity {
 
  public:
-  int entity_id = 0;
   Fireball fireball_;
   Frostbolt frostbolt_;
   std::optional<ProjectileData> CastProjectileSpell(BaseProjectileSpell& spell,
@@ -75,6 +80,7 @@ struct Enemies {
   std::array<float, kNumEnemies> movement_speed;
   std::array<Size, kNumEnemies> size;
   std::array<float, kNumEnemies> inv_mass;
+  EntityType entity_type = EntityType::enemy;
 };
 
 void UpdateEnemyStatus(Enemies& enemies);

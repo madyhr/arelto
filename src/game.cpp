@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <iostream>
+#include <numeric>
 #include "constants.h"
 #include "entity.h"
 #include "game_math.h"
@@ -193,11 +194,7 @@ void Game::RunGameLoop() {
   while (is_running_) {
     float current_time = (float)(SDL_GetTicks64() / 1000.0f);
     dt = current_time - time_;
-
-    Game::ProcessInput();
     Game::Update();
-    Game::GenerateOutput();
-
     time_ = current_time;
   }
 };
@@ -223,14 +220,13 @@ void Game::ProcessInput() {
   Game::ProcessPlayerInput();
 }
 
-Vector2D Game::GetCursorPositionWorld(){
+Vector2D Game::GetCursorPositionWorld() {
   int cursor_x, cursor_y;
   uint32_t cursor_mask = SDL_GetMouseState(&cursor_x, &cursor_y);
-  
-  return {(float)(cursor_x + camera_.position_.x), (float)(cursor_y + camera_.position_.y)};
+
+  return {(float)(cursor_x + camera_.position_.x),
+          (float)(cursor_y + camera_.position_.y)};
 };
-
-
 
 void Game::ProcessPlayerInput() {
   player_.velocity_ = {0.0f, 0.0f};
@@ -256,8 +252,8 @@ void Game::ProcessPlayerInput() {
     }
   }
   if (currentKeyStates[SDL_SCANCODE_I]) {
-    std::optional<ProjectileData> frostbolt =
-        player_.CastProjectileSpell(player_.frostbolt_, time_, cursor_position_);
+    std::optional<ProjectileData> frostbolt = player_.CastProjectileSpell(
+        player_.frostbolt_, time_, cursor_position_);
 
     if (frostbolt.has_value()) {
       projectiles_.AddProjectile(*frostbolt);
@@ -267,6 +263,7 @@ void Game::ProcessPlayerInput() {
 
 void Game::Update() {
 
+  Game::ProcessInput();
   Game::UpdatePlayerPosition(dt);
   Game::UpdateEnemyPosition(dt);
   Game::UpdateProjectilePosition(dt);
@@ -280,8 +277,10 @@ void Game::Update() {
   //   std::cout << printf("I am dying!") << std::endl;
   // };
   rl2::UpdateEnemyStatus(enemy_);
-
   game_status_.frame_stats.print_fps_running_average(dt);
+
+  Game::GenerateOutput();
+  projectiles_.DestroyProjectiles();
 }
 
 void Game::UpdatePlayerPosition(float dt) {
@@ -321,15 +320,15 @@ void Game::UpdateProjectilePosition(float dt) {
   };
 
   for (int i = 0; i < num_projectiles; ++i) {
-    projectiles_.positions_[i].x +=
-        projectiles_.velocities_[i].x * projectiles_.speeds_[i] * dt;
-    projectiles_.positions_[i].y +=
-        projectiles_.velocities_[i].y * projectiles_.speeds_[i] * dt;
+    projectiles_.position_[i].x +=
+        projectiles_.direction_[i].x * projectiles_.speed_[i] * dt;
+    projectiles_.position_[i].y +=
+        projectiles_.direction_[i].y * projectiles_.speed_[i] * dt;
   };
 };
 
 void Game::HandleCollisions() {
-  rl2::HandleCollisionsSAP(player_, enemy_);
+  rl2::HandleCollisionsSAP(player_, enemy_, projectiles_);
 };
 
 void Game::HandleOutOfBounds() {
@@ -462,19 +461,19 @@ void Game::RenderEnemies(int num_vertices) {
 };
 
 void Game::SetupProjectileGeometry() {
+  projectile_vertices_grouped_.clear();
   size_t num_projectiles = projectiles_.GetNumProjectiles();
   if (num_projectiles == 0) {
     return;
   }
 
-  projectile_vertices_grouped_.clear();
 
   for (int i = 0; i < num_projectiles; ++i) {
-    float x = projectiles_.positions_[i].x - camera_.position_.x;
-    float y = projectiles_.positions_[i].y - camera_.position_.y;
-    float w = projectiles_.sizes_[i].width;
-    float h = projectiles_.sizes_[i].height;
-    int texture_id = projectiles_.texture_ids_[i];
+    float x = projectiles_.position_[i].x - camera_.position_.x;
+    float y = projectiles_.position_[i].y - camera_.position_.y;
+    float w = projectiles_.size_[i].width;
+    float h = projectiles_.size_[i].height;
+    int texture_id = projectiles_.texture_id_[i];
 
     SDL_Vertex vertices[kProjectileVertices];
 

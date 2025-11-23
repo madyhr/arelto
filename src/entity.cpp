@@ -1,21 +1,28 @@
 // src/entity.cpp
 #include "entity.h"
+#include <algorithm>
 #include "constants.h"
 #include "game_math.h"
 #include "types.h"
-#include <algorithm>
 
 namespace rl2 {
 
 void Entity::UpdateAABB() {
-  aabb_ = {position_.x, position_.y, position_.x + stats_.size.width,
-           position_.y + stats_.size.height, entity_type, 0};
+  aabb_ = {position_.x,
+           position_.y,
+           position_.x + stats_.size.width,
+           position_.y + stats_.size.height,
+           entity_type,
+           0};
 };
 
 void UpdateEnemyStatus(Enemies& enemies) {
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemies.health_points[i] <= 0) {
       enemies.is_alive[i] = false;
+      // TODO: Create a dedicated graveyard position
+      enemies.position[i].x = -10000;
+      enemies.position[i].y = -10000;
     };
   };
 };
@@ -30,11 +37,11 @@ std::optional<ProjectileData> Player::CastProjectileSpell(
     ProjectileData projectile_spell = {(int)entity_type,
                                        position_,
                                        spell_direction,
-                                       spell.speed,
-                                       {spell.width, spell.height},
-                                       spell.inv_mass,
-                                       spell.id};
-    spell.time_of_last_use = time;
+                                       spell.GetSpeed(),
+                                       {spell.GetWidth(), spell.GetHeight()},
+                                       spell.GetInvMass(),
+                                       spell.GetId()};
+    spell.SetTimeOfLastUse(time);
     return projectile_spell;
   }
   return std::nullopt;
@@ -47,7 +54,7 @@ void Projectiles::AddProjectile(ProjectileData proj) {
   speed_.push_back(proj.speed);
   size_.push_back(proj.size);
   inv_mass_.push_back(proj.inv_mass);
-  texture_id_.push_back(proj.texture_id);
+  proj_id_.push_back(proj.proj_id);
 };
 
 void Projectiles::DestroyProjectile(int idx) {
@@ -59,7 +66,7 @@ void Projectiles::DestroyProjectile(int idx) {
     speed_[idx] = std::move(speed_[last_idx]);
     size_[idx] = std::move(size_[last_idx]);
     inv_mass_[idx] = std::move(inv_mass_[last_idx]);
-    texture_id_[idx] = std::move(texture_id_[last_idx]);
+    proj_id_[idx] = std::move(proj_id_[last_idx]);
   };
   owner_id_.pop_back();
   position_.pop_back();
@@ -67,11 +74,12 @@ void Projectiles::DestroyProjectile(int idx) {
   speed_.pop_back();
   size_.pop_back();
   inv_mass_.pop_back();
-  texture_id_.pop_back();
+  proj_id_.pop_back();
 };
 
 void Projectiles::DestroyProjectiles() {
-  std::vector<int> sorted_indices(to_be_destroyed_.begin(), to_be_destroyed_.end());
+  std::vector<int> sorted_indices(to_be_destroyed_.begin(),
+                                  to_be_destroyed_.end());
   std::sort(sorted_indices.begin(), sorted_indices.end(), std::greater<int>());
 
   for (int idx : sorted_indices) {
@@ -81,6 +89,9 @@ void Projectiles::DestroyProjectiles() {
   to_be_destroyed_.clear();
 };
 
-
+void Player::UpdateAllSpellStats() {
+  spell_stats_.SetProjectileSpellStats(fireball_);
+  spell_stats_.SetProjectileSpellStats(frostbolt_);
+};
 
 }  // namespace rl2

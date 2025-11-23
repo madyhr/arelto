@@ -112,6 +112,7 @@ bool Game::InitializePlayer() {
   player_.stats_.inv_mass = kPlayerInvMass;
   player_.position_ = {kPlayerInitX, kPlayerInitY};
   player_.stats_.movement_speed = kPlayerSpeed;
+  player_.UpdateAllSpellStats();
   return true;
 };
 
@@ -271,11 +272,6 @@ void Game::Update() {
   Game::HandleOutOfBounds();
 
   Game::UpdateCameraPosition();
-  // if (time_ >= last_kill_tick + 1.0f) {
-  //   last_kill_tick = time_;
-  //   Game::KillEnemiesSlowly();
-  //   std::cout << printf("I am dying!") << std::endl;
-  // };
   rl2::UpdateEnemyStatus(enemy_);
   game_status_.frame_stats.print_fps_running_average(dt);
 
@@ -473,7 +469,7 @@ void Game::SetupProjectileGeometry() {
     float y = projectiles_.position_[i].y - camera_.position_.y;
     float w = projectiles_.size_[i].width;
     float h = projectiles_.size_[i].height;
-    int texture_id = projectiles_.texture_id_[i];
+    int texture_id = projectiles_.proj_id_[i];
 
     SDL_Vertex vertices[kProjectileVertices];
 
@@ -514,12 +510,6 @@ void Game::RenderProjectiles() {
     };
   };
 };
-
-void Game::KillEnemiesSlowly() {
-  for (int i = 0; i < kNumEnemies; ++i) {
-    enemy_.health_points[i] -= 1;
-  }
-}
 
 void Game::Shutdown() {
 

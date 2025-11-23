@@ -52,9 +52,15 @@ constexpr int kProjectileVertices = 6;
 constexpr int kFireballWidth = 50;
 constexpr int kFireballHeight = 50;
 constexpr float kFireballSpeed = 350.0f;
-constexpr int kFrostboltWidth = 50;
-constexpr int kFrostboltHeight = 50;
+constexpr int kFireBallDamage = 5;
+constexpr int kFrostboltWidth = 100;
+constexpr int kFrostboltHeight = 100;
 constexpr float kFrostboltSpeed = 250.0f;
+constexpr int kFrostboltDamage = 10;
+
+// Abilities constants
+constexpr int kNumSpells = 2; // total number of spells
+constexpr int kNumProjectileSpells = 2;
 
 // Entity constants
 constexpr int kNumEntities = kNumEnemies + 1;

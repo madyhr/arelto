@@ -5,7 +5,9 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <memory>
 #include <vector>
+#include "abilities.h"
 #include "constants.h"
 #include "entity.h"
 #include "types.h"
@@ -102,6 +104,20 @@ void ResolveCollisionPairsSAP(Player& player, Enemies& enemies,
   for (const CollisionPair& cp : collision_pairs) {
     CollisionType collision_type = GetCollisionType(cp);
 
+    if (collision_type == CollisionType::None) {
+      continue;
+    } else if (collision_type == CollisionType::enemy_projectile) {
+      bool a_is_proj = cp.type_a == EntityType::projectile;
+      int proj_idx = a_is_proj ? cp.index_a - 1 - kNumEnemies
+                               : cp.index_b - 1 - kNumEnemies;
+      int enemy_idx = a_is_proj ? cp.index_b - 1 : cp.index_a - 1;
+      projectiles.to_be_destroyed_.insert(proj_idx);
+      int proj_id = projectiles.proj_id_[proj_idx];
+      int spell_damage = player.spell_stats_.damage[proj_id];
+      enemies.health_points[enemy_idx] -= spell_damage;
+      continue;
+    }
+
     const AABB& a = entities_aabb[cp.index_a];
     const AABB& b = entities_aabb[cp.index_b];
 
@@ -142,68 +158,26 @@ void ResolveCollisionPairsSAP(Player& player, Enemies& enemies,
         return enemies.inv_mass[enemy_idx];
       }
     };
+    float inv_mass_a = GetEntityInvMass(cp.type_a, cp.index_a);
+    float inv_mass_b = GetEntityInvMass(cp.type_b, cp.index_b);
+    float push_factor = inv_mass_b / (inv_mass_a + inv_mass_b);
 
-    if (collision_type == CollisionType::player_enemy) {
-      float inv_mass_a = GetEntityInvMass(cp.type_a, cp.index_a);
-      float inv_mass_b = GetEntityInvMass(cp.type_b, cp.index_b);
-      float push_factor = inv_mass_b / (inv_mass_a + inv_mass_b);
+    Vector2D centroid_a = GetEntityCentroid(cp.type_a, cp.index_a);
+    Vector2D centroid_b = GetEntityCentroid(cp.type_b, cp.index_b);
 
-      if (resolve_x) {
-        Vector2D centroid_a = GetEntityCentroid(cp.type_a, cp.index_a);
-        Vector2D centroid_b = GetEntityCentroid(cp.type_b, cp.index_b);
-        // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
-        float direction = (centroid_b.x - centroid_a.x >= 0.0f) ? 1.0f : -1.0f;
+    float direction = resolve_x ? (centroid_b.x >= centroid_a.x ? 1.0f : -1.0f)
+                                : (centroid_b.y >= centroid_a.y ? 1.0f : -1.0f);
 
-        MoveEntity(cp.type_a, cp.index_a,
-                   -direction * overlap_x * (1.0f - push_factor), 0.0f);
-        MoveEntity(cp.type_b, cp.index_b, direction * overlap_x * push_factor,
-                   0.0f);
-      } else {
-        Vector2D centroid_a = GetEntityCentroid(cp.type_a, cp.index_a);
-        Vector2D centroid_b = GetEntityCentroid(cp.type_b, cp.index_b);
-        // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
-        float direction = (centroid_b.y - centroid_a.y >= 0.0f) ? 1.0f : -1.0f;
+    float overlap = resolve_x ? overlap_x : overlap_y;
 
-        MoveEntity(cp.type_a, cp.index_a, 0.0f,
-                   -direction * overlap_y * (1.0f - push_factor));
-        MoveEntity(cp.type_b, cp.index_b, 0.0f,
-                   direction * overlap_y * push_factor);
-      }
+    float ax = resolve_x ? -direction * overlap * (1.0f - push_factor) : 0.0f;
+    float ay = resolve_x ? 0.0f : -direction * overlap * (1.0f - push_factor);
 
-    } else if (collision_type == CollisionType::enemy_enemy) {
-      float inv_mass_a = GetEntityInvMass(cp.type_a, cp.index_a);
-      float inv_mass_b = GetEntityInvMass(cp.type_b, cp.index_b);
-      float push_factor = inv_mass_b / (inv_mass_a + inv_mass_b);
+    float bx = resolve_x ? direction * overlap * (1.0f - push_factor) : 0.0f;
+    float by = resolve_x ? 0.0f : direction * overlap * (1.0f - push_factor);
 
-      if (resolve_x) {
-        Vector2D centroid_a = GetEntityCentroid(cp.type_a, cp.index_a);
-        Vector2D centroid_b = GetEntityCentroid(cp.type_b, cp.index_b);
-        // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
-        float direction = (centroid_b.x - centroid_a.x >= 0.0f) ? 1.0f : -1.0f;
-
-        MoveEntity(cp.type_a, cp.index_a,
-                   -direction * overlap_x * (1.0f - push_factor), 0.0f);
-        MoveEntity(cp.type_b, cp.index_b, direction * overlap_x * push_factor,
-                   0.0f);
-      } else {
-        Vector2D centroid_a = GetEntityCentroid(cp.type_a, cp.index_a);
-        Vector2D centroid_b = GetEntityCentroid(cp.type_b, cp.index_b);
-        // Determine the separation direction: 1.0f if B is to the right of A, -1.0f otherwise
-        float direction = (centroid_b.y - centroid_a.y >= 0.0f) ? 1.0f : -1.0f;
-
-        MoveEntity(cp.type_a, cp.index_a, 0.0f,
-                   -direction * overlap_y * (1.0f - push_factor));
-        MoveEntity(cp.type_b, cp.index_b, 0.0f,
-                   direction * overlap_y * push_factor);
-      }
-
-    } else if (collision_type == CollisionType::enemy_projectile) {
-      // std::cout << printf("enemy was hit by a proj") << std::endl;
-      if (cp.type_a == EntityType::projectile) {
-        int proj_idx = cp.index_a - 1 - kNumEnemies;
-        projectiles.to_be_destroyed_.insert(proj_idx);
-      };
-    };
+    MoveEntity(cp.type_a, cp.index_a, ax, ay);
+    MoveEntity(cp.type_b, cp.index_b, bx, by);
   }
 };
 

@@ -59,7 +59,7 @@ class Game {
   GameResources resources_;
   GameStatus game_status_;
   Player player_;
-  Enemies enemy_;
+  Enemy enemy_;
   Projectiles projectiles_;
   Camera camera_;
   Vector2D cursor_position_;

@@ -4,47 +4,44 @@
 #include "constants.h"
 #include "game_math.h"
 #include "types.h"
+#include "random.h"
 
 namespace rl2 {
 
-void Entity::UpdateAABB() {
-  aabb_ = {position_.x,
-           position_.y,
-           position_.x + stats_.size.width,
-           position_.y + stats_.size.height,
-           entity_type,
-           0};
-};
-
-void UpdateEnemyStatus(Enemies& enemies) {
+void UpdateEnemyStatus(Enemy& enemies, Player player) {
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemies.health_points[i] <= 0) {
       enemies.is_alive[i] = false;
-      // TODO: Create a dedicated graveyard position
-      enemies.position[i].x = -10000;
-      enemies.position[i].y = -10000;
+      RespawnEnemy(enemies, player);
+
     };
   };
 };
 
-std::optional<ProjectileData> Player::CastProjectileSpell(
-    BaseProjectileSpell& spell, float time, Vector2D cursor_position) {
+void RespawnEnemy(Enemy& enemy, Player player) {
+  
+  int max_x = kMapWidth - kEnemyWidth;
+  int max_y = kMapHeight - kEnemyHeight;
 
-  bool spell_is_ready = time >= spell.GetReadyTime();
-  if (spell_is_ready) {
-    Vector2D spell_direction = SubtractVector2D(cursor_position, position_);
-    spell_direction = NormalizeVector2D(spell_direction);
-    ProjectileData projectile_spell = {(int)entity_type,
-                                       position_,
-                                       spell_direction,
-                                       spell.GetSpeed(),
-                                       {spell.GetWidth(), spell.GetHeight()},
-                                       spell.GetInvMass(),
-                                       spell.GetId()};
-    spell.SetTimeOfLastUse(time);
-    return projectile_spell;
-  }
-  return std::nullopt;
+  for (int i = 0; i < kNumEnemies; ++i) {
+    if (enemy.is_alive[i]){
+      continue;
+    }
+
+    Vector2D potential_pos;
+
+    do {
+      potential_pos = {(float)GenerateRandomInt(0, max_x),
+                       (float)GenerateRandomInt(0, max_y)};
+
+    } while (CalculateVector2DDistance(potential_pos, player.position_) <
+             kEnemyMinimumInitialDistance);
+
+    enemy.position[i] = potential_pos;
+    enemy.health_points[i] = kEnemyHealth;
+    enemy.is_alive[i] = true;
+  };
+ 
 };
 
 void Projectiles::AddProjectile(ProjectileData proj) {
@@ -89,9 +86,39 @@ void Projectiles::DestroyProjectiles() {
   to_be_destroyed_.clear();
 };
 
+void Player::UpdateAABB() {
+  aabb_ = {position_.x,
+           position_.y,
+           position_.x + stats_.size.width,
+           position_.y + stats_.size.height,
+           entity_type_,
+           0};
+};
+
 void Player::UpdateAllSpellStats() {
   spell_stats_.SetProjectileSpellStats(fireball_);
   spell_stats_.SetProjectileSpellStats(frostbolt_);
+};
+
+std::optional<ProjectileData> Player::CastProjectileSpell(
+    BaseProjectileSpell& spell, float time, Vector2D cursor_position) {
+
+  bool spell_is_ready = time >= spell.GetReadyTime();
+  if (spell_is_ready) {
+    Vector2D centroid = GetCentroid(position_, stats_.size);
+    Vector2D spell_direction = SubtractVector2D(cursor_position, centroid);
+    spell_direction = spell_direction.Normalized();
+    ProjectileData projectile_spell = {(int)entity_type_,
+                                       position_,
+                                       spell_direction,
+                                       spell.GetSpeed(),
+                                       {spell.GetWidth(), spell.GetHeight()},
+                                       spell.GetInvMass(),
+                                       spell.GetId()};
+    spell.SetTimeOfLastUse(time);
+    return projectile_spell;
+  }
+  return std::nullopt;
 };
 
 }  // namespace rl2

@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <iostream>
-#include <numeric>
+#include "collision.h"
 #include "constants.h"
 #include "entity.h"
 #include "game_math.h"
@@ -117,44 +117,33 @@ bool Game::InitializePlayer() {
 };
 
 bool Game::InitializeEnemies() {
-  std::fill(enemy_.is_alive.begin(), enemy_.is_alive.end(), true);
+  std::fill(enemy_.is_alive.begin(), enemy_.is_alive.end(), false);
   std::fill(enemy_.movement_speed.begin(), enemy_.movement_speed.end(),
             kEnemySpeed);
   std::fill(enemy_.size.begin(), enemy_.size.end(),
             Size{kEnemyHeight, kEnemyWidth});
-  std::fill(enemy_.health_points.begin(), enemy_.health_points.end(),
-            kEnemyHealth);
   std::fill(enemy_.inv_mass.begin(), enemy_.inv_mass.end(), kEnemyInvMass);
+  RespawnEnemy(enemy_, player_);
 
-  int max_x = kMapWidth - kEnemyWidth;
-  int max_y = kMapHeight - kEnemyHeight;
-
+  // Add slight variation to each enemy to make it more interesting.
   for (int i = 0; i < kNumEnemies; ++i) {
-    Vector2D potential_pos;
-
-    do {
-      potential_pos = {(float)GenerateRandomInt(0, max_x),
-                       (float)GenerateRandomInt(0, max_y)};
-
-    } while (CalculateVector2dDistance(potential_pos, player_.position_) <
-             kEnemyMinimumInitialDistance);
-
-    enemy_.position[i] = potential_pos;
     enemy_.movement_speed[i] += GenerateRandomInt(1, 100);
     enemy_.size[i].height += GenerateRandomInt(1, 50);
     enemy_.size[i].width += GenerateRandomInt(1, 50);
   };
 
-  SDL_Color red = {255, 0, 0, 255};
-  for (int i = 0; i < kTotalEnemyVertices; ++i) {
-    enemies_vertices_[i].color = red;
-  }
+  // SDL_Color red = {255, 0, 0, 255};
+  // for (int i = 0; i < kTotalEnemyVertices; ++i) {
+  //   enemies_vertices_[i].color = red;
+  // }
   return true;
 };
 
 bool Game::InitializeCamera() {
-  camera_.position_.x = player_.position_.x - 0.5f * kWindowWidth;
-  camera_.position_.y = player_.position_.y - 0.5f * kWindowHeight;
+  Vector2D player_centroid =
+      GetCentroid(player_.position_, player_.stats_.size);
+  camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
+  camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
 
   return true;
 };
@@ -272,7 +261,7 @@ void Game::Update() {
   Game::HandleOutOfBounds();
 
   Game::UpdateCameraPosition();
-  rl2::UpdateEnemyStatus(enemy_);
+  UpdateEnemyStatus(enemy_, player_);
   game_status_.frame_stats.print_fps_running_average(dt);
 
   Game::GenerateOutput();
@@ -334,8 +323,10 @@ void Game::HandleOutOfBounds() {
 };
 
 void Game::UpdateCameraPosition() {
-  camera_.position_.x = player_.position_.x - 0.5f * kWindowWidth;
-  camera_.position_.y = player_.position_.y - 0.5f * kWindowHeight;
+  Vector2D player_centroid =
+      GetCentroid(player_.position_, player_.stats_.size);
+  camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
+  camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
   if (camera_.position_.x < 0) {
     camera_.position_.x = 0.0f;
   };
@@ -462,7 +453,6 @@ void Game::SetupProjectileGeometry() {
   if (num_projectiles == 0) {
     return;
   }
-
 
   for (int i = 0; i < num_projectiles; ++i) {
     float x = projectiles_.position_[i].x - camera_.position_.x;

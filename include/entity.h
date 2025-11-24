@@ -24,17 +24,6 @@ struct Stats {
   float inv_mass;
 };
 
-class Entity {
- public:
-  // TODO: Replace entity type such that only player has this type
-  EntityType entity_type = EntityType::player;
-  Stats stats_;
-  Vector2D position_;
-  Vector2D velocity_;
-  AABB aabb_;
-  void UpdateAABB();
-};
-
 struct ProjectileData {
   int owner_id;
   Vector2D position;
@@ -62,19 +51,7 @@ class Projectiles {
   void DestroyProjectiles();
 };
 
-class Player : public Entity {
-
- public:
-  SpellStats spell_stats_;
-  Fireball fireball_;
-  Frostbolt frostbolt_;
-  void UpdateAllSpellStats();
-  std::optional<ProjectileData> CastProjectileSpell(BaseProjectileSpell& spell,
-                                                    float time,
-                                                    Vector2D cursor_position);
-};
-
-struct Enemies {
+struct Enemy {
   std::array<bool, kNumEnemies> is_alive;
   std::array<Vector2D, kNumEnemies> position;
   std::array<Vector2D, kNumEnemies> velocity;
@@ -85,7 +62,27 @@ struct Enemies {
   EntityType entity_type = EntityType::enemy;
 };
 
-void UpdateEnemyStatus(Enemies& enemies);
+
+class Player {
+ public:
+  EntityType entity_type_ = EntityType::player;
+  Stats stats_;
+  Vector2D position_;
+  Vector2D velocity_;
+  AABB aabb_;
+  SpellStats<kNumPlayerSpells> spell_stats_;
+  Fireball fireball_;
+  Frostbolt frostbolt_;
+  void UpdateAABB();
+  void UpdateAllSpellStats();
+  std::optional<ProjectileData> CastProjectileSpell(BaseProjectileSpell& spell,
+                                                    float time,
+                                                    Vector2D cursor_position);
+};
+
+
+void UpdateEnemyStatus(Enemy& enemies, Player player);
+void RespawnEnemy(Enemy& enemy, Player player);
 
 }  // namespace rl2
 

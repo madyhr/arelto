@@ -9,8 +9,8 @@ constexpr int kWindowWidth = 1920;
 constexpr int kWindowHeight = 1080;
 
 // Map constants
-constexpr int kMapWidth = 3000;
-constexpr int kMapHeight = 3000;
+constexpr int kMapWidth = 1000;
+constexpr int kMapHeight = 1000;
 constexpr int kTileSize = 256;
 constexpr int kNumTileTypes = 16;
 constexpr int kNumTilesX = ((kMapWidth + kTileSize - 1) / kTileSize);
@@ -29,8 +29,8 @@ constexpr int kPlayerHeight = (int)(kPlayerWidth * 1.258);
 constexpr float kPlayerInvMass = 0.01f;
 
 // Enemy constants
-constexpr int kNumEnemies = 10;
-constexpr int kEnemyHealth = 5;
+constexpr int kNumEnemies = 5;
+constexpr int kEnemyHealth = 10;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;
 constexpr float kEnemySpeed = 40.0f;
@@ -39,7 +39,7 @@ constexpr int kEnemyWidth = 30;
 constexpr int kEnemyHeight = (int)(kEnemyWidth * 1.04);
 constexpr float kEnemyInvMass = 0.1f;
 
-constexpr int kEnemyMinimumInitialDistance = 500;
+constexpr int kEnemyMinimumInitialDistance = 300;
 constexpr int kEnemyVertices = 6;
 constexpr int kTotalEnemyVertices = kEnemyVertices * kNumEnemies;
 constexpr float kTexCoordTop = 0.0f;
@@ -59,8 +59,7 @@ constexpr float kFrostboltSpeed = 250.0f;
 constexpr int kFrostboltDamage = 10;
 
 // Abilities constants
-constexpr int kNumSpells = 2; // total number of spells
-constexpr int kNumProjectileSpells = 2;
+constexpr int kNumPlayerSpells = 2;  // total number of spells
 
 // Entity constants
 constexpr int kNumEntities = kNumEnemies + 1;

@@ -11,6 +11,13 @@ struct Vector2D {
   float y;
 
   float Norm() const { return std::sqrt(x * x + y * y); };
+  Vector2D Normalized() const {
+    float n = Norm();
+    if (n == 0.0f) {
+      return {0.0f, 0.0f};
+    }
+    return {x / n, y / n};
+  };
 };
 
 struct VertexData {

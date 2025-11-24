@@ -2,12 +2,9 @@
 #ifndef RL2_ABILITIES_H_
 #define RL2_ABILITIES_H_
 #include <SDL2/SDL_render.h>
-#include <cstdint>
-#include <memory>
-#include <unordered_map>
-#include "constants.h"
-#include <vector>
 #include <array>
+#include <cstdint>
+#include "constants.h"
 
 namespace rl2 {
 
@@ -71,16 +68,17 @@ class Frostbolt : public BaseProjectileSpell {
   }
 };
 
+template <size_t N>
 struct SpellStats {
-  std::array<float, kNumSpells> cooldown;
-  std::array<float, kNumSpells> time_of_last_use;
-  std::array<float, kNumSpells> speed;
-  std::array<uint32_t, kNumSpells> width;
-  std::array<uint32_t, kNumSpells> height;
-  std::array<int, kNumSpells> damage;
+  std::array<float, N> cooldown;
+  std::array<float, N> time_of_last_use;
+  std::array<float, N> speed;
+  std::array<uint32_t, N> width;
+  std::array<uint32_t, N> height;
+  std::array<int, N> damage;
 
-  void SetProjectileSpellStats(BaseProjectileSpell spell){
-    int id = spell.GetId(); 
+  void SetProjectileSpellStats(BaseProjectileSpell spell) {
+    int id = spell.GetId();
     cooldown[id] = spell.GetCooldown();
     speed[id] = spell.GetSpeed();
     width[id] = spell.GetWidth();

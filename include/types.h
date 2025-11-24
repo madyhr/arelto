@@ -18,7 +18,62 @@ struct Vector2D {
     }
     return {x / n, y / n};
   };
+
+  Vector2D& operator+=(const Vector2D& other) {
+    x += other.x;
+    y += other.y;
+    return *this;
+  }
+  Vector2D& operator-=(const Vector2D& other) {
+    x -= other.x;
+    y -= other.y;
+    return *this;
+  }
 };
+
+// Vector2D & Vector2D
+inline bool operator==(const Vector2D& vector0, const Vector2D& vector1) {
+  return vector0.x == vector1.x && vector0.y == vector1.y;
+};
+
+inline Vector2D operator+(const Vector2D& vector0, const Vector2D& vector1) {
+  return {vector0.x + vector1.x, vector0.y + vector1.y};
+};
+
+inline Vector2D operator-(const Vector2D& vector0, const Vector2D& vector1) {
+  return {vector0.x - vector1.x, vector0.y - vector1.y};
+};
+
+// Vector2D & float
+inline Vector2D operator+(const Vector2D& vector, const float& scalar) {
+  return {vector.x + scalar, vector.y + scalar};
+};
+
+inline Vector2D operator+(const float& scalar, const Vector2D& vector) {
+  return {vector.x + scalar, vector.y + scalar};
+};
+
+inline Vector2D operator-(const Vector2D& vector, const float& scalar) {
+  return {vector.x - scalar, vector.y - scalar};
+};
+
+inline Vector2D operator-(const float& scalar, const Vector2D& vector) {
+  return {vector.x - scalar, vector.y - scalar};
+};
+
+inline Vector2D operator*(const float& scalar, const Vector2D& vector) {
+  return {vector.x * scalar, vector.y * scalar};
+};
+
+inline Vector2D operator*(const Vector2D& vector, const float& scalar) {
+  return {vector.x * scalar, vector.y * scalar};
+};
+
+inline Vector2D operator/(const Vector2D& vector, const float& scalar) {
+  return {vector.x / scalar, vector.y / scalar};
+};
+
+
 
 struct VertexData {
   SDL_Vertex vertex;

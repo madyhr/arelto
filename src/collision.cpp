@@ -103,66 +103,6 @@ void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
         ResolveEnemyProjectileCollision(cp, enemy, projectiles, player);
         continue;
     }
-
-    const AABB& a = entities_aabb[cp.index_a];
-    const AABB& b = entities_aabb[cp.index_b];
-
-    float overlap_x = std::min(a.max_x, b.max_x) - std::max(a.min_x, b.min_x);
-    float overlap_y = std::min(a.max_y, b.max_y) - std::max(a.min_y, b.min_y);
-
-    if (overlap_x <= 0.0f || overlap_y <= 0.0f)
-      continue;  // No overlap
-
-    // Choose smaller axis
-    bool resolve_x = (overlap_x < overlap_y);
-
-    auto MoveEntity = [&](EntityType entity_type, int idx, float dx, float dy) {
-      if (entity_type == EntityType::player) {
-        player.position_.x += dx;
-        player.position_.y += dy;
-      } else if (entity_type == EntityType::enemy) {
-        int enemy_idx = idx - 1;
-        enemy.position[enemy_idx].x += dx;
-        enemy.position[enemy_idx].y += dy;
-      }
-    };
-    auto GetEntityCentroid = [&](EntityType entity_type, int idx) -> Vector2D {
-      if (entity_type == EntityType::player) {
-        return rl2::GetCentroid(player.position_, player.stats_.size);
-      } else {
-        int enemy_idx = idx - 1;
-        return rl2::GetCentroid(enemy.position[enemy_idx],
-                                enemy.size[enemy_idx]);
-      }
-    };
-    auto GetEntityInvMass = [&](EntityType entity_type, int idx) -> float {
-      if (entity_type == EntityType::player) {
-        return player.stats_.inv_mass;
-      } else {
-        int enemy_idx = idx - 1;
-        return enemy.inv_mass[enemy_idx];
-      }
-    };
-    float inv_mass_a = GetEntityInvMass(cp.type_a, cp.index_a);
-    float inv_mass_b = GetEntityInvMass(cp.type_b, cp.index_b);
-    float push_factor = inv_mass_b / (inv_mass_a + inv_mass_b);
-
-    Vector2D centroid_a = GetEntityCentroid(cp.type_a, cp.index_a);
-    Vector2D centroid_b = GetEntityCentroid(cp.type_b, cp.index_b);
-
-    float direction = resolve_x ? (centroid_b.x >= centroid_a.x ? 1.0f : -1.0f)
-                                : (centroid_b.y >= centroid_a.y ? 1.0f : -1.0f);
-
-    float overlap = resolve_x ? overlap_x : overlap_y;
-
-    float ax = resolve_x ? -direction * overlap * (1.0f - push_factor) : 0.0f;
-    float ay = resolve_x ? 0.0f : -direction * overlap * (1.0f - push_factor);
-
-    float bx = resolve_x ? direction * overlap * (1.0f - push_factor) : 0.0f;
-    float by = resolve_x ? 0.0f : direction * overlap * (1.0f - push_factor);
-
-    MoveEntity(cp.type_a, cp.index_a, ax, ay);
-    MoveEntity(cp.type_b, cp.index_b, bx, by);
   }
 };
 
@@ -235,10 +175,8 @@ void ResolveEnemyEnemyCollision(const CollisionPair& cp, Enemy& enemy,
       {entities_aabb[cp.index_a], entities_aabb[cp.index_b]},
       {centroid_a, centroid_b}, {inv_mass_a, inv_mass_b});
 
-  enemy.position[enemy_idx_a].x += displacement_vectors[0].x;
-  enemy.position[enemy_idx_a].y += displacement_vectors[0].y;
-  enemy.position[enemy_idx_b].x += displacement_vectors[1].x;
-  enemy.position[enemy_idx_b].y += displacement_vectors[1].y;
+  enemy.position[enemy_idx_a] += displacement_vectors[0];
+  enemy.position[enemy_idx_b] += displacement_vectors[1];
 };
 
 void ResolvePlayerEnemyCollision(const CollisionPair& cp, Player& player,
@@ -260,12 +198,9 @@ void ResolvePlayerEnemyCollision(const CollisionPair& cp, Player& player,
       {entities_aabb[player_idx], entities_aabb[enemy_idx + 1]},
       {centroid_player, centroid_enemy}, {inv_mass_player, inv_mass_enemy});
 
-  player.position_.x += displacement_vectors[0].x;
-  player.position_.y += displacement_vectors[0].y;
-  enemy.position[enemy_idx].x += displacement_vectors[1].x;
-  enemy.position[enemy_idx].y += displacement_vectors[1].y;
+  player.position_ += displacement_vectors[0];
+  enemy.position[enemy_idx] += displacement_vectors[1];
 };
-
 
 void ResolveEnemyProjectileCollision(const CollisionPair& cp, Enemy& enemy,
                                      Projectiles& projectiles, Player& player) {
@@ -278,7 +213,5 @@ void ResolveEnemyProjectileCollision(const CollisionPair& cp, Enemy& enemy,
   int spell_damage = player.spell_stats_.damage[proj_id];
   enemy.health_points[enemy_idx] -= spell_damage;
 };
-
-
 
 }  // namespace rl2

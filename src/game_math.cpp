@@ -10,10 +10,6 @@
 
 namespace rl2 {
 
-Vector2D SubtractVector2D(Vector2D v0, Vector2D v1) {
-  return {v0.x - v1.x, v0.y - v1.y};
-}
-
 float CalculateVector2DDistance(Vector2D v0, Vector2D v1) {
   float dx = v1.x - v0.x;
   float dy = v1.y - v0.y;

@@ -269,31 +269,17 @@ void Game::Update() {
 }
 
 void Game::UpdatePlayerPosition(float dt) {
-
-  float player_velocity_magnitude = player_.velocity_.Norm();
-  if (player_velocity_magnitude > 1.0f) {
-    player_.velocity_.x /= player_velocity_magnitude;
-    player_.velocity_.y /= player_velocity_magnitude;
-  }
-
-  player_.position_.x +=
-      player_.velocity_.x * player_.stats_.movement_speed * dt;
-  player_.position_.y +=
-      player_.velocity_.y * player_.stats_.movement_speed * dt;
+  Vector2D delta_pos =
+      player_.velocity_.Normalized() * (player_.stats_.movement_speed * dt);
+  player_.position_ += delta_pos;
 };
 
 void Game::UpdateEnemyPosition(float dt) {
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemy_.is_alive[i]) {
-      float dx = player_.position_.x - enemy_.position[i].x;
-      float dy = player_.position_.y - enemy_.position[i].y;
-      float distance_to_player = std::hypot(dx, dy);
-      enemy_.velocity[i].x = dx / (distance_to_player + 1e-6);
-      enemy_.velocity[i].y = dy / (distance_to_player + 1e-6);
-      enemy_.position[i].x +=
-          enemy_.velocity[i].x * enemy_.movement_speed[i] * dt;
-      enemy_.position[i].y +=
-          enemy_.velocity[i].y * enemy_.movement_speed[i] * dt;
+      Vector2D distance_vector = player_.position_ - enemy_.position[i];
+      enemy_.velocity[i] = distance_vector.Normalized();
+      enemy_.position[i] += enemy_.velocity[i] * enemy_.movement_speed[i] * dt;
     }
   }
 };
@@ -305,15 +291,13 @@ void Game::UpdateProjectilePosition(float dt) {
   };
 
   for (int i = 0; i < num_projectiles; ++i) {
-    projectiles_.position_[i].x +=
-        projectiles_.direction_[i].x * projectiles_.speed_[i] * dt;
-    projectiles_.position_[i].y +=
-        projectiles_.direction_[i].y * projectiles_.speed_[i] * dt;
+    projectiles_.position_[i] +=
+        projectiles_.direction_[i] * projectiles_.speed_[i] * dt;
   };
 };
 
 void Game::HandleCollisions() {
-  rl2::HandleCollisionsSAP(player_, enemy_, projectiles_);
+  HandleCollisionsSAP(player_, enemy_, projectiles_);
 };
 
 void Game::HandleOutOfBounds() {

@@ -4,14 +4,10 @@
 #include <SDL2/SDL_render.h>
 #include <constants.h>
 #include <sys/types.h>
-#include <array>
-#include <vector>
 #include "entity.h"
 #include "types.h"
 
 namespace rl2 {
-
-Vector2D SubtractVector2D(Vector2D v0, Vector2D v1);
 
 float CalculateVector2DDistance(Vector2D v0, Vector2D v1);
 Vector2D GetCentroid(Vector2D position, Size size);

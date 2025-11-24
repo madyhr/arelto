@@ -3,8 +3,8 @@
 #include <algorithm>
 #include "constants.h"
 #include "game_math.h"
-#include "types.h"
 #include "random.h"
+#include "types.h"
 
 namespace rl2 {
 
@@ -13,18 +13,17 @@ void UpdateEnemyStatus(Enemy& enemies, Player player) {
     if (enemies.health_points[i] <= 0) {
       enemies.is_alive[i] = false;
       RespawnEnemy(enemies, player);
-
     };
   };
 };
 
 void RespawnEnemy(Enemy& enemy, Player player) {
-  
+
   int max_x = kMapWidth - kEnemyWidth;
   int max_y = kMapHeight - kEnemyHeight;
 
   for (int i = 0; i < kNumEnemies; ++i) {
-    if (enemy.is_alive[i]){
+    if (enemy.is_alive[i]) {
       continue;
     }
 
@@ -41,7 +40,6 @@ void RespawnEnemy(Enemy& enemy, Player player) {
     enemy.health_points[i] = kEnemyHealth;
     enemy.is_alive[i] = true;
   };
- 
 };
 
 void Projectiles::AddProjectile(ProjectileData proj) {
@@ -106,8 +104,7 @@ std::optional<ProjectileData> Player::CastProjectileSpell(
   bool spell_is_ready = time >= spell.GetReadyTime();
   if (spell_is_ready) {
     Vector2D centroid = GetCentroid(position_, stats_.size);
-    Vector2D spell_direction = SubtractVector2D(cursor_position, centroid);
-    spell_direction = spell_direction.Normalized();
+    Vector2D spell_direction = (cursor_position - centroid).Normalized();
     ProjectileData projectile_spell = {(int)entity_type_,
                                        position_,
                                        spell_direction,

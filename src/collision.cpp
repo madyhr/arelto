@@ -199,7 +199,10 @@ void ResolvePlayerEnemyCollision(const CollisionPair& cp, Player& player,
       {centroid_player, centroid_enemy}, {inv_mass_player, inv_mass_enemy});
 
   player.position_ += displacement_vectors[0];
-  enemy.position[enemy_idx] += displacement_vectors[1];
+  enemy.position[enemy_idx] += displacement_vectors[1]; 
+
+  player.stats_.health -= 1;
+  
 };
 
 void ResolveEnemyProjectileCollision(const CollisionPair& cp, Enemy& enemy,

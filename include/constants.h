@@ -9,8 +9,8 @@ constexpr int kWindowWidth = 1920;
 constexpr int kWindowHeight = 1080;
 
 // Map constants
-constexpr int kMapWidth = 1000;
-constexpr int kMapHeight = 1000;
+constexpr int kMapWidth = 3000;
+constexpr int kMapHeight = 3000;
 constexpr int kTileSize = 256;
 constexpr int kNumTileTypes = 16;
 constexpr int kNumTilesX = ((kMapWidth + kTileSize - 1) / kTileSize);
@@ -27,6 +27,9 @@ constexpr int kPlayerWidth = 60;
 // Derived from the generated wizard png
 constexpr int kPlayerHeight = (int)(kPlayerWidth * 1.258);
 constexpr float kPlayerInvMass = 0.01f;
+constexpr int kPlayerNumSpriteCells = 9;
+constexpr int kPlayerSpriteCellWidth = 48;
+constexpr int kPlayerSpriteCellHeight = 64;
 
 // Enemy constants
 constexpr int kNumEnemies = 5;
@@ -38,6 +41,9 @@ constexpr int kEnemyWidth = 30;
 // Derived from the generated goblin png
 constexpr int kEnemyHeight = (int)(kEnemyWidth * 1.04);
 constexpr float kEnemyInvMass = 0.1f;
+constexpr int kEnemyNumSpriteCells = 9;
+constexpr int kEnemySpriteCellWidth = 48;
+constexpr int kEnemySpriteCellHeight = 64;
 
 constexpr int kEnemyMinimumInitialDistance = 300;
 constexpr int kEnemyVertices = 6;

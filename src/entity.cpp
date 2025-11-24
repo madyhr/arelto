@@ -8,7 +8,7 @@
 
 namespace rl2 {
 
-void UpdateEnemyStatus(Enemy& enemies, Player player) {
+void UpdateEnemyStatus(Enemy& enemies, const Player& player) {
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemies.health_points[i] <= 0) {
       enemies.is_alive[i] = false;
@@ -17,7 +17,7 @@ void UpdateEnemyStatus(Enemy& enemies, Player player) {
   };
 };
 
-void RespawnEnemy(Enemy& enemy, Player player) {
+void RespawnEnemy(Enemy& enemy, const Player& player) {
 
   int max_x = kMapWidth - kEnemyWidth;
   int max_y = kMapHeight - kEnemyHeight;
@@ -33,7 +33,7 @@ void RespawnEnemy(Enemy& enemy, Player player) {
       potential_pos = {(float)GenerateRandomInt(0, max_x),
                        (float)GenerateRandomInt(0, max_y)};
 
-    } while (CalculateVector2DDistance(potential_pos, player.position_) <
+    } while ((potential_pos - player.position_).Norm() <
              kEnemyMinimumInitialDistance);
 
     enemy.position[i] = potential_pos;

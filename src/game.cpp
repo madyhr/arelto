@@ -80,12 +80,12 @@ bool Game::InitializeResources() {
 
   resources_.tile_texture = resources_.tile_manager.GetTileTexture(
       "assets/grassy_tiles.bmp", resources_.renderer);
-  resources_.player_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/wizard.png");
-  resources_.enemy_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/goblin.png");
-  // resources_.projectile_texture =
-  //     IMG_LoadTexture(resources_.renderer, "assets/textures/fireball.png");
+  // resources_.player_texture =
+  //     IMG_LoadTexture(resources_.renderer, "assets/textures/wizard.png");
+  resources_.player_texture = IMG_LoadTexture(
+      resources_.renderer, "assets/textures/wizard_sprite_sheet.png");
+  resources_.enemy_texture = IMG_LoadTexture(
+      resources_.renderer, "assets/textures/goblin_sprite_sheet.png");
   resources_.projectile_textures.push_back(
       IMG_LoadTexture(resources_.renderer, "assets/textures/fireball.png"));
   resources_.projectile_textures.push_back(
@@ -334,8 +334,9 @@ void Game::GenerateOutput() {
       (int)(player_.position_.y - camera_.position_.y),
       (int)player_.stats_.size.width, (int)player_.stats_.size.height};
 
-  SDL_RenderCopy(resources_.renderer, resources_.player_texture, NULL,
-                 &player_render_box);
+  // SDL_RenderCopy(resources_.renderer, resources_.player_texture, NULL,
+  //                &player_render_box);
+  RenderPlayer();
 
   int num_enemy_vertices = SetupEnemyGeometry();
   RenderEnemies(num_enemy_vertices);
@@ -379,12 +380,41 @@ void Game::RenderTiledMap() {
   }
 };
 
+void Game::RenderPlayer() {
+  SDL_Rect player_render_box = {
+      (int)(player_.position_.x - camera_.position_.x),
+      (int)(player_.position_.y - camera_.position_.y),
+      (int)player_.stats_.size.width, (int)player_.stats_.size.height};
+
+  SDL_Rect src_rect;
+
+  src_rect.w = kPlayerSpriteCellWidth;
+  src_rect.h = kPlayerSpriteCellHeight;
+  src_rect.y = 0;
+  src_rect.x = ((SDL_GetTicks64() / 150) % kPlayerNumSpriteCells) * src_rect.w;
+
+  bool is_facing_right = player_.last_horizontal_velocity_ >= 0.0f;
+
+  SDL_RendererFlip is_flipped =
+      is_facing_right ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
+
+  SDL_RenderCopyEx(resources_.renderer, resources_.player_texture, &src_rect,
+                   &player_render_box, 0.0, nullptr, is_flipped);
+
+  if (player_.velocity_.x != 0) {
+    player_.last_horizontal_velocity_ = player_.velocity_.x;
+  }
+};
+
 int Game::SetupEnemyGeometry() {
   // The return type is int as we need to know how many vertices to actually
   // render when we call SDLRenderGeometry. So we traverse the enemies struct
   // and keep count of the total number of active vertices.
 
   int current_vertex_idx = 0;
+
+  constexpr int kEnemyAnimationFrameDuration = 150;  // time in ms
+  float cell_uv_width = 1.0f / (float)kEnemyNumSpriteCells;
 
   for (int i = 0; i < kNumEnemies; ++i) {
     if (!enemy_.is_alive[i]) {
@@ -396,18 +426,29 @@ int Game::SetupEnemyGeometry() {
     float w = enemy_.size[i].width;
     float h = enemy_.size[i].height;
 
+    int frame_idx = (SDL_GetTicks64() / kEnemyAnimationFrameDuration) %
+                    kEnemyNumSpriteCells;
+
+    float u_left = frame_idx * cell_uv_width;
+    float u_right = u_left + cell_uv_width;
+    float v_top = kTexCoordTop;
+    float v_bottom = kTexCoordBottom;
+
+    bool is_facing_right = enemy_.last_horizontal_velocity[i] > 0;
+
+    float vertex_left = is_facing_right ? u_left : u_right;
+    float vertex_right = is_facing_right ? u_right : u_left;
+
     // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
     // 1. Top-Left
     enemies_vertices_[current_vertex_idx + 0] = {
-        {x, y}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordTop}};
+        {x, y}, {255, 255, 255, 255}, {vertex_left, v_top}};
     // 2. Bottom-Left
     enemies_vertices_[current_vertex_idx + 1] = {
-        {x, y + h}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordBottom}};
+        {x, y + h}, {255, 255, 255, 255}, {vertex_left, v_bottom}};
     // 3. Bottom-Right
     enemies_vertices_[current_vertex_idx + 2] = {
-        {x + w, y + h},
-        {255, 255, 255, 255},
-        {kTexCoordRight, kTexCoordBottom}};
+        {x + w, y + h}, {255, 255, 255, 255}, {vertex_right, v_bottom}};
     // --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
     // 4. Top-Left (Repeat)
     enemies_vertices_[current_vertex_idx + 3] =
@@ -417,9 +458,13 @@ int Game::SetupEnemyGeometry() {
         enemies_vertices_[current_vertex_idx + 2];  // Same as vertex 3
     // 6. Top-Right
     enemies_vertices_[current_vertex_idx + 5] = {
-        {x + w, y}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordTop}};
+        {x + w, y}, {255, 255, 255, 255}, {vertex_right, v_top}};
 
     current_vertex_idx += kEnemyVertices;
+
+    if (enemy_.velocity[i].x != 0) {
+      enemy_.last_horizontal_velocity[i] = enemy_.velocity[i].x;
+    }
   }
   return current_vertex_idx;
 };

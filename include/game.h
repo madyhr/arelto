@@ -85,6 +85,7 @@ class Game {
   void HandleOutOfBounds();
   void GenerateOutput();
   void RenderTiledMap();
+  void RenderPlayer();
   int SetupEnemyGeometry();
   void RenderEnemies(int num_vertices);
   void SetupProjectileGeometry();

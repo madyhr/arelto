@@ -59,6 +59,7 @@ struct Enemy {
   std::array<float, kNumEnemies> movement_speed;
   std::array<Size, kNumEnemies> size;
   std::array<float, kNumEnemies> inv_mass;
+  std::array<float, kNumEnemies> last_horizontal_velocity;
   EntityType entity_type = EntityType::enemy;
 };
 
@@ -70,6 +71,7 @@ class Player {
   Vector2D position_;
   Vector2D velocity_;
   AABB aabb_;
+  float last_horizontal_velocity_; 
   SpellStats<kNumPlayerSpells> spell_stats_;
   Fireball fireball_;
   Frostbolt frostbolt_;
@@ -81,8 +83,8 @@ class Player {
 };
 
 
-void UpdateEnemyStatus(Enemy& enemies, Player player);
-void RespawnEnemy(Enemy& enemy, Player player);
+void UpdateEnemyStatus(Enemy& enemies, const Player& player);
+void RespawnEnemy(Enemy& enemy, const Player& player);
 
 }  // namespace rl2
 

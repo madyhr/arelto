@@ -73,8 +73,6 @@ inline Vector2D operator/(const Vector2D& vector, const float& scalar) {
   return {vector.x / scalar, vector.y / scalar};
 };
 
-
-
 struct VertexData {
   SDL_Vertex vertex;
 };

@@ -9,7 +9,6 @@
 
 namespace rl2 {
 
-float CalculateVector2DDistance(Vector2D v0, Vector2D v1);
 Vector2D GetCentroid(Vector2D position, Size size);
 
 void HandlePlayerOOB(Player& player);

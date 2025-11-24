@@ -10,13 +10,6 @@
 
 namespace rl2 {
 
-float CalculateVector2DDistance(Vector2D v0, Vector2D v1) {
-  float dx = v1.x - v0.x;
-  float dy = v1.y - v0.y;
-  float distance = std::hypot(dx, dy);
-  return distance;
-};
-
 Vector2D GetCentroid(Vector2D position, Size size) {
   return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
 }

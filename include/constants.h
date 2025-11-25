@@ -27,9 +27,11 @@ constexpr int kPlayerWidth = 60;
 // Derived from the generated wizard png
 constexpr int kPlayerHeight = (int)(kPlayerWidth * 1.258);
 constexpr float kPlayerInvMass = 0.01f;
+// Num frames in the animation sprite sheet
 constexpr int kPlayerNumSpriteCells = 9;
 constexpr int kPlayerSpriteCellWidth = 48;
 constexpr int kPlayerSpriteCellHeight = 64;
+constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
 
 // Enemy constants
 constexpr int kNumEnemies = 5;
@@ -41,9 +43,11 @@ constexpr int kEnemyWidth = 30;
 // Derived from the generated goblin png
 constexpr int kEnemyHeight = (int)(kEnemyWidth * 1.04);
 constexpr float kEnemyInvMass = 0.1f;
+// Num frames in the animation sprite sheet
 constexpr int kEnemyNumSpriteCells = 9;
 constexpr int kEnemySpriteCellWidth = 48;
 constexpr int kEnemySpriteCellHeight = 64;
+constexpr int kEnemyAnimationFrameDuration = 150;  // time in ms
 
 constexpr int kEnemyMinimumInitialDistance = 300;
 constexpr int kEnemyVertices = 6;
@@ -67,7 +71,5 @@ constexpr int kFrostboltDamage = 10;
 // Abilities constants
 constexpr int kNumPlayerSpells = 2;  // total number of spells
 
-// Entity constants
-constexpr int kNumEntities = kNumEnemies + 1;
 }  // namespace rl2
 #endif

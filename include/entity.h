@@ -63,7 +63,6 @@ struct Enemy {
   EntityType entity_type = EntityType::enemy;
 };
 
-
 class Player {
  public:
   EntityType entity_type_ = EntityType::player;
@@ -71,7 +70,7 @@ class Player {
   Vector2D position_;
   Vector2D velocity_;
   AABB aabb_;
-  float last_horizontal_velocity_; 
+  float last_horizontal_velocity_;
   SpellStats<kNumPlayerSpells> spell_stats_;
   Fireball fireball_;
   Frostbolt frostbolt_;
@@ -81,7 +80,6 @@ class Player {
                                                     float time,
                                                     Vector2D cursor_position);
 };
-
 
 void UpdateEnemyStatus(Enemy& enemies, const Player& player);
 void RespawnEnemy(Enemy& enemy, const Player& player);

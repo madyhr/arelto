@@ -90,7 +90,7 @@ class Game {
   void RenderEnemies(int num_vertices);
   void SetupProjectileGeometry();
   void RenderProjectiles();
-  void KillEnemiesSlowly();
+  void GetModelObservation();
 };
 
 }  // namespace rl2

@@ -80,10 +80,8 @@ bool Game::InitializeResources() {
 
   resources_.tile_texture = resources_.tile_manager.GetTileTexture(
       "assets/grassy_tiles.bmp", resources_.renderer);
-  // resources_.player_texture =
-  //     IMG_LoadTexture(resources_.renderer, "assets/textures/wizard.png");
   resources_.player_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/wizard_sprite_sheet.png");
+      resources_.renderer, "assets/textures/wizard_sprite_sheet_with_idle.png");
   resources_.enemy_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/goblin_sprite_sheet.png");
   resources_.projectile_textures.push_back(
@@ -132,10 +130,6 @@ bool Game::InitializeEnemies() {
     enemy_.size[i].width += GenerateRandomInt(1, 50);
   };
 
-  // SDL_Color red = {255, 0, 0, 255};
-  // for (int i = 0; i < kTotalEnemyVertices; ++i) {
-  //   enemies_vertices_[i].color = red;
-  // }
   return true;
 };
 
@@ -329,13 +323,6 @@ void Game::GenerateOutput() {
   SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
   SDL_RenderClear(resources_.renderer);
   RenderTiledMap();
-  SDL_Rect player_render_box = {
-      (int)(player_.position_.x - camera_.position_.x),
-      (int)(player_.position_.y - camera_.position_.y),
-      (int)player_.stats_.size.width, (int)player_.stats_.size.height};
-
-  // SDL_RenderCopy(resources_.renderer, resources_.player_texture, NULL,
-  //                &player_render_box);
   RenderPlayer();
 
   int num_enemy_vertices = SetupEnemyGeometry();
@@ -343,12 +330,6 @@ void Game::GenerateOutput() {
 
   SetupProjectileGeometry();
   RenderProjectiles();
-
-  // For debugging render boxes
-  // SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 255);
-  // SDL_RenderFillRect(resources_.renderer, &player_render_box);
-  // SDL_RenderGeometry(resources_.renderer, nullptr, enemy_vertices_,
-  //                    kTotalEnemyVertices, nullptr, 0);
 
   SDL_RenderPresent(resources_.renderer);
 };
@@ -386,14 +367,15 @@ void Game::RenderPlayer() {
       (int)(player_.position_.y - camera_.position_.y),
       (int)player_.stats_.size.width, (int)player_.stats_.size.height};
 
-  SDL_Rect src_rect;
+  bool is_standing_still = player_.velocity_.Norm() < 1e-3;
+  bool is_facing_right = player_.last_horizontal_velocity_ >= 0.0f;
 
+  SDL_Rect src_rect;
   src_rect.w = kPlayerSpriteCellWidth;
   src_rect.h = kPlayerSpriteCellHeight;
-  src_rect.y = 0;
+  src_rect.y = is_standing_still ? 0 : kPlayerSpriteCellHeight;
   src_rect.x = ((SDL_GetTicks64() / 150) % kPlayerNumSpriteCells) * src_rect.w;
 
-  bool is_facing_right = player_.last_horizontal_velocity_ >= 0.0f;
 
   SDL_RendererFlip is_flipped =
       is_facing_right ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
@@ -413,7 +395,6 @@ int Game::SetupEnemyGeometry() {
 
   int current_vertex_idx = 0;
 
-  constexpr int kEnemyAnimationFrameDuration = 150;  // time in ms
   float cell_uv_width = 1.0f / (float)kEnemyNumSpriteCells;
 
   for (int i = 0; i < kNumEnemies; ++i) {
@@ -528,6 +509,12 @@ void Game::RenderProjectiles() {
                          vertices.data(), (int)vertices.size(), nullptr, 0);
     };
   };
+};
+
+void Game::GetModelObservation() {
+  std::vector<float> obs_buffer; 
+   
+
 };
 
 void Game::Shutdown() {

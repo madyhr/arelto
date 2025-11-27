@@ -13,9 +13,9 @@ constexpr int kMapWidth = 3000;
 constexpr int kMapHeight = 3000;
 constexpr int kOccupancyMapResolution = 25;
 // Tiles are used for rendering
-constexpr int kTileWidth = 128;
-constexpr int kTileHeight = 139;
-constexpr int kNumTileTypes = 16;
+constexpr int kTileWidth = 40;
+constexpr int kTileHeight = 119;
+constexpr int kNumTileTypes = 44;
 constexpr int kNumTilesX = ((kMapWidth + kTileWidth - 1) / kTileWidth);
 constexpr int kNumTilesY = ((kMapHeight + kTileHeight - 1) / kTileHeight);
 
@@ -48,8 +48,8 @@ constexpr int kEnemyHeight = (int)(kEnemyWidth * 1.04);
 constexpr float kEnemyInvMass = 0.1f;
 // Num frames in the animation sprite sheet
 constexpr int kEnemyNumSpriteCells = 9;
-constexpr int kEnemySpriteCellWidth = 48;
-constexpr int kEnemySpriteCellHeight = 64;
+constexpr int kEnemySpriteCellWidth = 42;
+constexpr int kEnemySpriteCellHeight = 50;
 constexpr int kEnemyAnimationFrameDuration = 150;  // time in ms
 constexpr int kEnemyMinimumInitialDistance = 300;
 constexpr size_t kEnemyOccupancyMapWidth = 20;

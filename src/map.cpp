@@ -25,6 +25,7 @@ void TileManager::SetupTileMap() {
     };
   };
 };
+
 void TileManager::SetupTiles() {
   for (int i = 0; i < kNumTilesX; ++i) {
     for (int j = 0; j < kNumTilesY; ++j) {
@@ -35,14 +36,15 @@ void TileManager::SetupTiles() {
     };
   };
 };
+
 void TileManager::SetupTileSelector() {
 
-  const int kTilesInRow = static_cast<int>(std::sqrt(kNumTileTypes));
-  // const int kTilesInRow = 4;
-  // const int kTilesInCol = 2;
+  // const int kTilesInRow = static_cast<int>(std::sqrt(kNumTileTypes));
+  const int kTilesInRow = 11;
+  const int kTilesInCol = 4;
   SDL_Rect selector;
   for (int i = 0; i < kNumTileTypes; ++i) {
-    int col = i % kTilesInRow;
+    int col = i % kTilesInCol;
     int row = i / kTilesInRow;
 
     selector.x = col * kTileWidth;

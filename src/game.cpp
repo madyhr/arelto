@@ -36,7 +36,7 @@ bool Game::Initialize() {
 
   std::signal(SIGINT, SignalHandler);
   std::signal(SIGKILL, SignalHandler);
-  game_status_.in_debug_mode = true;
+  game_status_.in_debug_mode = false;
   game_status_.in_headless_mode = false;
 
   if (!(Game::InitializeResources())) {
@@ -100,11 +100,13 @@ bool Game::InitializeResources() {
   resources_.tile_manager.SetupTileSelector();
 
   resources_.tile_texture = resources_.tile_manager.GetTileTexture(
-      "assets/dungeon_floor_tiles_16.bmp", resources_.renderer);
+      "assets/dungeon_floor_tiles_tall.bmp", resources_.renderer);
   resources_.player_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/wizard_sprite_sheet_with_idle.png");
+  // resources_.enemy_texture = IMG_LoadTexture(
+      // resources_.renderer, "assets/textures/goblin_sprite_sheet.png");
   resources_.enemy_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/goblin_sprite_sheet.png");
+      resources_.renderer, "assets/textures/tentacle_being_sprite_sheet.png");
   resources_.projectile_textures.push_back(
       IMG_LoadTexture(resources_.renderer, "assets/textures/fireball_sprite_sheet.png"));
   resources_.projectile_textures.push_back(

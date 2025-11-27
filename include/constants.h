@@ -11,6 +11,8 @@ constexpr int kWindowHeight = 1080;
 // Map constants
 constexpr int kMapWidth = 3000;
 constexpr int kMapHeight = 3000;
+constexpr int kOccupancyMapResolution = 25;
+// Tiles are used for rendering
 constexpr int kTileSize = 256;
 constexpr int kNumTileTypes = 16;
 constexpr int kNumTilesX = ((kMapWidth + kTileSize - 1) / kTileSize);
@@ -48,8 +50,9 @@ constexpr int kEnemyNumSpriteCells = 9;
 constexpr int kEnemySpriteCellWidth = 48;
 constexpr int kEnemySpriteCellHeight = 64;
 constexpr int kEnemyAnimationFrameDuration = 150;  // time in ms
-
 constexpr int kEnemyMinimumInitialDistance = 300;
+constexpr size_t kEnemyOccupancyMapWidth = 10;
+constexpr size_t kEnemyOccupancyMapHeight = 10;
 constexpr int kEnemyVertices = 6;
 constexpr int kTotalEnemyVertices = kEnemyVertices * kNumEnemies;
 constexpr float kTexCoordTop = 0.0f;

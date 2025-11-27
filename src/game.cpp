@@ -4,8 +4,10 @@
 #include <SDL_render.h>
 #include <SDL_surface.h>
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <iostream>
+#include <vector>
 #include "collision.h"
 #include "constants.h"
 #include "entity.h"
@@ -256,6 +258,8 @@ void Game::Update() {
 
   Game::UpdateCameraPosition();
   UpdateEnemyStatus(enemy_, player_);
+  Game::UpdateWorldOccupancyMap();
+  Game::UpdateEnemyOccupancyMap();
   game_status_.frame_stats.print_fps_running_average(dt);
 
   Game::GenerateOutput();
@@ -330,17 +334,21 @@ void Game::GenerateOutput() {
 
   SetupProjectileGeometry();
   RenderProjectiles();
+  if (in_debug_mode) {
+    // RenderDebugWorldOccupancyMap();
+    RenderDebugEnemyOccupancyMap();
+  };
 
   SDL_RenderPresent(resources_.renderer);
 };
 
 void Game::RenderTiledMap() {
-  int top_left_tile_x = (int)(camera_.position_.x / kTileSize);
-  int top_left_tile_y = (int)(camera_.position_.y / kTileSize);
-  int bottom_right_tile_x =
-      (int)std::ceil((camera_.position_.x + kWindowWidth) / kTileSize);
-  int bottom_right_tile_y =
-      (int)std::ceil((camera_.position_.y + kWindowHeight) / kTileSize);
+  int top_left_tile_x = static_cast<int>(camera_.position_.x / kTileSize);
+  int top_left_tile_y = static_cast<int>(camera_.position_.y / kTileSize);
+  int bottom_right_tile_x = static_cast<int>(
+      std::ceil((camera_.position_.x + kWindowWidth) / kTileSize));
+  int bottom_right_tile_y = static_cast<int>(
+      std::ceil((camera_.position_.y + kWindowHeight) / kTileSize));
   int start_x = std::max(0, top_left_tile_x);
   int end_x = std::min(kNumTilesX, bottom_right_tile_x);
 
@@ -350,8 +358,8 @@ void Game::RenderTiledMap() {
   for (int i = start_x; i < end_x; ++i) {
     for (int j = start_y; j < end_y; ++j) {
       SDL_Rect render_rect = resources_.tile_manager.tiles_[i][j];
-      render_rect.x -= (int)camera_.position_.x;
-      render_rect.y -= (int)camera_.position_.y;
+      render_rect.x -= static_cast<int>(camera_.position_.x);
+      render_rect.y -= static_cast<int>(camera_.position_.y);
       int tile_id = resources_.tile_manager.tile_map_[i][j];
       const SDL_Rect& source_rect =
           resources_.tile_manager.select_tiles_[tile_id];
@@ -363,9 +371,10 @@ void Game::RenderTiledMap() {
 
 void Game::RenderPlayer() {
   SDL_Rect player_render_box = {
-      (int)(player_.position_.x - camera_.position_.x),
-      (int)(player_.position_.y - camera_.position_.y),
-      (int)player_.stats_.size.width, (int)player_.stats_.size.height};
+      static_cast<int>(player_.position_.x - camera_.position_.x),
+      static_cast<int>(player_.position_.y - camera_.position_.y),
+      static_cast<int>(player_.stats_.size.width),
+      static_cast<int>(player_.stats_.size.height)};
 
   bool is_standing_still = player_.velocity_.Norm() < 1e-3;
   bool is_facing_right = player_.last_horizontal_velocity_ >= 0.0f;
@@ -375,7 +384,6 @@ void Game::RenderPlayer() {
   src_rect.h = kPlayerSpriteCellHeight;
   src_rect.y = is_standing_still ? 0 : kPlayerSpriteCellHeight;
   src_rect.x = ((SDL_GetTicks64() / 150) % kPlayerNumSpriteCells) * src_rect.w;
-
 
   SDL_RendererFlip is_flipped =
       is_facing_right ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
@@ -504,17 +512,220 @@ void Game::RenderProjectiles() {
     int texture_id = pair.first;
     const std::vector<SDL_Vertex>& vertices = pair.second;
     if (texture_id >= 0 && texture_id < resources_.projectile_textures.size()) {
-      SDL_RenderGeometry(resources_.renderer,
-                         resources_.projectile_textures[texture_id],
-                         vertices.data(), (int)vertices.size(), nullptr, 0);
+      SDL_RenderGeometry(
+          resources_.renderer, resources_.projectile_textures[texture_id],
+          vertices.data(), static_cast<int>(vertices.size()), nullptr, 0);
     };
   };
 };
 
-void Game::GetModelObservation() {
-  std::vector<float> obs_buffer; 
-   
+void Game::UpdateWorldOccupancyMap() {
 
+  world_occupancy_map_.Clear();
+
+  Vector2D player_grid_pos = WorldToGrid(player_.position_);
+  int player_grid_width = WorldToGrid(player_.stats_.size.width);
+  int player_grid_height = WorldToGrid(player_.stats_.size.height);
+  // Vector2D player_grid_size =
+  //     WorldToGrid({player_.stats_.size.width, player_.stats_.size.height});
+  world_occupancy_map_.SetGrid(
+      static_cast<int>(player_grid_pos.x), static_cast<int>(player_grid_pos.y),
+      player_grid_width, player_grid_height, player_.entity_type_);
+  for (int i = 0; i < kNumEnemies; ++i) {
+    Vector2D enemy_grid_pos = WorldToGrid(enemy_.position[i]);
+    int enemy_grid_width = WorldToGrid(enemy_.size[i].width);
+    int enemy_grid_height = WorldToGrid(enemy_.size[i].height);
+    world_occupancy_map_.SetGrid(
+        static_cast<int>(enemy_grid_pos.x), static_cast<int>(enemy_grid_pos.y),
+        enemy_grid_width, enemy_grid_height, enemy_.entity_type);
+  }
+
+  const size_t num_proj = projectiles_.GetNumProjectiles();
+  for (int i = 0; i < num_proj; ++i) {
+    Vector2D proj_grid_pos = WorldToGrid(projectiles_.position_[i]);
+    int proj_grid_width = WorldToGrid(projectiles_.size_[i].width);
+    int proj_grid_height = WorldToGrid(projectiles_.size_[i].height);
+    world_occupancy_map_.SetGrid(
+        static_cast<int>(proj_grid_pos.x), static_cast<int>(proj_grid_pos.y),
+        proj_grid_width, proj_grid_height, projectiles_.entity_type_);
+  };
+};
+
+void Game::UpdateEnemyOccupancyMap() {
+  // Get local occupancy map from world
+  const int local_h = kEnemyOccupancyMapHeight;
+  const int half_w = static_cast<int>(kEnemyOccupancyMapWidth / 2);
+  const int half_h = static_cast<int>(kEnemyOccupancyMapHeight / 2);
+
+  for (int i = 0; i < kNumEnemies; ++i) {
+    // We do not update the occupancy map for enemies that are dead to save performance.
+    if (!enemy_.is_alive[i]) {
+      continue;
+    }
+    // Vector2D enemy_grid_pos = WorldToGrid(enemy_.position[i]);
+    Vector2D enemy_grid_pos =
+        WorldToGrid(GetCentroid(enemy_.position[i], enemy_.size[i]));
+
+    int start_world_x = static_cast<int>(enemy_grid_pos.x) - half_w;
+    int start_world_y = static_cast<int>(enemy_grid_pos.y) - half_h;
+
+    for (int local_row = 0; local_row < local_h; ++local_row) {
+      int world_row = start_world_y + local_row;
+      enemy_.occupancy_map[i].CopyRowFrom(world_occupancy_map_, local_row,
+                                          world_row, start_world_x);
+    };
+  }
+};
+
+void Game::RenderDebugWorldOccupancyMap() {
+  SDL_BlendMode originalBlendMode;
+  SDL_GetRenderDrawBlendMode(resources_.renderer, &originalBlendMode);
+  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
+
+  int grid_width_cells = kMapWidth / kOccupancyMapResolution;
+  int grid_height_cells = kMapHeight / kOccupancyMapResolution;
+
+  int top_left_x =
+      static_cast<int>(camera_.position_.x / kOccupancyMapResolution);
+  int top_left_y =
+      static_cast<int>(camera_.position_.y / kOccupancyMapResolution);
+  int bottom_right_x = static_cast<int>(std::ceil(
+      (camera_.position_.x + kWindowWidth) / kOccupancyMapResolution));
+  int bottom_right_y = static_cast<int>(std::ceil(
+      (camera_.position_.y + kWindowHeight) / kOccupancyMapResolution));
+
+  int start_x = std::max(0, top_left_x);
+  int end_x = std::min(grid_width_cells, bottom_right_x);
+  int start_y = std::max(0, top_left_y);
+  int end_y = std::min(grid_height_cells, bottom_right_y);
+
+  for (int i = start_x; i < end_x; ++i) {
+    for (int j = start_y; j < end_y; ++j) {
+
+      SDL_Rect render_rect;
+      render_rect.x =
+          static_cast<int>(i * kOccupancyMapResolution - camera_.position_.x);
+      render_rect.y =
+          static_cast<int>(j * kOccupancyMapResolution - camera_.position_.y);
+      render_rect.w = kOccupancyMapResolution;
+      render_rect.h = kOccupancyMapResolution;
+
+      EntityType type = world_occupancy_map_.Get(i, j);
+
+      if (type != EntityType::None) {
+        // Color coding based on type
+        switch (type) {
+          case EntityType::player:
+            SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 255,
+                                   128);  // Blue
+            break;
+          case EntityType::enemy:
+            SDL_SetRenderDrawColor(resources_.renderer, 255, 0, 0, 128);  // Red
+            break;
+          case EntityType::projectile:
+            SDL_SetRenderDrawColor(resources_.renderer, 255, 255, 0,
+                                   128);  // Yellow
+            break;
+          case EntityType::terrain:
+            SDL_SetRenderDrawColor(resources_.renderer, 0, 255, 0,
+                                   128);  // Green
+            break;
+          default:
+            SDL_SetRenderDrawColor(resources_.renderer, 100, 100, 100,
+                                   128);  // Grey (Generic)
+            break;
+        }
+        // The rectangles are rendered first so the grid cells are on top.
+        SDL_RenderFillRect(resources_.renderer, &render_rect);
+      }
+
+      SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 50);
+      SDL_RenderDrawRect(resources_.renderer, &render_rect);
+    }
+  }
+
+  // Restore original blend mode
+  SDL_SetRenderDrawBlendMode(resources_.renderer, originalBlendMode);
+}
+
+void Game::RenderDebugEnemyOccupancyMap() {
+  SDL_BlendMode originalBlendMode;
+  SDL_GetRenderDrawBlendMode(resources_.renderer, &originalBlendMode);
+  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
+
+  const int half_w = static_cast<int>(kEnemyOccupancyMapWidth / 2);
+  const int half_h = static_cast<int>(kEnemyOccupancyMapHeight / 2);
+
+  for (int i = 0; i < kNumEnemies; ++i) {
+    if (!enemy_.is_alive[i]) {
+      continue;
+    }
+
+    // Vector2D enemy_grid_pos = WorldToGrid(enemy_.position[i]);
+    Vector2D enemy_grid_pos =
+        WorldToGrid(GetCentroid(enemy_.position[i], enemy_.size[i]));
+    int start_world_x = static_cast<int>(enemy_grid_pos.x) - half_w;
+    int start_world_y = static_cast<int>(enemy_grid_pos.y) - half_h;
+
+    // Draw outline of the enemy's vision
+    SDL_Rect vision_rect;
+    vision_rect.x = static_cast<int>(start_world_x * kOccupancyMapResolution -
+                                     camera_.position_.x);
+    vision_rect.y = static_cast<int>(start_world_y * kOccupancyMapResolution -
+                                     camera_.position_.y);
+    vision_rect.w = kEnemyOccupancyMapWidth * kOccupancyMapResolution;
+    vision_rect.h = kEnemyOccupancyMapHeight * kOccupancyMapResolution;
+
+    SDL_SetRenderDrawColor(resources_.renderer, 255, 255, 255, 200);
+    SDL_RenderDrawRect(resources_.renderer, &vision_rect);
+
+    for (int local_y = 0; local_y < kEnemyOccupancyMapHeight; ++local_y) {
+      for (int local_x = 0; local_x < kEnemyOccupancyMapWidth; ++local_x) {
+        EntityType type = enemy_.occupancy_map[i].Get(local_x, local_y);
+
+        if (type != EntityType::None) {
+          int world_x = start_world_x + local_x;
+          int world_y = start_world_y + local_y;
+
+          SDL_Rect render_rect;
+          render_rect.x = static_cast<int>(world_x * kOccupancyMapResolution -
+                                           camera_.position_.x);
+          render_rect.y = static_cast<int>(world_y * kOccupancyMapResolution -
+                                           camera_.position_.y);
+          render_rect.w = kOccupancyMapResolution;
+          render_rect.h = kOccupancyMapResolution;
+
+          switch (type) {
+            case EntityType::player:
+              SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 255, 128);
+              break;
+            case EntityType::enemy:
+              SDL_SetRenderDrawColor(resources_.renderer, 255, 0, 0, 128);
+              break;
+            case EntityType::projectile:
+              SDL_SetRenderDrawColor(resources_.renderer, 255, 255, 0, 128);
+              break;
+            case EntityType::terrain:
+              SDL_SetRenderDrawColor(resources_.renderer, 0, 255, 0, 128);
+              break;
+            default:
+              SDL_SetRenderDrawColor(resources_.renderer, 100, 100, 100, 128);
+              break;
+          }
+          SDL_RenderFillRect(resources_.renderer, &render_rect);
+
+          SDL_SetRenderDrawColor(resources_.renderer, 255, 255, 255, 50);
+          SDL_RenderDrawRect(resources_.renderer, &render_rect);
+        }
+      }
+    }
+  }
+
+  SDL_SetRenderDrawBlendMode(resources_.renderer, originalBlendMode);
+}
+
+void Game::GetModelObservation() {
+  std::vector<float> obs_buffer;
 };
 
 void Game::Shutdown() {

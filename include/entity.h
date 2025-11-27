@@ -60,6 +60,9 @@ struct Enemy {
   std::array<Size, kNumEnemies> size;
   std::array<float, kNumEnemies> inv_mass;
   std::array<float, kNumEnemies> last_horizontal_velocity;
+  std::array<FixedMap<kEnemyOccupancyMapWidth, kEnemyOccupancyMapHeight>,
+             kNumEnemies>
+      occupancy_map;
   EntityType entity_type = EntityType::enemy;
 };
 

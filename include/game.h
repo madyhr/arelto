@@ -6,8 +6,8 @@
 #include <SDL2/SDL_image.h>
 #include <SDL_render.h>
 #include <array>
-#include <vector>
 #include <map>
+#include <vector>
 #include "constants.h"
 #include "entity.h"
 #include "map.h"
@@ -38,7 +38,8 @@ class FrameStats {
   float frame_time_sum = 0.0f;
   int current_buffer_length = 0;
   int max_buffer_length = 100;
-  int head_index = 0; void update_frame_time_buffer(float dt);
+  int head_index = 0;
+  void update_frame_time_buffer(float dt);
   float get_average_frame_time();
   void print_fps_running_average(float dt);
 };
@@ -61,10 +62,14 @@ class Game {
   Player player_;
   Enemy enemy_;
   Projectiles projectiles_;
+  FixedMap<(int)kMapWidth / kOccupancyMapResolution,
+           (int)kMapHeight / kOccupancyMapResolution>
+      world_occupancy_map_;
   Camera camera_;
   Vector2D cursor_position_;
   SDL_Vertex enemies_vertices_[kTotalEnemyVertices];
   std::map<int, std::vector<SDL_Vertex>> projectile_vertices_grouped_;
+  bool in_debug_mode = true;
   bool is_running_;
   float last_kill_tick = 0.0f;
   float time_ = 0.0f;
@@ -90,7 +95,15 @@ class Game {
   void RenderEnemies(int num_vertices);
   void SetupProjectileGeometry();
   void RenderProjectiles();
+  void UpdateWorldOccupancyMap();
+  void UpdateEnemyOccupancyMap();
+  void RenderDebugWorldOccupancyMap();
+  void RenderDebugEnemyOccupancyMap();
   void GetModelObservation();
+
+  inline auto WorldToGrid(auto pos) {
+    return (pos / kOccupancyMapResolution);
+  }
 };
 
 }  // namespace rl2

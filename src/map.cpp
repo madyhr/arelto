@@ -37,7 +37,7 @@ void TileManager::SetupTiles() {
 };
 void TileManager::SetupTileSelector() {
 
-  const int kTilesInRow = (int)std::sqrt(kNumTileTypes);
+  const int kTilesInRow = static_cast<int>(std::sqrt(kNumTileTypes));
   SDL_Rect selector;
   for (int i = 0; i < kNumTileTypes; ++i) {
     int col = i % kTilesInRow;

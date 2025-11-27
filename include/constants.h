@@ -13,10 +13,11 @@ constexpr int kMapWidth = 3000;
 constexpr int kMapHeight = 3000;
 constexpr int kOccupancyMapResolution = 25;
 // Tiles are used for rendering
-constexpr int kTileSize = 256;
+constexpr int kTileWidth = 128;
+constexpr int kTileHeight = 139;
 constexpr int kNumTileTypes = 16;
-constexpr int kNumTilesX = ((kMapWidth + kTileSize - 1) / kTileSize);
-constexpr int kNumTilesY = ((kMapHeight + kTileSize - 1) / kTileSize);
+constexpr int kNumTilesX = ((kMapWidth + kTileWidth - 1) / kTileWidth);
+constexpr int kNumTilesY = ((kMapHeight + kTileHeight - 1) / kTileHeight);
 
 // Game status constants
 constexpr int kFrameTimes = 1000;
@@ -51,8 +52,8 @@ constexpr int kEnemySpriteCellWidth = 48;
 constexpr int kEnemySpriteCellHeight = 64;
 constexpr int kEnemyAnimationFrameDuration = 150;  // time in ms
 constexpr int kEnemyMinimumInitialDistance = 300;
-constexpr size_t kEnemyOccupancyMapWidth = 10;
-constexpr size_t kEnemyOccupancyMapHeight = 10;
+constexpr size_t kEnemyOccupancyMapWidth = 20;
+constexpr size_t kEnemyOccupancyMapHeight = 20;
 constexpr int kEnemyVertices = 6;
 constexpr int kTotalEnemyVertices = kEnemyVertices * kNumEnemies;
 constexpr float kTexCoordTop = 0.0f;
@@ -62,8 +63,12 @@ constexpr float kTexCoordRight = 1.0f;
 
 // Projectiles constants
 constexpr int kProjectileVertices = 6;
-constexpr int kFireballWidth = 50;
-constexpr int kFireballHeight = 50;
+constexpr int kProjectileNumSpriteCells = 12;
+constexpr int kProjectileSpriteCellWidth = 24;
+constexpr int kProjectileSpriteCellHeight = 48;
+constexpr int kProjectileAnimationFrameDuration = 150;  // time in ms
+constexpr int kFireballWidth = 40;
+constexpr int kFireballHeight = 40;
 constexpr float kFireballSpeed = 350.0f;
 constexpr int kFireBallDamage = 5;
 constexpr int kFrostboltWidth = 100;

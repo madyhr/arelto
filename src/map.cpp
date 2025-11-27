@@ -28,25 +28,27 @@ void TileManager::SetupTileMap() {
 void TileManager::SetupTiles() {
   for (int i = 0; i < kNumTilesX; ++i) {
     for (int j = 0; j < kNumTilesY; ++j) {
-      tiles_[i][j].x = i * kTileSize;
-      tiles_[i][j].y = j * kTileSize;
-      tiles_[i][j].w = kTileSize;
-      tiles_[i][j].h = kTileSize;
+      tiles_[i][j].x = i * kTileWidth;
+      tiles_[i][j].y = j * kTileHeight;
+      tiles_[i][j].w = kTileWidth;
+      tiles_[i][j].h = kTileHeight;
     };
   };
 };
 void TileManager::SetupTileSelector() {
 
   const int kTilesInRow = static_cast<int>(std::sqrt(kNumTileTypes));
+  // const int kTilesInRow = 4;
+  // const int kTilesInCol = 2;
   SDL_Rect selector;
   for (int i = 0; i < kNumTileTypes; ++i) {
     int col = i % kTilesInRow;
     int row = i / kTilesInRow;
 
-    selector.x = col * kTileSize;
-    selector.y = row * kTileSize;
-    selector.w = kTileSize;
-    selector.h = kTileSize;
+    selector.x = col * kTileWidth;
+    selector.y = row * kTileHeight;
+    selector.w = kTileWidth;
+    selector.h = kTileHeight;
 
     select_tiles_.push_back(selector);
   }

@@ -5,9 +5,9 @@
 #include <SDL_surface.h>
 #include <algorithm>
 #include <array>
+#include <csignal>
 #include <cstdio>
 #include <iostream>
-#include <stdexcept>
 #include <vector>
 #include "collision.h"
 #include "constants.h"
@@ -15,6 +15,14 @@
 #include "game_math.h"
 #include "random.h"
 #include "types.h"
+
+namespace {
+volatile std::sig_atomic_t g_stop_request = 0;
+}
+
+void SignalHandler(int signal) {
+  g_stop_request = 1;
+}
 
 namespace rl2 {
 
@@ -25,6 +33,12 @@ Game::~Game() {
 }
 
 bool Game::Initialize() {
+
+  std::signal(SIGINT, SignalHandler);
+  std::signal(SIGKILL, SignalHandler);
+  game_status_.in_debug_mode = true;
+  game_status_.in_headless_mode = false;
+
   if (!(Game::InitializeResources())) {
     return false;
   }
@@ -50,6 +64,10 @@ bool Game::InitializeResources() {
     std::cerr << "SDL could not initialize! SDL Error: " << SDL_GetError()
               << std::endl;
     return false;
+  }
+
+  if (game_status_.in_headless_mode) {
+    return true;
   }
 
   resources_.window =
@@ -82,15 +100,15 @@ bool Game::InitializeResources() {
   resources_.tile_manager.SetupTileSelector();
 
   resources_.tile_texture = resources_.tile_manager.GetTileTexture(
-      "assets/grassy_tiles.bmp", resources_.renderer);
+      "assets/dungeon_floor_tiles_16.bmp", resources_.renderer);
   resources_.player_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/wizard_sprite_sheet_with_idle.png");
   resources_.enemy_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/goblin_sprite_sheet.png");
   resources_.projectile_textures.push_back(
-      IMG_LoadTexture(resources_.renderer, "assets/textures/fireball.png"));
+      IMG_LoadTexture(resources_.renderer, "assets/textures/fireball_sprite_sheet.png"));
   resources_.projectile_textures.push_back(
-      IMG_LoadTexture(resources_.renderer, "assets/textures/frostbolt.png"));
+      IMG_LoadTexture(resources_.renderer, "assets/textures/frostbolt_sprite_sheet.png"));
 
   if (resources_.tile_texture == nullptr ||
       resources_.player_texture == nullptr ||
@@ -188,6 +206,16 @@ void Game::RunGameLoop() {
 
 void Game::ProcessInput() {
 
+  if (g_stop_request) {
+    is_running_ = false;
+    std::cout << "Signal received. Exiting..." << std::endl;
+    return;
+  };
+
+  if (game_status_.in_headless_mode) {
+    return;
+  }
+
   SDL_Event e;
 
   while (SDL_PollEvent(&e) != 0) {
@@ -262,9 +290,11 @@ void Game::Update() {
   Game::UpdateWorldOccupancyMap();
   Game::UpdateEnemyOccupancyMap();
   game_status_.frame_stats.print_fps_running_average(dt);
-
-  Game::GenerateOutput();
   projectiles_.DestroyProjectiles();
+  if (game_status_.in_headless_mode) {
+    return;
+  }
+  Game::GenerateOutput();
 }
 
 void Game::UpdatePlayerPosition(float dt) {
@@ -335,7 +365,7 @@ void Game::GenerateOutput() {
 
   SetupProjectileGeometry();
   RenderProjectiles();
-  if (in_debug_mode) {
+  if (game_status_.in_debug_mode) {
     // RenderDebugWorldOccupancyMap();
     RenderDebugEnemyOccupancyMap();
   };
@@ -344,12 +374,12 @@ void Game::GenerateOutput() {
 };
 
 void Game::RenderTiledMap() {
-  int top_left_tile_x = static_cast<int>(camera_.position_.x / kTileSize);
-  int top_left_tile_y = static_cast<int>(camera_.position_.y / kTileSize);
+  int top_left_tile_x = static_cast<int>(camera_.position_.x / kTileWidth);
+  int top_left_tile_y = static_cast<int>(camera_.position_.y / kTileHeight);
   int bottom_right_tile_x = static_cast<int>(
-      std::ceil((camera_.position_.x + kWindowWidth) / kTileSize));
+      std::ceil((camera_.position_.x + kWindowWidth) / kTileWidth));
   int bottom_right_tile_y = static_cast<int>(
-      std::ceil((camera_.position_.y + kWindowHeight) / kTileSize));
+      std::ceil((camera_.position_.y + kWindowHeight) / kTileHeight));
   int start_x = std::max(0, top_left_tile_x);
   int end_x = std::min(kNumTilesX, bottom_right_tile_x);
 
@@ -473,6 +503,9 @@ void Game::SetupProjectileGeometry() {
     return;
   }
 
+  int current_vertex_idx = 0;
+  float cell_uv_width = 1.0f / (float)kProjectileNumSpriteCells;
+
   for (int i = 0; i < num_projectiles; ++i) {
     float x = projectiles_.position_[i].x - camera_.position_.x;
     float y = projectiles_.position_[i].y - camera_.position_.y;
@@ -480,26 +513,36 @@ void Game::SetupProjectileGeometry() {
     float h = projectiles_.size_[i].height;
     int texture_id = projectiles_.proj_id_[i];
 
+    int frame_idx = (SDL_GetTicks64() / kProjectileAnimationFrameDuration) %
+                    kProjectileNumSpriteCells;
+
+    float u_left = frame_idx * cell_uv_width;
+    float u_right = u_left + cell_uv_width;
+    float v_top = kTexCoordTop;
+    float v_bottom = kTexCoordBottom;
+
+    bool is_facing_right = projectiles_.direction_[i].x > 0;
+
+    float vertex_left = is_facing_right ? u_left : u_right;
+    float vertex_right = is_facing_right ? u_right : u_left;
+
     SDL_Vertex vertices[kProjectileVertices];
 
     // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
     // 1. Top-Left
-    vertices[0] = {{x, y}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordTop}};
+    vertices[0] = {{x, y}, {255, 255, 255, 255}, {vertex_left, v_top}};
     // 2. Bottom-Left
-    vertices[1] = {
-        {x, y + h}, {255, 255, 255, 255}, {kTexCoordLeft, kTexCoordBottom}};
+    vertices[1] = {{x, y + h}, {255, 255, 255, 255}, {vertex_left, v_bottom}};
     // 3. Bottom-Right
-    vertices[2] = {{x + w, y + h},
-                   {255, 255, 255, 255},
-                   {kTexCoordRight, kTexCoordBottom}};
+    vertices[2] = {
+        {x + w, y + h}, {255, 255, 255, 255}, {vertex_right, v_bottom}};
     // --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
     // 4. Top-Left (Repeat)
     vertices[3] = vertices[0];  // Same as vertex 1
                                 // 5. Bottom-Right (Repeat)
     vertices[4] = vertices[2];  // Same as vertex 3
     // 6. Top-Right
-    vertices[5] = {
-        {x + w, y}, {255, 255, 255, 255}, {kTexCoordRight, kTexCoordTop}};
+    vertices[5] = {{x + w, y}, {255, 255, 255, 255}, {vertex_right, v_top}};
 
     for (int j = 0; j < kProjectileVertices; ++j) {
       projectile_vertices_grouped_[texture_id].push_back(vertices[j]);

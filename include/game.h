@@ -46,6 +46,8 @@ class FrameStats {
 
 struct GameStatus {
   FrameStats frame_stats;
+  bool in_debug_mode;
+  bool in_headless_mode;
 };
 
 class Game {

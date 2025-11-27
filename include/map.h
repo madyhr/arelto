@@ -1,8 +1,8 @@
 // include/map.h
 #ifndef RL2_MAP_H_
 #define RL2_MAP_H_
-#include <SDL_render.h>
-#include <SDL_surface.h>
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_surface.h>
 #include <vector>
 #include "constants.h"
 

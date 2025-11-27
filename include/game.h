@@ -4,7 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <SDL_render.h>
+#include <SDL2/SDL_render.h>
 #include <array>
 #include <map>
 #include <vector>
@@ -100,6 +100,7 @@ class Game {
   void RenderDebugWorldOccupancyMap();
   void RenderDebugEnemyOccupancyMap();
   void GetModelObservation();
+  int GetObservationSize();
 
   inline auto WorldToGrid(auto pos) {
     return (pos / kOccupancyMapResolution);

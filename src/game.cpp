@@ -7,6 +7,7 @@
 #include <array>
 #include <cstdio>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 #include "collision.h"
 #include "constants.h"
@@ -578,8 +579,8 @@ void Game::UpdateEnemyOccupancyMap() {
 };
 
 void Game::RenderDebugWorldOccupancyMap() {
-  SDL_BlendMode originalBlendMode;
-  SDL_GetRenderDrawBlendMode(resources_.renderer, &originalBlendMode);
+  SDL_BlendMode original_blend_mode;
+  SDL_GetRenderDrawBlendMode(resources_.renderer, &original_blend_mode);
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
 
   int grid_width_cells = kMapWidth / kOccupancyMapResolution;
@@ -645,7 +646,7 @@ void Game::RenderDebugWorldOccupancyMap() {
   }
 
   // Restore original blend mode
-  SDL_SetRenderDrawBlendMode(resources_.renderer, originalBlendMode);
+  SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
 }
 
 void Game::RenderDebugEnemyOccupancyMap() {
@@ -724,16 +725,92 @@ void Game::RenderDebugEnemyOccupancyMap() {
   SDL_SetRenderDrawBlendMode(resources_.renderer, originalBlendMode);
 }
 
-void Game::GetModelObservation() {
-  std::vector<float> obs_buffer;
+int Game::GetObservationSize() {
+  return 2 +                                            // player position
+         (kNumEnemies * 2) +                            // enemy position: x,y
+         (kNumEnemies * 2) +                            // enemy velocity: x,y
+         (kNumEnemies * 2) +                            // enemy size: w,h
+         (kNumEnemies) +                                // enemy health_points
+         (kNumEnemies) +                                // enemy inv mass
+         (kNumEnemies);                                 // enemy movement speed
+  (kNumEnemies * enemy_.occupancy_map[0].kTotalCells);  // enemy occupancy map
 };
 
+// void Game::FillObservationBuffer() {
+//
+//   std::vector<float> obs_buffer;
+//   // std::array of kNumEnemies with Vector2D{ float x, float y};
+//   // obs_buffer.push_back(enemy_.position);
+//   // // std::array of kNumEnemies with Vector2D{ float x, float y};
+//   // obs_buffer.push_back(enemy_.velocity);
+//   // // A single Vector2D{ float x, float y};
+//   // obs_buffer.push_back(player_.position_);
+//   // // std::array of kNumEnemies with Size {uint32_t width, uint32_t height};
+//   // obs_buffer.push_back(enemy_.size);
+//   // // std::array of kNumEnemies with float inv_mass
+//   // obs_buffer.push_back(enemy_.inv_mass);
+//   // // std::array of kNumEnemies with int health_points
+//   // obs_buffer.push_back(enemy_.health_points);
+//   // // std::array of kNumEnemies with float movement_speed
+//   // obs_buffer.push_back(enemy_.movement_speed);
+//
+//   auto ptr = buffer.mutable_unchecked<1>();
+//
+//   if (ptr.shape(0) != GetObservationSize()) {
+//     throw std::runtime_error("Buffer size mismatch");
+//   };
+//
+//   int idx = 0;
+//
+//   ptr(idx++) = player_.position_.x;
+//   ptr(idx++) = player_.position_.y;
+//
+//   for (const Vector2D& enemy_pos : enemy_.position) {
+//     ptr(idx++) = enemy_pos.x;
+//     ptr(idx++) = enemy_pos.y;
+//   }
+//
+//   for (const Vector2D& enemy_pos : enemy_.position) {
+//     ptr(idx++) = enemy_pos.x;
+//     ptr(idx++) = enemy_pos.y;
+//   }
+//
+//   for (const Size& enemy_size : enemy_.size) {
+//     ptr(idx++) = static_cast<float>(enemy_size.width);
+//     ptr(idx++) = static_cast<float>(enemy_size.height);
+//   }
+//
+//   for (const int& enemy_health : enemy_.health_points) {
+//     ptr(idx++) = static_cast<float>(enemy_health);
+//   }
+//
+//   for (const float& enemy_inv_mass : enemy_.inv_mass) {
+//     ptr(idx++) = enemy_inv_mass;
+//   }
+//
+//   for (const float& enemy_movement_speed : enemy_.movement_speed) {
+//     ptr(idx++) = enemy_movement_speed;
+//   }
+//
+//   for (int i = 0; i < kNumEnemies; ++i) {
+//     const EntityType* map_data = enemy_.occupancy_map[i].Data();
+//     size_t total_cells = enemy_.occupancy_map[i].kTotalCells;
+//
+//     for (size_t k = 0; k < total_cells; ++k) {
+//       ptr(idx++) = static_cast<float>(map_data[k]);
+//     }
+//   }
+//
+//   return;
+// };
+//
 void Game::Shutdown() {
 
   if (resources_.player_texture) {
     SDL_DestroyTexture(resources_.player_texture);
     resources_.player_texture = nullptr;
   }
+
   if (resources_.enemy_texture) {
     SDL_DestroyTexture(resources_.enemy_texture);
     resources_.enemy_texture = nullptr;

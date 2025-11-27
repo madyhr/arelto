@@ -2,9 +2,9 @@
 #ifndef RL2_TYPES_H_
 #define RL2_TYPES_H_
 #include <SDL2/SDL_render.h>
-#include <constants.h>
 #include <array>
 #include <vector>
+#include "constants.h"
 
 namespace rl2 {
 
@@ -154,7 +154,7 @@ class FixedMap {
   }
 
   inline void SetGrid(int x, int y, int w, int h, EntityType type) {
-    // Sets a grid of cells to a certain entity type. 
+    // Sets a grid of cells to a certain entity type.
     for (int i = 0; i < w + 1; ++i) {
       for (int j = 0; j < h + 1; ++j) {
         Set(x + i, y + j, type);

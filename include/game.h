@@ -23,7 +23,7 @@ struct GameResources {
   SDL_Texture* player_texture = nullptr;
   SDL_Texture* enemy_texture = nullptr;
   std::vector<SDL_Texture*> projectile_textures;
-  SDL_Rect map_layout = {(int)0, (int)0, kWindowWidth, kWindowHeight};
+  SDL_Rect map_layout = {0, 0, kWindowWidth, kWindowHeight};
   TileManager tile_manager;
 };
 
@@ -104,9 +104,7 @@ class Game {
   void GetModelObservation();
   int GetObservationSize();
 
-  inline auto WorldToGrid(auto pos) {
-    return (pos / kOccupancyMapResolution);
-  }
+  inline auto WorldToGrid(auto pos) { return (pos / kOccupancyMapResolution); }
 };
 
 }  // namespace rl2

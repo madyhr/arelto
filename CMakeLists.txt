@@ -41,3 +41,17 @@ add_custom_command(TARGET rl2_core POST_BUILD
 		"${CMAKE_SOURCE_DIR}/assets"
 		"$<TARGET_FILE_DIR:rl2_core>/assets"
 )
+
+find_program(STUBGEN_EXE pybind11-stubgen REQUIRED)
+
+add_custom_command(
+    TARGET rl2_py POST_BUILD
+    # Set PYTHONPATH so it finds the module, and LD_LIBRARY_PATH so it finds the core library
+    COMMAND ${CMAKE_COMMAND} -E env 
+        PYTHONPATH=$<TARGET_FILE_DIR:rl2_py> 
+        LD_LIBRARY_PATH=$<TARGET_FILE_DIR:rl2_core> 
+        ${STUBGEN_EXE} rl2_py --output-dir $<TARGET_FILE_DIR:rl2_py>
+    COMMENT "Generating Python interface stubs (.pyi) for rl2_py"
+    VERBATIM
+)
+

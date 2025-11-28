@@ -50,6 +50,14 @@ struct GameStatus {
   bool in_headless_mode;
 };
 
+enum GameState : int {
+  in_start_screen = 0,
+  in_main_menu,
+  is_running,
+  is_gameover,
+  in_shutdown,
+};
+
 class Game {
  public:
   Game();
@@ -57,10 +65,15 @@ class Game {
   bool Initialize();
   void RunGameLoop();
   void Shutdown();
+  void FillObservationBuffer(float* buffer_ptr, int buffer_size);
+  int GetObservationSize();
+  int GetGameState();
+  void SetGameState(int game_state);
 
  private:
   GameResources resources_;
   GameStatus game_status_;
+  GameState game_state_;
   Player player_;
   Enemy enemy_;
   Projectiles projectiles_;
@@ -72,7 +85,6 @@ class Game {
   SDL_Vertex enemies_vertices_[kTotalEnemyVertices];
   std::map<int, std::vector<SDL_Vertex>> projectile_vertices_grouped_;
   bool in_debug_mode = true;
-  bool is_running_;
   float last_kill_tick = 0.0f;
   float time_ = 0.0f;
   float dt = 0.0f;
@@ -102,7 +114,6 @@ class Game {
   void RenderDebugWorldOccupancyMap();
   void RenderDebugEnemyOccupancyMap();
   void GetModelObservation();
-  int GetObservationSize();
 
   inline auto WorldToGrid(auto pos) { return (pos / kOccupancyMapResolution); }
 };

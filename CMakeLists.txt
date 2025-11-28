@@ -26,6 +26,7 @@ target_link_libraries(rl2_core PUBLIC
   SDL2::SDL2
   SDL2_image::SDL2_image
   SDL2_ttf::SDL2_ttf
+  pybind11::embed
 )
 
 add_executable(game_app src/main.cpp)

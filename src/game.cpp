@@ -32,6 +32,10 @@ Game::~Game() {
   Game::Shutdown();
 }
 
+int Game::GetGameState() {
+  return static_cast<int>(game_state_);
+};
+
 bool Game::Initialize() {
 
   std::signal(SIGINT, SignalHandler);
@@ -53,7 +57,7 @@ bool Game::Initialize() {
   }
 
   time_ = (float)(SDL_GetTicks64() / 1000.0f);
-  is_running_ = true;
+  game_state_ = GameState::is_running;
 
   return true;
 }
@@ -104,13 +108,13 @@ bool Game::InitializeResources() {
   resources_.player_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/wizard_sprite_sheet_with_idle.png");
   // resources_.enemy_texture = IMG_LoadTexture(
-      // resources_.renderer, "assets/textures/goblin_sprite_sheet.png");
+  // resources_.renderer, "assets/textures/goblin_sprite_sheet.png");
   resources_.enemy_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/tentacle_being_sprite_sheet.png");
-  resources_.projectile_textures.push_back(
-      IMG_LoadTexture(resources_.renderer, "assets/textures/fireball_sprite_sheet.png"));
-  resources_.projectile_textures.push_back(
-      IMG_LoadTexture(resources_.renderer, "assets/textures/frostbolt_sprite_sheet.png"));
+  resources_.projectile_textures.push_back(IMG_LoadTexture(
+      resources_.renderer, "assets/textures/fireball_sprite_sheet.png"));
+  resources_.projectile_textures.push_back(IMG_LoadTexture(
+      resources_.renderer, "assets/textures/frostbolt_sprite_sheet.png"));
 
   if (resources_.tile_texture == nullptr ||
       resources_.player_texture == nullptr ||
@@ -198,7 +202,7 @@ void FrameStats::print_fps_running_average(float dt) {
 };
 
 void Game::RunGameLoop() {
-  while (is_running_) {
+  while (game_state_ == GameState::is_running) {
     float current_time = (float)(SDL_GetTicks64() / 1000.0f);
     dt = current_time - time_;
     Game::Update();
@@ -208,8 +212,9 @@ void Game::RunGameLoop() {
 
 void Game::ProcessInput() {
 
+  // To be able to quit while in headless mode we need to capture ctrl+C signals
   if (g_stop_request) {
-    is_running_ = false;
+    game_state_ = GameState::in_shutdown;
     std::cout << "Signal received. Exiting..." << std::endl;
     return;
   };
@@ -222,12 +227,12 @@ void Game::ProcessInput() {
 
   while (SDL_PollEvent(&e) != 0) {
     if (e.type == SDL_QUIT) {
-      is_running_ = false;
+      game_state_ = GameState::in_shutdown;
     } else if (e.type == SDL_KEYDOWN) {
 
       switch (e.key.keysym.sym) {
         case SDLK_q:
-          is_running_ = false;
+          game_state_ = GameState::in_shutdown;
           std::cout << "Key 'q' pressed! Exiting..." << std::endl;
           break;
       }
@@ -287,12 +292,12 @@ void Game::Update() {
   Game::HandleCollisions();
   Game::HandleOutOfBounds();
 
-  Game::UpdateCameraPosition();
   UpdateEnemyStatus(enemy_, player_);
   Game::UpdateWorldOccupancyMap();
   Game::UpdateEnemyOccupancyMap();
   game_status_.frame_stats.print_fps_running_average(dt);
   projectiles_.DestroyProjectiles();
+
   if (game_status_.in_headless_mode) {
     return;
   }
@@ -337,6 +342,27 @@ void Game::HandleOutOfBounds() {
   rl2::HandleProjectileOOB(projectiles_);
 };
 
+void Game::GenerateOutput() {
+
+  Game::UpdateCameraPosition();
+  SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
+  SDL_RenderClear(resources_.renderer);
+  RenderTiledMap();
+  RenderPlayer();
+
+  int num_enemy_vertices = SetupEnemyGeometry();
+  RenderEnemies(num_enemy_vertices);
+
+  SetupProjectileGeometry();
+  RenderProjectiles();
+  if (game_status_.in_debug_mode) {
+    // RenderDebugWorldOccupancyMap();
+    RenderDebugEnemyOccupancyMap();
+  };
+
+  SDL_RenderPresent(resources_.renderer);
+};
+
 void Game::UpdateCameraPosition() {
   Vector2D player_centroid =
       GetCentroid(player_.position_, player_.stats_.size);
@@ -354,25 +380,6 @@ void Game::UpdateCameraPosition() {
   if (camera_.position_.y > (kMapHeight - kWindowHeight)) {
     camera_.position_.y = kMapHeight - kWindowHeight;
   }
-};
-
-void Game::GenerateOutput() {
-  SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
-  SDL_RenderClear(resources_.renderer);
-  RenderTiledMap();
-  RenderPlayer();
-
-  int num_enemy_vertices = SetupEnemyGeometry();
-  RenderEnemies(num_enemy_vertices);
-
-  SetupProjectileGeometry();
-  RenderProjectiles();
-  if (game_status_.in_debug_mode) {
-    // RenderDebugWorldOccupancyMap();
-    RenderDebugEnemyOccupancyMap();
-  };
-
-  SDL_RenderPresent(resources_.renderer);
 };
 
 void Game::RenderTiledMap() {
@@ -416,7 +423,9 @@ void Game::RenderPlayer() {
   src_rect.w = kPlayerSpriteCellWidth;
   src_rect.h = kPlayerSpriteCellHeight;
   src_rect.y = is_standing_still ? 0 : kPlayerSpriteCellHeight;
-  src_rect.x = ((SDL_GetTicks64() / 150) % kPlayerNumSpriteCells) * src_rect.w;
+  src_rect.x = ((SDL_GetTicks64() / kPlayerAnimationFrameDuration) %
+                kPlayerNumSpriteCells) *
+               src_rect.w;
 
   SDL_RendererFlip is_flipped =
       is_facing_right ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
@@ -771,84 +780,68 @@ void Game::RenderDebugEnemyOccupancyMap() {
 }
 
 int Game::GetObservationSize() {
-  return 2 +                                            // player position
-         (kNumEnemies * 2) +                            // enemy position: x,y
-         (kNumEnemies * 2) +                            // enemy velocity: x,y
-         (kNumEnemies * 2) +                            // enemy size: w,h
-         (kNumEnemies) +                                // enemy health_points
-         (kNumEnemies) +                                // enemy inv mass
-         (kNumEnemies);                                 // enemy movement speed
-  (kNumEnemies * enemy_.occupancy_map[0].kTotalCells);  // enemy occupancy map
+  return 2 +                  // player position
+         (kNumEnemies * 2) +  // enemy position: x,y
+         (kNumEnemies * 2) +  // enemy velocity: x,y
+         (kNumEnemies * 2) +  // enemy size: w,h
+         (kNumEnemies) +      // enemy health_points
+         (kNumEnemies) +      // enemy inv mass
+         (kNumEnemies) +      // enemy movement speed
+         (kNumEnemies *
+          enemy_.occupancy_map[0].kTotalCells);  // enemy occupancy map
 };
 
-// void Game::FillObservationBuffer() {
-//
-//   std::vector<float> obs_buffer;
-//   // std::array of kNumEnemies with Vector2D{ float x, float y};
-//   // obs_buffer.push_back(enemy_.position);
-//   // // std::array of kNumEnemies with Vector2D{ float x, float y};
-//   // obs_buffer.push_back(enemy_.velocity);
-//   // // A single Vector2D{ float x, float y};
-//   // obs_buffer.push_back(player_.position_);
-//   // // std::array of kNumEnemies with Size {uint32_t width, uint32_t height};
-//   // obs_buffer.push_back(enemy_.size);
-//   // // std::array of kNumEnemies with float inv_mass
-//   // obs_buffer.push_back(enemy_.inv_mass);
-//   // // std::array of kNumEnemies with int health_points
-//   // obs_buffer.push_back(enemy_.health_points);
-//   // // std::array of kNumEnemies with float movement_speed
-//   // obs_buffer.push_back(enemy_.movement_speed);
-//
-//   auto ptr = buffer.mutable_unchecked<1>();
-//
-//   if (ptr.shape(0) != GetObservationSize()) {
-//     throw std::runtime_error("Buffer size mismatch");
-//   };
-//
-//   int idx = 0;
-//
-//   ptr(idx++) = player_.position_.x;
-//   ptr(idx++) = player_.position_.y;
-//
-//   for (const Vector2D& enemy_pos : enemy_.position) {
-//     ptr(idx++) = enemy_pos.x;
-//     ptr(idx++) = enemy_pos.y;
-//   }
-//
-//   for (const Vector2D& enemy_pos : enemy_.position) {
-//     ptr(idx++) = enemy_pos.x;
-//     ptr(idx++) = enemy_pos.y;
-//   }
-//
-//   for (const Size& enemy_size : enemy_.size) {
-//     ptr(idx++) = static_cast<float>(enemy_size.width);
-//     ptr(idx++) = static_cast<float>(enemy_size.height);
-//   }
-//
-//   for (const int& enemy_health : enemy_.health_points) {
-//     ptr(idx++) = static_cast<float>(enemy_health);
-//   }
-//
-//   for (const float& enemy_inv_mass : enemy_.inv_mass) {
-//     ptr(idx++) = enemy_inv_mass;
-//   }
-//
-//   for (const float& enemy_movement_speed : enemy_.movement_speed) {
-//     ptr(idx++) = enemy_movement_speed;
-//   }
-//
-//   for (int i = 0; i < kNumEnemies; ++i) {
-//     const EntityType* map_data = enemy_.occupancy_map[i].Data();
-//     size_t total_cells = enemy_.occupancy_map[i].kTotalCells;
-//
-//     for (size_t k = 0; k < total_cells; ++k) {
-//       ptr(idx++) = static_cast<float>(map_data[k]);
-//     }
-//   }
-//
-//   return;
-// };
-//
+// void Game::FillObservationBuffer(py::array_t<float> buffer) {
+void Game::FillObservationBuffer(float* buffer_ptr, int buffer_size) {
+
+  if (buffer_size != GetObservationSize()) {
+    throw std::runtime_error("Buffer size mismatch");
+  };
+
+  int idx = 0;
+
+  buffer_ptr[idx++] = player_.position_.x;
+  buffer_ptr[idx++] = player_.position_.y;
+
+  for (const Vector2D& enemy_pos : enemy_.position) {
+    buffer_ptr[idx++] = enemy_pos.x;
+    buffer_ptr[idx++] = enemy_pos.y;
+  }
+
+  for (const Vector2D& enemy_pos : enemy_.position) {
+    buffer_ptr[idx++] = enemy_pos.x;
+    buffer_ptr[idx++] = enemy_pos.y;
+  }
+
+  for (const Size& enemy_size : enemy_.size) {
+    buffer_ptr[idx++] = static_cast<float>(enemy_size.width);
+    buffer_ptr[idx++] = static_cast<float>(enemy_size.height);
+  }
+
+  for (const int& enemy_health : enemy_.health_points) {
+    buffer_ptr[idx++] = static_cast<float>(enemy_health);
+  }
+
+  for (const float& enemy_inv_mass : enemy_.inv_mass) {
+    buffer_ptr[idx++] = enemy_inv_mass;
+  }
+
+  for (const float& enemy_movement_speed : enemy_.movement_speed) {
+    buffer_ptr[idx++] = enemy_movement_speed;
+  }
+
+  for (int i = 0; i < kNumEnemies; ++i) {
+    const EntityType* map_data = enemy_.occupancy_map[i].Data();
+    size_t total_cells = enemy_.occupancy_map[i].kTotalCells;
+
+    for (size_t k = 0; k < total_cells; ++k) {
+      buffer_ptr[idx++] = static_cast<float>(map_data[k]);
+    }
+  }
+
+  return;
+};
+
 void Game::Shutdown() {
 
   if (resources_.player_texture) {

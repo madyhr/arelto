@@ -3,6 +3,8 @@ import sys
 import os
 import numpy as np
 import torch
+import timeit
+import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../build')))
 
@@ -13,17 +15,36 @@ game = rl2_py.Game()
 is_initialized = game.initialize()
 
 obs_size = game.get_observation_size()
-# Having dtype np.float32 is important as we need to match the C++ type (float)
 numpy_buffer = np.zeros(obs_size, dtype=np.float32) 
 print(f"{numpy_buffer}")
 
-# Using torch.from_numpy ensures that it views the same memory, 
-# so we can write to this buffer directly.
 torch_obs = torch.from_numpy(numpy_buffer)
 
-if is_initialized:
-    while game.get_game_state() == 2:
-        game.run()
+print("Game initialized!")
 
-        game.fill_observation_buffer(numpy_buffer)
+start = timeit.timeit()
+dt = 0.001
+accumulator = 0.0
+current_time = time.time()
+
+while game.get_game_state() == 2:
+    new_time = time.time()
+    frame_time = new_time - current_time
+    # Cap frame_time to prevent spiral of death
+    if frame_time > 0.1:
+        frame_time = 0.1
+    
+    current_time = new_time
+    accumulator += frame_time
+
+    while accumulator >= dt:
+        game.step() 
+        accumulator -= dt
+
+    game.fill_observation_buffer(numpy_buffer)
+    
+    alpha = accumulator / dt
+    game.render(alpha)
+    
+game.shutdown()
 

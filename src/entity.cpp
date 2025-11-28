@@ -37,6 +37,7 @@ void RespawnEnemy(Enemy& enemy, const Player& player) {
              kEnemyMinimumInitialDistance);
 
     enemy.position[i] = potential_pos;
+    enemy.prev_position[i] = potential_pos;
     enemy.health_points[i] = kEnemyHealth;
     enemy.is_alive[i] = true;
   };
@@ -45,6 +46,9 @@ void RespawnEnemy(Enemy& enemy, const Player& player) {
 void Projectiles::AddProjectile(ProjectileData proj) {
   owner_id_.push_back(proj.owner_id);
   position_.push_back(proj.position);
+  // upon initialization prev pos should be set to initial pos to
+  // avoid errors during render interpolation.
+  prev_position_.push_back(proj.position);
   direction_.push_back(proj.velocity);
   speed_.push_back(proj.speed);
   size_.push_back(proj.size);
@@ -57,6 +61,7 @@ void Projectiles::DestroyProjectile(int idx) {
   if (idx != last_idx) {
     owner_id_[idx] = std::move(owner_id_[last_idx]);
     position_[idx] = std::move(position_[last_idx]);
+    prev_position_[idx] = std::move(prev_position_[last_idx]);
     direction_[idx] = std::move(direction_[last_idx]);
     speed_[idx] = std::move(speed_[last_idx]);
     size_[idx] = std::move(size_[last_idx]);
@@ -65,6 +70,7 @@ void Projectiles::DestroyProjectile(int idx) {
   };
   owner_id_.pop_back();
   position_.pop_back();
+  prev_position_.pop_back();
   direction_.pop_back();
   speed_.pop_back();
   size_.pop_back();

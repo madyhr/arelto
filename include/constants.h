@@ -8,9 +8,12 @@ namespace rl2 {
 constexpr int kWindowWidth = 1920;
 constexpr int kWindowHeight = 1080;
 
+// Game constats
+constexpr float kPhysicsDt = 0.001f;
+
 // Map constants
-constexpr int kMapWidth = 3000;
-constexpr int kMapHeight = 3000;
+constexpr int kMapWidth = 5000;
+constexpr int kMapHeight = 5000;
 constexpr int kOccupancyMapResolution = 25;
 // Tiles are used for rendering
 constexpr int kTileWidth = 40;
@@ -20,7 +23,9 @@ constexpr int kNumTilesX = ((kMapWidth + kTileWidth - 1) / kTileWidth);
 constexpr int kNumTilesY = ((kMapHeight + kTileHeight - 1) / kTileHeight);
 
 // Game status constants
+// number of frames to average over in fps counter
 constexpr int kFrameTimes = 1000;
+constexpr float kMaxFrameTime = 0.1;  // in seconds
 
 // Player constants
 constexpr float kPlayerInitX = 500.0f;
@@ -37,7 +42,7 @@ constexpr int kPlayerSpriteCellHeight = 64;
 constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
 
 // Enemy constants
-constexpr int kNumEnemies = 5;
+constexpr int kNumEnemies = 100;
 constexpr int kEnemyHealth = 10;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;

@@ -201,12 +201,55 @@ void FrameStats::print_fps_running_average(float dt) {
   accumulated_time += dt;
 };
 
+void Game::Step() {
+  CachePreviousState();
+  ProcessInput();
+  StepPhysics(dt);
+  time_ += dt;
+};
+
+void Game::Render(float alpha) {
+  if (game_status_.in_headless_mode) {
+    return;
+  }
+  // Setting alpha to 1.0f to always render the latest state.
+  Game::GenerateOutput(alpha);
+}
+
 void Game::RunGameLoop() {
+  // Runs the game loop continuously. Acts as a way to only run the game.
+
+  float current_time = static_cast<float>(SDL_GetTicks64() / 1000.0f);
+  float accumulator = 0.0f;
+
   while (game_state_ == GameState::is_running) {
-    float current_time = (float)(SDL_GetTicks64() / 1000.0f);
-    dt = current_time - time_;
-    Game::Update();
-    time_ = current_time;
+    float new_time = (float)(SDL_GetTicks64() / 1000.0f);
+    float frame_time = new_time - current_time;
+    current_time = new_time;
+
+    // In case the frame time is too large, we override the frame time and
+    // use a specified max frame time instead to avoid the "spiral of death".
+    if (frame_time > kMaxFrameTime) {
+      frame_time = kMaxFrameTime;
+    }
+
+    accumulator += frame_time;
+
+    while (accumulator >= dt) {
+      CachePreviousState();
+      ProcessInput();
+      Game::StepPhysics(dt);
+      accumulator -= dt;
+      time_ += dt;
+    }
+
+    float alpha = accumulator / dt;
+
+    if (game_status_.in_headless_mode) {
+      return;
+    }
+    Game::GenerateOutput(alpha);
+    game_status_.frame_stats.print_fps_running_average(frame_time);
   }
 };
 
@@ -282,26 +325,35 @@ void Game::ProcessPlayerInput() {
     }
   }
 }
+void Game::StepPhysics(float physics_dt) {
 
-void Game::Update() {
-
-  Game::ProcessInput();
-  Game::UpdatePlayerPosition(dt);
-  Game::UpdateEnemyPosition(dt);
-  Game::UpdateProjectilePosition(dt);
+  Game::UpdatePlayerPosition(physics_dt);
+  Game::UpdateEnemyPosition(physics_dt);
+  Game::UpdateProjectilePosition(physics_dt);
   Game::HandleCollisions();
   Game::HandleOutOfBounds();
 
   UpdateEnemyStatus(enemy_, player_);
   Game::UpdateWorldOccupancyMap();
   Game::UpdateEnemyOccupancyMap();
-  game_status_.frame_stats.print_fps_running_average(dt);
   projectiles_.DestroyProjectiles();
+}
 
-  if (game_status_.in_headless_mode) {
-    return;
+void Game::CachePreviousState() {
+  player_.prev_position_ = player_.position_;
+
+  for (int i = 0; i < kNumEnemies; ++i) {
+    if (enemy_.is_alive[i]) {
+      enemy_.prev_position[i] = enemy_.position[i];
+    }
   }
-  Game::GenerateOutput();
+
+  size_t num_proj = projectiles_.GetNumProjectiles();
+  for (size_t i = 0; i < num_proj; ++i) {
+    projectiles_.prev_position_[i] = projectiles_.position_[i];
+  }
+
+  camera_.prev_position_ = camera_.position_;
 }
 
 void Game::UpdatePlayerPosition(float dt) {
@@ -342,22 +394,25 @@ void Game::HandleOutOfBounds() {
   rl2::HandleProjectileOOB(projectiles_);
 };
 
-void Game::GenerateOutput() {
+void Game::GenerateOutput(float alpha) {
 
   Game::UpdateCameraPosition();
+
+  Vector2D render_cam_pos =
+      LerpVector2D(camera_.prev_position_, camera_.position_, alpha);
   SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
   SDL_RenderClear(resources_.renderer);
-  RenderTiledMap();
-  RenderPlayer();
+  RenderTiledMap(render_cam_pos);
+  RenderPlayer(alpha, render_cam_pos);
 
-  int num_enemy_vertices = SetupEnemyGeometry();
+  int num_enemy_vertices = SetupEnemyGeometry(alpha, render_cam_pos);
   RenderEnemies(num_enemy_vertices);
 
-  SetupProjectileGeometry();
+  SetupProjectileGeometry(alpha, render_cam_pos);
   RenderProjectiles();
   if (game_status_.in_debug_mode) {
     // RenderDebugWorldOccupancyMap();
-    RenderDebugEnemyOccupancyMap();
+    RenderDebugEnemyOccupancyMap(alpha, render_cam_pos);
   };
 
   SDL_RenderPresent(resources_.renderer);
@@ -368,6 +423,7 @@ void Game::UpdateCameraPosition() {
       GetCentroid(player_.position_, player_.stats_.size);
   camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
   camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
+
   if (camera_.position_.x < 0) {
     camera_.position_.x = 0.0f;
   };
@@ -382,9 +438,9 @@ void Game::UpdateCameraPosition() {
   }
 };
 
-void Game::RenderTiledMap() {
-  int top_left_tile_x = static_cast<int>(camera_.position_.x / kTileWidth);
-  int top_left_tile_y = static_cast<int>(camera_.position_.y / kTileHeight);
+void Game::RenderTiledMap(Vector2D cam_pos) {
+  int top_left_tile_x = static_cast<int>(cam_pos.x / kTileWidth);
+  int top_left_tile_y = static_cast<int>(cam_pos.y / kTileHeight);
   int bottom_right_tile_x = static_cast<int>(
       std::ceil((camera_.position_.x + kWindowWidth) / kTileWidth));
   int bottom_right_tile_y = static_cast<int>(
@@ -398,8 +454,8 @@ void Game::RenderTiledMap() {
   for (int i = start_x; i < end_x; ++i) {
     for (int j = start_y; j < end_y; ++j) {
       SDL_Rect render_rect = resources_.tile_manager.tiles_[i][j];
-      render_rect.x -= static_cast<int>(camera_.position_.x);
-      render_rect.y -= static_cast<int>(camera_.position_.y);
+      render_rect.x -= static_cast<int>(cam_pos.x);
+      render_rect.y -= static_cast<int>(cam_pos.y);
       int tile_id = resources_.tile_manager.tile_map_[i][j];
       const SDL_Rect& source_rect =
           resources_.tile_manager.select_tiles_[tile_id];
@@ -409,10 +465,13 @@ void Game::RenderTiledMap() {
   }
 };
 
-void Game::RenderPlayer() {
+void Game::RenderPlayer(float alpha, Vector2D cam_pos) {
+
+  Vector2D player_render_pos =
+      LerpVector2D(player_.prev_position_, player_.position_, alpha);
   SDL_Rect player_render_box = {
-      static_cast<int>(player_.position_.x - camera_.position_.x),
-      static_cast<int>(player_.position_.y - camera_.position_.y),
+      static_cast<int>(player_render_pos.x - cam_pos.x),
+      static_cast<int>(player_render_pos.y - cam_pos.y),
       static_cast<int>(player_.stats_.size.width),
       static_cast<int>(player_.stats_.size.height)};
 
@@ -438,7 +497,7 @@ void Game::RenderPlayer() {
   }
 };
 
-int Game::SetupEnemyGeometry() {
+int Game::SetupEnemyGeometry(float alpha, Vector2D cam_pos) {
   // The return type is int as we need to know how many vertices to actually
   // render when we call SDLRenderGeometry. So we traverse the enemies struct
   // and keep count of the total number of active vertices.
@@ -452,8 +511,11 @@ int Game::SetupEnemyGeometry() {
       continue;
     };
 
-    float x = enemy_.position[i].x - camera_.position_.x;
-    float y = enemy_.position[i].y - camera_.position_.y;
+    Vector2D render_enemy_pos =
+        LerpVector2D(enemy_.prev_position[i], enemy_.position[i], alpha);
+
+    float x = render_enemy_pos.x - cam_pos.x;
+    float y = render_enemy_pos.y - cam_pos.y;
     float w = enemy_.size[i].width;
     float h = enemy_.size[i].height;
 
@@ -507,7 +569,7 @@ void Game::RenderEnemies(int num_vertices) {
                      enemies_vertices_, num_vertices, nullptr, 0);
 };
 
-void Game::SetupProjectileGeometry() {
+void Game::SetupProjectileGeometry(float alpha, Vector2D cam_pos) {
   projectile_vertices_grouped_.clear();
   size_t num_projectiles = projectiles_.GetNumProjectiles();
   if (num_projectiles == 0) {
@@ -518,8 +580,10 @@ void Game::SetupProjectileGeometry() {
   float cell_uv_width = 1.0f / (float)kProjectileNumSpriteCells;
 
   for (int i = 0; i < num_projectiles; ++i) {
-    float x = projectiles_.position_[i].x - camera_.position_.x;
-    float y = projectiles_.position_[i].y - camera_.position_.y;
+    Vector2D proj_render_pos = LerpVector2D(projectiles_.prev_position_[i],
+                                            projectiles_.position_[i], alpha);
+    float x = proj_render_pos.x - cam_pos.x;
+    float y = proj_render_pos.y - cam_pos.y;
     float w = projectiles_.size_[i].width;
     float h = projectiles_.size_[i].height;
     int texture_id = projectiles_.proj_id_[i];
@@ -632,7 +696,7 @@ void Game::UpdateEnemyOccupancyMap() {
   }
 };
 
-void Game::RenderDebugWorldOccupancyMap() {
+void Game::RenderDebugWorldOccupancyMap(Vector2D cam_pos) {
   SDL_BlendMode original_blend_mode;
   SDL_GetRenderDrawBlendMode(resources_.renderer, &original_blend_mode);
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
@@ -640,14 +704,12 @@ void Game::RenderDebugWorldOccupancyMap() {
   int grid_width_cells = kMapWidth / kOccupancyMapResolution;
   int grid_height_cells = kMapHeight / kOccupancyMapResolution;
 
-  int top_left_x =
-      static_cast<int>(camera_.position_.x / kOccupancyMapResolution);
-  int top_left_y =
-      static_cast<int>(camera_.position_.y / kOccupancyMapResolution);
-  int bottom_right_x = static_cast<int>(std::ceil(
-      (camera_.position_.x + kWindowWidth) / kOccupancyMapResolution));
-  int bottom_right_y = static_cast<int>(std::ceil(
-      (camera_.position_.y + kWindowHeight) / kOccupancyMapResolution));
+  int top_left_x = static_cast<int>(cam_pos.x / kOccupancyMapResolution);
+  int top_left_y = static_cast<int>(cam_pos.y / kOccupancyMapResolution);
+  int bottom_right_x = static_cast<int>(
+      std::ceil((cam_pos.x + kWindowWidth) / kOccupancyMapResolution));
+  int bottom_right_y = static_cast<int>(
+      std::ceil((cam_pos.y + kWindowHeight) / kOccupancyMapResolution));
 
   int start_x = std::max(0, top_left_x);
   int end_x = std::min(grid_width_cells, bottom_right_x);
@@ -658,10 +720,8 @@ void Game::RenderDebugWorldOccupancyMap() {
     for (int j = start_y; j < end_y; ++j) {
 
       SDL_Rect render_rect;
-      render_rect.x =
-          static_cast<int>(i * kOccupancyMapResolution - camera_.position_.x);
-      render_rect.y =
-          static_cast<int>(j * kOccupancyMapResolution - camera_.position_.y);
+      render_rect.x = static_cast<int>(i * kOccupancyMapResolution - cam_pos.x);
+      render_rect.y = static_cast<int>(j * kOccupancyMapResolution - cam_pos.y);
       render_rect.w = kOccupancyMapResolution;
       render_rect.h = kOccupancyMapResolution;
 
@@ -703,7 +763,7 @@ void Game::RenderDebugWorldOccupancyMap() {
   SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
 }
 
-void Game::RenderDebugEnemyOccupancyMap() {
+void Game::RenderDebugEnemyOccupancyMap(float alpha, Vector2D cam_pos) {
   SDL_BlendMode originalBlendMode;
   SDL_GetRenderDrawBlendMode(resources_.renderer, &originalBlendMode);
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
@@ -716,18 +776,21 @@ void Game::RenderDebugEnemyOccupancyMap() {
       continue;
     }
 
+    Vector2D enemy_render_pos =
+        LerpVector2D(enemy_.prev_position[i], enemy_.position[i], alpha);
+
     // Vector2D enemy_grid_pos = WorldToGrid(enemy_.position[i]);
     Vector2D enemy_grid_pos =
-        WorldToGrid(GetCentroid(enemy_.position[i], enemy_.size[i]));
+        WorldToGrid(GetCentroid(enemy_render_pos, enemy_.size[i]));
     int start_world_x = static_cast<int>(enemy_grid_pos.x) - half_w;
     int start_world_y = static_cast<int>(enemy_grid_pos.y) - half_h;
 
     // Draw outline of the enemy's vision
     SDL_Rect vision_rect;
-    vision_rect.x = static_cast<int>(start_world_x * kOccupancyMapResolution -
-                                     camera_.position_.x);
-    vision_rect.y = static_cast<int>(start_world_y * kOccupancyMapResolution -
-                                     camera_.position_.y);
+    vision_rect.x =
+        static_cast<int>(start_world_x * kOccupancyMapResolution - cam_pos.x);
+    vision_rect.y =
+        static_cast<int>(start_world_y * kOccupancyMapResolution - cam_pos.y);
     vision_rect.w = kEnemyOccupancyMapWidth * kOccupancyMapResolution;
     vision_rect.h = kEnemyOccupancyMapHeight * kOccupancyMapResolution;
 
@@ -743,10 +806,10 @@ void Game::RenderDebugEnemyOccupancyMap() {
           int world_y = start_world_y + local_y;
 
           SDL_Rect render_rect;
-          render_rect.x = static_cast<int>(world_x * kOccupancyMapResolution -
-                                           camera_.position_.x);
-          render_rect.y = static_cast<int>(world_y * kOccupancyMapResolution -
-                                           camera_.position_.y);
+          render_rect.x =
+              static_cast<int>(world_x * kOccupancyMapResolution - cam_pos.x);
+          render_rect.y =
+              static_cast<int>(world_y * kOccupancyMapResolution - cam_pos.y);
           render_rect.w = kOccupancyMapResolution;
           render_rect.h = kOccupancyMapResolution;
 

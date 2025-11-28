@@ -38,6 +38,7 @@ class Projectiles {
  public:
   std::vector<int> owner_id_;
   std::vector<Vector2D> position_;
+  std::vector<Vector2D> prev_position_;
   std::vector<Vector2D> direction_;
   std::vector<float> speed_;
   std::vector<Size> size_;
@@ -54,6 +55,7 @@ class Projectiles {
 struct Enemy {
   std::array<bool, kNumEnemies> is_alive;
   std::array<Vector2D, kNumEnemies> position;
+  std::array<Vector2D, kNumEnemies> prev_position;
   std::array<Vector2D, kNumEnemies> velocity;
   std::array<int, kNumEnemies> health_points;
   std::array<float, kNumEnemies> movement_speed;
@@ -71,6 +73,7 @@ class Player {
   EntityType entity_type_ = EntityType::player;
   Stats stats_;
   Vector2D position_;
+  Vector2D prev_position_;
   Vector2D velocity_;
   AABB aabb_;
   float last_horizontal_velocity_;

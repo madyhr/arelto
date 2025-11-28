@@ -30,6 +30,7 @@ struct GameResources {
 class Camera {
  public:
   Vector2D position_;
+  Vector2D prev_position_;
 };
 
 class FrameStats {
@@ -64,6 +65,8 @@ class Game {
   ~Game();
   bool Initialize();
   void RunGameLoop();
+  void Step();
+  void Render(float alpha = 1.0f);
   void Shutdown();
   void FillObservationBuffer(float* buffer_ptr, int buffer_size);
   int GetObservationSize();
@@ -87,7 +90,7 @@ class Game {
   bool in_debug_mode = true;
   float last_kill_tick = 0.0f;
   float time_ = 0.0f;
-  float dt = 0.0f;
+  const float dt = kPhysicsDt;
   bool InitializeResources();
   bool InitializePlayer();
   bool InitializeEnemies();
@@ -95,24 +98,25 @@ class Game {
   void ProcessInput();
   Vector2D GetCursorPositionWorld();
   void ProcessPlayerInput();
-  void Update();
+  void StepPhysics(float physics_dt);
+  void CachePreviousState();
   void UpdateEnemyPosition(float dt);
   void UpdatePlayerPosition(float dt);
   void UpdateProjectilePosition(float dt);
   void UpdateCameraPosition();
   void HandleCollisions();
   void HandleOutOfBounds();
-  void GenerateOutput();
-  void RenderTiledMap();
-  void RenderPlayer();
-  int SetupEnemyGeometry();
+  void GenerateOutput(float alpha);
+  void RenderTiledMap(Vector2D cam_pos);
+  void RenderPlayer(float alpha, Vector2D cam_pos);
+  int SetupEnemyGeometry(float alpha, Vector2D cam_pos);
   void RenderEnemies(int num_vertices);
-  void SetupProjectileGeometry();
+  void SetupProjectileGeometry(float alpha, Vector2D cam_pos);
   void RenderProjectiles();
   void UpdateWorldOccupancyMap();
   void UpdateEnemyOccupancyMap();
-  void RenderDebugWorldOccupancyMap();
-  void RenderDebugEnemyOccupancyMap();
+  void RenderDebugWorldOccupancyMap(Vector2D cam_pos);
+  void RenderDebugEnemyOccupancyMap(float alpha, Vector2D cam_pos);
   void GetModelObservation();
 
   inline auto WorldToGrid(auto pos) { return (pos / kOccupancyMapResolution); }

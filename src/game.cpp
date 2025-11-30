@@ -40,7 +40,7 @@ bool Game::Initialize() {
 
   std::signal(SIGINT, SignalHandler);
   std::signal(SIGKILL, SignalHandler);
-  game_status_.in_debug_mode = false;
+  game_status_.in_debug_mode = true;
   game_status_.in_headless_mode = false;
 
   if (!(Game::InitializeResources())) {
@@ -441,10 +441,10 @@ void Game::UpdateCameraPosition() {
 void Game::RenderTiledMap(Vector2D cam_pos) {
   int top_left_tile_x = static_cast<int>(cam_pos.x / kTileWidth);
   int top_left_tile_y = static_cast<int>(cam_pos.y / kTileHeight);
-  int bottom_right_tile_x = static_cast<int>(
-      std::ceil((camera_.position_.x + kWindowWidth) / kTileWidth));
-  int bottom_right_tile_y = static_cast<int>(
-      std::ceil((camera_.position_.y + kWindowHeight) / kTileHeight));
+  int bottom_right_tile_x =
+      static_cast<int>(std::ceil((cam_pos.x + kWindowWidth) / kTileWidth));
+  int bottom_right_tile_y =
+      static_cast<int>(std::ceil((cam_pos.y + kWindowHeight) / kTileHeight));
   int start_x = std::max(0, top_left_tile_x);
   int end_x = std::min(kNumTilesX, bottom_right_tile_x);
 
@@ -506,21 +506,42 @@ int Game::SetupEnemyGeometry(float alpha, Vector2D cam_pos) {
 
   float cell_uv_width = 1.0f / (float)kEnemyNumSpriteCells;
 
+  float cull_left = cam_pos.x;
+  float cull_right = cam_pos.x + kWindowWidth;
+  float cull_top = cam_pos.y;
+  float cull_bottom = cam_pos.y + kWindowHeight;
+
+  cull_left -= kCullPadding;
+  cull_right += kCullPadding;
+  cull_top -= kCullPadding;
+  cull_bottom += kCullPadding;
+
   for (int i = 0; i < kNumEnemies; ++i) {
     if (!enemy_.is_alive[i]) {
       continue;
     };
+
+    float w = enemy_.size[i].width;
+    float h = enemy_.size[i].height;
+
+    // Skip setting up the enemy geometry if they are not in view.
+    if (enemy_.position[i].x + w < cull_left ||
+        enemy_.position[i].x > cull_right ||
+        enemy_.position[i].y + h < cull_top ||
+        enemy_.position[i].y > cull_bottom) {
+      continue;
+    }
 
     Vector2D render_enemy_pos =
         LerpVector2D(enemy_.prev_position[i], enemy_.position[i], alpha);
 
     float x = render_enemy_pos.x - cam_pos.x;
     float y = render_enemy_pos.y - cam_pos.y;
-    float w = enemy_.size[i].width;
-    float h = enemy_.size[i].height;
 
-    int frame_idx = (SDL_GetTicks64() / kEnemyAnimationFrameDuration) %
-                    kEnemyNumSpriteCells;
+    uint16_t time_offset = i * 127;
+    uint16_t frame_idx =
+        ((SDL_GetTicks64() + time_offset) / kEnemyAnimationFrameDuration) %
+        kEnemyNumSpriteCells;
 
     float u_left = frame_idx * cell_uv_width;
     float u_right = u_left + cell_uv_width;
@@ -579,17 +600,40 @@ void Game::SetupProjectileGeometry(float alpha, Vector2D cam_pos) {
   int current_vertex_idx = 0;
   float cell_uv_width = 1.0f / (float)kProjectileNumSpriteCells;
 
+  float cull_left = cam_pos.x;
+  float cull_right = cam_pos.x + kWindowWidth;
+  float cull_top = cam_pos.y;
+  float cull_bottom = cam_pos.y + kWindowHeight;
+
+  cull_left -= kCullPadding;
+  cull_right += kCullPadding;
+  cull_top -= kCullPadding;
+  cull_bottom += kCullPadding;
+
   for (int i = 0; i < num_projectiles; ++i) {
-    Vector2D proj_render_pos = LerpVector2D(projectiles_.prev_position_[i],
-                                            projectiles_.position_[i], alpha);
-    float x = proj_render_pos.x - cam_pos.x;
-    float y = proj_render_pos.y - cam_pos.y;
     float w = projectiles_.size_[i].width;
     float h = projectiles_.size_[i].height;
+
+    // Skip setting up the projectile geometry if they are not in view.
+    if (projectiles_.position_[i].x + w < cull_left ||
+        projectiles_.position_[i].x > cull_right ||
+        projectiles_.position_[i].y + h < cull_top ||
+        projectiles_.position_[i].y > cull_bottom) {
+      continue;
+    }
+
+    Vector2D proj_render_pos = LerpVector2D(projectiles_.prev_position_[i],
+                                            projectiles_.position_[i], alpha);
+
+    float x = proj_render_pos.x - cam_pos.x;
+    float y = proj_render_pos.y - cam_pos.y;
+
     int texture_id = projectiles_.proj_id_[i];
 
-    int frame_idx = (SDL_GetTicks64() / kProjectileAnimationFrameDuration) %
-                    kProjectileNumSpriteCells;
+    uint16_t time_offset = i * 127;
+    int frame_idx =
+        ((SDL_GetTicks64() + time_offset) / kProjectileAnimationFrameDuration) %
+        kProjectileNumSpriteCells;
 
     float u_left = frame_idx * cell_uv_width;
     float u_right = u_left + cell_uv_width;

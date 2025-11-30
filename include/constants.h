@@ -7,6 +7,7 @@ namespace rl2 {
 // Window constants
 constexpr int kWindowWidth = 1920;
 constexpr int kWindowHeight = 1080;
+constexpr float kCullPadding = 50.0f;
 
 // Game constats
 constexpr float kPhysicsDt = 0.001f;
@@ -42,7 +43,7 @@ constexpr int kPlayerSpriteCellHeight = 64;
 constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
 
 // Enemy constants
-constexpr int kNumEnemies = 100;
+constexpr int kNumEnemies = 10;
 constexpr int kEnemyHealth = 10;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;

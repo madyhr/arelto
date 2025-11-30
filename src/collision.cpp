@@ -8,7 +8,6 @@
 #include "abilities.h"
 #include "constants.h"
 #include "entity.h"
-#include "game_math.h"
 #include "types.h"
 
 namespace rl2 {

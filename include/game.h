@@ -6,6 +6,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_render.h>
 #include <array>
+#include <csignal>
 #include <map>
 #include <vector>
 #include "constants.h"
@@ -72,6 +73,7 @@ class Game {
   int GetObservationSize();
   int GetGameState();
   void SetGameState(int game_state);
+  static void SignalHandler(int signal);
 
  private:
   GameResources resources_;
@@ -90,6 +92,7 @@ class Game {
   bool in_debug_mode = true;
   float last_kill_tick = 0.0f;
   float time_ = 0.0f;
+  static volatile std::sig_atomic_t stop_request_;
   const float dt = kPhysicsDt;
   bool InitializeResources();
   bool InitializePlayer();

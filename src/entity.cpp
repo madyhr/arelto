@@ -2,11 +2,15 @@
 #include "entity.h"
 #include <algorithm>
 #include "constants.h"
-#include "game_math.h"
 #include "random.h"
 #include "types.h"
 
 namespace rl2 {
+
+
+Vector2D GetCentroid(Vector2D position, Size size) {
+  return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
+}
 
 void UpdateEnemyStatus(Enemy& enemies, const Player& player) {
   for (int i = 0; i < kNumEnemies; ++i) {

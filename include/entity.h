@@ -87,6 +87,7 @@ class Player {
                                                     Vector2D cursor_position);
 };
 
+Vector2D GetCentroid(Vector2D position, Size size);
 void UpdateEnemyStatus(Enemy& enemies, const Player& player);
 void RespawnEnemy(Enemy& enemy, const Player& player);
 

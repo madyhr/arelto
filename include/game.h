@@ -122,5 +122,10 @@ class Game {
   inline auto WorldToGrid(auto pos) { return (pos / kOccupancyMapResolution); }
 };
 
+void HandlePlayerOOB(Player& player);
+void HandleEnemyOOB(Enemy& enemy);
+void HandleProjectileOOB(Projectiles& projectiles);
+void DestroyProjectiles(Projectiles& projectiles);
+
 }  // namespace rl2
 #endif

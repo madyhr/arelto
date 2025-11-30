@@ -79,6 +79,8 @@ inline Vector2D operator/(const Vector2D& vector, float scalar) {
   return {vector.x * inv_scalar, vector.y * inv_scalar};
 }
 
+
+
 inline Vector2D LerpVector2D(const Vector2D& start, const Vector2D& end,
                              const float& alpha) {
   return start * (1 - alpha) + end * alpha;

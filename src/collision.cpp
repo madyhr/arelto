@@ -44,8 +44,6 @@ void HandleCollisionsSAP(Player& player, Enemy& enemies,
 std::vector<CollisionPair> GetCollisionPairsSAP(
     std::vector<AABB>& sorted_aabb) {
   std::vector<CollisionPair> collision_pairs;
-  // std::sort(sorted_aabb.begin(), sorted_aabb.end(),
-  //           [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
   std::vector<const AABB*> active_list;
   for (int i = 0; i < sorted_aabb.size(); ++i) {
     const AABB& current_aabb = sorted_aabb[i];

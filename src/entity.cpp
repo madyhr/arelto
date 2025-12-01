@@ -7,7 +7,6 @@
 
 namespace rl2 {
 
-
 Vector2D GetCentroid(Vector2D position, Size size) {
   return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
 }
@@ -19,6 +18,10 @@ void UpdateEnemyStatus(Enemy& enemies, const Player& player) {
       RespawnEnemy(enemies, player);
     };
   };
+};
+
+void UpdateProjectilesStatus(Projectiles& projectiles) {
+  projectiles.DestroyProjectiles();
 };
 
 void RespawnEnemy(Enemy& enemy, const Player& player) {

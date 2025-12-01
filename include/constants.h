@@ -16,6 +16,8 @@ constexpr float kPhysicsDt = 0.001f;
 constexpr int kMapWidth = 5000;
 constexpr int kMapHeight = 5000;
 constexpr int kOccupancyMapResolution = 25;
+constexpr int kOccupancyMapWidth = static_cast<int>(kMapWidth / kOccupancyMapResolution);
+constexpr int kOccupancyMapHeight = static_cast<int>(kMapHeight / kOccupancyMapResolution);
 // Tiles are used for rendering
 constexpr int kTileWidth = 40;
 constexpr int kTileHeight = 119;

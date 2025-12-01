@@ -9,6 +9,7 @@
 #include "abilities.h"
 #include "constants.h"
 #include "types.h"
+#include "map.h"
 
 namespace rl2 {
 
@@ -46,7 +47,7 @@ class Projectiles {
   std::vector<int> proj_id_;
   std::unordered_set<int> to_be_destroyed_;
   EntityType entity_type_ = EntityType::projectile;
-  size_t GetNumProjectiles() { return owner_id_.size(); };
+  size_t GetNumProjectiles() const { return owner_id_.size(); };
   void AddProjectile(ProjectileData proj);
   void DestroyProjectile(int idx);
   void DestroyProjectiles();
@@ -89,6 +90,7 @@ class Player {
 
 Vector2D GetCentroid(Vector2D position, Size size);
 void UpdateEnemyStatus(Enemy& enemies, const Player& player);
+void UpdateProjectilesStatus(Projectiles& projectiles);
 void RespawnEnemy(Enemy& enemy, const Player& player);
 
 }  // namespace rl2

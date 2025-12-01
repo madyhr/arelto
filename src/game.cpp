@@ -10,6 +10,8 @@
 #include <vector>
 #include "constants.h"
 #include "entity.h"
+#include "physics_manager.h"
+#include "render_manager.h"
 #include "types.h"
 
 namespace rl2 {
@@ -23,7 +25,7 @@ void Game::SignalHandler(int signal) {
 Game::Game(){};
 
 Game::~Game() {
-  Game::Shutdown();
+  renderer_.Shutdown();
 }
 
 int Game::GetGameState() {
@@ -62,11 +64,17 @@ void FrameStats::print_fps_running_average(float dt) {
   accumulated_time += dt;
 };
 
-void Game::Step() {
+void Game::StepGame() {
   CachePreviousState();
   ProcessInput();
-  StepPhysics(dt);
-  time_ += dt;
+  physics_.StepPhysics(player_, enemy_, projectiles_, world_occupancy_map_);
+  time_ += physics_.GetPhysicsDt();
+};
+
+void Game::RenderGame(float alpha) {
+
+  renderer_.Render(player_, enemy_, projectiles_, world_occupancy_map_, alpha,
+                   game_status_.is_debug);
 };
 
 void Game::RunGameLoop() {
@@ -88,20 +96,17 @@ void Game::RunGameLoop() {
 
     accumulator += frame_time;
 
-    while (accumulator >= dt) {
-      CachePreviousState();
-      ProcessInput();
-      Game::StepPhysics(dt);
-      accumulator -= dt;
-      time_ += dt;
+    while (accumulator >= physics_.GetPhysicsDt()) {
+      StepGame();
+      accumulator -= physics_.GetPhysicsDt();
     }
 
     float alpha = accumulator / dt;
 
-    if (game_status_.in_headless_mode) {
+    if (game_status_.is_headless) {
       return;
     }
-    Game::GenerateOutput(alpha);
+    RenderGame(alpha);
     game_status_.frame_stats.print_fps_running_average(frame_time);
   }
 };
@@ -115,7 +120,7 @@ void Game::ProcessInput() {
     return;
   };
 
-  if (game_status_.in_headless_mode) {
+  if (game_status_.is_headless) {
     return;
   }
 
@@ -142,8 +147,8 @@ Vector2D Game::GetCursorPositionWorld() {
   int cursor_x, cursor_y;
   uint32_t cursor_mask = SDL_GetMouseState(&cursor_x, &cursor_y);
 
-  return {(float)(cursor_x + camera_.position_.x),
-          (float)(cursor_y + camera_.position_.y)};
+  return {(float)(cursor_x + renderer_.camera_.position_.x),
+          (float)(cursor_y + renderer_.camera_.position_.y)};
 };
 
 void Game::ProcessPlayerInput() {
@@ -193,7 +198,7 @@ void Game::CachePreviousState() {
     projectiles_.prev_position_[i] = projectiles_.position_[i];
   }
 
-  camera_.prev_position_ = camera_.position_;
+  renderer_.camera_.prev_position_ = renderer_.camera_.position_;
 }
 
 void Game::Shutdown() {

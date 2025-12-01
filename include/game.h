@@ -12,6 +12,8 @@
 #include "constants.h"
 #include "entity.h"
 #include "map.h"
+#include "physics_manager.h"
+#include "render_manager.h"
 #include "types.h"
 
 namespace rl2 {
@@ -28,12 +30,6 @@ struct GameResources {
   TileManager tile_manager;
 };
 
-class Camera {
- public:
-  Vector2D position_;
-  Vector2D prev_position_;
-};
-
 class FrameStats {
  public:
   std::array<float, kFrameTimes> frame_time_buffer{};
@@ -48,8 +44,8 @@ class FrameStats {
 
 struct GameStatus {
   FrameStats frame_stats;
-  bool in_debug_mode;
-  bool in_headless_mode;
+  bool is_debug;
+  bool is_headless;
 };
 
 enum GameState : int {
@@ -66,8 +62,8 @@ class Game {
   ~Game();
   bool Initialize();
   void RunGameLoop();
-  void Step();
-  void Render(float alpha = 1.0f);
+  void StepGame();
+  void RenderGame(float alpha = 1.0f);
   void Shutdown();
   void FillObservationBuffer(float* buffer_ptr, int buffer_size);
   int GetObservationSize();
@@ -77,6 +73,8 @@ class Game {
 
  private:
   GameResources resources_;
+  RenderManager renderer_;
+  PhysicsManager physics_;
   GameStatus game_status_;
   GameState game_state_;
   Player player_;
@@ -94,41 +92,16 @@ class Game {
   float time_ = 0.0f;
   static volatile std::sig_atomic_t stop_request_;
   const float dt = kPhysicsDt;
-  bool InitializeResources();
   bool InitializePlayer();
   bool InitializeEnemies();
   bool InitializeCamera();
   void ProcessInput();
   Vector2D GetCursorPositionWorld();
   void ProcessPlayerInput();
-  void StepPhysics(float physics_dt);
   void CachePreviousState();
-  void UpdateEnemyPosition(float dt);
-  void UpdatePlayerPosition(float dt);
-  void UpdateProjectilePosition(float dt);
-  void UpdateCameraPosition();
-  void HandleCollisions();
-  void HandleOutOfBounds();
-  void GenerateOutput(float alpha);
-  void RenderTiledMap(Vector2D cam_pos);
-  void RenderPlayer(float alpha, Vector2D cam_pos);
-  int SetupEnemyGeometry(float alpha, Vector2D cam_pos);
-  void RenderEnemies(int num_vertices);
-  void SetupProjectileGeometry(float alpha, Vector2D cam_pos);
-  void RenderProjectiles();
-  void UpdateWorldOccupancyMap();
-  void UpdateEnemyOccupancyMap();
-  void RenderDebugWorldOccupancyMap(Vector2D cam_pos);
-  void RenderDebugEnemyOccupancyMap(float alpha, Vector2D cam_pos);
   void GetModelObservation();
-
-  inline auto WorldToGrid(auto pos) { return (pos / kOccupancyMapResolution); }
 };
 
-void HandlePlayerOOB(Player& player);
-void HandleEnemyOOB(Enemy& enemy);
-void HandleProjectileOOB(Projectiles& projectiles);
-void DestroyProjectiles(Projectiles& projectiles);
 
 }  // namespace rl2
 #endif

@@ -14,8 +14,8 @@ PYBIND11_MODULE(rl2_py, m) {
       .def(py::init())
       .def("initialize", &rl2::Game::Initialize)
       .def("run", &rl2::Game::RunGameLoop)
-      .def("step", &rl2::Game::Step)
-      .def("render", &rl2::Game::Render)
+      .def("step", &rl2::Game::StepGame)
+      .def("render", &rl2::Game::RenderGame)
       .def("fill_observation_buffer",
            [](rl2::Game& self, py::array_t<float> buffer) {
              py::buffer_info info = buffer.request();

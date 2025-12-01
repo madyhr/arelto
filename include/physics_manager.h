@@ -2,6 +2,7 @@
 #ifndef RL2_PHYSICS_MANAGER_H_
 #define RL2_PHYSICS_MANAGER_H_
 #include <SDL2/SDL_render.h>
+#include "collision_manager.h"
 #include "constants.h"
 #include "entity.h"
 #include "map.h"
@@ -23,10 +24,11 @@ class PhysicsManager {
  private:
   int tick_count_ = 0;
   float physics_dt_;
+  CollisionManager collision_manager_;
   void UpdatePlayerState(Player& player);
   void UpdateEnemyState(Enemy& enemy, const Player& player);
   void UpdateProjectileState(Projectiles& projectiles);
-  void HandleCollisions(Player& player, Enemy& enemy, Projectiles& projectiles);
+  void HandleCollisions(Scene& scene);
   void HandleOutOfBounds(Player& player, Enemy& enemy,
                          Projectiles& projectiles);
   void HandlePlayerOOB(Player& player);

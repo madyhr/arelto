@@ -1,5 +1,5 @@
-// src/collision.cpp
-#include "collision.h"
+// src/collision_manager.cpp
+#include "collision_manager.h"
 #include <SDL_rect.h>
 #include <algorithm>
 #include <array>
@@ -8,75 +8,66 @@
 #include "abilities.h"
 #include "constants.h"
 #include "entity.h"
+#include "scene.h"
 #include "types.h"
 
 namespace rl2 {
 
-void HandleCollisionsSAP(Player& player, Enemy& enemies,
-                         Projectiles& projectiles) {
-  std::vector<AABB> entities_aabb;
-  player.UpdateAABB();
-  entities_aabb.push_back(player.aabb_);
+void CollisionManager::HandleCollisionsSAP(Scene& scene) {
+  size_t total_entities =
+      1 + kNumEnemies + scene.projectiles.GetNumProjectiles();
+
+  if (entity_aabb_.capacity() < total_entities) {
+    entity_aabb_.reserve(total_entities * 2);
+  };
+
+  entity_aabb_.clear();
+  scene.player.UpdateAABB();
+  entity_aabb_.push_back(scene.player.aabb_);
   for (int i = 0; i < kNumEnemies; ++i) {
-    entities_aabb.push_back({enemies.position[i].x, enemies.position[i].y,
-                             enemies.position[i].x + enemies.size[i].width,
-                             enemies.position[i].y + enemies.size[i].height,
-                             enemies.entity_type, i + 1});
+    entity_aabb_.push_back(GetAABB(scene.enemy.position[i], scene.enemy.size[i],
+                                   scene.enemy.entity_type, i + 1));
   }
-  for (int i = 0; i < projectiles.GetNumProjectiles(); ++i) {
-    entities_aabb.push_back(
-        {projectiles.position_[i].x, projectiles.position_[i].y,
-         projectiles.position_[i].x + projectiles.size_[i].width,
-         projectiles.position_[i].y + projectiles.size_[i].height,
-         projectiles.entity_type_, i + 1 + kNumEnemies});
+  for (int i = 0; i < scene.projectiles.GetNumProjectiles(); ++i) {
+    entity_aabb_.push_back(
+        GetAABB(scene.projectiles.position_[i], scene.projectiles.size_[i],
+                scene.projectiles.entity_type_, i + 1 + kNumEnemies));
   }
-  std::vector<AABB> sorted_aabb = entities_aabb;
-  std::sort(sorted_aabb.begin(), sorted_aabb.end(),
+  std::sort(entity_aabb_.begin(), entity_aabb_.end(),
             [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
 
-  std::vector<CollisionPair> collision_pairs =
-      GetCollisionPairsSAP(sorted_aabb);
-  ResolveCollisionPairsSAP(player, enemies, projectiles, entities_aabb,
-                           collision_pairs);
+  FindCollisionPairsSAP(entity_aabb_);
+  ResolveCollisionPairsSAP(scene);
 };
 
-std::vector<CollisionPair> GetCollisionPairsSAP(
-    std::vector<AABB>& sorted_aabb) {
-  std::vector<CollisionPair> collision_pairs;
-  std::vector<const AABB*> active_list;
-  for (int i = 0; i < sorted_aabb.size(); ++i) {
+void CollisionManager::FindCollisionPairsSAP(std::vector<AABB>& sorted_aabb) {
+
+  collision_pairs_.clear();
+  size_t count = sorted_aabb.size();
+  for (int i = 0; i < count; ++i) {
     const AABB& current_aabb = sorted_aabb[i];
 
-    // Prune
-    active_list.erase(std::remove_if(active_list.begin(), active_list.end(),
-                                     [&](const AABB* active_aabb) {
-                                       return active_aabb->max_x <
-                                              current_aabb.min_x;
-                                     }),
-                      active_list.end());
-    // Search
-    for (const AABB* active_aabb : active_list) {
-      bool has_y_overlap = current_aabb.max_y > active_aabb->min_y &&
-                           current_aabb.min_y < active_aabb->max_y;
+    for (int j = i + 1; j < count; ++j) {
+      const AABB& active_aabb = sorted_aabb[j];
+
+      // As the AABB vector is sorted by min_x, we know that there can be no collision
+      // if the min of the active AABB is larger than the max of the current AABB.
+      if (active_aabb.min_x > current_aabb.max_x) {
+        break;
+      }
+      bool has_y_overlap = current_aabb.max_y > active_aabb.min_y &&
+                           current_aabb.min_y < active_aabb.max_y;
       if (has_y_overlap) {
-        collision_pairs.push_back(
-            {current_aabb.storage_index, active_aabb->storage_index,
-             current_aabb.entity_type, active_aabb->entity_type});
+        collision_pairs_.push_back(
+            {current_aabb.storage_index, active_aabb.storage_index,
+             current_aabb.entity_type, active_aabb.entity_type});
       };
     }
-
-    // Add
-    active_list.push_back(&current_aabb);
   }
-
-  return collision_pairs;
 };
 
-void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
-                              Projectiles& projectiles,
-                              std::vector<AABB>& entities_aabb,
-                              std::vector<CollisionPair>& collision_pairs) {
-  for (const CollisionPair& cp : collision_pairs) {
+void CollisionManager::ResolveCollisionPairsSAP(Scene& scene) {
+  for (const CollisionPair& cp : collision_pairs_) {
     CollisionType collision_type = GetCollisionType(cp);
 
     switch (collision_type) {
@@ -89,21 +80,22 @@ void ResolveCollisionPairsSAP(Player& player, Enemy& enemy,
       case CollisionType::projectile_terrain:
         continue;
       case CollisionType::player_enemy:
-        ResolvePlayerEnemyCollision(cp, player, enemy, entities_aabb);
+        ResolvePlayerEnemyCollision(cp, scene.player, scene.enemy);
         continue;
       case CollisionType::enemy_enemy:
-        ResolveEnemyEnemyCollision(cp, enemy, entities_aabb);
+        ResolveEnemyEnemyCollision(cp, scene.enemy);
         continue;
       case CollisionType::player_projectile:
         continue;
       case CollisionType::enemy_projectile:
-        ResolveEnemyProjectileCollision(cp, enemy, projectiles, player);
+        ResolveEnemyProjectileCollision(cp, scene.enemy, scene.projectiles,
+                                        scene.player);
         continue;
     }
   }
 };
 
-CollisionType GetCollisionType(const CollisionPair& cp) {
+CollisionType CollisionManager::GetCollisionType(const CollisionPair& cp) {
   EntityType type_a = cp.type_a;
   EntityType type_b = cp.type_b;
 
@@ -123,7 +115,7 @@ CollisionType GetCollisionType(const CollisionPair& cp) {
   }
 };
 
-std::array<Vector2D, 2> GetDisplacementVectors(
+std::array<Vector2D, 2> CollisionManager::GetDisplacementVectors(
     const std::array<AABB, 2>& aabbs, const std::array<Vector2D, 2>& centroids,
     const std::array<float, 2>& inv_masses) {
   std::array<Vector2D, 2> displacement_vectors;
@@ -155,8 +147,8 @@ std::array<Vector2D, 2> GetDisplacementVectors(
   return displacement_vectors;
 }
 
-void ResolveEnemyEnemyCollision(const CollisionPair& cp, Enemy& enemy,
-                                std::vector<AABB>& entities_aabb) {
+void CollisionManager::ResolveEnemyEnemyCollision(const CollisionPair& cp,
+                                                  Enemy& enemy) {
 
   int enemy_idx_a = cp.index_a - 1;
   int enemy_idx_b = cp.index_b - 1;
@@ -168,42 +160,49 @@ void ResolveEnemyEnemyCollision(const CollisionPair& cp, Enemy& enemy,
   Vector2D centroid_b =
       GetCentroid(enemy.position[enemy_idx_b], enemy.size[enemy_idx_b]);
 
+  AABB aabb_a = GetAABB(enemy.position[enemy_idx_a], enemy.size[enemy_idx_a]);
+  AABB aabb_b = GetAABB(enemy.position[enemy_idx_b], enemy.size[enemy_idx_b]);
+
   std::array<Vector2D, 2> displacement_vectors = GetDisplacementVectors(
-      {entities_aabb[cp.index_a], entities_aabb[cp.index_b]},
+      {aabb_a, aabb_b},
       {centroid_a, centroid_b}, {inv_mass_a, inv_mass_b});
 
   enemy.position[enemy_idx_a] += displacement_vectors[0];
   enemy.position[enemy_idx_b] += displacement_vectors[1];
 };
 
-void ResolvePlayerEnemyCollision(const CollisionPair& cp, Player& player,
-                                 Enemy& enemy,
-                                 std::vector<AABB>& entities_aabb) {
+void CollisionManager::ResolvePlayerEnemyCollision(const CollisionPair& cp,
+                                                   Player& player,
+                                                   Enemy& enemy) {
 
   bool a_is_player = cp.type_a == EntityType::player;
   int player_idx = a_is_player ? cp.index_a : cp.index_b;
   int enemy_idx = a_is_player ? cp.index_b - 1 : cp.index_a - 1;
 
-  float inv_mass_player = player.stats_.inv_mass;
-  float inv_mass_enemy = enemy.inv_mass[enemy_idx];
+  float player_inv_mass = player.stats_.inv_mass;
+  float enemy_inv_mass = enemy.inv_mass[enemy_idx];
 
-  Vector2D centroid_player = GetCentroid(player.position_, player.stats_.size);
-  Vector2D centroid_enemy =
+  Vector2D player_centroid = GetCentroid(player.position_, player.stats_.size);
+  Vector2D enemy_centroid =
       GetCentroid(enemy.position[enemy_idx], enemy.size[enemy_idx]);
 
+  player.UpdateAABB();
+  AABB enemy_aabb = GetAABB(enemy.position[enemy_idx], enemy.size[enemy_idx]);
+
   std::array<Vector2D, 2> displacement_vectors = GetDisplacementVectors(
-      {entities_aabb[player_idx], entities_aabb[enemy_idx + 1]},
-      {centroid_player, centroid_enemy}, {inv_mass_player, inv_mass_enemy});
+      {player.aabb_, enemy_aabb},
+      {player_centroid, enemy_centroid}, {player_inv_mass, enemy_inv_mass});
 
   player.position_ += displacement_vectors[0];
-  enemy.position[enemy_idx] += displacement_vectors[1]; 
+  enemy.position[enemy_idx] += displacement_vectors[1];
 
   player.stats_.health -= 1;
-  
 };
 
-void ResolveEnemyProjectileCollision(const CollisionPair& cp, Enemy& enemy,
-                                     Projectiles& projectiles, Player& player) {
+void CollisionManager::ResolveEnemyProjectileCollision(const CollisionPair& cp,
+                                                       Enemy& enemy,
+                                                       Projectiles& projectiles,
+                                                       Player& player) {
   bool a_is_proj = cp.type_a == EntityType::projectile;
   int proj_idx =
       a_is_proj ? cp.index_a - 1 - kNumEnemies : cp.index_b - 1 - kNumEnemies;

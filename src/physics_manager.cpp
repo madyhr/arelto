@@ -1,6 +1,6 @@
 // src/physics_manager.cpp
 #include "physics_manager.h"
-#include "collision.h"
+#include "collision_manager.h"
 #include "constants.h"
 #include "entity.h"
 
@@ -19,7 +19,7 @@ void PhysicsManager::StepPhysics(Scene& scene) {
   UpdatePlayerState(scene.player);
   UpdateEnemyState(scene.enemy, scene.player);
   UpdateProjectileState(scene.projectiles);
-  HandleCollisions(scene.player, scene.enemy, scene.projectiles);
+  HandleCollisions(scene);
   HandleOutOfBounds(scene.player, scene.enemy, scene.projectiles);
 
   UpdateEnemyStatus(scene.enemy, scene.player);
@@ -73,9 +73,8 @@ void PhysicsManager::UpdateProjectileState(Projectiles& projectiles) {
   };
 };
 
-void PhysicsManager::HandleCollisions(Player& player, Enemy& enemy,
-                                      Projectiles& projectiles) {
-  rl2::HandleCollisionsSAP(player, enemy, projectiles);
+void PhysicsManager::HandleCollisions(Scene& scene) {
+  collision_manager_.HandleCollisionsSAP(scene);
 };
 
 void PhysicsManager::HandleOutOfBounds(Player& player, Enemy& enemy,

@@ -11,6 +11,15 @@ Vector2D GetCentroid(Vector2D position, Size size) {
   return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
 }
 
+AABB GetAABB(Vector2D position, Size size, EntityType type, int storage_index) {
+  return {position.x,
+          position.y,
+          position.x + size.width,
+          position.y + size.height,
+          type,
+          storage_index};
+};
+
 void UpdateEnemyStatus(Enemy& enemies, const Player& player) {
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemies.health_points[i] <= 0) {
@@ -98,12 +107,7 @@ void Projectiles::DestroyProjectiles() {
 };
 
 void Player::UpdateAABB() {
-  aabb_ = {position_.x,
-           position_.y,
-           position_.x + stats_.size.width,
-           position_.y + stats_.size.height,
-           entity_type_,
-           0};
+  aabb_ = GetAABB(position_, stats_.size, entity_type_, 0);
 };
 
 void Player::UpdateAllSpellStats() {

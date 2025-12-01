@@ -8,8 +8,8 @@
 #include <vector>
 #include "abilities.h"
 #include "constants.h"
-#include "types.h"
 #include "map.h"
+#include "types.h"
 
 namespace rl2 {
 
@@ -89,6 +89,8 @@ class Player {
 };
 
 Vector2D GetCentroid(Vector2D position, Size size);
+AABB GetAABB(Vector2D position, Size size, EntityType type = EntityType::None,
+             int storage_index = 0);
 void UpdateEnemyStatus(Enemy& enemies, const Player& player);
 void UpdateProjectilesStatus(Projectiles& projectiles);
 void RespawnEnemy(Enemy& enemy, const Player& player);

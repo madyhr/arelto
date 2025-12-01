@@ -7,11 +7,7 @@
 #include <SDL2/SDL_render.h>
 #include <array>
 #include <csignal>
-#include <map>
-#include <vector>
 #include "constants.h"
-#include "entity.h"
-#include "map.h"
 #include "observation_manager.h"
 #include "physics_manager.h"
 #include "render_manager.h"

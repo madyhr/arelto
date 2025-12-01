@@ -15,20 +15,9 @@
 #include "physics_manager.h"
 #include "render_manager.h"
 #include "types.h"
+#include "scene.h"
 
 namespace rl2 {
-// Struct to hold all the core resources
-struct GameResources {
-  SDL_Window* window = nullptr;
-  SDL_Renderer* renderer = nullptr;
-  SDL_Texture* map_texture = nullptr;
-  SDL_Texture* tile_texture = nullptr;
-  SDL_Texture* player_texture = nullptr;
-  SDL_Texture* enemy_texture = nullptr;
-  std::vector<SDL_Texture*> projectile_textures;
-  SDL_Rect map_layout = {0, 0, kWindowWidth, kWindowHeight};
-  TileManager tile_manager;
-};
 
 class FrameStats {
  public:
@@ -63,7 +52,7 @@ class Game {
   bool Initialize();
   void RunGameLoop();
   void StepGame();
-  void RenderGame(float alpha = 1.0f);
+  void RenderGame(float alpha);
   void Shutdown();
   void FillObservationBuffer(float* buffer_ptr, int buffer_size);
   int GetObservationSize();
@@ -72,11 +61,11 @@ class Game {
   static void SignalHandler(int signal);
 
  private:
-  GameResources resources_;
   RenderManager renderer_;
   PhysicsManager physics_;
   GameStatus game_status_;
   GameState game_state_;
+  Scene scene_;
   Player player_;
   Enemy enemy_;
   Projectiles projectiles_;

@@ -6,12 +6,13 @@
 #include <algorithm>
 #include <iostream>
 #include "entity.h"
+#include "scene.h"
 #include "types.h"
 
 namespace rl2 {
 
 RenderManager::RenderManager(){};
-RenderManager::~RenderManager(){
+RenderManager::~RenderManager() {
   Shutdown();
 };
 
@@ -87,37 +88,31 @@ bool RenderManager::Initialize(bool is_headless) {
 };
 
 bool RenderManager::InitializeCamera(const Player& player) {
-  Vector2D player_centroid =
-      GetCentroid(player.position_, player.stats_.size);
+  Vector2D player_centroid = GetCentroid(player.position_, player.stats_.size);
   camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
   camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
 
   return true;
 };
 
+void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode) {
 
-
-void RenderManager::Render(
-    const Player& player, const Enemy& enemy, const Projectiles& projectiles,
-    const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
-    float alpha, bool debug_mode) {
-
-  UpdateCameraPosition(player);
+  UpdateCameraPosition(scene.player);
 
   camera_.render_position_ =
       LerpVector2D(camera_.prev_position_, camera_.position_, alpha);
   SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
   SDL_RenderClear(resources_.renderer);
   RenderTiledMap();
-  RenderPlayer(player, alpha);
+  RenderPlayer(scene.player, alpha);
 
-  int num_enemy_vertices = SetupEnemyGeometry(enemy, alpha);
-  RenderEnemies(enemy, num_enemy_vertices);
-  SetupProjectileGeometry(projectiles, alpha);
-  RenderProjectiles(projectiles);
+  int num_enemy_vertices = SetupEnemyGeometry(scene.enemy, alpha);
+  RenderEnemies(scene.enemy, num_enemy_vertices);
+  SetupProjectileGeometry(scene.projectiles, alpha);
+  RenderProjectiles(scene.projectiles);
   if (debug_mode) {
     // RenderDebugWorldOccupancyMap(occupancy_map);
-    RenderDebugEnemyOccupancyMap(enemy, occupancy_map, alpha);
+    RenderDebugEnemyOccupancyMap(scene.enemy, scene.occupancy_map, alpha);
   };
 
   SDL_RenderPresent(resources_.renderer);
@@ -196,7 +191,6 @@ void RenderManager::RenderPlayer(const Player& player, float alpha) {
 
   SDL_RenderCopyEx(resources_.renderer, resources_.player_texture, &src_rect,
                    &player_render_box, 0.0, nullptr, is_flipped);
-
 };
 
 int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
@@ -279,7 +273,6 @@ int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
         {x + w, y}, {255, 255, 255, 255}, {vertex_right, v_top}};
 
     current_vertex_idx += kEnemyVertices;
-
   }
   return current_vertex_idx;
 };

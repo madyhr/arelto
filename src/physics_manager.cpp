@@ -3,7 +3,6 @@
 #include "collision.h"
 #include "constants.h"
 #include "entity.h"
-#include "game.h"
 
 namespace rl2 {
 PhysicsManager::PhysicsManager(){};
@@ -15,22 +14,20 @@ bool PhysicsManager::Initialize() {
   return true;
 };
 
-void PhysicsManager::StepPhysics(
-    Player& player, Enemy& enemy, Projectiles& projectiles,
-    FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
+void PhysicsManager::StepPhysics(Scene& scene) {
 
-  UpdatePlayerState(player);
-  UpdateEnemyState(enemy, player);
-  UpdateProjectileState(projectiles);
-  HandleCollisions(player, enemy, projectiles);
-  HandleOutOfBounds(player, enemy, projectiles);
+  UpdatePlayerState(scene.player);
+  UpdateEnemyState(scene.enemy, scene.player);
+  UpdateProjectileState(scene.projectiles);
+  HandleCollisions(scene.player, scene.enemy, scene.projectiles);
+  HandleOutOfBounds(scene.player, scene.enemy, scene.projectiles);
 
-  UpdateEnemyStatus(enemy, player);
-  UpdateProjectilesStatus(projectiles);
-  UpdateWorldOccupancyMap(occupancy_map, player, enemy, projectiles);
-  UpdateEnemyOccupancyMap(enemy, occupancy_map);
+  UpdateEnemyStatus(scene.enemy, scene.player);
+  UpdateProjectilesStatus(scene.projectiles);
+  UpdateWorldOccupancyMap(scene.occupancy_map, scene.player, scene.enemy, scene.projectiles);
+  UpdateEnemyOccupancyMap(scene.enemy, scene.occupancy_map);
 
-  projectiles.DestroyProjectiles();
+  scene.projectiles.DestroyProjectiles();
 }
 
 void PhysicsManager::UpdatePlayerState(Player& player) {
@@ -84,7 +81,7 @@ void PhysicsManager::HandleOutOfBounds(Player& player, Enemy& enemy,
   HandleProjectileOOB(projectiles);
 };
 
-void HandlePlayerOOB(Player& player) {
+void PhysicsManager::HandlePlayerOOB(Player& player) {
   if (player.position_.x < 0) {
     player.position_.x = 0;
   }
@@ -99,7 +96,7 @@ void HandlePlayerOOB(Player& player) {
   }
 };
 
-void HandleEnemyOOB(Enemy& enemies) {
+void PhysicsManager::HandleEnemyOOB(Enemy& enemies) {
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemies.is_alive[i]) {
       if (enemies.position[i].x < 0) {
@@ -118,7 +115,7 @@ void HandleEnemyOOB(Enemy& enemies) {
   }
 };
 
-void HandleProjectileOOB(Projectiles& projectiles) {
+void PhysicsManager::HandleProjectileOOB(Projectiles& projectiles) {
   size_t num_projectiles = projectiles.GetNumProjectiles();
   if (num_projectiles == 0) {
     return;

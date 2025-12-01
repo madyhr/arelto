@@ -6,6 +6,7 @@
 #include "constants.h"
 #include "entity.h"
 #include "map.h"
+#include "scene.h"
 #include "types.h"
 
 namespace rl2 {
@@ -33,10 +34,7 @@ class RenderManager {
   bool Initialize(bool is_headless);
   void Shutdown();
 
-  void Render(
-      const Player& player, const Enemy& enemy, const Projectiles& projectiles,
-      const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
-      float alpha, bool debug_mode = false);
+  void Render(const Scene& scene, float alpha, bool debug_mode = false);
 
   Camera camera_;
 

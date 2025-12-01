@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "entity.h"
 #include "map.h"
+#include "scene.h"
 
 namespace rl2 {
 
@@ -15,9 +16,7 @@ class PhysicsManager {
   ~PhysicsManager();
 
   bool Initialize();
-  void StepPhysics(
-      Player& player, Enemy& enemy, Projectiles& projectiles,
-      FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
+  void StepPhysics(Scene& scene);
   float GetPhysicsDt() { return physics_dt_; };
   void SetPhysicsDt(float dt) { physics_dt_ = dt; };
 
@@ -29,6 +28,9 @@ class PhysicsManager {
   void HandleCollisions(Player& player, Enemy& enemy, Projectiles& projectiles);
   void HandleOutOfBounds(Player& player, Enemy& enemy,
                          Projectiles& projectiles);
+  void HandlePlayerOOB(Player& player);
+  void HandleEnemyOOB(Enemy& enemy);
+  void HandleProjectileOOB(Projectiles& projectiles);
   void UpdateWorldOccupancyMap(
       FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
       Player& player, Enemy& enemy, Projectiles& projectiles);
@@ -36,11 +38,6 @@ class PhysicsManager {
       Enemy& enemy,
       FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
 };
-
-void HandlePlayerOOB(Player& player);
-void HandleEnemyOOB(Enemy& enemy);
-void HandleProjectileOOB(Projectiles& projectiles);
-void DestroyProjectiles(Projectiles& projectiles);
 
 }  // namespace rl2
 

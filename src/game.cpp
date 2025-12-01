@@ -67,14 +67,12 @@ void FrameStats::print_fps_running_average(float dt) {
 void Game::StepGame() {
   CachePreviousState();
   ProcessInput();
-  physics_.StepPhysics(player_, enemy_, projectiles_, world_occupancy_map_);
+  physics_.StepPhysics(scene_);
   time_ += physics_.GetPhysicsDt();
 };
 
 void Game::RenderGame(float alpha) {
-
-  renderer_.Render(player_, enemy_, projectiles_, world_occupancy_map_, alpha,
-                   game_status_.is_debug);
+  renderer_.Render(scene_, alpha, game_status_.is_debug);
 };
 
 void Game::RunGameLoop() {
@@ -152,50 +150,50 @@ Vector2D Game::GetCursorPositionWorld() {
 };
 
 void Game::ProcessPlayerInput() {
-  player_.velocity_ = {0.0f, 0.0f};
+  scene_.player.velocity_ = {0.0f, 0.0f};
   const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
   if (currentKeyStates[SDL_SCANCODE_W]) {
-    player_.velocity_.y -= 1.0f;
+    scene_.player.velocity_.y -= 1.0f;
   }
   if (currentKeyStates[SDL_SCANCODE_S]) {
-    player_.velocity_.y += 1.0f;
+    scene_.player.velocity_.y += 1.0f;
   }
   if (currentKeyStates[SDL_SCANCODE_A]) {
-    player_.velocity_.x -= 1.0f;
+    scene_.player.velocity_.x -= 1.0f;
   }
   if (currentKeyStates[SDL_SCANCODE_D]) {
-    player_.velocity_.x += 1.0f;
+    scene_.player.velocity_.x += 1.0f;
   }
   if (currentKeyStates[SDL_SCANCODE_F]) {
-    std::optional<ProjectileData> fireball =
-        player_.CastProjectileSpell(player_.fireball_, time_, cursor_position_);
+    std::optional<ProjectileData> fireball = scene_.player.CastProjectileSpell(
+        scene_.player.fireball_, time_, cursor_position_);
 
     if (fireball.has_value()) {
-      projectiles_.AddProjectile(*fireball);
+      scene_.projectiles.AddProjectile(*fireball);
     }
   }
   if (currentKeyStates[SDL_SCANCODE_I]) {
-    std::optional<ProjectileData> frostbolt = player_.CastProjectileSpell(
-        player_.frostbolt_, time_, cursor_position_);
+    std::optional<ProjectileData> frostbolt = scene_.player.CastProjectileSpell(
+        scene_.player.frostbolt_, time_, cursor_position_);
 
     if (frostbolt.has_value()) {
-      projectiles_.AddProjectile(*frostbolt);
+      scene_.projectiles.AddProjectile(*frostbolt);
     }
   }
 }
 
 void Game::CachePreviousState() {
-  player_.prev_position_ = player_.position_;
+  scene_.player.prev_position_ = scene_.player.position_;
 
   for (int i = 0; i < kNumEnemies; ++i) {
-    if (enemy_.is_alive[i]) {
-      enemy_.prev_position[i] = enemy_.position[i];
+    if (scene_.enemy.is_alive[i]) {
+      scene_.enemy.prev_position[i] = scene_.enemy.position[i];
     }
   }
 
-  size_t num_proj = projectiles_.GetNumProjectiles();
+  size_t num_proj = scene_.projectiles.GetNumProjectiles();
   for (size_t i = 0; i < num_proj; ++i) {
-    projectiles_.prev_position_[i] = projectiles_.position_[i];
+    scene_.projectiles.prev_position_[i] = scene_.projectiles.position_[i];
   }
 
   renderer_.camera_.prev_position_ = renderer_.camera_.position_;
@@ -203,29 +201,7 @@ void Game::CachePreviousState() {
 
 void Game::Shutdown() {
 
-  if (resources_.player_texture) {
-    SDL_DestroyTexture(resources_.player_texture);
-    resources_.player_texture = nullptr;
-  }
-
-  if (resources_.enemy_texture) {
-    SDL_DestroyTexture(resources_.enemy_texture);
-    resources_.enemy_texture = nullptr;
-  }
-
-  IMG_Quit();
-
-  if (resources_.renderer) {
-    SDL_DestroyRenderer(resources_.renderer);
-    resources_.renderer = nullptr;
-  }
-
-  if (resources_.window) {
-    SDL_DestroyWindow(resources_.window);
-    resources_.window = nullptr;
-  }
-
-  SDL_Quit();
+  renderer_.Shutdown();
 }
 
 }  // namespace rl2

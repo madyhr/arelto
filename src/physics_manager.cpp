@@ -24,10 +24,14 @@ void PhysicsManager::StepPhysics(Scene& scene) {
 
   UpdateEnemyStatus(scene.enemy, scene.player);
   UpdateProjectilesStatus(scene.projectiles);
-  UpdateWorldOccupancyMap(scene.occupancy_map, scene.player, scene.enemy, scene.projectiles);
-  UpdateEnemyOccupancyMap(scene.enemy, scene.occupancy_map);
+  if (tick_count_ % kOccupancyMapTimeDecimation == 0) {
+    UpdateWorldOccupancyMap(scene.occupancy_map, scene.player, scene.enemy,
+                            scene.projectiles);
+    UpdateEnemyOccupancyMap(scene.enemy, scene.occupancy_map);
+  }
 
   scene.projectiles.DestroyProjectiles();
+  tick_count_ += 1;
 }
 
 void PhysicsManager::UpdatePlayerState(Player& player) {

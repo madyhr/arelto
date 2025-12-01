@@ -12,10 +12,11 @@
 #include "constants.h"
 #include "entity.h"
 #include "map.h"
+#include "observation_manager.h"
 #include "physics_manager.h"
 #include "render_manager.h"
-#include "types.h"
 #include "scene.h"
+#include "types.h"
 
 namespace rl2 {
 
@@ -54,43 +55,28 @@ class Game {
   void StepGame();
   void RenderGame(float alpha);
   void Shutdown();
-  void FillObservationBuffer(float* buffer_ptr, int buffer_size);
-  int GetObservationSize();
   int GetGameState();
   void SetGameState(int game_state);
   static void SignalHandler(int signal);
 
+  Scene scene_;
+  ObservationManager obs_manager_;
+
  private:
-  RenderManager renderer_;
-  PhysicsManager physics_;
+  RenderManager render_manager_;
+  PhysicsManager physics_manager_;
   GameStatus game_status_;
   GameState game_state_;
-  Scene scene_;
-  Player player_;
-  Enemy enemy_;
-  Projectiles projectiles_;
-  FixedMap<(int)kMapWidth / kOccupancyMapResolution,
-           (int)kMapHeight / kOccupancyMapResolution>
-      world_occupancy_map_;
   Camera camera_;
   Vector2D cursor_position_;
-  SDL_Vertex enemies_vertices_[kTotalEnemyVertices];
-  std::map<int, std::vector<SDL_Vertex>> projectile_vertices_grouped_;
-  bool in_debug_mode = true;
-  float last_kill_tick = 0.0f;
   float time_ = 0.0f;
   static volatile std::sig_atomic_t stop_request_;
-  const float dt = kPhysicsDt;
-  bool InitializePlayer();
-  bool InitializeEnemies();
   bool InitializeCamera();
   void ProcessInput();
   Vector2D GetCursorPositionWorld();
   void ProcessPlayerInput();
   void CachePreviousState();
-  void GetModelObservation();
 };
-
 
 }  // namespace rl2
 #endif

@@ -25,7 +25,7 @@ void Game::SignalHandler(int signal) {
 Game::Game(){};
 
 Game::~Game() {
-  renderer_.Shutdown();
+  render_manager_.Shutdown();
 }
 
 int Game::GetGameState() {
@@ -67,12 +67,12 @@ void FrameStats::print_fps_running_average(float dt) {
 void Game::StepGame() {
   CachePreviousState();
   ProcessInput();
-  physics_.StepPhysics(scene_);
-  time_ += physics_.GetPhysicsDt();
+  physics_manager_.StepPhysics(scene_);
+  time_ += physics_manager_.GetPhysicsDt();
 };
 
 void Game::RenderGame(float alpha) {
-  renderer_.Render(scene_, alpha, game_status_.is_debug);
+  render_manager_.Render(scene_, alpha, game_status_.is_debug);
 };
 
 void Game::RunGameLoop() {
@@ -94,12 +94,12 @@ void Game::RunGameLoop() {
 
     accumulator += frame_time;
 
-    while (accumulator >= physics_.GetPhysicsDt()) {
+    while (accumulator >= physics_manager_.GetPhysicsDt()) {
       StepGame();
-      accumulator -= physics_.GetPhysicsDt();
+      accumulator -= physics_manager_.GetPhysicsDt();
     }
 
-    float alpha = accumulator / dt;
+    float alpha = accumulator / physics_manager_.GetPhysicsDt();
 
     if (game_status_.is_headless) {
       return;
@@ -145,8 +145,8 @@ Vector2D Game::GetCursorPositionWorld() {
   int cursor_x, cursor_y;
   uint32_t cursor_mask = SDL_GetMouseState(&cursor_x, &cursor_y);
 
-  return {(float)(cursor_x + renderer_.camera_.position_.x),
-          (float)(cursor_y + renderer_.camera_.position_.y)};
+  return {(float)(cursor_x + render_manager_.camera_.position_.x),
+          (float)(cursor_y + render_manager_.camera_.position_.y)};
 };
 
 void Game::ProcessPlayerInput() {
@@ -196,12 +196,12 @@ void Game::CachePreviousState() {
     scene_.projectiles.prev_position_[i] = scene_.projectiles.position_[i];
   }
 
-  renderer_.camera_.prev_position_ = renderer_.camera_.position_;
+  render_manager_.camera_.prev_position_ = render_manager_.camera_.position_;
 }
 
 void Game::Shutdown() {
 
-  renderer_.Shutdown();
+  render_manager_.Shutdown();
 }
 
 }  // namespace rl2

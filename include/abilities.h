@@ -49,7 +49,7 @@ class BaseProjectileSpell : public BaseSpell {
 class Fireball : public BaseProjectileSpell {
  public:
   Fireball() : BaseProjectileSpell(SpellId::FireballId) {
-    SetCooldown(1.0f);
+    SetCooldown(kFireballCooldown);
     SetSpeed(kFireballSpeed);
     SetWidth(kFireballWidth);
     SetHeight(kFireballHeight);
@@ -60,7 +60,7 @@ class Fireball : public BaseProjectileSpell {
 class Frostbolt : public BaseProjectileSpell {
  public:
   Frostbolt() : BaseProjectileSpell(SpellId::FrostboltId) {
-    SetCooldown(2.0f);
+    SetCooldown(kFrostboltCooldown);
     SetSpeed(kFrostboltSpeed);
     SetWidth(kFrostboltWidth);
     SetHeight(kFrostboltHeight);

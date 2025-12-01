@@ -10,7 +10,7 @@ constexpr int kWindowHeight = 1080;
 constexpr float kCullPadding = 50.0f;
 
 // Game constats
-constexpr float kPhysicsDt = 0.001f;
+constexpr float kPhysicsDt = 0.001f; // time in sec
 
 // Map constants
 constexpr int kMapWidth = 5000;
@@ -18,6 +18,8 @@ constexpr int kMapHeight = 5000;
 constexpr int kOccupancyMapResolution = 25;
 constexpr int kOccupancyMapWidth = static_cast<int>(kMapWidth / kOccupancyMapResolution);
 constexpr int kOccupancyMapHeight = static_cast<int>(kMapHeight / kOccupancyMapResolution);
+// number of physics steps per occupancy map update
+constexpr int kOccupancyMapTimeDecimation = 100; 
 // Tiles are used for rendering
 constexpr int kTileWidth = 40;
 constexpr int kTileHeight = 119;
@@ -45,7 +47,7 @@ constexpr int kPlayerSpriteCellHeight = 64;
 constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
 
 // Enemy constants
-constexpr int kNumEnemies = 10;
+constexpr int kNumEnemies = 1000;
 constexpr int kEnemyHealth = 10;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;
@@ -79,10 +81,12 @@ constexpr int kFireballWidth = 40;
 constexpr int kFireballHeight = 40;
 constexpr float kFireballSpeed = 350.0f;
 constexpr int kFireBallDamage = 5;
+constexpr float kFireballCooldown = 1.0f; // time in sec
 constexpr int kFrostboltWidth = 100;
 constexpr int kFrostboltHeight = 100;
 constexpr float kFrostboltSpeed = 250.0f;
 constexpr int kFrostboltDamage = 10;
+constexpr float kFrostboltCooldown = 2.0f; // time in sec
 
 // Abilities constants
 constexpr int kNumPlayerSpells = 2;  // total number of spells

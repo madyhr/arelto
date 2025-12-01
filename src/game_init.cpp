@@ -1,8 +1,6 @@
 // src/game_init.cpp
-#include <algorithm>
 #include <csignal>
 #include "game.h"
-#include "random.h"
 
 namespace rl2 {
 
@@ -10,14 +8,14 @@ bool Game::Initialize() {
 
   std::signal(SIGINT, SignalHandler);
   std::signal(SIGKILL, SignalHandler);
-  game_status_.is_debug = true;
+  game_status_.is_debug = false;
   game_status_.is_headless = false;
 
-  if (!(renderer_.Initialize(game_status_.is_headless))) {
+  if (!(render_manager_.Initialize(game_status_.is_headless))) {
     return false;
   }
 
-  if (!(physics_.Initialize())) {
+  if (!(physics_manager_.Initialize())) {
     return false;
   }
 
@@ -35,9 +33,10 @@ bool Game::Initialize() {
 
 bool Game::InitializeCamera() {
   Vector2D player_centroid =
-      GetCentroid(player_.position_, player_.stats_.size);
-  renderer_.camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
-  renderer_.camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
+      GetCentroid(scene_.player.position_, scene_.player.stats_.size);
+  render_manager_.camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
+  render_manager_.camera_.position_.y =
+      player_centroid.y - 0.5f * kWindowHeight;
 
   return true;
 };

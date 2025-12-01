@@ -21,6 +21,7 @@ class PhysicsManager {
   void SetPhysicsDt(float dt) { physics_dt_ = dt; };
 
  private:
+  int tick_count_ = 0;
   float physics_dt_;
   void UpdatePlayerState(Player& player);
   void UpdateEnemyState(Enemy& enemy, const Player& player);

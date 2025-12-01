@@ -24,10 +24,14 @@ PYBIND11_MODULE(rl2_py, m) {
                throw std::runtime_error("Observation buffer must be 1D array");
              }
 
-             self.FillObservationBuffer(static_cast<float*>(info.ptr),
-                                        static_cast<int>(info.size));
+             self.obs_manager_.FillObservationBuffer(
+                 static_cast<float*>(info.ptr), static_cast<int>(info.size),
+                 self.scene_);
            })
-      .def("get_observation_size", &rl2::Game::GetObservationSize)
+      .def("get_observation_size",
+           [](rl2::Game& self) {
+             return self.obs_manager_.GetObservationSize(self.scene_);
+           })
       .def("shutdown", &rl2::Game::Shutdown)
       .def("get_game_state", &rl2::Game::GetGameState);
 };

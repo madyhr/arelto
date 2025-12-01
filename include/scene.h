@@ -16,14 +16,14 @@ struct Scene {
 
   void Reset() {
 
-    // Player
+    // -- Player
     player.stats_.size = {kPlayerWidth, kPlayerHeight};
     player.stats_.inv_mass = kPlayerInvMass;
     player.position_ = {kPlayerInitX, kPlayerInitY};
     player.stats_.movement_speed = kPlayerSpeed;
     player.UpdateAllSpellStats();
 
-    // Enemies
+    // -- Enemies
     std::fill(enemy.is_alive.begin(), enemy.is_alive.end(), false);
     std::fill(enemy.movement_speed.begin(), enemy.movement_speed.end(),
               kEnemySpeed);

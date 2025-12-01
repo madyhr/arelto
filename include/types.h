@@ -1,9 +1,6 @@
 // include/types.h
 #ifndef RL2_TYPES_H_
 #define RL2_TYPES_H_
-#include <SDL2/SDL_render.h>
-#include <array>
-#include <vector>
 #include "constants.h"
 
 namespace rl2 {
@@ -33,59 +30,71 @@ struct Vector2D {
     y -= other.y;
     return *this;
   }
+  Vector2D& operator*=(float scalar) {
+    x *= scalar;
+    y *= scalar;
+    return *this;
+  }
+  Vector2D& operator/=(float scalar) {
+    // Optional: Check for zero division here
+    float inv_scalar = 1.0f / scalar;
+    x *= inv_scalar;
+    y *= inv_scalar;
+    return *this;
+  }
+  float Dot(const Vector2D& other) const {
+    return (x * other.x) + (y * other.y);
+  }
+  // Returns > 0 if 'other' is clockwise from 'this'
+  // Returns < 0 if 'other' is counter-clockwise
+  float Cross(const Vector2D& other) const {
+    return (x * other.y) - (y * other.x);
+  }
 };
 
-// Vector2D & Vector2D
-inline bool operator==(const Vector2D& vector0, const Vector2D& vector1) {
-  return vector0.x == vector1.x && vector0.y == vector1.y;
-};
+// Vector + Vector
+inline Vector2D operator+(Vector2D lhs, const Vector2D& rhs) {
+  lhs += rhs;
+  return lhs;
+}
 
-inline Vector2D operator+(const Vector2D& vector0, const Vector2D& vector1) {
-  return {vector0.x + vector1.x, vector0.y + vector1.y};
-};
+// Vector - Vector
+inline Vector2D operator-(Vector2D lhs, const Vector2D& rhs) {
+  lhs -= rhs;
+  return lhs;
+}
 
-inline Vector2D operator-(const Vector2D& vector0, const Vector2D& vector1) {
-  return {vector0.x - vector1.x, vector0.y - vector1.y};
-};
+// Vector * Float
+inline Vector2D operator*(Vector2D lhs, float scalar) {
+  lhs *= scalar;
+  return lhs;
+}
 
-// Vector2D & float
-inline Vector2D operator+(const Vector2D& vector, const float& scalar) {
-  return {vector.x + scalar, vector.y + scalar};
-};
+// Float * Vector (Commutativity)
+inline Vector2D operator*(float scalar, Vector2D rhs) {
+  rhs *= scalar;
+  return rhs;
+}
 
-inline Vector2D operator+(const float& scalar, const Vector2D& vector) {
-  return {vector.x + scalar, vector.y + scalar};
-};
+// Vector / Float
+inline Vector2D operator/(Vector2D lhs, float scalar) {
+  lhs /= scalar;
+  return lhs;
+}
 
-inline Vector2D operator-(const Vector2D& vector, const float& scalar) {
-  return {vector.x - scalar, vector.y - scalar};
-};
+inline bool operator==(const Vector2D& lhs, const Vector2D& rhs) {
+  // Check if difference is negligible
+  constexpr float epsilon = 1e-5f;
+  return std::abs(lhs.x - rhs.x) < epsilon && std::abs(lhs.y - rhs.y) < epsilon;
+}
 
-inline Vector2D operator-(const float& scalar, const Vector2D& vector) {
-  return {vector.x - scalar, vector.y - scalar};
-};
-
-inline Vector2D operator*(const float& scalar, const Vector2D& vector) {
-  return {vector.x * scalar, vector.y * scalar};
-};
-
-inline Vector2D operator*(const Vector2D& vector, const float& scalar) {
-  return {vector.x * scalar, vector.y * scalar};
-};
-
-inline Vector2D operator/(const Vector2D& vector, float scalar) {
-  // Calculating the inverse scalar to avoid using division twice.
-  float inv_scalar = 1.0f / scalar;
-  return {vector.x * inv_scalar, vector.y * inv_scalar};
+inline bool operator!=(const Vector2D& lhs, const Vector2D& rhs) {
+  return !(lhs == rhs);
 }
 
 inline Vector2D LerpVector2D(const Vector2D& start, const Vector2D& end,
                              const float& alpha) {
   return start * (1 - alpha) + end * alpha;
-};
-
-struct VertexData {
-  SDL_Vertex vertex;
 };
 
 enum class EntityType : int { None = -1, terrain, player, enemy, projectile };

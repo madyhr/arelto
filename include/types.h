@@ -1,6 +1,7 @@
 // include/types.h
 #ifndef RL2_TYPES_H_
 #define RL2_TYPES_H_
+#include <cstdint>
 #include "constants.h"
 
 namespace rl2 {
@@ -98,6 +99,36 @@ inline Vector2D LerpVector2D(const Vector2D& start, const Vector2D& end,
 };
 
 enum class EntityType : int { None = -1, terrain, player, enemy, projectile };
+
+struct Size {
+  uint32_t width;
+  uint32_t height;
+};
+
+// The offset is defined as the offset from a reference position to the center
+// of the Collider.
+struct Collider {
+  Vector2D offset;
+  Size size;
+};
+
+struct Stats {
+  uint32_t health;
+  float movement_speed;
+  Size sprite_size;
+  float inv_mass;
+};
+
+struct ProjectileData {
+  int owner_id;
+  Vector2D position;
+  Vector2D velocity;
+  float speed;
+  Collider collider;
+  Size sprite_size;
+  float inv_mass;
+  int proj_id;
+};
 
 // entity type is used during collisions to handle each type of entity differently
 // storage index is used to be able to retrieve the original index of the entity

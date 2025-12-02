@@ -38,7 +38,7 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr, int buffer_siz
     buffer_ptr[idx++] = enemy_pos.y;
   }
 
-  for (const Size& enemy_size : scene.enemy.size) {
+  for (const Size& enemy_size : scene.enemy.sprite_size) {
     buffer_ptr[idx++] = static_cast<float>(enemy_size.width);
     buffer_ptr[idx++] = static_cast<float>(enemy_size.height);
   }

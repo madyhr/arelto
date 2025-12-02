@@ -22,17 +22,24 @@ void CollisionManager::HandleCollisionsSAP(Scene& scene) {
   };
 
   entity_aabb_.clear();
-  scene.player.UpdateAABB();
-  entity_aabb_.push_back(scene.player.aabb_);
+
+  entity_aabb_.push_back(GetCollisionAABB(
+      scene.player.position_ + scene.player.collider_.offset,
+      scene.player.collider_.size, scene.player.entity_type_, 0));
+
   for (int i = 0; i < kNumEnemies; ++i) {
-    entity_aabb_.push_back(GetAABB(scene.enemy.position[i], scene.enemy.size[i],
-                                   scene.enemy.entity_type, i + 1));
+    entity_aabb_.push_back(GetCollisionAABB(
+        scene.enemy.position[i] + scene.enemy.collider[i].offset,
+        scene.enemy.collider[i].size, scene.enemy.entity_type, i + 1));
   }
+
   for (int i = 0; i < scene.projectiles.GetNumProjectiles(); ++i) {
-    entity_aabb_.push_back(
-        GetAABB(scene.projectiles.position_[i], scene.projectiles.size_[i],
-                scene.projectiles.entity_type_, i + 1 + kNumEnemies));
+    entity_aabb_.push_back(GetCollisionAABB(
+        scene.projectiles.position_[i] + scene.projectiles.collider_[i].offset,
+        scene.projectiles.collider_[i].size, scene.projectiles.entity_type_,
+        i + 1 + kNumEnemies));
   }
+
   std::sort(entity_aabb_.begin(), entity_aabb_.end(),
             [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
 
@@ -156,16 +163,15 @@ void CollisionManager::ResolveEnemyEnemyCollision(const CollisionPair& cp,
   float inv_mass_a = enemy.inv_mass[enemy_idx_a];
   float inv_mass_b = enemy.inv_mass[enemy_idx_b];
   Vector2D centroid_a =
-      GetCentroid(enemy.position[enemy_idx_a], enemy.size[enemy_idx_a]);
+      enemy.position[enemy_idx_a] + enemy.collider[enemy_idx_a].offset;
   Vector2D centroid_b =
-      GetCentroid(enemy.position[enemy_idx_b], enemy.size[enemy_idx_b]);
+      enemy.position[enemy_idx_b] + enemy.collider[enemy_idx_b].offset;
 
-  AABB aabb_a = GetAABB(enemy.position[enemy_idx_a], enemy.size[enemy_idx_a]);
-  AABB aabb_b = GetAABB(enemy.position[enemy_idx_b], enemy.size[enemy_idx_b]);
+  AABB aabb_a = GetCollisionAABB(centroid_a, enemy.collider[enemy_idx_a].size);
+  AABB aabb_b = GetCollisionAABB(centroid_b, enemy.collider[enemy_idx_b].size);
 
   std::array<Vector2D, 2> displacement_vectors = GetDisplacementVectors(
-      {aabb_a, aabb_b},
-      {centroid_a, centroid_b}, {inv_mass_a, inv_mass_b});
+      {aabb_a, aabb_b}, {centroid_a, centroid_b}, {inv_mass_a, inv_mass_b});
 
   enemy.position[enemy_idx_a] += displacement_vectors[0];
   enemy.position[enemy_idx_b] += displacement_vectors[1];
@@ -182,16 +188,17 @@ void CollisionManager::ResolvePlayerEnemyCollision(const CollisionPair& cp,
   float player_inv_mass = player.stats_.inv_mass;
   float enemy_inv_mass = enemy.inv_mass[enemy_idx];
 
-  Vector2D player_centroid = GetCentroid(player.position_, player.stats_.size);
+  Vector2D player_centroid = player.position_ + player.collider_.offset;
   Vector2D enemy_centroid =
-      GetCentroid(enemy.position[enemy_idx], enemy.size[enemy_idx]);
+      enemy.position[enemy_idx] + enemy.collider[enemy_idx].offset;
 
-  player.UpdateAABB();
-  AABB enemy_aabb = GetAABB(enemy.position[enemy_idx], enemy.size[enemy_idx]);
+  AABB player_aabb = GetCollisionAABB(player_centroid, player.collider_.size);
+  AABB enemy_aabb =
+      GetCollisionAABB(enemy_centroid, enemy.collider[enemy_idx].size);
 
   std::array<Vector2D, 2> displacement_vectors = GetDisplacementVectors(
-      {player.aabb_, enemy_aabb},
-      {player_centroid, enemy_centroid}, {player_inv_mass, enemy_inv_mass});
+      {player_aabb, enemy_aabb}, {player_centroid, enemy_centroid},
+      {player_inv_mass, enemy_inv_mass});
 
   player.position_ += displacement_vectors[0];
   enemy.position[enemy_idx] += displacement_vectors[1];

@@ -20,6 +20,20 @@ AABB GetAABB(Vector2D position, Size size, EntityType type, int storage_index) {
           storage_index};
 };
 
+AABB GetCollisionAABB(Vector2D centroid, Size size, EntityType type,
+                      int storage_index) {
+
+  float half_w = 0.5 * size.width;
+  float half_h = 0.5 * size.height;
+
+  return {centroid.x - half_w,
+          centroid.y - half_h,
+          centroid.x + half_w,
+          centroid.y + half_h,
+          type,
+          storage_index};
+};
+
 void UpdateEnemyStatus(Enemy& enemies, const Player& player) {
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemies.health_points[i] <= 0) {
@@ -35,8 +49,8 @@ void UpdateProjectilesStatus(Projectiles& projectiles) {
 
 void RespawnEnemy(Enemy& enemy, const Player& player) {
 
-  int max_x = kMapWidth - kEnemyWidth;
-  int max_y = kMapHeight - kEnemyHeight;
+  int max_x = kMapWidth - kEnemySpriteWidth;
+  int max_y = kMapHeight - kEnemySpriteHeight;
 
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemy.is_alive[i]) {
@@ -67,7 +81,8 @@ void Projectiles::AddProjectile(ProjectileData proj) {
   prev_position_.push_back(proj.position);
   direction_.push_back(proj.velocity);
   speed_.push_back(proj.speed);
-  size_.push_back(proj.size);
+  collider_.push_back(proj.collider);
+  sprite_size_.push_back(proj.sprite_size);
   inv_mass_.push_back(proj.inv_mass);
   proj_id_.push_back(proj.proj_id);
 };
@@ -80,16 +95,19 @@ void Projectiles::DestroyProjectile(int idx) {
     prev_position_[idx] = std::move(prev_position_[last_idx]);
     direction_[idx] = std::move(direction_[last_idx]);
     speed_[idx] = std::move(speed_[last_idx]);
-    size_[idx] = std::move(size_[last_idx]);
+    collider_[idx] = std::move(collider_[last_idx]);
+    sprite_size_[idx] = std::move(sprite_size_[last_idx]);
     inv_mass_[idx] = std::move(inv_mass_[last_idx]);
     proj_id_[idx] = std::move(proj_id_[last_idx]);
-  };
+  }
+
   owner_id_.pop_back();
   position_.pop_back();
   prev_position_.pop_back();
   direction_.pop_back();
   speed_.pop_back();
-  size_.pop_back();
+  collider_.pop_back();
+  sprite_size_.pop_back();
   inv_mass_.pop_back();
   proj_id_.pop_back();
 };
@@ -106,10 +124,6 @@ void Projectiles::DestroyProjectiles() {
   to_be_destroyed_.clear();
 };
 
-void Player::UpdateAABB() {
-  aabb_ = GetAABB(position_, stats_.size, entity_type_, 0);
-};
-
 void Player::UpdateAllSpellStats() {
   spell_stats_.SetProjectileSpellStats(fireball_);
   spell_stats_.SetProjectileSpellStats(frostbolt_);
@@ -120,13 +134,14 @@ std::optional<ProjectileData> Player::CastProjectileSpell(
 
   bool spell_is_ready = time >= spell.GetReadyTime();
   if (spell_is_ready) {
-    Vector2D centroid = GetCentroid(position_, stats_.size);
+    Vector2D centroid = GetCentroid(position_, stats_.sprite_size);
     Vector2D spell_direction = (cursor_position - centroid).Normalized();
-    ProjectileData projectile_spell = {(int)entity_type_,
+    ProjectileData projectile_spell = {static_cast<int>(entity_type_),
                                        position_,
                                        spell_direction,
                                        spell.GetSpeed(),
-                                       {spell.GetWidth(), spell.GetHeight()},
+                                       spell.GetCollider(),
+                                       spell.GetSpriteSize(),
                                        spell.GetInvMass(),
                                        spell.GetId()};
     spell.SetTimeOfLastUse(time);

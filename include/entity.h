@@ -2,7 +2,6 @@
 #ifndef RL2_ENTITY_H_
 #define RL2_ENTITY_H_
 #include <array>
-#include <cstdint>
 #include <optional>
 #include <unordered_set>
 #include <vector>
@@ -13,28 +12,6 @@
 
 namespace rl2 {
 
-struct Size {
-  uint32_t width;
-  uint32_t height;
-};
-
-struct Stats {
-  uint32_t health;
-  float movement_speed;
-  Size size;
-  float inv_mass;
-};
-
-struct ProjectileData {
-  int owner_id;
-  Vector2D position;
-  Vector2D velocity;
-  float speed;
-  Size size;
-  float inv_mass;
-  int proj_id;
-};
-
 class Projectiles {
  public:
   std::vector<int> owner_id_;
@@ -42,7 +19,8 @@ class Projectiles {
   std::vector<Vector2D> prev_position_;
   std::vector<Vector2D> direction_;
   std::vector<float> speed_;
-  std::vector<Size> size_;
+  std::vector<Size> sprite_size_;
+  std::vector<Collider> collider_;
   std::vector<float> inv_mass_;
   std::vector<int> proj_id_;
   std::unordered_set<int> to_be_destroyed_;
@@ -60,7 +38,8 @@ struct Enemy {
   std::array<Vector2D, kNumEnemies> velocity;
   std::array<int, kNumEnemies> health_points;
   std::array<float, kNumEnemies> movement_speed;
-  std::array<Size, kNumEnemies> size;
+  std::array<Size, kNumEnemies> sprite_size;
+  std::array<Collider, kNumEnemies> collider;
   std::array<float, kNumEnemies> inv_mass;
   std::array<float, kNumEnemies> last_horizontal_velocity;
   std::array<FixedMap<kEnemyOccupancyMapWidth, kEnemyOccupancyMapHeight>,
@@ -76,12 +55,12 @@ class Player {
   Vector2D position_;
   Vector2D prev_position_;
   Vector2D velocity_;
-  AABB aabb_;
+  Collider collider_;
+  AABB hitbox_aabb_;
   float last_horizontal_velocity_;
   SpellStats<kNumPlayerSpells> spell_stats_;
   Fireball fireball_;
   Frostbolt frostbolt_;
-  void UpdateAABB();
   void UpdateAllSpellStats();
   std::optional<ProjectileData> CastProjectileSpell(BaseProjectileSpell& spell,
                                                     float time,
@@ -91,6 +70,8 @@ class Player {
 Vector2D GetCentroid(Vector2D position, Size size);
 AABB GetAABB(Vector2D position, Size size, EntityType type = EntityType::None,
              int storage_index = 0);
+AABB GetCollisionAABB(Vector2D centroid, Size size,
+                      EntityType type = EntityType::None, int storage_index = 0);
 void UpdateEnemyStatus(Enemy& enemies, const Player& player);
 void UpdateProjectilesStatus(Projectiles& projectiles);
 void RespawnEnemy(Enemy& enemy, const Player& player);

@@ -88,7 +88,7 @@ bool RenderManager::Initialize(bool is_headless) {
 };
 
 bool RenderManager::InitializeCamera(const Player& player) {
-  Vector2D player_centroid = GetCentroid(player.position_, player.stats_.size);
+  Vector2D player_centroid = GetCentroid(player.position_, player.stats_.sprite_size);
   camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
   camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
 
@@ -120,7 +120,7 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode) {
 
 void RenderManager::UpdateCameraPosition(const Player& player) {
   Vector2D player_centroid =
-      rl2::GetCentroid(player.position_, player.stats_.size);
+      rl2::GetCentroid(player.position_, player.stats_.sprite_size);
   camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
   camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
 
@@ -172,8 +172,8 @@ void RenderManager::RenderPlayer(const Player& player, float alpha) {
   SDL_Rect player_render_box = {
       static_cast<int>(player_render_pos.x - camera_.position_.x),
       static_cast<int>(player_render_pos.y - camera_.position_.y),
-      static_cast<int>(player.stats_.size.width),
-      static_cast<int>(player.stats_.size.height)};
+      static_cast<int>(player.stats_.sprite_size.width),
+      static_cast<int>(player.stats_.sprite_size.height)};
 
   bool is_standing_still = player.velocity_.Norm() < 1e-3;
   bool is_facing_right = player.last_horizontal_velocity_ >= 0.0f;
@@ -217,8 +217,8 @@ int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
       continue;
     };
 
-    float w = enemy.size[i].width;
-    float h = enemy.size[i].height;
+    float w = enemy.sprite_size[i].width;
+    float h = enemy.sprite_size[i].height;
 
     // Skip setting up the enemy geometry if they are not in view.
     if (enemy.position[i].x + w < cull_left ||
@@ -306,8 +306,8 @@ void RenderManager::SetupProjectileGeometry(const Projectiles& projectiles,
   cull_bottom += kCullPadding;
 
   for (int i = 0; i < num_projectiles; ++i) {
-    float w = projectiles.size_[i].width;
-    float h = projectiles.size_[i].height;
+    float w = projectiles.sprite_size_[i].width;
+    float h = projectiles.sprite_size_[i].height;
 
     // Skip setting up the projectile geometry if they are not in view.
     if (projectiles.position_[i].x + w < cull_left ||
@@ -471,7 +471,7 @@ void RenderManager::RenderDebugEnemyOccupancyMap(
 
     // Vector2D enemy_grid_pos = WorldToGrid(enemy.position[i]);
     Vector2D enemy_grid_pos =
-        WorldToGrid(GetCentroid(enemy_render_pos, enemy.size[i]));
+        WorldToGrid(GetCentroid(enemy_render_pos, enemy.sprite_size[i]));
     int start_world_x = static_cast<int>(enemy_grid_pos.x) - half_w;
     int start_world_y = static_cast<int>(enemy_grid_pos.y) - half_h;
 

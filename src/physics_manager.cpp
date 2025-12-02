@@ -91,11 +91,11 @@ void PhysicsManager::HandlePlayerOOB(Player& player) {
   if (player.position_.y < 0) {
     player.position_.y = 0;
   }
-  if ((player.position_.x + player.stats_.size.width) > kMapWidth) {
-    player.position_.x = kMapWidth - player.stats_.size.width;
+  if ((player.position_.x + player.stats_.sprite_size.width) > kMapWidth) {
+    player.position_.x = kMapWidth - player.stats_.sprite_size.width;
   }
-  if ((player.position_.y + player.stats_.size.height) > kMapHeight) {
-    player.position_.y = kMapHeight - player.stats_.size.height;
+  if ((player.position_.y + player.stats_.sprite_size.height) > kMapHeight) {
+    player.position_.y = kMapHeight - player.stats_.sprite_size.height;
   }
 };
 
@@ -108,11 +108,11 @@ void PhysicsManager::HandleEnemyOOB(Enemy& enemies) {
       if (enemies.position[i].y < 0) {
         enemies.position[i].y = 0;
       }
-      if ((enemies.position[i].x + enemies.size[i].width) > kMapWidth) {
-        enemies.position[i].x = kMapWidth - enemies.size[i].width;
+      if ((enemies.position[i].x + enemies.sprite_size[i].width) > kMapWidth) {
+        enemies.position[i].x = kMapWidth - enemies.sprite_size[i].width;
       }
-      if ((enemies.position[i].y + enemies.size[i].height) > kMapHeight) {
-        enemies.position[i].y = kMapHeight - enemies.size[i].height;
+      if ((enemies.position[i].y + enemies.sprite_size[i].height) > kMapHeight) {
+        enemies.position[i].y = kMapHeight - enemies.sprite_size[i].height;
       }
     }
   }
@@ -125,8 +125,8 @@ void PhysicsManager::HandleProjectileOOB(Projectiles& projectiles) {
   }
   for (int i = 0; i < num_projectiles; ++i) {
     if (projectiles.position_[i].x < 0 || projectiles.position_[i].y < 0 ||
-        (projectiles.position_[i].x + projectiles.size_[i].width) > kMapWidth ||
-        (projectiles.position_[i].y + projectiles.size_[i].height) >
+        (projectiles.position_[i].x + projectiles.sprite_size_[i].width) > kMapWidth ||
+        (projectiles.position_[i].y + projectiles.sprite_size_[i].height) >
             kMapHeight) {
       projectiles.to_be_destroyed_.insert(i);
     }
@@ -140,16 +140,16 @@ void PhysicsManager::UpdateWorldOccupancyMap(
   occupancy_map.Clear();
 
   Vector2D player_grid_pos = WorldToGrid(player.position_);
-  int player_grid_width = WorldToGrid(player.stats_.size.width);
-  int player_grid_height = WorldToGrid(player.stats_.size.height);
+  int player_grid_width = WorldToGrid(player.stats_.sprite_size.width);
+  int player_grid_height = WorldToGrid(player.stats_.sprite_size.height);
   occupancy_map.SetGrid(static_cast<int>(player_grid_pos.x),
                         static_cast<int>(player_grid_pos.y), player_grid_width,
                         player_grid_height, player.entity_type_);
 
   for (int i = 0; i < kNumEnemies; ++i) {
     Vector2D enemygrid_pos = WorldToGrid(enemy.position[i]);
-    int enemy_grid_width = WorldToGrid(enemy.size[i].width);
-    int enemy_grid_height = WorldToGrid(enemy.size[i].height);
+    int enemy_grid_width = WorldToGrid(enemy.sprite_size[i].width);
+    int enemy_grid_height = WorldToGrid(enemy.sprite_size[i].height);
     occupancy_map.SetGrid(static_cast<int>(enemygrid_pos.x),
                           static_cast<int>(enemygrid_pos.y), enemy_grid_width,
                           enemy_grid_height, enemy.entity_type);
@@ -158,8 +158,8 @@ void PhysicsManager::UpdateWorldOccupancyMap(
   const size_t num_proj = projectiles.GetNumProjectiles();
   for (int i = 0; i < num_proj; ++i) {
     Vector2D proj_grid_pos = WorldToGrid(projectiles.position_[i]);
-    int proj_grid_width = WorldToGrid(projectiles.size_[i].width);
-    int proj_grid_height = WorldToGrid(projectiles.size_[i].height);
+    int proj_grid_width = WorldToGrid(projectiles.sprite_size_[i].width);
+    int proj_grid_height = WorldToGrid(projectiles.sprite_size_[i].height);
     occupancy_map.SetGrid(static_cast<int>(proj_grid_pos.x),
                           static_cast<int>(proj_grid_pos.y), proj_grid_width,
                           proj_grid_height, projectiles.entity_type_);
@@ -180,7 +180,7 @@ void PhysicsManager::UpdateEnemyOccupancyMap(
       continue;
     }
     Vector2D enemy_grid_pos =
-        WorldToGrid(GetCentroid(enemy.position[i], enemy.size[i]));
+        WorldToGrid(GetCentroid(enemy.position[i], enemy.sprite_size[i]));
 
     int start_world_x = static_cast<int>(enemy_grid_pos.x) - half_w;
     int start_world_y = static_cast<int>(enemy_grid_pos.y) - half_h;

@@ -61,7 +61,7 @@ class RenderManager {
       const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
       float alpha);
   void RenderUI(const Scene& scene, float time);
-  void RenderDigitString(const std::string& text, int start_x, int start_y, Size sprite_size, Size char_size);
+  void RenderDigitString(const std::string& text, int start_x, int start_y, Size2D sprite_size, Size2D char_size);
 };
 
 }  // namespace rl2

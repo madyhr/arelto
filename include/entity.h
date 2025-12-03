@@ -19,7 +19,7 @@ class Projectiles {
   std::vector<Vector2D> prev_position_;
   std::vector<Vector2D> direction_;
   std::vector<float> speed_;
-  std::vector<Size> sprite_size_;
+  std::vector<Size2D> sprite_size_;
   std::vector<Collider> collider_;
   std::vector<float> inv_mass_;
   std::vector<int> proj_id_;
@@ -38,7 +38,7 @@ struct Enemy {
   std::array<Vector2D, kNumEnemies> velocity;
   std::array<int, kNumEnemies> health_points;
   std::array<float, kNumEnemies> movement_speed;
-  std::array<Size, kNumEnemies> sprite_size;
+  std::array<Size2D, kNumEnemies> sprite_size;
   std::array<Collider, kNumEnemies> collider;
   std::array<float, kNumEnemies> inv_mass;
   std::array<float, kNumEnemies> last_horizontal_velocity;
@@ -69,10 +69,10 @@ class Player {
                                                     Vector2D cursor_position);
 };
 
-Vector2D GetCentroid(Vector2D position, Size size);
-AABB GetAABB(Vector2D position, Size size, EntityType type = EntityType::None,
+Vector2D GetCentroid(Vector2D position, Size2D size);
+AABB GetAABB(Vector2D position, Size2D size, EntityType type = EntityType::None,
              int storage_index = 0);
-AABB GetCollisionAABB(Vector2D centroid, Size size,
+AABB GetCollisionAABB(Vector2D centroid, Size2D size,
                       EntityType type = EntityType::None, int storage_index = 0);
 void UpdateEnemyStatus(Enemy& enemies, const Player& player);
 void UpdateProjectilesStatus(Projectiles& projectiles);

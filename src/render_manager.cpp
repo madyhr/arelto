@@ -550,7 +550,7 @@ void RenderManager::RenderDebugEnemyOccupancyMap(
 
 void RenderManager::RenderUI(const Scene& scene, float time) {
 
-  ui_manager_.UpdateUI(scene);
+  ui_manager_.UpdateUI(scene, time);
 
   int group_x = static_cast<int>(ui_manager_.health_bar_.screen_position.x);
   int group_y = static_cast<int>(ui_manager_.health_bar_.screen_position.y);
@@ -562,23 +562,32 @@ void RenderManager::RenderUI(const Scene& scene, float time) {
     dst_rect.w = el.sprite_size.width;
     dst_rect.h = el.sprite_size.height;
 
+    if (el.tag == UIElement::Tag::text) {
+      RenderDigitString(el.text_value,
+                        group_x + static_cast<int>(el.relative_offset.x),
+                        group_y + static_cast<int>(el.relative_offset.y),
+                        el.sprite_size, el.char_size);
+      continue;
+    }
+
+
     SDL_RenderCopy(resources_.renderer,
                    resources_.ui_resources.health_bar_texture, &el.src_rect,
                    &dst_rect);
   }
-  int text_center_x = group_x + kHealthBarTextRelOffsetX;
-  int text_center_y = group_y + kHealthBarTextRelOffsetY;
-
-  std::string hp_text = std::to_string(scene.player.stats_.health) + "/" +
-                        std::to_string(scene.player.stats_.max_health);
-
-  int text_length = hp_text.length();
-  int draw_x = text_center_x - (text_length / 2);
-
-  RenderDigitString(hp_text, draw_x, text_center_y,
-                    {kDigitSpriteWidth, kDigitSpriteHeight},
-                    {kHealthBarTextCharWidth, kHealthBarTextCharHeight});
-
+  // int text_center_x = group_x + kHealthBarTextRelOffsetX;
+  // int text_center_y = group_y + kHealthBarTextRelOffsetY;
+  //
+  // std::string hp_text = std::to_string(scene.player.stats_.health) + "/" +
+  //                       std::to_string(scene.player.stats_.max_health);
+  //
+  // int text_length = hp_text.length();
+  // int draw_x = text_center_x - (text_length / 2);
+  //
+  // RenderDigitString(hp_text, draw_x, text_center_y,
+  //                   {kDigitSpriteWidth, kDigitSpriteHeight},
+  //                   {kHealthBarTextCharWidth, kHealthBarTextCharHeight});
+  //
   group_x = static_cast<int>(ui_manager_.timer_.screen_position.x);
   group_y = static_cast<int>(ui_manager_.timer_.screen_position.y);
 
@@ -589,27 +598,35 @@ void RenderManager::RenderUI(const Scene& scene, float time) {
     dst_rect.w = el.sprite_size.width;
     dst_rect.h = el.sprite_size.height;
 
+    if (el.tag == UIElement::Tag::text) {
+      RenderDigitString(el.text_value,
+                        group_x + static_cast<int>(el.relative_offset.x),
+                        group_y + static_cast<int>(el.relative_offset.y),
+                        el.sprite_size, el.char_size);
+      continue;
+    }
+
     SDL_RenderCopy(resources_.renderer,
                    resources_.ui_resources.timer_hourglass_texture,
                    &el.src_rect, &dst_rect);
   };
-
-  text_center_x = group_x + kTimerTextRelOffsetX;
-  text_center_y = group_y + kTimerTextRelOffsetY;
-
-  std::string timer_text = std::to_string(static_cast<int>(time));
-
-  text_length = timer_text.length();
-  draw_x = text_center_x - (text_length / 2);
-
-  RenderDigitString(timer_text, draw_x, text_center_y,
-                    {kDigitSpriteWidth, kDigitSpriteHeight},
-                    {kTimerTextCharWidth, kTimerTextCharHeight});
+  //
+  // text_center_x = group_x + kTimerTextRelOffsetX;
+  // text_center_y = group_y + kTimerTextRelOffsetY;
+  //
+  // std::string timer_text = std::to_string(static_cast<int>(time));
+  //
+  // text_length = timer_text.length();
+  // draw_x = text_center_x - (text_length / 2);
+  //
+  // RenderDigitString(timer_text, draw_x, text_center_y,
+  //                   {kDigitSpriteWidth, kDigitSpriteHeight},
+  //                   {kTimerTextCharWidth, kTimerTextCharHeight});
 };
 
 void RenderManager::RenderDigitString(const std::string& text, int start_x,
-                                      int start_y, Size sprite_size,
-                                      Size char_size) {
+                                      int start_y, Size2D sprite_size,
+                                      Size2D char_size) {
 
   int char_width = char_size.width;
   int char_height = char_size.height;

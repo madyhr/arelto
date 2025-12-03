@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
+#include <string>
 #include <vector>
 #include "scene.h"
 #include "types.h"
@@ -27,9 +28,13 @@ struct UIElement {
   // offset relative to group
   Vector2D relative_offset;
   // size to actually draw on screen
-  Size sprite_size;
+  Size2D sprite_size;
   // tag for easier access
   enum Tag { none, background, fill, icon, text } tag = none;
+
+  // TODO: Refactor to a more polymorphic setup to not just use a "fat struct".
+  Size2D char_size = {0, 0};
+  std::string text_value = "";
 };
 
 struct UIElementGroup {
@@ -60,8 +65,8 @@ class UIManager {
   void SetupUI();
   void SetupHealthBar();
   void SetupTimer();
-  void UpdateUI(const Scene& scene);
-  void UpdateHealthBar(int current_hp, int max_hp);
+  void UpdateUI(const Scene& scene, float time);
+  void UpdateHealthBar(const Scene& scene);
   void UpdateTimer(float time);
 
  private:

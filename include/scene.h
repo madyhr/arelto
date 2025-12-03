@@ -22,7 +22,7 @@ struct Scene {
     player.collider_ =
         Collider{{kPlayerColliderOffsetX, kPlayerColliderOffsetY},
                  {kPlayerColliderWidth, kPlayerColliderHeight}};
-    player.stats_.sprite_size = Size{kPlayerSpriteWidth, kPlayerSpriteHeight};
+    player.stats_.sprite_size = Size2D{kPlayerSpriteWidth, kPlayerSpriteHeight};
     player.stats_.max_health = kPlayerInitMaxHealth;
     player.stats_.health = player.stats_.max_health;
     player.stats_.inv_mass = kPlayerInvMass;
@@ -38,7 +38,7 @@ struct Scene {
               Collider{{kEnemyColliderOffsetX, kEnemyColliderOffsetY},
                        {kEnemyColliderWidth,kEnemyColliderHeight}});
     std::fill(enemy.sprite_size.begin(), enemy.sprite_size.end(),
-              Size{kEnemySpriteWidth,kEnemySpriteHeight});
+              Size2D{kEnemySpriteWidth,kEnemySpriteHeight});
     std::fill(enemy.inv_mass.begin(), enemy.inv_mass.end(), kEnemyInvMass);
     RespawnEnemy(enemy, player);
 

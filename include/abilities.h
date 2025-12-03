@@ -31,7 +31,7 @@ class BaseProjectileSpell : public BaseSpell {
   float inv_mass_ = 0.0f;
   uint32_t damage_ = 0;
   Collider collider_;
-  Size sprite_size_;
+  Size2D sprite_size_;
 
  public:
   BaseProjectileSpell(SpellId id) : BaseSpell(id){};
@@ -43,8 +43,8 @@ class BaseProjectileSpell : public BaseSpell {
   virtual void SetDamage(uint32_t damage) { damage_ = damage; };
   virtual Collider GetCollider() { return collider_; };
   virtual void SetCollider(Collider collider) { collider_ = collider; };
-  virtual Size GetSpriteSize() { return sprite_size_; };
-  virtual void SetSpriteSize(Size size) { sprite_size_ = size; };
+  virtual Size2D GetSpriteSize() { return sprite_size_; };
+  virtual void SetSpriteSize(Size2D size) { sprite_size_ = size; };
 };
 
 class Fireball : public BaseProjectileSpell {
@@ -77,7 +77,7 @@ struct SpellStats {
   std::array<float, N> time_of_last_use;
   std::array<float, N> speed;
   std::array<Collider, N> collider;
-  std::array<Size, N> sprite_size;
+  std::array<Size2D, N> sprite_size;
   std::array<int, N> damage;
 
   void SetProjectileSpellStats(BaseProjectileSpell spell) {

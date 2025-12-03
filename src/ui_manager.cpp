@@ -1,7 +1,10 @@
 // src/ui_manager.cpp
 #include "ui_manager.h"
+#include <algorithm>
+#include <string>
 #include "constants.h"
 #include "scene.h"
+#include "types.h"
 
 namespace rl2 {
 
@@ -15,22 +18,30 @@ void UIManager::SetupHealthBar() {
   health_bar_.screen_position = {kHealthBarGroupX, kHealthBarGroupY};
 
   UIElement health_bar_container = {
-      {kHealthBarContainerSpriteOffsetX, kHealthBarContainerSpriteOffsetY,
+      SDL_Rect{kHealthBarContainerSpriteOffsetX, kHealthBarContainerSpriteOffsetY,
        kHealthBarContainerSpriteWidth, kHealthBarContainerSpriteHeight},
-      {kHealthBarContainerRelOffsetX, kHealthBarContainerRelOffsetY},
-      {kHealthBarContainerSpriteWidth, kHealthBarContainerSpriteHeight},
+      Vector2D{kHealthBarContainerRelOffsetX, kHealthBarContainerRelOffsetY},
+      Size2D{kHealthBarContainerSpriteWidth, kHealthBarContainerSpriteHeight},
       UIElement::Tag::background};
 
   UIElement health_bar_fill = {
-      {kHealthBarSpriteOffsetX, kHealthBarSpriteOffsetY, kHealthBarSpriteWidth,
+      SDL_Rect{kHealthBarSpriteOffsetX, kHealthBarSpriteOffsetY, kHealthBarSpriteWidth,
        kHealthBarSpriteHeight},
-      {kHealthBarRelOffsetX, kHealthBarRelOffsetY},
-      {kHealthBarSpriteWidth, kHealthBarSpriteHeight},
+      Vector2D{kHealthBarRelOffsetX, kHealthBarRelOffsetY},
+      Size2D{kHealthBarSpriteWidth, kHealthBarSpriteHeight},
       UIElement::Tag::fill};
+
+  UIElement health_bar_text = {
+      SDL_Rect{0, 0, kDigitSpriteWidth, kDigitSpriteHeight},
+      Vector2D{kHealthBarTextRelOffsetX, kHealthBarTextRelOffsetY},
+      Size2D{kDigitSpriteWidth, kDigitSpriteHeight},
+      UIElement::Tag::text,
+      Size2D{kHealthBarTextCharWidth, kHealthBarTextCharHeight}};
 
   // Order matters here, as the first element in elements is also rendered first.
   health_bar_.elements.push_back(health_bar_container);
   health_bar_.elements.push_back(health_bar_fill);
+  health_bar_.elements.push_back(health_bar_text);
 }
 
 void UIManager::SetupTimer() {
@@ -39,25 +50,32 @@ void UIManager::SetupTimer() {
 
   // the texture map only contains the hourglass, so sprite offset is {0,0}.
   UIElement timer_icon = {
-      {0, 0, kTimerHourglassSpriteWidth, kTimerHourglassSpriteHeight},
-      {kTimerHourglassRelOffsetX, kTimerHourglassRelOffsetY},
-      {kTimerHourglassSpriteWidth, kTimerHourglassSpriteHeight},
+      SDL_Rect{0, 0, kTimerHourglassSpriteWidth, kTimerHourglassSpriteHeight},
+      Vector2D{kTimerHourglassRelOffsetX, kTimerHourglassRelOffsetY},
+      Size2D{kTimerHourglassSpriteWidth, kTimerHourglassSpriteHeight},
       UIElement::Tag::icon};
 
+  UIElement timer_text = {SDL_Rect{0, 0, kDigitSpriteWidth, kDigitSpriteHeight},
+                          Vector2D{kTimerTextRelOffsetX, kTimerTextRelOffsetY},
+                          Size2D{kDigitSpriteWidth, kDigitSpriteHeight},
+                          UIElement::Tag::text,
+                          Size2D{kTimerTextCharWidth, kTimerTextCharHeight}};
+
   timer_.elements.push_back(timer_icon);
+  timer_.elements.push_back(timer_text);
 };
 
-void UIManager::UpdateUI(const Scene& scene) {
-  UpdateHealthBar(scene.player.stats_.health, scene.player.stats_.max_health);
+void UIManager::UpdateUI(const Scene& scene, float time) {
+  UpdateHealthBar(scene);
+  UpdateTimer(time);
 };
 
-void UIManager::UpdateHealthBar(int current_hp, int max_hp) {
+void UIManager::UpdateHealthBar(const Scene& scene) {
+  int current_hp = scene.player.stats_.health;
+  int max_hp = scene.player.stats_.max_health;
   float percent = static_cast<float>(current_hp) / max_hp;
-
-  if (percent < 0.0f)
-    percent = 0.0f;
-  if (percent > 1.0f)
-    percent = 1.0f;
+  // the percentage is clamped to avoid having a negative sprite width;
+  percent = std::clamp(percent, 0.0f, 1.0f);
 
   UIElement* fill_bar = health_bar_.GetElemByTag(UIElement::Tag::fill);
 
@@ -65,6 +83,20 @@ void UIManager::UpdateHealthBar(int current_hp, int max_hp) {
     fill_bar->sprite_size.width =
         static_cast<int>(kHealthBarSpriteWidth * percent);
     fill_bar->src_rect.w = static_cast<int>(kHealthBarSpriteWidth * percent);
+  }
+
+  UIElement* text_elem = health_bar_.GetElemByTag(UIElement::Tag::text);
+
+  if (text_elem) {
+    text_elem->text_value =
+        std::to_string(current_hp) + "/" + std::to_string(max_hp);
+  }
+};
+
+void UIManager::UpdateTimer(float time) {
+  UIElement* text_elem = timer_.GetElemByTag(UIElement::Tag::text);
+  if (text_elem) {
+    text_elem->text_value = std::to_string(static_cast<int>(time));
   }
 };
 

@@ -100,7 +100,7 @@ inline Vector2D LerpVector2D(const Vector2D& start, const Vector2D& end,
 
 enum class EntityType : int { None = -1, terrain, player, enemy, projectile };
 
-struct Size {
+struct Size2D {
   uint32_t width;
   uint32_t height;
 };
@@ -109,14 +109,14 @@ struct Size {
 // of the Collider.
 struct Collider {
   Vector2D offset;
-  Size size;
+  Size2D size;
 };
 
 struct Stats {
   int health;
   int max_health;
   float movement_speed;
-  Size sprite_size;
+  Size2D sprite_size;
   float inv_mass;
 };
 
@@ -126,7 +126,7 @@ struct ProjectileData {
   Vector2D velocity;
   float speed;
   Collider collider;
-  Size sprite_size;
+  Size2D sprite_size;
   float inv_mass;
   int proj_id;
 };

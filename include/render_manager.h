@@ -2,12 +2,15 @@
 #ifndef RL2_RENDER_MANAGER_H_
 #define RL2_RENDER_MANAGER_H_
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_ttf.h>
 #include <map>
+#include <string>
 #include "constants.h"
 #include "entity.h"
 #include "map.h"
 #include "scene.h"
 #include "types.h"
+#include "ui_manager.h"
 
 namespace rl2 {
 
@@ -23,6 +26,7 @@ struct RenderResources {
   std::map<int, std::vector<SDL_Vertex>> projectile_vertices_grouped_;
   SDL_Rect map_layout = {0, 0, kWindowWidth, kWindowHeight};
   TileManager tile_manager;
+  UIResources ui_resources;
 };
 
 class RenderManager {
@@ -34,12 +38,13 @@ class RenderManager {
   bool Initialize(bool is_headless);
   void Shutdown();
 
-  void Render(const Scene& scene, float alpha, bool debug_mode = false);
+  void Render(const Scene& scene, float alpha, bool debug_mode, float time);
 
   Camera camera_;
 
  private:
   RenderResources resources_;
+  UIManager ui_manager_;
 
   bool InitializeCamera(const Player& player);
   void UpdateCameraPosition(const Player& player);
@@ -55,6 +60,8 @@ class RenderManager {
       const Enemy& enemy,
       const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
       float alpha);
+  void RenderUI(const Scene& scene, float time);
+  void RenderDigitString(const std::string& text, int start_x, int start_y, Size sprite_size, Size char_size);
 };
 
 }  // namespace rl2

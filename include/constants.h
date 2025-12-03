@@ -12,6 +12,39 @@ constexpr float kCullPadding = 50.0f;
 // Game constats
 constexpr float kPhysicsDt = 0.001f;  // time in sec
 
+// UI constants
+constexpr float kHealthBarGroupX = 50.0f;
+constexpr float kHealthBarGroupY = 900.0f;
+constexpr int kHealthBarContainerSpriteOffsetX = 0;
+constexpr int kHealthBarContainerSpriteOffsetY = 0;
+constexpr int kHealthBarContainerSpriteWidth = 404;
+constexpr int kHealthBarContainerSpriteHeight = 92;
+constexpr float kHealthBarContainerRelOffsetX = 0.0f;
+constexpr float kHealthBarContainerRelOffsetY = 0.0f;
+constexpr float kHealthBarRelOffsetX = 80.0f;
+constexpr float kHealthBarRelOffsetY = 32.0f;
+constexpr int kHealthBarSpriteOffsetX = 0;
+constexpr int kHealthBarSpriteOffsetY = 128;
+constexpr int kHealthBarSpriteWidth = 299;
+constexpr int kHealthBarSpriteHeight = 28;
+constexpr int kHealthBarTextRelOffsetX = 100;
+constexpr int kHealthBarTextRelOffsetY = 32;
+constexpr int kDigitSpriteWidth = 30;
+constexpr int kDigitSpriteHeight = 50;
+constexpr int kHealthBarTextCharWidth = 20;
+constexpr int kHealthBarTextCharHeight = 25;
+constexpr float kTimerGroupX = 50.0f;
+constexpr float kTimerGroupY = 50.0f;
+constexpr int kTimerHourglassSpriteWidth = 50;
+constexpr int kTimerHourglassSpriteHeight = 72;
+constexpr int kTimerHourglassRelOffsetX = 0;
+constexpr int kTimerHourglassRelOffsetY = 0;
+constexpr int kTimerTextRelOffsetX = 60;
+constexpr int kTimerTextRelOffsetY = 0;
+constexpr int kTimerTextCharWidth = 50;
+constexpr int kTimerTextCharHeight = 72;
+
+
 // Map constants
 constexpr int kMapWidth = 5000;
 constexpr int kMapHeight = 5000;
@@ -34,7 +67,7 @@ constexpr float kTexCoordTop = 0.0f;
 constexpr float kTexCoordBottom = 1.0f;
 constexpr float kTexCoordLeft = 0.0f;
 constexpr float kTexCoordRight = 1.0f;
-constexpr int kSpriteColliderMargin = 7;
+constexpr int kSpriteColliderMargin = 9;
 
 // Game status constants
 // number of frames to average over in fps counter
@@ -42,6 +75,7 @@ constexpr int kFrameTimes = 1000;
 constexpr float kMaxFrameTime = 0.1;  // in seconds
 
 // Player constants
+constexpr int kPlayerInitMaxHealth = 100;
 constexpr float kPlayerInitX = 500.0f;
 constexpr float kPlayerInitY = 500.0f;
 constexpr float kPlayerSpeed = 200.0f;
@@ -59,6 +93,7 @@ constexpr int kPlayerNumSpriteCells = 9;
 constexpr int kPlayerSpriteCellWidth = 48;
 constexpr int kPlayerSpriteCellHeight = 64;
 constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
+constexpr float kPlayerInvulnerableWindow = 0.1;    // time in sec
 
 // Enemy constants
 constexpr int kNumEnemies = 10;

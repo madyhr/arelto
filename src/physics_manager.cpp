@@ -42,6 +42,15 @@ void PhysicsManager::UpdatePlayerState(Player& player) {
   if (player.velocity_.x != 0) {
     player.last_horizontal_velocity_ = player.velocity_.x;
   }
+
+  // TODO: Create Player state update function outside physics manager.
+  if (player.invulnerable_timer < 0.0f) {
+    player.is_invulnerable = false;
+    player.invulnerable_timer = kPlayerInvulnerableWindow;
+  }
+
+  player.invulnerable_timer -= physics_dt_;
+
 };
 
 void PhysicsManager::UpdateEnemyState(Enemy& enemy, const Player& player) {

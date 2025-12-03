@@ -56,6 +56,8 @@ class Player {
   Vector2D prev_position_;
   Vector2D velocity_;
   Collider collider_;
+  bool is_invulnerable;
+  float invulnerable_timer;
   AABB hitbox_aabb_;
   float last_horizontal_velocity_;
   SpellStats<kNumPlayerSpells> spell_stats_;

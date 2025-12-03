@@ -72,7 +72,7 @@ void Game::StepGame() {
 };
 
 void Game::RenderGame(float alpha) {
-  render_manager_.Render(scene_, alpha, game_status_.is_debug);
+  render_manager_.Render(scene_, alpha, game_status_.is_debug, time_);
 };
 
 void Game::RunGameLoop() {

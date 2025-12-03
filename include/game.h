@@ -63,7 +63,6 @@ class Game {
   PhysicsManager physics_manager_;
   GameStatus game_status_;
   GameState game_state_;
-  Camera camera_;
   Vector2D cursor_position_;
   float time_ = 0.0f;
   static volatile std::sig_atomic_t stop_request_;

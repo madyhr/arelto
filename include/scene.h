@@ -19,13 +19,15 @@ struct Scene {
   void Reset() {
 
     // -- Player
-    player.stats_.sprite_size = Size{kPlayerSpriteWidth, kPlayerSpriteHeight};
     player.collider_ =
         Collider{{kPlayerColliderOffsetX, kPlayerColliderOffsetY},
                  {kPlayerColliderWidth, kPlayerColliderHeight}};
+    player.stats_.sprite_size = Size{kPlayerSpriteWidth, kPlayerSpriteHeight};
+    player.stats_.max_health = kPlayerInitMaxHealth;
+    player.stats_.health = player.stats_.max_health;
     player.stats_.inv_mass = kPlayerInvMass;
-    player.position_ = Vector2D{kPlayerInitX, kPlayerInitY};
     player.stats_.movement_speed = kPlayerSpeed;
+    player.position_ = Vector2D{kPlayerInitX, kPlayerInitY};
     player.UpdateAllSpellStats();
 
     // -- Enemies

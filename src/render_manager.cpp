@@ -1,13 +1,15 @@
 // src/render_manager.cpp
 #include "render_manager.h"
 #include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_timer.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_timer.h>
 #include <algorithm>
 #include <iostream>
+#include "constants.h"
 #include "entity.h"
 #include "scene.h"
 #include "types.h"
+#include "ui_manager.h"
 
 namespace rl2 {
 
@@ -57,6 +59,8 @@ bool RenderManager::Initialize(bool is_headless) {
   resources_.tile_manager.SetupTiles();
   resources_.tile_manager.SetupTileSelector();
 
+  ui_manager_.SetupUI();
+
   resources_.tile_texture = resources_.tile_manager.GetTileTexture(
       "assets/dungeon_floor_tiles_tall.bmp", resources_.renderer);
   resources_.player_texture = IMG_LoadTexture(
@@ -69,10 +73,18 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.renderer, "assets/textures/fireball_sprite_sheet.png"));
   resources_.projectile_textures.push_back(IMG_LoadTexture(
       resources_.renderer, "assets/textures/frostbolt_sprite_sheet.png"));
+  resources_.ui_resources.health_bar_texture =
+      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/health_bar.png");
+  resources_.ui_resources.digit_font_texture = IMG_LoadTexture(
+      resources_.renderer, "assets/fonts/font_outlined_sprite_sheet.png");
+  resources_.ui_resources.timer_hourglass_texture =
+      IMG_LoadTexture(resources_.renderer, "assets/textures/hourglass.png");
 
   if (resources_.tile_texture == nullptr ||
       resources_.player_texture == nullptr ||
       resources_.enemy_texture == nullptr ||
+      resources_.ui_resources.health_bar_texture == nullptr ||
+      resources_.ui_resources.timer_hourglass_texture == nullptr ||
       std::any_of(
           resources_.projectile_textures.begin(),
           resources_.projectile_textures.end(),
@@ -88,14 +100,16 @@ bool RenderManager::Initialize(bool is_headless) {
 };
 
 bool RenderManager::InitializeCamera(const Player& player) {
-  Vector2D player_centroid = GetCentroid(player.position_, player.stats_.sprite_size);
+  Vector2D player_centroid =
+      GetCentroid(player.position_, player.stats_.sprite_size);
   camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
   camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
 
   return true;
 };
 
-void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode) {
+void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
+                           float time) {
 
   UpdateCameraPosition(scene.player);
 
@@ -114,6 +128,8 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode) {
     // RenderDebugWorldOccupancyMap(occupancy_map);
     RenderDebugEnemyOccupancyMap(scene.enemy, scene.occupancy_map, alpha);
   };
+
+  RenderUI(scene, time);
 
   SDL_RenderPresent(resources_.renderer);
 };
@@ -530,6 +546,102 @@ void RenderManager::RenderDebugEnemyOccupancyMap(
   }
 
   SDL_SetRenderDrawBlendMode(resources_.renderer, originalBlendMode);
+};
+
+void RenderManager::RenderUI(const Scene& scene, float time) {
+
+  ui_manager_.UpdateUI(scene);
+
+  int group_x = static_cast<int>(ui_manager_.health_bar_.screen_position.x);
+  int group_y = static_cast<int>(ui_manager_.health_bar_.screen_position.y);
+
+  for (const auto& el : ui_manager_.health_bar_.elements) {
+    SDL_Rect dst_rect;
+    dst_rect.x = group_x + el.relative_offset.x;
+    dst_rect.y = group_y + el.relative_offset.y;
+    dst_rect.w = el.sprite_size.width;
+    dst_rect.h = el.sprite_size.height;
+
+    SDL_RenderCopy(resources_.renderer,
+                   resources_.ui_resources.health_bar_texture, &el.src_rect,
+                   &dst_rect);
+  }
+  int text_center_x = group_x + kHealthBarTextRelOffsetX;
+  int text_center_y = group_y + kHealthBarTextRelOffsetY;
+
+  std::string hp_text = std::to_string(scene.player.stats_.health) + "/" +
+                        std::to_string(scene.player.stats_.max_health);
+
+  int text_length = hp_text.length();
+  int draw_x = text_center_x - (text_length / 2);
+
+  RenderDigitString(hp_text, draw_x, text_center_y,
+                    {kDigitSpriteWidth, kDigitSpriteHeight},
+                    {kHealthBarTextCharWidth, kHealthBarTextCharHeight});
+
+  group_x = static_cast<int>(ui_manager_.timer_.screen_position.x);
+  group_y = static_cast<int>(ui_manager_.timer_.screen_position.y);
+
+  for (const auto& el : ui_manager_.timer_.elements) {
+    SDL_Rect dst_rect;
+    dst_rect.x = group_x + el.relative_offset.x;
+    dst_rect.y = group_y + el.relative_offset.y;
+    dst_rect.w = el.sprite_size.width;
+    dst_rect.h = el.sprite_size.height;
+
+    SDL_RenderCopy(resources_.renderer,
+                   resources_.ui_resources.timer_hourglass_texture,
+                   &el.src_rect, &dst_rect);
+  };
+
+  text_center_x = group_x + kTimerTextRelOffsetX;
+  text_center_y = group_y + kTimerTextRelOffsetY;
+
+  std::string timer_text = std::to_string(static_cast<int>(time));
+
+  text_length = timer_text.length();
+  draw_x = text_center_x - (text_length / 2);
+
+  RenderDigitString(timer_text, draw_x, text_center_y,
+                    {kDigitSpriteWidth, kDigitSpriteHeight},
+                    {kTimerTextCharWidth, kTimerTextCharHeight});
+};
+
+void RenderManager::RenderDigitString(const std::string& text, int start_x,
+                                      int start_y, Size sprite_size,
+                                      Size char_size) {
+
+  int char_width = char_size.width;
+  int char_height = char_size.height;
+
+  int current_x = start_x;
+
+  for (char c : text) {
+    SDL_Rect src_rect = {0, 0, static_cast<int>(sprite_size.width),
+                         static_cast<int>(sprite_size.height)};
+
+    if (c >= '0' && c <= '9') {
+      int digit = c - '0';
+      src_rect.x = digit * sprite_size.width;
+    } else if (c == '/') {
+      // TODO: Add more maintainable way of getting the sprite cell for a char.
+      src_rect.x = sprite_size.width * 10;
+    } else if (c == '-') {
+      src_rect.x = sprite_size.width * 11;
+    } else {
+      // if not one of the above, they are not in the texture atlas, so we skip.
+      current_x += char_width;
+      continue;
+    }
+
+    SDL_Rect dest_rect = {current_x, start_y, char_width, char_height};
+
+    SDL_RenderCopy(resources_.renderer,
+                   resources_.ui_resources.digit_font_texture, &src_rect,
+                   &dest_rect);
+
+    current_x += char_width;
+  };
 };
 
 void RenderManager::Shutdown() {

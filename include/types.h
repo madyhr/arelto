@@ -113,7 +113,8 @@ struct Collider {
 };
 
 struct Stats {
-  uint32_t health;
+  int health;
+  int max_health;
   float movement_speed;
   Size sprite_size;
   float inv_mass;

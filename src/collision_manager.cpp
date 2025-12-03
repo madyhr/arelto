@@ -203,7 +203,10 @@ void CollisionManager::ResolvePlayerEnemyCollision(const CollisionPair& cp,
   player.position_ += displacement_vectors[0];
   enemy.position[enemy_idx] += displacement_vectors[1];
 
-  player.stats_.health -= 1;
+  if (!player.is_invulnerable) {
+    player.stats_.health -= 1;
+    player.is_invulnerable = true;
+  }
 };
 
 void CollisionManager::ResolveEnemyProjectileCollision(const CollisionPair& cp,

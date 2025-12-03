@@ -44,12 +44,12 @@ void PhysicsManager::UpdatePlayerState(Player& player) {
   }
 
   // TODO: Create Player state update function outside physics manager.
-  if (player.invulnerable_timer < 0.0f) {
-    player.is_invulnerable = false;
-    player.invulnerable_timer = kPlayerInvulnerableWindow;
-  }
-
-  player.invulnerable_timer -= physics_dt_;
+  // if (player.invulnerable_timer < 0.0f) {
+  //   player.is_invulnerable = false;
+  //   player.invulnerable_timer = kPlayerInvulnerableWindow;
+  // }
+  //
+  // player.invulnerable_timer -= physics_dt_;
 
 };
 
@@ -65,6 +65,10 @@ void PhysicsManager::UpdateEnemyState(Enemy& enemy, const Player& player) {
       // an enemy is facing.
       if (enemy.velocity[i].x != 0) {
         enemy.last_horizontal_velocity[i] = enemy.velocity[i].x;
+      }
+
+      if (enemy.attack_cooldown[i] >= 0.0f) {
+        enemy.attack_cooldown[i] -= physics_dt_;
       }
     }
   }

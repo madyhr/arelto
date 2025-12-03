@@ -110,6 +110,7 @@ constexpr float kEnemyColliderOffsetX = 0.5f * kEnemySpriteWidth;
 constexpr float kEnemyColliderOffsetY = 0.5f * kEnemySpriteHeight;
 constexpr int kEnemyColliderWidth = kEnemySpriteWidth - kSpriteColliderMargin;
 constexpr int kEnemyColliderHeight = kEnemySpriteHeight - kSpriteColliderMargin;
+constexpr float kEnemyAttackCooldown = 0.1f; // time in sec
 
 constexpr float kEnemyInvMass = 0.1f;
 // Num frames in the animation sprite sheet

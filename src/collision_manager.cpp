@@ -203,9 +203,9 @@ void CollisionManager::ResolvePlayerEnemyCollision(const CollisionPair& cp,
   player.position_ += displacement_vectors[0];
   enemy.position[enemy_idx] += displacement_vectors[1];
 
-  if (!player.is_invulnerable) {
+  if (enemy.attack_cooldown[enemy_idx] < 0.0f) {
     player.stats_.health -= 1;
-    player.is_invulnerable = true;
+    enemy.attack_cooldown[enemy_idx] = kEnemyAttackCooldown;
   }
 };
 

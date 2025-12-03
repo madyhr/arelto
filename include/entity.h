@@ -42,6 +42,7 @@ struct Enemy {
   std::array<Collider, kNumEnemies> collider;
   std::array<float, kNumEnemies> inv_mass;
   std::array<float, kNumEnemies> last_horizontal_velocity;
+  std::array<float, kNumEnemies> attack_cooldown;
   std::array<FixedMap<kEnemyOccupancyMapWidth, kEnemyOccupancyMapHeight>,
              kNumEnemies>
       occupancy_map;

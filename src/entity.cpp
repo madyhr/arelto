@@ -11,7 +11,8 @@ Vector2D GetCentroid(Vector2D position, Size2D size) {
   return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
 }
 
-AABB GetAABB(Vector2D position, Size2D size, EntityType type, int storage_index) {
+AABB GetAABB(Vector2D position, Size2D size, EntityType type,
+             int storage_index) {
   return {position.x,
           position.y,
           position.x + size.width,
@@ -124,7 +125,22 @@ void Projectiles::DestroyProjectiles() {
   to_be_destroyed_.clear();
 };
 
+void Projectiles::ResetAllProjectiles() {
+  owner_id_.clear();
+  position_.clear();
+  prev_position_.clear();
+  direction_.clear();
+  speed_.clear();
+  sprite_size_.clear();
+  collider_.clear();
+  inv_mass_.clear();
+  proj_id_.clear();
+  to_be_destroyed_.clear();
+};
+
 void Player::UpdateAllSpellStats() {
+  fireball_.SetTimeOfLastUse(-1.0f);
+  frostbolt_.SetTimeOfLastUse(-1.0f);
   spell_stats_.SetProjectileSpellStats(fireball_);
   spell_stats_.SetProjectileSpellStats(frostbolt_);
 };

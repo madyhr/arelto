@@ -40,6 +40,7 @@ with GameDiagnostics(target_fps=TARGET_FPS) as monitor:
 
     while game.get_game_state() == 2:
         loop_start = time.perf_counter()
+        game.process_input()
         
         new_time = time.perf_counter()
         frame_time = new_time - current_time

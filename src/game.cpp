@@ -32,80 +32,75 @@ int Game::GetGameState() {
   return static_cast<int>(game_state_);
 };
 
-void FrameStats::update_frame_time_buffer(float new_value) {
-  float oldest_value = frame_time_buffer[head_index];
-  frame_time_sum = frame_time_sum - oldest_value + new_value;
-  frame_time_buffer[head_index] = new_value;
-
-  if (current_buffer_length < max_buffer_length) {
-    current_buffer_length++;
-  };
-
-  head_index = (head_index + 1) % max_buffer_length;
-};
-
-float FrameStats::get_average_frame_time() {
-  if (current_buffer_length == 0) {
-    return 0.0f;
-  }
-  return static_cast<float>(frame_time_sum / current_buffer_length);
-};
-
-void FrameStats::print_fps_running_average(float dt) {
-  static float accumulated_time = 0.0f;
-  update_frame_time_buffer(dt);
-  if (accumulated_time > 1.0f) {
-    float avg_frame_time = get_average_frame_time();
-    float average_fps = 1.0f / (avg_frame_time);
-    std::cout << "Current Avg FPS: " << std::fixed << average_fps;
-    std::cout << "\r" << std::flush;
-    accumulated_time -= 1.0f;
-  };
-  accumulated_time += dt;
-};
-
 void Game::StepGame() {
   CachePreviousState();
-  ProcessInput();
   physics_manager_.StepPhysics(scene_);
   time_ += physics_manager_.GetPhysicsDt();
+
+  if (scene_.player.stats_.health <= 0) {
+    game_state_ = is_gameover;
+  };
 };
 
 void Game::RenderGame(float alpha) {
-  render_manager_.Render(scene_, alpha, game_status_.is_debug, time_);
+  render_manager_.Render(scene_, alpha, game_status_.is_debug, time_, game_state_);
+};
+
+void Game::ResetGame() {
+
+  scene_.Reset();
+  game_state_ = is_running;
+  time_ = 0.0f;
 };
 
 void Game::RunGameLoop() {
   // Runs the game loop continuously.
-
   float current_time = static_cast<float>(SDL_GetTicks64() / 1000.0f);
   float accumulator = 0.0f;
 
-  while (game_state_ == GameState::is_running) {
-    float new_time = (float)(SDL_GetTicks64() / 1000.0f);
-    float frame_time = new_time - current_time;
-    current_time = new_time;
+  while (game_state_ != in_shutdown) {
 
-    // In case the frame time is too large, we override the frame time and
-    // use a specified max frame time instead to avoid the "spiral of death".
-    if (frame_time > kMaxFrameTime) {
-      frame_time = kMaxFrameTime;
+    ProcessInput();
+
+    switch (game_state_) {
+
+      case is_running: {
+        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
+        float frame_time = new_time - current_time;
+        current_time = new_time;
+
+        // In case the frame time is too large, we override the frame time and
+        // use a specified max frame time instead to avoid the "spiral of death".
+        if (frame_time > kMaxFrameTime) {
+          frame_time = kMaxFrameTime;
+        }
+
+        accumulator += frame_time;
+
+        while (accumulator >= physics_manager_.GetPhysicsDt()) {
+          StepGame();
+          accumulator -= physics_manager_.GetPhysicsDt();
+        }
+
+        float alpha = accumulator / physics_manager_.GetPhysicsDt();
+
+        if (game_status_.is_headless) {
+          break;
+        }
+        RenderGame(alpha);
+        game_status_.frame_stats.print_fps_running_average(frame_time);
+        break;
+      }
+
+      case in_start_screen:
+        break;
+
+      case is_gameover:
+        break;
+
+      default:
+        break;
     }
-
-    accumulator += frame_time;
-
-    while (accumulator >= physics_manager_.GetPhysicsDt()) {
-      StepGame();
-      accumulator -= physics_manager_.GetPhysicsDt();
-    }
-
-    float alpha = accumulator / physics_manager_.GetPhysicsDt();
-
-    if (game_status_.is_headless) {
-      return;
-    }
-    RenderGame(alpha);
-    game_status_.frame_stats.print_fps_running_average(frame_time);
   }
 };
 
@@ -134,6 +129,11 @@ void Game::ProcessInput() {
           game_state_ = GameState::in_shutdown;
           std::cout << "Key 'q' pressed! Exiting..." << std::endl;
           break;
+
+        case SDLK_r:
+          if (game_state_ == is_gameover){
+            ResetGame();
+          }
       }
     }
   }

@@ -56,6 +56,8 @@ struct Scene {
       enemy.collider[i].size.width += random_width;
       enemy.collider[i].size.height += random_height;
     };
+
+    projectiles.ResetAllProjectiles();
   };
 };
 

@@ -88,6 +88,11 @@ struct SpellStats {
     sprite_size[id] = spell.GetSpriteSize();
     damage[id] = spell.GetDamage();
   };
+
+  void ResetProjectileSpellStats(BaseProjectileSpell spell) {
+    int id = spell.GetId();
+    time_of_last_use[id] = 0.0f;
+  }
 };
 };  // namespace rl2
 #endif

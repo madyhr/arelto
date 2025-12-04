@@ -38,7 +38,8 @@ class RenderManager {
   bool Initialize(bool is_headless);
   void Shutdown();
 
-  void Render(const Scene& scene, float alpha, bool debug_mode, float time);
+  void Render(const Scene& scene, float alpha, bool debug_mode, float time, GameState game_state);
+  void RenderGameOver();
 
   Camera camera_;
 

@@ -30,6 +30,7 @@ class Projectiles {
   void AddProjectile(ProjectileData proj);
   void DestroyProjectile(int idx);
   void DestroyProjectiles();
+  void ResetAllProjectiles();
 };
 
 struct Enemy {

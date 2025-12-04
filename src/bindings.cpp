@@ -13,6 +13,7 @@ PYBIND11_MODULE(rl2_py, m) {
   py::class_<rl2::Game>(m, "Game")
       .def(py::init())
       .def("initialize", &rl2::Game::Initialize)
+      .def("process_input", &rl2::Game::ProcessInput)
       .def("run", &rl2::Game::RunGameLoop)
       .def("step", &rl2::Game::StepGame)
       .def("render", &rl2::Game::RenderGame)

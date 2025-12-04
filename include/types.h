@@ -3,6 +3,7 @@
 #define RL2_TYPES_H_
 #include <cstdint>
 #include "constants.h"
+#include "utils.h"
 
 namespace rl2 {
 
@@ -170,5 +171,21 @@ class Camera {
 inline auto WorldToGrid(auto pos) {
   return (pos / kOccupancyMapResolution);
 }
+
+struct GameStatus {
+  FrameStats frame_stats;
+  bool is_debug;
+  bool is_headless;
+};
+
+enum GameState : int {
+  in_start_screen = 0,
+  in_main_menu,
+  is_running,
+  is_gameover,
+  in_shutdown,
+};
+
+
 }  // namespace rl2
 #endif

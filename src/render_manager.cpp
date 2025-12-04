@@ -3,6 +3,8 @@
 #include <SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_timer.h>
+#include <SDL_rect.h>
+#include <SDL_render.h>
 #include <algorithm>
 #include <iostream>
 #include "constants.h"
@@ -75,6 +77,8 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.renderer, "assets/textures/frostbolt_sprite_sheet.png"));
   resources_.ui_resources.health_bar_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/health_bar.png");
+  resources_.ui_resources.game_over_texture =
+      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/game_over.png");
   resources_.ui_resources.digit_font_texture = IMG_LoadTexture(
       resources_.renderer, "assets/fonts/font_outlined_sprite_sheet.png");
   resources_.ui_resources.timer_hourglass_texture =
@@ -85,6 +89,7 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.enemy_texture == nullptr ||
       resources_.ui_resources.health_bar_texture == nullptr ||
       resources_.ui_resources.timer_hourglass_texture == nullptr ||
+      resources_.ui_resources.game_over_texture == nullptr ||
       std::any_of(
           resources_.projectile_textures.begin(),
           resources_.projectile_textures.end(),
@@ -109,7 +114,7 @@ bool RenderManager::InitializeCamera(const Player& player) {
 };
 
 void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
-                           float time) {
+                           float time, GameState game_state) {
 
   UpdateCameraPosition(scene.player);
 
@@ -130,6 +135,9 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
   };
 
   RenderUI(scene, time);
+  if (game_state == is_gameover) {
+    RenderGameOver();
+  };
 
   SDL_RenderPresent(resources_.renderer);
 };
@@ -635,6 +643,33 @@ void RenderManager::RenderDigitString(const std::string& text, int start_x,
 
     current_x += char_width;
   };
+};
+
+void RenderManager::RenderGameOver() {
+
+  SDL_Rect render_rect;
+  render_rect.x = 0;
+  render_rect.y = 0;
+  render_rect.w = kWindowWidth;
+  render_rect.h = kWindowHeight;
+
+  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
+  SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 128);
+  SDL_RenderFillRect(resources_.renderer, &render_rect);
+
+  int tex_w = 610;
+  int tex_h = 88;
+
+  SDL_Rect dst_rect;
+  dst_rect.x = (kWindowWidth - tex_w) / 2;
+  dst_rect.y = (kWindowHeight - tex_h) / 2;
+  dst_rect.w = tex_w;
+  dst_rect.h = tex_h;
+
+  SDL_RenderCopy(resources_.renderer, resources_.ui_resources.game_over_texture,
+                 nullptr, &dst_rect);
+
+  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
 };
 
 void RenderManager::Shutdown() {

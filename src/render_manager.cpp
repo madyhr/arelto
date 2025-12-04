@@ -382,7 +382,6 @@ void RenderManager::SetupProjectileGeometry(const Projectiles& projectiles,
 };
 
 void RenderManager::RenderProjectiles(const Projectiles& projectiles) {
-
   for (const auto& pair : resources_.projectile_vertices_grouped_) {
     int texture_id = pair.first;
     const std::vector<SDL_Vertex>& vertices = pair.second;
@@ -396,6 +395,8 @@ void RenderManager::RenderProjectiles(const Projectiles& projectiles) {
 
 void RenderManager::RenderDebugWorldOccupancyMap(
     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
+  // Get the original blend mode to be able to later restore it. The debug
+  // visualization should blend textures, but regular rendering should not.
   SDL_BlendMode original_blend_mode;
   SDL_GetRenderDrawBlendMode(resources_.renderer, &original_blend_mode);
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
@@ -450,7 +451,7 @@ void RenderManager::RenderDebugWorldOccupancyMap(
             break;
           default:
             SDL_SetRenderDrawColor(resources_.renderer, 100, 100, 100,
-                                   128);  // Grey (Generic)
+                                   128);  // Grey
             break;
         }
         // The rectangles are rendered first so the grid cells are on top.
@@ -462,7 +463,6 @@ void RenderManager::RenderDebugWorldOccupancyMap(
     }
   }
 
-  // Restore original blend mode
   SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
 };
 
@@ -470,6 +470,8 @@ void RenderManager::RenderDebugEnemyOccupancyMap(
     const Enemy& enemy,
     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
     float alpha) {
+  // Get the original blend mode to be able to later restore it. The debug
+  // visualization should blend textures, but regular rendering should not.
   SDL_BlendMode originalBlendMode;
   SDL_GetRenderDrawBlendMode(resources_.renderer, &originalBlendMode);
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
@@ -549,7 +551,6 @@ void RenderManager::RenderDebugEnemyOccupancyMap(
 };
 
 void RenderManager::RenderUI(const Scene& scene, float time) {
-
   ui_manager_.UpdateUI(scene, time);
 
   int group_x = static_cast<int>(ui_manager_.health_bar_.screen_position.x);
@@ -570,24 +571,11 @@ void RenderManager::RenderUI(const Scene& scene, float time) {
       continue;
     }
 
-
     SDL_RenderCopy(resources_.renderer,
                    resources_.ui_resources.health_bar_texture, &el.src_rect,
                    &dst_rect);
   }
-  // int text_center_x = group_x + kHealthBarTextRelOffsetX;
-  // int text_center_y = group_y + kHealthBarTextRelOffsetY;
-  //
-  // std::string hp_text = std::to_string(scene.player.stats_.health) + "/" +
-  //                       std::to_string(scene.player.stats_.max_health);
-  //
-  // int text_length = hp_text.length();
-  // int draw_x = text_center_x - (text_length / 2);
-  //
-  // RenderDigitString(hp_text, draw_x, text_center_y,
-  //                   {kDigitSpriteWidth, kDigitSpriteHeight},
-  //                   {kHealthBarTextCharWidth, kHealthBarTextCharHeight});
-  //
+
   group_x = static_cast<int>(ui_manager_.timer_.screen_position.x);
   group_y = static_cast<int>(ui_manager_.timer_.screen_position.y);
 
@@ -610,18 +598,6 @@ void RenderManager::RenderUI(const Scene& scene, float time) {
                    resources_.ui_resources.timer_hourglass_texture,
                    &el.src_rect, &dst_rect);
   };
-  //
-  // text_center_x = group_x + kTimerTextRelOffsetX;
-  // text_center_y = group_y + kTimerTextRelOffsetY;
-  //
-  // std::string timer_text = std::to_string(static_cast<int>(time));
-  //
-  // text_length = timer_text.length();
-  // draw_x = text_center_x - (text_length / 2);
-  //
-  // RenderDigitString(timer_text, draw_x, text_center_y,
-  //                   {kDigitSpriteWidth, kDigitSpriteHeight},
-  //                   {kTimerTextCharWidth, kTimerTextCharHeight});
 };
 
 void RenderManager::RenderDigitString(const std::string& text, int start_x,
@@ -671,6 +647,21 @@ void RenderManager::Shutdown() {
   if (resources_.enemy_texture) {
     SDL_DestroyTexture(resources_.enemy_texture);
     resources_.enemy_texture = nullptr;
+  }
+
+  if (resources_.ui_resources.digit_font_texture) {
+    SDL_DestroyTexture(resources_.ui_resources.digit_font_texture);
+    resources_.ui_resources.digit_font_texture = nullptr;
+  }
+
+  if (resources_.ui_resources.health_bar_texture) {
+    SDL_DestroyTexture(resources_.ui_resources.health_bar_texture);
+    resources_.ui_resources.health_bar_texture = nullptr;
+  }
+
+  if (resources_.ui_resources.timer_hourglass_texture) {
+    SDL_DestroyTexture(resources_.ui_resources.timer_hourglass_texture);
+    resources_.ui_resources.timer_hourglass_texture = nullptr;
   }
 
   IMG_Quit();

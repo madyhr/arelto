@@ -57,8 +57,6 @@ struct UIElementGroup {
 class UIManager {
 
  public:
-  // UIManager();
-  // ~UIManager();
   UIElementGroup health_bar_;
   UIElementGroup timer_;
 

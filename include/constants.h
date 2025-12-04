@@ -67,7 +67,7 @@ constexpr float kTexCoordTop = 0.0f;
 constexpr float kTexCoordBottom = 1.0f;
 constexpr float kTexCoordLeft = 0.0f;
 constexpr float kTexCoordRight = 1.0f;
-constexpr int kSpriteColliderMargin = 9;
+constexpr int kSpriteColliderMargin = 14;
 
 // Game status constants
 // number of frames to average over in fps counter
@@ -96,7 +96,7 @@ constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
 constexpr float kPlayerInvulnerableWindow = 0.1;    // time in sec
 
 // Enemy constants
-constexpr int kNumEnemies = 10;
+constexpr int kNumEnemies = 100;
 constexpr int kEnemyHealth = 10;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;
@@ -130,13 +130,13 @@ constexpr int kProjectileNumSpriteCells = 12;
 constexpr int kProjectileSpriteCellWidth = 24;
 constexpr int kProjectileSpriteCellHeight = 48;
 constexpr int kProjectileAnimationFrameDuration = 150;  // time in ms
-constexpr int kFireballSpriteWidth = 40;
-constexpr int kFireballSpriteHeight = 40;
+constexpr int kFireballSpriteWidth = 60;
+constexpr int kFireballSpriteHeight = 60;
 constexpr int kFireballColliderWidth =
     kFireballSpriteWidth - kSpriteColliderMargin;
 constexpr int kFireballColliderHeight =
     kFireballSpriteHeight - kSpriteColliderMargin;
-constexpr float kFireballSpeed = 350.0f;
+constexpr float kFireballSpeed = 500.0f;
 constexpr int kFireBallDamage = 5;
 constexpr float kFireballCooldown = 1.0f;  // time in sec
 constexpr int kFrostboltSpriteWidth = 100;

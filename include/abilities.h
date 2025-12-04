@@ -53,7 +53,7 @@ class Fireball : public BaseProjectileSpell {
     SetCooldown(kFireballCooldown);
     SetSpeed(kFireballSpeed);
     SetCollider({{0.5f * kFireballSpriteWidth, 0.5f * kFireballSpriteHeight},
-                 {kFireballSpriteWidth, kFireballSpriteHeight}});
+                 {kFireballColliderWidth, kFireballColliderHeight}});
     SetSpriteSize({kFireballSpriteWidth, kFireballSpriteHeight});
     SetDamage(kFireBallDamage);
   }

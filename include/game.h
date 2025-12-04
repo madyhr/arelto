@@ -6,6 +6,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_render.h>
 #include <csignal>
+#include "action_manager.h"
 #include "observation_manager.h"
 #include "physics_manager.h"
 #include "render_manager.h"
@@ -21,7 +22,7 @@ class Game {
   bool Initialize();
   void ProcessInput();
   void RunGameLoop();
-  void StepGame();
+  void StepGame(float dt);
   void RenderGame(float alpha);
   void ResetGame();
   void Shutdown();
@@ -31,6 +32,7 @@ class Game {
 
   Scene scene_;
   ObservationManager obs_manager_;
+  ActionManager action_manager_;
 
  private:
   RenderManager render_manager_;
@@ -39,8 +41,10 @@ class Game {
   GameState game_state_;
   Vector2D cursor_position_;
   float time_ = 0.0f;
+  float accumulator_step_;
   static volatile std::sig_atomic_t stop_request_;
   bool InitializeCamera();
+  void StepGamePhysics();
   Vector2D GetCursorPositionWorld();
   void ProcessPlayerInput();
   void CachePreviousState();

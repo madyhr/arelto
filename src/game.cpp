@@ -32,7 +32,7 @@ int Game::GetGameState() {
   return static_cast<int>(game_state_);
 };
 
-void Game::StepGame() {
+void Game::StepGamePhysics() {
   CachePreviousState();
   physics_manager_.StepPhysics(scene_);
   time_ += physics_manager_.GetPhysicsDt();
@@ -43,7 +43,8 @@ void Game::StepGame() {
 };
 
 void Game::RenderGame(float alpha) {
-  render_manager_.Render(scene_, alpha, game_status_.is_debug, time_, game_state_);
+  render_manager_.Render(scene_, alpha, game_status_.is_debug, time_,
+                         game_state_);
 };
 
 void Game::ResetGame() {
@@ -51,6 +52,7 @@ void Game::ResetGame() {
   scene_.Reset();
   game_state_ = is_running;
   time_ = 0.0f;
+  accumulator_step_ = 0.0f;
 };
 
 void Game::RunGameLoop() {
@@ -78,7 +80,7 @@ void Game::RunGameLoop() {
         accumulator += frame_time;
 
         while (accumulator >= physics_manager_.GetPhysicsDt()) {
-          StepGame();
+          StepGamePhysics();
           accumulator -= physics_manager_.GetPhysicsDt();
         }
 
@@ -101,6 +103,15 @@ void Game::RunGameLoop() {
       default:
         break;
     }
+  }
+};
+
+void Game::StepGame(float dt) {
+  accumulator_step_ += dt;
+
+  while (accumulator_step_ >= physics_manager_.GetPhysicsDt()) {
+    StepGamePhysics();
+    accumulator_step_ -= physics_manager_.GetPhysicsDt();
   }
 };
 
@@ -131,7 +142,7 @@ void Game::ProcessInput() {
           break;
 
         case SDLK_r:
-          if (game_state_ == is_gameover){
+          if (game_state_ == is_gameover) {
             ResetGame();
           }
       }

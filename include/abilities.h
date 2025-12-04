@@ -52,7 +52,7 @@ class Fireball : public BaseProjectileSpell {
   Fireball() : BaseProjectileSpell(SpellId::FireballId) {
     SetCooldown(kFireballCooldown);
     SetSpeed(kFireballSpeed);
-    SetCollider({{0.5f * kFireballSpriteWidth, 0.5f * kFireballSpriteHeight},
+    SetCollider({{0.5*kFireballSpriteWidth, 0.5*kFireballSpriteHeight},
                  {kFireballColliderWidth, kFireballColliderHeight}});
     SetSpriteSize({kFireballSpriteWidth, kFireballSpriteHeight});
     SetDamage(kFireBallDamage);
@@ -64,7 +64,7 @@ class Frostbolt : public BaseProjectileSpell {
   Frostbolt() : BaseProjectileSpell(SpellId::FrostboltId) {
     SetCooldown(kFrostboltCooldown);
     SetSpeed(kFrostboltSpeed);
-    SetCollider({{0.5f * kFrostboltSpriteWidth, 0.5f * kFrostboltSpriteHeight},
+    SetCollider({{0.5*kFrostboltSpriteWidth, 0.5*kFrostboltSpriteHeight},
                  {kFrostboltColliderWidth, kFrostboltColliderHeight }});
     SetSpriteSize({kFrostboltSpriteWidth, kFrostboltSpriteHeight});
     SetDamage(kFrostboltDamage);

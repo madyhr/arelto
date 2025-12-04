@@ -17,6 +17,7 @@ PYBIND11_MODULE(rl2_py, m) {
       .def("run", &rl2::Game::RunGameLoop)
       .def("step", &rl2::Game::StepGame)
       .def("render", &rl2::Game::RenderGame)
+      .def("reset", &rl2::Game::ResetGame)
       .def("fill_observation_buffer",
            [](rl2::Game& self, py::array_t<float> buffer) {
              py::buffer_info info = buffer.request();
@@ -32,6 +33,22 @@ PYBIND11_MODULE(rl2_py, m) {
       .def("get_observation_size",
            [](rl2::Game& self) {
              return self.obs_manager_.GetObservationSize(self.scene_);
+           })
+      .def("apply_action",
+           [](rl2::Game& self, py::array_t<float> buffer) {
+             py::buffer_info info = buffer.request();
+
+             if (info.ndim != 1) {
+               throw std::runtime_error("Action buffer must be 1D array");
+
+               self.action_manager_.ReadActionBuffer(
+                   static_cast<float*>(info.ptr), static_cast<int>(info.size),
+                   self.scene_);
+             }
+           })
+      .def("get_action_size",
+           [](rl2::Game& self) {
+             return self.action_manager_.GetActionSize(self.scene_);
            })
       .def("shutdown", &rl2::Game::Shutdown)
       .def("get_game_state", &rl2::Game::GetGameState);

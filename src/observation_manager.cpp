@@ -12,12 +12,16 @@ int ObservationManager::GetObservationSize(const Scene& scene) {
          (kNumEnemies * 2) +  // enemy size: w,h
          (kNumEnemies) +      // enemy health_points
          (kNumEnemies) +      // enemy inv mass
-         (kNumEnemies) +      // enemy movement speed
-         (kNumEnemies *
-          scene.enemy.occupancy_map[0].kTotalCells);  // enemy occupancy map
+         (kNumEnemies)
+      // +// enemy movement speed
+      //        (kNumEnemies *
+      //         scene.enemy.occupancy_map[0].kTotalCells)
+      ;  // enemy occupancy map
 };
 
-void ObservationManager::FillObservationBuffer(float* buffer_ptr, int buffer_size, const Scene& scene) {
+void ObservationManager::FillObservationBuffer(float* buffer_ptr,
+                                               int buffer_size,
+                                               const Scene& scene) {
 
   if (buffer_size != GetObservationSize(scene)) {
     throw std::runtime_error("Buffer size mismatch");
@@ -33,9 +37,9 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr, int buffer_siz
     buffer_ptr[idx++] = enemy_pos.y;
   }
 
-  for (const Vector2D& enemy_pos : scene.enemy.position) {
-    buffer_ptr[idx++] = enemy_pos.x;
-    buffer_ptr[idx++] = enemy_pos.y;
+  for (const Vector2D& enemy_vel : scene.enemy.velocity) {
+    buffer_ptr[idx++] = enemy_vel.x;
+    buffer_ptr[idx++] = enemy_vel.y;
   }
 
   for (const Size2D& enemy_size : scene.enemy.sprite_size) {
@@ -55,14 +59,14 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr, int buffer_siz
     buffer_ptr[idx++] = enemy_movement_speed;
   }
 
-  for (int i = 0; i < kNumEnemies; ++i) {
-    const EntityType* map_data = scene.enemy.occupancy_map[i].Data();
-    size_t total_cells = scene.enemy.occupancy_map[i].kTotalCells;
-
-    for (size_t k = 0; k < total_cells; ++k) {
-      buffer_ptr[idx++] = static_cast<float>(map_data[k]);
-    }
-  }
+  // for (int i = 0; i < kNumEnemies; ++i) {
+  //   const EntityType* map_data = scene.enemy.occupancy_map[i].Data();
+  //   size_t total_cells = scene.enemy.occupancy_map[i].kTotalCells;
+  //
+  //   for (size_t k = 0; k < total_cells; ++k) {
+  //     buffer_ptr[idx++] = static_cast<float>(map_data[k]);
+  //   }
+  // }
 
   return;
 };

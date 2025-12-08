@@ -163,12 +163,14 @@ void RenderManager::UpdateCameraPosition(const Player& player) {
 };
 
 void RenderManager::RenderTiledMap() {
-  int top_left_tile_x = static_cast<int>(camera_.position_.x / kTileWidth);
-  int top_left_tile_y = static_cast<int>(camera_.position_.y / kTileHeight);
+  int top_left_tile_x =
+      static_cast<int>(camera_.render_position_.x / kTileWidth);
+  int top_left_tile_y =
+      static_cast<int>(camera_.render_position_.y / kTileHeight);
   int bottom_right_tile_x = static_cast<int>(
-      std::ceil((camera_.position_.x + kWindowWidth) / kTileWidth));
+      std::ceil((camera_.render_position_.x + kWindowWidth) / kTileWidth));
   int bottom_right_tile_y = static_cast<int>(
-      std::ceil((camera_.position_.y + kWindowHeight) / kTileHeight));
+      std::ceil((camera_.render_position_.y + kWindowHeight) / kTileHeight));
   int start_x = std::max(0, top_left_tile_x);
   int end_x = std::min(kNumTilesX, bottom_right_tile_x);
 
@@ -178,8 +180,8 @@ void RenderManager::RenderTiledMap() {
   for (int i = start_x; i < end_x; ++i) {
     for (int j = start_y; j < end_y; ++j) {
       SDL_Rect render_rect = resources_.tile_manager.tiles_[i][j];
-      render_rect.x -= static_cast<int>(camera_.position_.x);
-      render_rect.y -= static_cast<int>(camera_.position_.y);
+      render_rect.x -= static_cast<int>(camera_.render_position_.x);
+      render_rect.y -= static_cast<int>(camera_.render_position_.y);
       int tile_id = resources_.tile_manager.tile_map_[i][j];
       const SDL_Rect& source_rect =
           resources_.tile_manager.select_tiles_[tile_id];
@@ -194,8 +196,8 @@ void RenderManager::RenderPlayer(const Player& player, float alpha) {
   Vector2D player_render_pos =
       LerpVector2D(player.prev_position_, player.position_, alpha);
   SDL_Rect player_render_box = {
-      static_cast<int>(player_render_pos.x - camera_.position_.x),
-      static_cast<int>(player_render_pos.y - camera_.position_.y),
+      static_cast<int>(player_render_pos.x - camera_.render_position_.x),
+      static_cast<int>(player_render_pos.y - camera_.render_position_.y),
       static_cast<int>(player.stats_.sprite_size.width),
       static_cast<int>(player.stats_.sprite_size.height)};
 
@@ -226,15 +228,15 @@ int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
 
   float cell_uv_width = 1.0f / (float)kEnemyNumSpriteCells;
 
-  float cull_left = camera_.position_.x;
-  float cull_right = camera_.position_.x + kWindowWidth;
-  float cull_top = camera_.position_.y;
-  float cull_bottom = camera_.position_.y + kWindowHeight;
+  float cull_left = camera_.render_position_.x;
+  float cull_right = camera_.render_position_.x + kWindowWidth;
+  float cull_top = camera_.render_position_.y;
+  float cull_bottom = camera_.render_position_.y + kWindowHeight;
 
-  cull_left -= kCullPadding;
-  cull_right += kCullPadding;
-  cull_top -= kCullPadding;
-  cull_bottom += kCullPadding;
+  cull_left -= kRenderCullPadding;
+  cull_right += kRenderCullPadding;
+  cull_top -= kRenderCullPadding;
+  cull_bottom += kRenderCullPadding;
 
   for (int i = 0; i < kNumEnemies; ++i) {
     if (!enemy.is_alive[i]) {
@@ -255,8 +257,8 @@ int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
     Vector2D render_enemy_pos =
         LerpVector2D(enemy.prev_position[i], enemy.position[i], alpha);
 
-    float x = render_enemy_pos.x - camera_.position_.x;
-    float y = render_enemy_pos.y - camera_.position_.y;
+    float x = render_enemy_pos.x - camera_.render_position_.x;
+    float y = render_enemy_pos.y - camera_.render_position_.y;
 
     uint16_t time_offset = i * 127;
     uint16_t frame_idx =
@@ -319,15 +321,15 @@ void RenderManager::SetupProjectileGeometry(const Projectiles& projectiles,
   int current_vertex_idx = 0;
   float cell_uv_width = 1.0f / (float)kProjectileNumSpriteCells;
 
-  float cull_left = camera_.position_.x;
-  float cull_right = camera_.position_.x + kWindowWidth;
-  float cull_top = camera_.position_.y;
-  float cull_bottom = camera_.position_.y + kWindowHeight;
+  float cull_left = camera_.render_position_.x;
+  float cull_right = camera_.render_position_.x + kWindowWidth;
+  float cull_top = camera_.render_position_.y;
+  float cull_bottom = camera_.render_position_.y + kWindowHeight;
 
-  cull_left -= kCullPadding;
-  cull_right += kCullPadding;
-  cull_top -= kCullPadding;
-  cull_bottom += kCullPadding;
+  cull_left -= kRenderCullPadding;
+  cull_right += kRenderCullPadding;
+  cull_top -= kRenderCullPadding;
+  cull_bottom += kRenderCullPadding;
 
   for (int i = 0; i < num_projectiles; ++i) {
     float w = projectiles.sprite_size_[i].width;
@@ -344,8 +346,8 @@ void RenderManager::SetupProjectileGeometry(const Projectiles& projectiles,
     Vector2D proj_render_pos = LerpVector2D(projectiles.prev_position_[i],
                                             projectiles.position_[i], alpha);
 
-    float x = proj_render_pos.x - camera_.position_.x;
-    float y = proj_render_pos.y - camera_.position_.y;
+    float x = proj_render_pos.x - camera_.render_position_.x;
+    float y = proj_render_pos.y - camera_.render_position_.y;
 
     int texture_id = projectiles.proj_id_[i];
 
@@ -413,13 +415,13 @@ void RenderManager::RenderDebugWorldOccupancyMap(
   int grid_height_cells = kMapHeight / kOccupancyMapResolution;
 
   int top_left_x =
-      static_cast<int>(camera_.position_.x / kOccupancyMapResolution);
+      static_cast<int>(camera_.render_position_.x / kOccupancyMapResolution);
   int top_left_y =
-      static_cast<int>(camera_.position_.y / kOccupancyMapResolution);
+      static_cast<int>(camera_.render_position_.y / kOccupancyMapResolution);
   int bottom_right_x = static_cast<int>(std::ceil(
-      (camera_.position_.x + kWindowWidth) / kOccupancyMapResolution));
+      (camera_.render_position_.x + kWindowWidth) / kOccupancyMapResolution));
   int bottom_right_y = static_cast<int>(std::ceil(
-      (camera_.position_.y + kWindowHeight) / kOccupancyMapResolution));
+      (camera_.render_position_.y + kWindowHeight) / kOccupancyMapResolution));
 
   int start_x = std::max(0, top_left_x);
   int end_x = std::min(grid_width_cells, bottom_right_x);
@@ -431,9 +433,9 @@ void RenderManager::RenderDebugWorldOccupancyMap(
 
       SDL_Rect render_rect;
       render_rect.x =
-          static_cast<int>(i * kOccupancyMapResolution - camera_.position_.x);
+          static_cast<int>(i * kOccupancyMapResolution - camera_.render_position_.x);
       render_rect.y =
-          static_cast<int>(j * kOccupancyMapResolution - camera_.position_.y);
+          static_cast<int>(j * kOccupancyMapResolution - camera_.render_position_.y);
       render_rect.w = kOccupancyMapResolution;
       render_rect.h = kOccupancyMapResolution;
 
@@ -504,9 +506,9 @@ void RenderManager::RenderDebugEnemyOccupancyMap(
     // Draw outline of the enemy's vision
     SDL_Rect vision_rect;
     vision_rect.x = static_cast<int>(start_world_x * kOccupancyMapResolution -
-                                     camera_.position_.x);
+                                     camera_.render_position_.x);
     vision_rect.y = static_cast<int>(start_world_y * kOccupancyMapResolution -
-                                     camera_.position_.y);
+                                     camera_.render_position_.y);
     vision_rect.w = kEnemyOccupancyMapWidth * kOccupancyMapResolution;
     vision_rect.h = kEnemyOccupancyMapHeight * kOccupancyMapResolution;
 
@@ -523,9 +525,9 @@ void RenderManager::RenderDebugEnemyOccupancyMap(
 
           SDL_Rect render_rect;
           render_rect.x = static_cast<int>(world_x * kOccupancyMapResolution -
-                                           camera_.position_.x);
+                                           camera_.render_position_.x);
           render_rect.y = static_cast<int>(world_y * kOccupancyMapResolution -
-                                           camera_.position_.y);
+                                           camera_.render_position_.y);
           render_rect.w = kOccupancyMapResolution;
           render_rect.h = kOccupancyMapResolution;
 
@@ -649,22 +651,19 @@ void RenderManager::RenderGameOver() {
 
   SDL_Rect render_rect;
   render_rect.x = 0;
-  render_rect.y = 0;
+  render_rect.y = kWindowHeight / 3;
   render_rect.w = kWindowWidth;
-  render_rect.h = kWindowHeight;
+  render_rect.h = kWindowHeight / 3;
 
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
   SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 128);
   SDL_RenderFillRect(resources_.renderer, &render_rect);
 
-  int tex_w = 610;
-  int tex_h = 88;
-
   SDL_Rect dst_rect;
-  dst_rect.x = (kWindowWidth - tex_w) / 2;
-  dst_rect.y = (kWindowHeight - tex_h) / 2;
-  dst_rect.w = tex_w;
-  dst_rect.h = tex_h;
+  dst_rect.x = (kWindowWidth - kGameOverSpriteWidth) / 2;
+  dst_rect.y = (kWindowHeight - kGameOverSpriteHeight) / 2;
+  dst_rect.w = kGameOverSpriteWidth;
+  dst_rect.h = kGameOverSpriteHeight;
 
   SDL_RenderCopy(resources_.renderer, resources_.ui_resources.game_over_texture,
                  nullptr, &dst_rect);

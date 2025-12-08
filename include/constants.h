@@ -7,7 +7,6 @@ namespace rl2 {
 // Window constants
 constexpr int kWindowWidth = 1920;
 constexpr int kWindowHeight = 1080;
-constexpr float kCullPadding = 50.0f;
 
 // Game constats
 constexpr float kPhysicsDt = 0.001f;  // time in sec
@@ -43,11 +42,12 @@ constexpr int kTimerTextRelOffsetX = 60;
 constexpr int kTimerTextRelOffsetY = 0;
 constexpr int kTimerTextCharWidth = 50;
 constexpr int kTimerTextCharHeight = 72;
-
+constexpr int kGameOverSpriteWidth = 610;
+constexpr int kGameOverSpriteHeight = 88;
 
 // Map constants
-constexpr int kMapWidth = 5000;
-constexpr int kMapHeight = 5000;
+constexpr int kMapWidth = 2000;
+constexpr int kMapHeight = 2000;
 constexpr int kOccupancyMapResolution = 25;
 constexpr int kOccupancyMapWidth =
     static_cast<int>(kMapWidth / kOccupancyMapResolution);
@@ -67,7 +67,8 @@ constexpr float kTexCoordTop = 0.0f;
 constexpr float kTexCoordBottom = 1.0f;
 constexpr float kTexCoordLeft = 0.0f;
 constexpr float kTexCoordRight = 1.0f;
-constexpr int kSpriteColliderMargin = 14;
+constexpr int kSpriteColliderMargin = 30;
+constexpr float kRenderCullPadding = 50.0f;
 
 // Game status constants
 // number of frames to average over in fps counter
@@ -96,7 +97,7 @@ constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
 constexpr float kPlayerInvulnerableWindow = 0.1;    // time in sec
 
 // Enemy constants
-constexpr int kNumEnemies = 100;
+constexpr int kNumEnemies = 2;
 constexpr int kEnemyHealth = 10;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;
@@ -110,7 +111,7 @@ constexpr float kEnemyColliderOffsetX = 0.5f * kEnemySpriteWidth;
 constexpr float kEnemyColliderOffsetY = 0.5f * kEnemySpriteHeight;
 constexpr int kEnemyColliderWidth = kEnemySpriteWidth - kSpriteColliderMargin;
 constexpr int kEnemyColliderHeight = kEnemySpriteHeight - kSpriteColliderMargin;
-constexpr float kEnemyAttackCooldown = 0.1f; // time in sec
+constexpr float kEnemyAttackCooldown = 0.1f;  // time in sec
 
 constexpr float kEnemyInvMass = 0.1f;
 // Num frames in the animation sprite sheet
@@ -142,9 +143,9 @@ constexpr float kFireballCooldown = 1.0f;  // time in sec
 constexpr int kFrostboltSpriteWidth = 100;
 constexpr int kFrostboltSpriteHeight = 100;
 constexpr int kFrostboltColliderWidth =
-    kEnemySpriteWidth - kSpriteColliderMargin;
+    kFrostboltSpriteWidth - kSpriteColliderMargin;
 constexpr int kFrostboltColliderHeight =
-    kEnemySpriteHeight - kSpriteColliderMargin;
+    kFrostboltSpriteHeight - kSpriteColliderMargin;
 constexpr float kFrostboltSpeed = 250.0f;
 constexpr int kFrostboltDamage = 10;
 constexpr float kFrostboltCooldown = 2.0f;  // time in sec

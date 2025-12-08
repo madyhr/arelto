@@ -50,9 +50,9 @@ void Game::RenderGame(float alpha) {
 void Game::ResetGame() {
 
   scene_.Reset();
-  game_state_ = is_running;
   time_ = 0.0f;
   accumulator_step_ = 0.0f;
+  game_state_ = is_running;
 };
 
 void Game::RunGameLoop() {

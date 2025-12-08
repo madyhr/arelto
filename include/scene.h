@@ -28,6 +28,7 @@ struct Scene {
     player.stats_.inv_mass = kPlayerInvMass;
     player.stats_.movement_speed = kPlayerSpeed;
     player.position_ = Vector2D{kPlayerInitX, kPlayerInitY};
+    player.prev_position_ = player.position_;
     player.UpdateAllSpellStats();
 
     // -- Enemies

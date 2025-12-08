@@ -52,6 +52,20 @@ PYBIND11_MODULE(rl2_py, m) {
            [](rl2::Game& self) {
              return self.action_manager_.GetActionSize(self.scene_);
            })
+      .def("fill_reward_buffer",
+           [](rl2::Game& self, py::array_t<float> buffer) {
+             py::buffer_info info = buffer.request();
+
+             if (info.ndim != 1) {
+               throw std::runtime_error("Reward buffer must be 1D array");
+             }
+
+             self.reward_manager_.FillRewardBuffer(
+                 static_cast<float*>(info.ptr), static_cast<int>(info.size),
+                 self.scene_);
+           })
+      .def("get_reward_size",
+           [](rl2::Game& self) { return self.reward_manager_.GetRewardSize(); })
       .def("shutdown", &rl2::Game::Shutdown)
       .def("get_game_state", &rl2::Game::GetGameState);
 };

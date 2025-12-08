@@ -37,11 +37,12 @@ struct Scene {
               kEnemySpeed);
     std::fill(enemy.collider.begin(), enemy.collider.end(),
               Collider{{kEnemyColliderOffsetX, kEnemyColliderOffsetY},
-                       {kEnemyColliderWidth,kEnemyColliderHeight}});
+                       {kEnemyColliderWidth, kEnemyColliderHeight}});
     std::fill(enemy.sprite_size.begin(), enemy.sprite_size.end(),
-              Size2D{kEnemySpriteWidth,kEnemySpriteHeight});
+              Size2D{kEnemySpriteWidth, kEnemySpriteHeight});
     std::fill(enemy.inv_mass.begin(), enemy.inv_mass.end(), kEnemyInvMass);
     std::fill(enemy.attack_cooldown.begin(), enemy.attack_cooldown.end(), 0.0f);
+    std::fill(enemy.attack_damage.begin(), enemy.attack_damage.end(), 1);
     RespawnEnemy(enemy, player);
 
     // Add slight variation to each enemy to make it more interesting.
@@ -58,6 +59,7 @@ struct Scene {
       enemy.collider[i].size.height += random_height;
     };
 
+    // -- Projectiles
     projectiles.ResetAllProjectiles();
   };
 };

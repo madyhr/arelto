@@ -17,21 +17,22 @@ bool PhysicsManager::Initialize() {
 
 void PhysicsManager::StepPhysics(Scene& scene) {
 
+  UpdateEnemyStatus(scene.enemy, scene.player);
+  UpdateProjectilesStatus(scene.projectiles);
+
   UpdatePlayerState(scene.player);
   UpdateEnemyState(scene.enemy, scene.player);
   UpdateProjectileState(scene.projectiles);
+
   HandleCollisions(scene);
   HandleOutOfBounds(scene.player, scene.enemy, scene.projectiles);
 
-  UpdateEnemyStatus(scene.enemy, scene.player);
-  UpdateProjectilesStatus(scene.projectiles);
   if (tick_count_ % kOccupancyMapTimeDecimation == 0) {
     UpdateWorldOccupancyMap(scene.occupancy_map, scene.player, scene.enemy,
                             scene.projectiles);
     UpdateEnemyOccupancyMap(scene.enemy, scene.occupancy_map);
   }
 
-  scene.projectiles.DestroyProjectiles();
   tick_count_ += 1;
 }
 
@@ -48,8 +49,6 @@ void PhysicsManager::UpdatePlayerState(Player& player) {
 void PhysicsManager::UpdateEnemyState(Enemy& enemy, const Player& player) {
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemy.is_alive[i]) {
-      // Vector2D distance_vector = player.position_ - enemy.position[i];
-      // enemy.velocity[i] = distance_vector.Normalized();
       enemy.velocity[i] = enemy.velocity[i].Normalized();
       enemy.position[i] +=
           enemy.velocity[i] * enemy.movement_speed[i] * physics_dt_;

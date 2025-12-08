@@ -35,13 +35,14 @@ AABB GetCollisionAABB(Vector2D centroid, Size2D size, EntityType type,
           storage_index};
 };
 
-void UpdateEnemyStatus(Enemy& enemies, const Player& player) {
+void UpdateEnemyStatus(Enemy& enemy, const Player& player) {
   for (int i = 0; i < kNumEnemies; ++i) {
-    if (enemies.health_points[i] <= 0) {
-      enemies.is_alive[i] = false;
-      RespawnEnemy(enemies, player);
+    if (enemy.health_points[i] <= 0) {
+      enemy.is_alive[i] = false;
+      RespawnEnemy(enemy, player);
     };
   };
+  enemy.damage_dealt_sim_step.fill(0);
 };
 
 void UpdateProjectilesStatus(Projectiles& projectiles) {
@@ -70,6 +71,7 @@ void RespawnEnemy(Enemy& enemy, const Player& player) {
     enemy.position[i] = potential_pos;
     enemy.prev_position[i] = potential_pos;
     enemy.health_points[i] = kEnemyHealth;
+    enemy.damage_dealt_sim_step[i] = 0;
     enemy.is_alive[i] = true;
   };
 };
@@ -114,6 +116,9 @@ void Projectiles::DestroyProjectile(int idx) {
 };
 
 void Projectiles::DestroyProjectiles() {
+  if (to_be_destroyed_.empty()) {
+    return;
+  };
   std::vector<int> sorted_indices(to_be_destroyed_.begin(),
                                   to_be_destroyed_.end());
   std::sort(sorted_indices.begin(), sorted_indices.end(), std::greater<int>());

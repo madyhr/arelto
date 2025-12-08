@@ -10,6 +10,7 @@
 #include "observation_manager.h"
 #include "physics_manager.h"
 #include "render_manager.h"
+#include "reward_manager.h"
 #include "scene.h"
 #include "types.h"
 
@@ -33,6 +34,7 @@ class Game {
   Scene scene_;
   ObservationManager obs_manager_;
   ActionManager action_manager_;
+  RewardManager reward_manager_;
 
  private:
   RenderManager render_manager_;

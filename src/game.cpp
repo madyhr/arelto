@@ -25,6 +25,47 @@ void Game::SignalHandler(int signal) {
 Game::Game(){};
 Game::~Game() {}
 
+bool Game::Initialize() {
+
+  std::signal(SIGINT, SignalHandler);
+  std::signal(SIGKILL, SignalHandler);
+  game_status_.is_debug = true;
+  game_status_.is_headless = false;
+
+  if (!(render_manager_.Initialize(game_status_.is_headless))) {
+    return false;
+  }
+
+  if (!(physics_manager_.Initialize())) {
+    return false;
+  }
+
+  if (!(reward_manager_.Initialize())) {
+    return false;
+  }
+
+  scene_.Reset();
+
+  if (!(Game::InitializeCamera())) {
+    return false;
+  }
+
+  time_ = (float)(SDL_GetTicks64() / 1000.0f);
+  game_state_ = GameState::is_running;
+
+  return true;
+}
+
+bool Game::InitializeCamera() {
+  Vector2D player_centroid =
+      GetCentroid(scene_.player.position_, scene_.player.stats_.sprite_size);
+  render_manager_.camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
+  render_manager_.camera_.position_.y =
+      player_centroid.y - 0.5f * kWindowHeight;
+
+  return true;
+};
+
 int Game::GetGameState() {
   return static_cast<int>(game_state_);
 };
@@ -32,6 +73,7 @@ int Game::GetGameState() {
 void Game::StepGamePhysics() {
   CachePreviousState();
   physics_manager_.StepPhysics(scene_);
+  reward_manager_.UpdateRewardTerms(scene_);
   time_ += physics_manager_.GetPhysicsDt();
 
   if (scene_.player.stats_.health <= 0) {

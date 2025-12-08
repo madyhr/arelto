@@ -10,7 +10,8 @@ class ObservationManager {
 
  public:
   int GetObservationSize(const Scene& scene);
-  void FillObservationBuffer(float* buffer_ptr, int buffer_size, const Scene& scene);
+  void FillObservationBuffer(float* buffer_ptr, int buffer_size,
+                             const Scene& scene);
 };
 
 }  // namespace rl2

@@ -20,6 +20,21 @@ PYBIND11_MODULE(rl2_py, m) {
       .def("step", &rl2::Game::StepGame)
       .def("render", &rl2::Game::RenderGame)
       .def("reset", &rl2::Game::ResetGame)
+      .def("fill_dones_buffer",
+           [](rl2::Game& self, py::array_t<bool> buffer) {
+             py::buffer_info info = buffer.request();
+
+             if (info.ndim != 1) {
+               throw std::runtime_error("Observation buffer must be 1D array");
+             }
+
+             bool* info_ptr = static_cast<bool*>(info.ptr);
+
+             for (int i = 0; i < rl2::kNumEnemies; ++i) {
+               info_ptr[i] = self.scene_.enemy.is_done_latched[i];
+               self.scene_.enemy.is_done_latched[i] = false;
+             }
+           })
       .def("fill_observation_buffer",
            [](rl2::Game& self, py::array_t<float> buffer) {
              py::buffer_info info = buffer.request();

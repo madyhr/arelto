@@ -9,14 +9,14 @@ namespace rl2 {
 // This function is used to define all the reward terms.
 void RewardManager::RegisterRewardTerms() {
 
-  AddTerm("proximity_to_player", 0.02f,
+  AddTerm("proximity_to_player", 0.1f,
           [](const Scene& scene) -> std::array<float, kNumEnemies> {
             std::array<float, kNumEnemies> value_array;
 
             for (int i = 0; i < kNumEnemies; ++i) {
               float distance_to_player =
                   (scene.player.position_ - scene.enemy.position[i]).Norm();
-              value_array[i] = std::exp(-distance_to_player / 1000);
+              value_array[i] = std::exp(-distance_to_player / 100);
             }
 
             return value_array;

@@ -31,6 +31,7 @@ action_size = game.get_action_size()
 numpy_action_buffer = np.zeros(action_size, dtype=np.float32)
 reward_size = game.get_reward_size()
 numpy_reward_buffer = np.zeros(reward_size, dtype=np.float32)
+numpy_dones_buffer = np.zeros(game.num_enemies, dtype=bool)
 print(f"Initial obs buffer: {numpy_obs_buffer}")
 print(f"Initial rew buffer: {numpy_reward_buffer}")
 
@@ -43,6 +44,7 @@ physics_dt = 0.001
 step_dt = 0.02
 current_time = time.time()
 
+dones_buffer_sum = np.zeros_like(numpy_dones_buffer, dtype=int)
 counter = 0
 
 next_tick = time.perf_counter()
@@ -55,13 +57,16 @@ while game.get_game_state() != game_state["in_shutdown"]:
         game.step(step_dt)
         game.fill_observation_buffer(numpy_obs_buffer)
         game.fill_reward_buffer(numpy_reward_buffer)
+        game.fill_dones_buffer(numpy_dones_buffer)
 
     game.render(1.0)
 
     next_tick += step_dt
 
-    if counter % 50:
-        print(f"Rew buffer {counter % 50}: {numpy_reward_buffer}")
+    dones_buffer_sum += numpy_dones_buffer
+    if counter % 50 == 0:
+        print(f"Rew buffer: {torch_reward}")
+        print(f"Dones buffer sum: {dones_buffer_sum}")
 
     # Calculate how long we need to sleep to hit 60 FPS
     sleep_needed = next_tick - time.perf_counter()

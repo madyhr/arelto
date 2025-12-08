@@ -224,6 +224,9 @@ void PhysicsManager::UpdateEnemyStatus(Enemy& enemy, const Player& player) {
     if (enemy.timeout_timer[i] >= kEpisodeTimeout) {
       enemy.is_done[i] = true;
     }
+    if (enemy.is_done[i]) {
+      enemy.is_done_latched[i] = true;
+    }
   };
 };
 

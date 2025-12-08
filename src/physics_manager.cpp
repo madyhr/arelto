@@ -17,8 +17,7 @@ bool PhysicsManager::Initialize() {
 
 void PhysicsManager::StepPhysics(Scene& scene) {
 
-  UpdateEnemyStatus(scene.enemy, scene.player);
-  UpdateProjectilesStatus(scene.projectiles);
+  RespawnEnemy(scene.enemy, scene.player);
 
   UpdatePlayerState(scene.player);
   UpdateEnemyState(scene.enemy, scene.player);
@@ -32,6 +31,9 @@ void PhysicsManager::StepPhysics(Scene& scene) {
                             scene.projectiles);
     UpdateEnemyOccupancyMap(scene.enemy, scene.occupancy_map);
   }
+
+  UpdateEnemyStatus(scene.enemy, scene.player);
+  UpdateProjectilesStatus(scene.projectiles);
 
   tick_count_ += 1;
 }
@@ -62,6 +64,8 @@ void PhysicsManager::UpdateEnemyState(Enemy& enemy, const Player& player) {
       if (enemy.attack_cooldown[i] >= 0.0f) {
         enemy.attack_cooldown[i] -= physics_dt_;
       }
+
+      enemy.damage_dealt_sim_step[i] = 0;
     }
   }
 };
@@ -206,6 +210,25 @@ void PhysicsManager::UpdateEnemyOccupancyMap(
                                          start_world_x);
     };
   }
+};
+
+void PhysicsManager::UpdateEnemyStatus(Enemy& enemy, const Player& player) {
+
+  for (int i = 0; i < kNumEnemies; ++i) {
+    enemy.timeout_timer[i] += physics_dt_;
+
+    if (enemy.health_points[i] <= 0) {
+      enemy.is_alive[i] = false;
+      enemy.is_done[i] = true;
+    };
+    if (enemy.timeout_timer[i] >= kEpisodeTimeout) {
+      enemy.is_done[i] = true;
+    }
+  };
+};
+
+void PhysicsManager::UpdateProjectilesStatus(Projectiles& projectiles) {
+  projectiles.DestroyProjectiles();
 };
 
 }  // namespace rl2

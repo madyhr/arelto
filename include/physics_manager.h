@@ -40,6 +40,8 @@ class PhysicsManager {
   void UpdateEnemyOccupancyMap(
       Enemy& enemy,
       FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
+  void UpdateEnemyStatus(Enemy& enemy, const Player& player);
+  void UpdateProjectilesStatus(Projectiles& projectiles);
 };
 
 }  // namespace rl2

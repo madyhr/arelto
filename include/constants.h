@@ -10,6 +10,7 @@ constexpr int kWindowHeight = 1080;
 
 // Game constats
 constexpr float kPhysicsDt = 0.001f;  // time in sec
+constexpr float kEpisodeTimeout = 20.0f;  // time in sec
 
 // UI constants
 constexpr float kHealthBarGroupX = 50.0f;
@@ -97,7 +98,7 @@ constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
 constexpr float kPlayerInvulnerableWindow = 0.1;    // time in sec
 
 // Enemy constants
-constexpr int kNumEnemies = 2;
+constexpr int kNumEnemies = 5;
 constexpr int kEnemyHealth = 10;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;
@@ -152,6 +153,7 @@ constexpr float kFrostboltCooldown = 2.0f;  // time in sec
 
 // Abilities constants
 constexpr int kNumPlayerSpells = 2;  // total number of spells
+
 
 }  // namespace rl2
 #endif

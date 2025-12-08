@@ -29,7 +29,7 @@ obs_size = game.get_observation_size()
 numpy_obs_buffer = np.zeros(obs_size, dtype=np.float32)
 action_size = game.get_action_size()
 numpy_action_buffer = np.zeros(action_size, dtype=np.float32)
-reward_size = game.get_action_size()
+reward_size = game.get_reward_size()
 numpy_reward_buffer = np.zeros(reward_size, dtype=np.float32)
 print(f"Initial obs buffer: {numpy_obs_buffer}")
 print(f"Initial rew buffer: {numpy_reward_buffer}")
@@ -50,11 +50,11 @@ while game.get_game_state() != game_state["in_shutdown"]:
     game.process_input()
 
     if game.get_game_state() == game_state["is_running"]:
-        game.fill_observation_buffer(numpy_obs_buffer)
-        game.fill_reward_buffer(numpy_reward_buffer)
         action = model(torch_obs)
         game.apply_action(action.detach().numpy())
         game.step(step_dt)
+        game.fill_observation_buffer(numpy_obs_buffer)
+        game.fill_reward_buffer(numpy_reward_buffer)
 
     game.render(1.0)
 

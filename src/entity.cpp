@@ -35,27 +35,13 @@ AABB GetCollisionAABB(Vector2D centroid, Size2D size, EntityType type,
           storage_index};
 };
 
-void UpdateEnemyStatus(Enemy& enemy, const Player& player) {
-  for (int i = 0; i < kNumEnemies; ++i) {
-    if (enemy.health_points[i] <= 0) {
-      enemy.is_alive[i] = false;
-      RespawnEnemy(enemy, player);
-    };
-  };
-  enemy.damage_dealt_sim_step.fill(0);
-};
-
-void UpdateProjectilesStatus(Projectiles& projectiles) {
-  projectiles.DestroyProjectiles();
-};
-
 void RespawnEnemy(Enemy& enemy, const Player& player) {
 
   int max_x = kMapWidth - kEnemySpriteWidth;
   int max_y = kMapHeight - kEnemySpriteHeight;
 
   for (int i = 0; i < kNumEnemies; ++i) {
-    if (enemy.is_alive[i]) {
+    if (enemy.is_alive[i] && !enemy.is_done[i]) {
       continue;
     }
 
@@ -73,6 +59,8 @@ void RespawnEnemy(Enemy& enemy, const Player& player) {
     enemy.health_points[i] = kEnemyHealth;
     enemy.damage_dealt_sim_step[i] = 0;
     enemy.is_alive[i] = true;
+    enemy.is_done[i] = false;
+    enemy.timeout_timer[i] = 0.0f;
   };
 };
 

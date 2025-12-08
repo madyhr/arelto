@@ -33,6 +33,7 @@ struct Scene {
 
     // -- Enemies
     std::fill(enemy.is_alive.begin(), enemy.is_alive.end(), false);
+    std::fill(enemy.is_done.begin(), enemy.is_done.end(), false);
     std::fill(enemy.movement_speed.begin(), enemy.movement_speed.end(),
               kEnemySpeed);
     std::fill(enemy.collider.begin(), enemy.collider.end(),

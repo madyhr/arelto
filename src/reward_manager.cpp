@@ -72,7 +72,7 @@ std::map<std::string, std::array<float, kNumEnemies>>
 RewardManager::GetLastSignalDict() {
   std::map<std::string, std::array<float, kNumEnemies>> signal_dict;
 
-  for (auto& term : terms_) {
+  for (RewardTerm& term : terms_) {
     signal_dict[term.name] = term.last_signal;
   }
 

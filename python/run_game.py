@@ -1,4 +1,4 @@
-# python/rl2_env.py
+# python/run_game.py
 import os
 import sys
 import time
@@ -9,6 +9,7 @@ import torch
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../build")))
 
 import rl2_py
+from test_model import TestModel
 
 # This comes from the order of the game states as defined in the C++ source code.
 game_state = {
@@ -20,14 +21,17 @@ game_state = {
 }
 
 game = rl2_py.Game()
+model = TestModel(num_envs=game.num_enemies, action_dim=game.get_action_size())
 
 is_initialized = game.initialize()
 
 obs_size = game.get_observation_size()
-numpy_buffer = np.zeros(obs_size, dtype=np.float32)
-print(f"{numpy_buffer}")
+numpy_obs_buffer = np.zeros(obs_size, dtype=np.float32)
+action_size = game.get_action_size()
+numpy_action_buffer = np.zeros(action_size, dtype=np.float32)
+print(f"{numpy_obs_buffer}")
 
-torch_obs = torch.from_numpy(numpy_buffer)
+torch_obs = torch.from_numpy(numpy_obs_buffer)
 
 print("Game initialized!")
 
@@ -40,8 +44,10 @@ while game.get_game_state() != game_state["in_shutdown"]:
     game.process_input()
 
     if game.get_game_state() == game_state["is_running"]:
+        game.fill_observation_buffer(numpy_obs_buffer)
+        action = model(torch_obs)
+        game.apply_action(action.detach().numpy())
         game.step(step_dt)
-        game.fill_observation_buffer(numpy_buffer)
 
     game.render(1.0)
 

@@ -1,22 +1,21 @@
 // src/observation_manager.cpp
 #include "observation_manager.h"
 #include <stdexcept>
+#include "constants.h"
 #include "scene.h"
+#include "types.h"
 
 namespace rl2 {
 
 int ObservationManager::GetObservationSize(const Scene& scene) {
-  return 2 +                  // player position: x,y
-         (kNumEnemies * 2) +  // enemy position: x,y
-         (kNumEnemies * 2) +  // enemy velocity: x,y
-         (kNumEnemies * 2) +  // enemy size: w,h
-         (kNumEnemies) +      // enemy health_points
-         (kNumEnemies) +      // enemy inv mass
-         (kNumEnemies)
-      // +// enemy movement speed
-      //        (kNumEnemies *
-      //         scene.enemy.occupancy_map[0].kTotalCells)
-      ;  // enemy occupancy map
+  return kNumEnemies * (1 +  // distance to player
+                        2 +  // enemy position: x,y
+                        2 +  // enemy velocity: x,y
+                        2 +  // enemy size: w,h
+                        1 +  // enemy health_points
+                        1 +  // enemy inv mass
+                        1)   // enemy movement speed
+      ;
 };
 
 void ObservationManager::FillObservationBuffer(float* buffer_ptr,
@@ -29,8 +28,9 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr,
 
   int idx = 0;
 
-  buffer_ptr[idx++] = scene.player.position_.x;
-  buffer_ptr[idx++] = scene.player.position_.y;
+  for (const Vector2D& enemy_pos : scene.enemy.position) {
+    buffer_ptr[idx++] = (scene.player.position_ - enemy_pos).Norm();
+  }
 
   for (const Vector2D& enemy_pos : scene.enemy.position) {
     buffer_ptr[idx++] = enemy_pos.x;

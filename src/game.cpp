@@ -23,10 +23,7 @@ void Game::SignalHandler(int signal) {
 }
 
 Game::Game(){};
-
-Game::~Game() {
-  render_manager_.Shutdown();
-}
+Game::~Game() {}
 
 int Game::GetGameState() {
   return static_cast<int>(game_state_);
@@ -48,7 +45,6 @@ void Game::RenderGame(float alpha) {
 };
 
 void Game::ResetGame() {
-
   scene_.Reset();
   time_ = 0.0f;
   accumulator_step_ = 0.0f;

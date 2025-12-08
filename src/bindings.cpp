@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <stdexcept>
+#include "constants.h"
 #include "game.h"
 
 namespace py = pybind11;
@@ -11,6 +12,7 @@ PYBIND11_MODULE(rl2_py, m) {
   m.doc() = "RL2 Game Python Bindings";
 
   py::class_<rl2::Game>(m, "Game")
+      .def_readonly_static("num_enemies", &rl2::kNumEnemies)
       .def(py::init())
       .def("initialize", &rl2::Game::Initialize)
       .def("process_input", &rl2::Game::ProcessInput)
@@ -40,11 +42,11 @@ PYBIND11_MODULE(rl2_py, m) {
 
              if (info.ndim != 1) {
                throw std::runtime_error("Action buffer must be 1D array");
-
-               self.action_manager_.ReadActionBuffer(
-                   static_cast<float*>(info.ptr), static_cast<int>(info.size),
-                   self.scene_);
              }
+
+             self.action_manager_.ReadActionBuffer(
+                 static_cast<float*>(info.ptr), static_cast<int>(info.size),
+                 self.scene_);
            })
       .def("get_action_size",
            [](rl2::Game& self) {

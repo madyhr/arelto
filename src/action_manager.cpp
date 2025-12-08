@@ -7,12 +7,12 @@
 namespace rl2 {
 
 int ActionManager::GetActionSize(const Scene& scene) {
-  return kNumEnemies * 2;  // enemy velocity (x,y)
+  return 2;  // enemy velocity (x,y)
 };
 
-void ActionManager::ReadActionBuffer(const float* buffer_ptr, int buffer_size,
+void ActionManager::ReadActionBuffer(float* buffer_ptr, int buffer_size,
                                      Scene& scene) {
-  if (buffer_size != GetActionSize(scene)) {
+  if (buffer_size != (kNumEnemies * GetActionSize(scene))) {
     throw std::runtime_error("Action buffer size mismatch");
   };
 

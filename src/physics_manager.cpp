@@ -3,6 +3,7 @@
 #include "collision_manager.h"
 #include "constants.h"
 #include "entity.h"
+#include "types.h"
 
 namespace rl2 {
 PhysicsManager::PhysicsManager(){};
@@ -42,22 +43,14 @@ void PhysicsManager::UpdatePlayerState(Player& player) {
   if (player.velocity_.x != 0) {
     player.last_horizontal_velocity_ = player.velocity_.x;
   }
-
-  // TODO: Create Player state update function outside physics manager.
-  // if (player.invulnerable_timer < 0.0f) {
-  //   player.is_invulnerable = false;
-  //   player.invulnerable_timer = kPlayerInvulnerableWindow;
-  // }
-  //
-  // player.invulnerable_timer -= physics_dt_;
-
 };
 
 void PhysicsManager::UpdateEnemyState(Enemy& enemy, const Player& player) {
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemy.is_alive[i]) {
-      Vector2D distance_vector = player.position_ - enemy.position[i];
-      enemy.velocity[i] = distance_vector.Normalized();
+      // Vector2D distance_vector = player.position_ - enemy.position[i];
+      // enemy.velocity[i] = distance_vector.Normalized();
+      enemy.velocity[i] = enemy.velocity[i].Normalized();
       enemy.position[i] +=
           enemy.velocity[i] * enemy.movement_speed[i] * physics_dt_;
 
@@ -124,7 +117,8 @@ void PhysicsManager::HandleEnemyOOB(Enemy& enemies) {
       if ((enemies.position[i].x + enemies.sprite_size[i].width) > kMapWidth) {
         enemies.position[i].x = kMapWidth - enemies.sprite_size[i].width;
       }
-      if ((enemies.position[i].y + enemies.sprite_size[i].height) > kMapHeight) {
+      if ((enemies.position[i].y + enemies.sprite_size[i].height) >
+          kMapHeight) {
         enemies.position[i].y = kMapHeight - enemies.sprite_size[i].height;
       }
     }
@@ -138,7 +132,8 @@ void PhysicsManager::HandleProjectileOOB(Projectiles& projectiles) {
   }
   for (int i = 0; i < num_projectiles; ++i) {
     if (projectiles.position_[i].x < 0 || projectiles.position_[i].y < 0 ||
-        (projectiles.position_[i].x + projectiles.sprite_size_[i].width) > kMapWidth ||
+        (projectiles.position_[i].x + projectiles.sprite_size_[i].width) >
+            kMapWidth ||
         (projectiles.position_[i].y + projectiles.sprite_size_[i].height) >
             kMapHeight) {
       projectiles.to_be_destroyed_.insert(i);
@@ -152,17 +147,24 @@ void PhysicsManager::UpdateWorldOccupancyMap(
 
   occupancy_map.Clear();
 
-  Vector2D player_grid_pos = WorldToGrid(player.position_);
-  int player_grid_width = WorldToGrid(player.stats_.sprite_size.width);
-  int player_grid_height = WorldToGrid(player.stats_.sprite_size.height);
+  auto GetGridTopLeft = [](Vector2D pos, Collider col) {
+    Vector2D center = pos + col.offset;
+    AABB collider_box = GetCollisionAABB(center, col.size);
+    return WorldToGrid(Vector2D{collider_box.min_x, collider_box.min_y});
+  };
+
+  Vector2D player_grid_pos = GetGridTopLeft(player.position_, player.collider_);
+  int player_grid_width = WorldToGrid(player.collider_.size.width);
+  int player_grid_height = WorldToGrid(player.collider_.size.height);
   occupancy_map.SetGrid(static_cast<int>(player_grid_pos.x),
                         static_cast<int>(player_grid_pos.y), player_grid_width,
                         player_grid_height, player.entity_type_);
 
   for (int i = 0; i < kNumEnemies; ++i) {
-    Vector2D enemygrid_pos = WorldToGrid(enemy.position[i]);
-    int enemy_grid_width = WorldToGrid(enemy.sprite_size[i].width);
-    int enemy_grid_height = WorldToGrid(enemy.sprite_size[i].height);
+    Vector2D enemygrid_pos =
+        GetGridTopLeft(enemy.position[i], enemy.collider[i]);
+    int enemy_grid_width = WorldToGrid(enemy.collider[i].size.width);
+    int enemy_grid_height = WorldToGrid(enemy.collider[i].size.height);
     occupancy_map.SetGrid(static_cast<int>(enemygrid_pos.x),
                           static_cast<int>(enemygrid_pos.y), enemy_grid_width,
                           enemy_grid_height, enemy.entity_type);
@@ -170,9 +172,10 @@ void PhysicsManager::UpdateWorldOccupancyMap(
 
   const size_t num_proj = projectiles.GetNumProjectiles();
   for (int i = 0; i < num_proj; ++i) {
-    Vector2D proj_grid_pos = WorldToGrid(projectiles.position_[i]);
-    int proj_grid_width = WorldToGrid(projectiles.sprite_size_[i].width);
-    int proj_grid_height = WorldToGrid(projectiles.sprite_size_[i].height);
+    Vector2D proj_grid_pos =
+        GetGridTopLeft(projectiles.position_[i], projectiles.collider_[i]);
+    int proj_grid_width = WorldToGrid(projectiles.collider_[i].size.width);
+    int proj_grid_height = WorldToGrid(projectiles.collider_[i].size.height);
     occupancy_map.SetGrid(static_cast<int>(proj_grid_pos.x),
                           static_cast<int>(proj_grid_pos.y), proj_grid_width,
                           proj_grid_height, projectiles.entity_type_);

@@ -25,7 +25,7 @@ game_state = {
 def run_game():
 
     env = RL2Env()
-    model = TestModel(num_envs=env.num_envs, action_dim=env.game.get_action_size())
+    model = TestModel(num_envs=env._num_envs, action_dim=env.game.get_action_size())
 
     is_initialized = env.game.initialize()
 
@@ -44,18 +44,25 @@ def run_game():
         env.game.process_input()
 
         action = model(obs)
-        obs, reward, _, dones = env.step(action)
+        obs, reward, _, terminated, truncated = env.step(action)
+
+        dones = terminated | truncated
 
         env.game.render(1.0)
 
-        next_tick += env.step_dt
+        next_tick += env._step_dt
 
         if torch.any(dones) == 1:
-            print(f"Done detected at count: {counter}")
+            print(f"Terminated or truncated envs detected at count: {counter}")
+
+        if torch.any(terminated) == 1:
+            print(f"Terminated envs detected at count: {counter}")
+
+        if torch.any(truncated) == 1:
+            print(f"Truncated envs detected at count: {counter}")
 
         if counter % 50 == 0:
             print(f"Rew buffer: {reward}")
-            print(f"Dones buffer sum: {dones}")
 
         sleep_needed = next_tick - time.perf_counter()
 

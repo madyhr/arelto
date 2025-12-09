@@ -17,7 +17,6 @@ bool PhysicsManager::Initialize() {
 
 void PhysicsManager::StepPhysics(Scene& scene) {
 
-
   UpdatePlayerState(scene.player);
   UpdateEnemyState(scene.enemy, scene.player);
   UpdateProjectileState(scene.projectiles);
@@ -219,12 +218,12 @@ void PhysicsManager::UpdateEnemyStatus(Enemy& enemy, const Player& player) {
     if (enemy.health_points[i] <= 0) {
       enemy.is_alive[i] = false;
       enemy.is_done[i] = true;
+      enemy.is_terminated_latched[i] = true;
     };
+
     if (enemy.timeout_timer[i] >= kEpisodeTimeout) {
       enemy.is_done[i] = true;
-    }
-    if (enemy.is_done[i]) {
-      enemy.is_done_latched[i] = true;
+      enemy.is_truncated_latched[i] = true;
     }
   };
 };

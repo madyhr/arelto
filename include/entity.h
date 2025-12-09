@@ -52,8 +52,11 @@ struct Enemy {
   std::array<int, kNumEnemies> damage_dealt_sim_step;
   // this is used for RL training and signifies the end of an episode if true.
   std::array<bool, kNumEnemies> is_done;
-  std::array<bool, kNumEnemies> is_done_latched;
   std::array<float, kNumEnemies> timeout_timer;
+  // this is used for enemy terminations that happen due to a timeout
+  std::array<bool, kNumEnemies> is_truncated_latched;
+  // this is used for enemy terminations that happen before a timeout
+  std::array<bool, kNumEnemies> is_terminated_latched;
   EntityType entity_type = EntityType::enemy;
 };
 

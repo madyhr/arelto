@@ -127,6 +127,8 @@ void Game::RunGameLoop() {
         if (game_status_.is_headless) {
           break;
         }
+
+        RespawnEnemy(scene_.enemy, scene_.player);
         RenderGame(alpha);
         game_status_.frame_stats.print_fps_running_average(frame_time);
         break;
@@ -151,6 +153,8 @@ void Game::StepGame(float dt) {
     StepGamePhysics();
     accumulator_step_ -= physics_manager_.GetPhysicsDt();
   }
+
+  RespawnEnemy(scene_.enemy, scene_.player);
 };
 
 void Game::ProcessInput() {

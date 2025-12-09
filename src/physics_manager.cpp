@@ -17,7 +17,6 @@ bool PhysicsManager::Initialize() {
 
 void PhysicsManager::StepPhysics(Scene& scene) {
 
-  RespawnEnemy(scene.enemy, scene.player);
 
   UpdatePlayerState(scene.player);
   UpdateEnemyState(scene.enemy, scene.player);

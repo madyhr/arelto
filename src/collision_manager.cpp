@@ -28,6 +28,9 @@ void CollisionManager::HandleCollisionsSAP(Scene& scene) {
       scene.player.collider_.size, scene.player.entity_type_, 0));
 
   for (int i = 0; i < kNumEnemies; ++i) {
+    if (!scene.enemy.is_alive[i]) {
+      continue;
+    };
     entity_aabb_.push_back(GetCollisionAABB(
         scene.enemy.position[i] + scene.enemy.collider[i].offset,
         scene.enemy.collider[i].size, scene.enemy.entity_type, i + 1));
@@ -160,8 +163,6 @@ void CollisionManager::ResolveEnemyEnemyCollision(const CollisionPair& cp,
   int enemy_idx_a = cp.index_a - 1;
   int enemy_idx_b = cp.index_b - 1;
 
-  float inv_mass_a = enemy.inv_mass[enemy_idx_a];
-  float inv_mass_b = enemy.inv_mass[enemy_idx_b];
   Vector2D centroid_a =
       enemy.position[enemy_idx_a] + enemy.collider[enemy_idx_a].offset;
   Vector2D centroid_b =
@@ -171,7 +172,8 @@ void CollisionManager::ResolveEnemyEnemyCollision(const CollisionPair& cp,
   AABB aabb_b = GetCollisionAABB(centroid_b, enemy.collider[enemy_idx_b].size);
 
   std::array<Vector2D, 2> displacement_vectors = GetDisplacementVectors(
-      {aabb_a, aabb_b}, {centroid_a, centroid_b}, {inv_mass_a, inv_mass_b});
+      {aabb_a, aabb_b}, {centroid_a, centroid_b},
+      {enemy.inv_mass[enemy_idx_a], enemy.inv_mass[enemy_idx_b]});
 
   enemy.position[enemy_idx_a] += displacement_vectors[0];
   enemy.position[enemy_idx_b] += displacement_vectors[1];
@@ -185,9 +187,6 @@ void CollisionManager::ResolvePlayerEnemyCollision(const CollisionPair& cp,
   int player_idx = a_is_player ? cp.index_a : cp.index_b;
   int enemy_idx = a_is_player ? cp.index_b - 1 : cp.index_a - 1;
 
-  float player_inv_mass = player.stats_.inv_mass;
-  float enemy_inv_mass = enemy.inv_mass[enemy_idx];
-
   Vector2D player_centroid = player.position_ + player.collider_.offset;
   Vector2D enemy_centroid =
       enemy.position[enemy_idx] + enemy.collider[enemy_idx].offset;
@@ -198,7 +197,7 @@ void CollisionManager::ResolvePlayerEnemyCollision(const CollisionPair& cp,
 
   std::array<Vector2D, 2> displacement_vectors = GetDisplacementVectors(
       {player_aabb, enemy_aabb}, {player_centroid, enemy_centroid},
-      {player_inv_mass, enemy_inv_mass});
+      {player.stats_.inv_mass, enemy.inv_mass[enemy_idx]});
 
   player.position_ += displacement_vectors[0];
   enemy.position[enemy_idx] += displacement_vectors[1];

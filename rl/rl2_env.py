@@ -1,15 +1,8 @@
 # python/rl2_gym_env.py
 
-import os
-import sys
-
-import gymnasium as gym
 import numpy as np
-import torch
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../build")))
-
 import rl2_py
+import torch
 
 
 class RL2Env:
@@ -17,22 +10,22 @@ class RL2Env:
     def __init__(self, step_dt: float = 0.02) -> None:
         self.game = rl2_py.Game()
 
-        self._step_dt: float = step_dt
+        self.step_dt: float = step_dt
 
-        self._num_envs: int = self.game.num_enemies
+        self.num_envs: int = self.game.num_enemies
         self._obs_size: int = self.game.get_observation_size()
         self._act_size: int = self.game.get_action_size()
         self._rew_size: int = self.game.get_reward_size()
-        self._np_obs_buf = np.zeros((self._obs_size, self._num_envs), dtype=np.float32)
-        self._np_rew_buf = np.zeros((self._num_envs,), dtype=np.float32)
-        self._np_terminated_buf = np.zeros((self._num_envs,), dtype=bool)
-        self._np_truncated_buf = np.zeros((self._num_envs,), dtype=bool)
+        self._np_obs_buf = np.zeros((self._obs_size, self.num_envs), dtype=np.float32)
+        self._np_rew_buf = np.zeros((self.num_envs,), dtype=np.float32)
+        self._np_terminated_buf = np.zeros((self.num_envs,), dtype=bool)
+        self._np_truncated_buf = np.zeros((self.num_envs,), dtype=bool)
 
     def step(
         self, action: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         self.game.apply_action(action.t().detach().numpy())
-        self.game.step(self._step_dt)
+        self.game.step(self.step_dt)
         self.game.fill_observation_buffer(self._np_obs_buf)
         self.game.fill_reward_buffer(self._np_rew_buf)
         self.game.fill_terminated_buffer(self._np_terminated_buf)

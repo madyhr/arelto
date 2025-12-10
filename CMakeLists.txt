@@ -2,9 +2,24 @@ cmake_minimum_required(VERSION 3.10)
 
 project(rl2 VERSION 1.0)
 
+if(DEFINED ENV{CONDA_PREFIX})
+    message(STATUS "Using Conda prefix: $ENV{CONDA_PREFIX}")
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
+
+if(APPLE)
+    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+elseif(UNIX)
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif()
+
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+
+set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED COMPONENTS PNG) 
@@ -19,9 +34,10 @@ list(FILTER ENGINE_SOURCES EXCLUDE REGEX "src/bindings.cpp")
 add_library(rl2_core SHARED ${ENGINE_SOURCES})
 
 target_include_directories(rl2_core 
-	PUBLIC 
-	"${CMAKE_SOURCE_DIR}/include"
+    PUBLIC 
+    "${CMAKE_SOURCE_DIR}/include"
 )
+
 target_link_libraries(rl2_core PUBLIC
   SDL2::SDL2
   SDL2_image::SDL2_image
@@ -38,16 +54,15 @@ target_link_libraries(rl2_py PRIVATE rl2_core)
 file(GLOB_RECURSE ASSETS_TO_COPY "assets/*")
 
 add_custom_command(TARGET rl2_core POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-		"${CMAKE_SOURCE_DIR}/assets"
-		"$<TARGET_FILE_DIR:rl2_core>/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:rl2_core>/assets"
 )
 
 find_program(STUBGEN_EXE pybind11-stubgen REQUIRED)
 
 add_custom_command(
     TARGET rl2_py POST_BUILD
-    # Set PYTHONPATH so it finds the module, and LD_LIBRARY_PATH so it finds the core library
     COMMAND ${CMAKE_COMMAND} -E env 
         PYTHONPATH=$<TARGET_FILE_DIR:rl2_py> 
         LD_LIBRARY_PATH=$<TARGET_FILE_DIR:rl2_core> 
@@ -55,4 +70,3 @@ add_custom_command(
     COMMENT "Generating Python interface stubs (.pyi) for rl2_py"
     VERBATIM
 )
-

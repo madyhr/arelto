@@ -1,3 +1,10 @@
 {
-  "extraPaths": ["build"],
+  "venvPath": "/home/madyhr/miniconda3/envs",
+  "venv": "rl2_conda_env",
+  "extraPaths": [
+    "build",
+    "rl",
+    "tests"
+  ],
+  "typeCheckingMode": "standard"
 }

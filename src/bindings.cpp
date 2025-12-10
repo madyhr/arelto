@@ -54,8 +54,8 @@ PYBIND11_MODULE(rl2_py, m) {
            [](rl2::Game& self, py::array_t<float> buffer) {
              py::buffer_info info = buffer.request();
 
-             if (info.ndim != 1) {
-               throw std::runtime_error("Observation buffer must be 1D array");
+             if (info.ndim != 2) {
+               throw std::runtime_error("Observation buffer must be 2D array");
              }
 
              self.obs_manager_.FillObservationBuffer(
@@ -70,8 +70,8 @@ PYBIND11_MODULE(rl2_py, m) {
            [](rl2::Game& self, py::array_t<float> buffer) {
              py::buffer_info info = buffer.request();
 
-             if (info.ndim != 1) {
-               throw std::runtime_error("Action buffer must be 1D array");
+             if (info.ndim != 2) {
+               throw std::runtime_error("Action buffer must be 2D array");
              }
 
              self.action_manager_.ReadActionBuffer(

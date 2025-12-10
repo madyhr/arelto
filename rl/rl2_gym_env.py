@@ -23,15 +23,15 @@ class RL2Env(gym.Env):
         self._obs_size: int = self.game.get_observation_size()
         self._act_size: int = self.game.get_action_size()
         self._rew_size: int = self.game.get_reward_size()
-        self._np_obs_buf = np.zeros(self._obs_size, dtype=np.float32)
-        self._np_rew_buf = np.zeros(self._rew_size, dtype=np.float32)
-        self._np_terminated_buf = np.zeros(self._num_envs, dtype=bool)
-        self._np_truncated_buf = np.zeros(self._num_envs, dtype=bool)
+        self._np_obs_buf = np.zeros((self._obs_size, self._num_envs), dtype=np.float32)
+        self._np_rew_buf = np.zeros((self._num_envs,), dtype=np.float32)
+        self._np_terminated_buf = np.zeros((self._num_envs,), dtype=bool)
+        self._np_truncated_buf = np.zeros((self._num_envs,), dtype=bool)
 
     def step(
         self, action: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        self.game.apply_action(action.detach().numpy())
+        self.game.apply_action(action.t().detach().numpy())
         self.game.step(self._step_dt)
         self.game.fill_observation_buffer(self._np_obs_buf)
         self.game.fill_reward_buffer(self._np_rew_buf)
@@ -44,7 +44,7 @@ class RL2Env(gym.Env):
         truncated = self._get_truncated()
         info = self._get_info()
 
-        return obs, reward, info, terminated, truncated
+        return obs, reward, terminated, truncated, info
 
     def reset(self, seed: int | None = 42) -> tuple[torch.Tensor, torch.Tensor]:
         super().reset(seed=seed)
@@ -55,7 +55,7 @@ class RL2Env(gym.Env):
         return obs, info
 
     def _get_obs(self) -> torch.Tensor:
-        return torch.from_numpy(self._np_obs_buf)
+        return torch.from_numpy(self._np_obs_buf).t()
 
     def _get_reward(self) -> torch.Tensor:
         return torch.from_numpy(self._np_rew_buf)

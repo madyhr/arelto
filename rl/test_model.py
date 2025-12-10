@@ -11,6 +11,11 @@ class TestModel:
     def __call__(self, obs: torch.Tensor) -> torch.Tensor:
 
         action = (
-            2 * torch.rand((self.num_envs * self.action_dim,), dtype=torch.float32) - 1
+            2
+            * torch.rand(
+                size=(self.num_envs, self.action_dim),
+                dtype=torch.float32,
+            )
+            - 1
         )
         return action

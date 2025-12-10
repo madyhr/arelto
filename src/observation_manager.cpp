@@ -8,21 +8,25 @@
 namespace rl2 {
 
 int ObservationManager::GetObservationSize(const Scene& scene) {
-  return kNumEnemies * (1 +  // distance to player
-                        2 +  // enemy position: x,y
-                        2 +  // enemy velocity: x,y
-                        2 +  // enemy size: w,h
-                        1 +  // enemy health_points
-                        1 +  // enemy inv mass
-                        1)   // enemy movement speed
+  return 1 +  // distance to player
+         2 +  // enemy position: x,y
+         2 +  // enemy velocity: x,y
+         2 +  // enemy size: w,h
+         1 +  // enemy health_points
+         1 +  // enemy inv mass
+         1    // enemy movement speed
       ;
 };
 
+// Function that fills an observation buffer to be used for learning.
+// Each observation is looped over separately to ensure that
+// transposing the array will transform the unflattened size from
+// (num_features, num_enemies) to (num_enemies, num_features).
 void ObservationManager::FillObservationBuffer(float* buffer_ptr,
                                                int buffer_size,
                                                const Scene& scene) {
 
-  if (buffer_size != GetObservationSize(scene)) {
+  if (buffer_size != kNumEnemies * GetObservationSize(scene)) {
     throw std::runtime_error("Buffer size mismatch");
   };
 
@@ -34,16 +38,25 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr,
 
   for (const Vector2D& enemy_pos : scene.enemy.position) {
     buffer_ptr[idx++] = enemy_pos.x;
+  }
+
+  for (const Vector2D& enemy_pos : scene.enemy.position) {
     buffer_ptr[idx++] = enemy_pos.y;
   }
 
   for (const Vector2D& enemy_vel : scene.enemy.velocity) {
     buffer_ptr[idx++] = enemy_vel.x;
+  }
+
+  for (const Vector2D& enemy_vel : scene.enemy.velocity) {
     buffer_ptr[idx++] = enemy_vel.y;
   }
 
   for (const Size2D& enemy_size : scene.enemy.sprite_size) {
     buffer_ptr[idx++] = static_cast<float>(enemy_size.width);
+  }
+
+  for (const Size2D& enemy_size : scene.enemy.sprite_size) {
     buffer_ptr[idx++] = static_cast<float>(enemy_size.height);
   }
 

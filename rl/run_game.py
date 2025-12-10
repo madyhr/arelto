@@ -8,7 +8,6 @@ import torch
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../build")))
 
 import rl2_py
-
 from rl2_gym_env import RL2Env
 from test_model import TestModel
 
@@ -44,7 +43,7 @@ def run_game():
         env.game.process_input()
 
         action = model(obs)
-        obs, reward, _, terminated, truncated = env.step(action)
+        obs, reward, terminated, truncated, _ = env.step(action)
 
         dones = terminated | truncated
 

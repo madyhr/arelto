@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../buil
 import rl2_py
 
 
-class RL2Env(gym.Env):
+class RL2Env:
 
     def __init__(self, step_dt: float = 0.02) -> None:
         self.game = rl2_py.Game()
@@ -47,7 +47,7 @@ class RL2Env(gym.Env):
         return obs, reward, terminated, truncated, info
 
     def reset(self, seed: int | None = 42) -> tuple[torch.Tensor, torch.Tensor]:
-        super().reset(seed=seed)
+        torch.manual_seed(seed)
 
         obs = self._get_obs()
         info = self._get_info()

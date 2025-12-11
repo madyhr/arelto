@@ -62,9 +62,6 @@ def test_mlp_invalid_arguments():
         MLP(10, [10, -5], 5)
 
 
-# --- GaussianActor Tests ---
-
-
 def test_gaussian_actor_forward_shape(
     dummy_input, input_dim, output_dim, hidden_size, batch_size
 ):

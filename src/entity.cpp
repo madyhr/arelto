@@ -7,12 +7,12 @@
 
 namespace rl2 {
 
-Vector2D GetCentroid(Vector2D position, Size2D size) {
+Vector2D GetCentroid(const Vector2D& position, const Size2D& size) {
   return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
 }
 
-AABB GetAABB(Vector2D position, Size2D size, EntityType type,
-             int storage_index) {
+AABB GetAABB(const Vector2D& position, const Size2D& size, const EntityType& type,
+             const int& storage_index) {
   return {position.x,
           position.y,
           position.x + size.width,
@@ -21,8 +21,8 @@ AABB GetAABB(Vector2D position, Size2D size, EntityType type,
           storage_index};
 };
 
-AABB GetCollisionAABB(Vector2D centroid, Size2D size, EntityType type,
-                      int storage_index) {
+AABB GetCollisionAABB(const Vector2D& centroid, const Size2D& size, const EntityType& type,
+                      const int& storage_index) {
 
   float half_w = 0.5 * size.width;
   float half_h = 0.5 * size.height;

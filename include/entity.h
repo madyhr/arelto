@@ -81,11 +81,11 @@ class Player {
                                                     Vector2D cursor_position);
 };
 
-Vector2D GetCentroid(Vector2D position, Size2D size);
-AABB GetAABB(Vector2D position, Size2D size, EntityType type = EntityType::None,
-             int storage_index = 0);
-AABB GetCollisionAABB(Vector2D centroid, Size2D size,
-                      EntityType type = EntityType::None, int storage_index = 0);
+Vector2D GetCentroid(const Vector2D& position, const Size2D& size);
+AABB GetAABB(const Vector2D& position, const Size2D& size, const EntityType& type = EntityType::None,
+             const int& storage_index = 0);
+AABB GetCollisionAABB(const Vector2D& centroid, const Size2D& size,
+                      const EntityType& type = EntityType::None, const int& storage_index = 0);
 void UpdateEnemyStatus(Enemy& enemy, const Player& player);
 void UpdateProjectilesStatus(Projectiles& projectiles);
 void RespawnEnemy(Enemy& enemy, const Player& player);

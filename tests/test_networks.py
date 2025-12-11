@@ -105,11 +105,11 @@ def test_actor_critic_forward_flow(
 ):
     ac = ActorCritic(input_dim, hidden_size, output_dim, activation_func_class=nn.Tanh)
 
-    out1, out2, value = ac(dummy_input)
+    action, log_prob, value = ac(dummy_input)
 
-    assert out1.shape == (batch_size, output_dim)  # mean
-    assert out2.shape == (batch_size, output_dim)  # std
-    assert value.shape == (batch_size, 1)  # value
+    assert action.shape == (batch_size, output_dim)
+    assert log_prob.shape == (batch_size,)
+    assert value.shape == (batch_size, 1)
 
 
 def test_actor_critic_get_value(
@@ -119,3 +119,22 @@ def test_actor_critic_get_value(
     value = ac.get_value(dummy_input)
 
     assert value.shape == (batch_size, 1)
+
+
+def test_actor_critic_gradient_flow(dummy_input, input_dim, output_dim, hidden_size):
+    ac = ActorCritic(input_dim, hidden_size, output_dim, activation_func_class=nn.Tanh)
+
+    action, log_prob, value = ac(dummy_input)
+
+    loss = log_prob.sum() + value.sum()
+
+    ac.zero_grad()
+    loss.backward()
+
+    actor_first_layer = ac.actor.mean_network.network[0]
+    assert actor_first_layer.weight.grad is not None
+    assert torch.norm(actor_first_layer.weight.grad) > 0
+
+    critic_first_layer = ac.critic.network.network[0]
+    assert critic_first_layer.weight.grad is not None
+    assert torch.norm(critic_first_layer.weight.grad) > 0

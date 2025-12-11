@@ -74,7 +74,7 @@ class GaussianActor(nn.Module):
     def get_action(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         mean, std = self(x)
         dist = torch.distributions.Normal(mean, std)
-        sample = dist.rsample()
+        sample = dist.sample()
         log_prob = dist.log_prob(sample).sum(dim=-1)
 
         return sample, log_prob
@@ -89,7 +89,7 @@ class ValueNetwork(nn.Module):
     ) -> None:
         super().__init__()
 
-        self.net = MLP(
+        self.network = MLP(
             input_dim=input_dim,
             hidden_size=hidden_size,
             output_dim=1,
@@ -97,4 +97,4 @@ class ValueNetwork(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.net(x)
+        return self.network(x)

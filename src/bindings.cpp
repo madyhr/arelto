@@ -67,7 +67,7 @@ PYBIND11_MODULE(rl2_py, m) {
              return self.obs_manager_.GetObservationSize(self.scene_);
            })
       .def("apply_action",
-           [](rl2::Game& self, py::array_t<float> buffer) {
+           [](rl2::Game& self, py::array_t<int> buffer) {
              py::buffer_info info = buffer.request();
 
              if (info.ndim != 2) {
@@ -75,7 +75,7 @@ PYBIND11_MODULE(rl2_py, m) {
              }
 
              self.action_manager_.ReadActionBuffer(
-                 static_cast<float*>(info.ptr), static_cast<int>(info.size),
+                 static_cast<int*>(info.ptr), static_cast<int>(info.size),
                  self.scene_);
            })
       .def("get_action_size",

@@ -1,4 +1,4 @@
-# python/rl2_gym_env.py
+# python/rl2_env.py
 
 import numpy as np
 import rl2_py

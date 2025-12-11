@@ -9,13 +9,6 @@ class TestModel:
         self.action_dim: int = action_dim
 
     def __call__(self, obs: torch.Tensor) -> torch.Tensor:
-
-        action = (
-            2
-            * torch.rand(
-                size=(self.num_envs, self.action_dim),
-                dtype=torch.float32,
-            )
-            - 1
-        )
+        # 0 = left, 1 = noop, 2 = right
+        action = torch.randint(0, 3, (self.num_envs, self.action_dim))
         return action

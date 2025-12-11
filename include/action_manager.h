@@ -10,7 +10,7 @@ class ActionManager {
 
  public:
   int GetActionSize(const Scene& scene);
-  void ReadActionBuffer(float* buffer_ptr, int buffer_size, Scene& scene);
+  void ReadActionBuffer(int* buffer_ptr, int buffer_size, Scene& scene);
 };
 
 }  // namespace rl2

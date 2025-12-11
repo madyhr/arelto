@@ -12,6 +12,8 @@ class BaseActor(nn.Module):
         activation_func_class: type[nn.Module] = nn.Tanh,
     ) -> None:
         super().__init__()
+        # As the MLP class expects a one-dimensional output dim, we have to sum
+        # the output dimensions in case it is not one-dimensional.
         if isinstance(output_dim, list):
             mlp_output_dim = sum(output_dim)
         else:

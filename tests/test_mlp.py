@@ -1,8 +1,7 @@
 import pytest
 import torch
 import torch.nn as nn
-
-from rl.networks.mlp import MLP
+from networks.mlp import MLP
 
 
 def test_mlp_initialization(input_dim, output_dim, hidden_size):

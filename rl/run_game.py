@@ -1,8 +1,10 @@
 # rl/run_game.py
 import time
 
+from modules.actor import MultiDiscreteActor
+from modules.actor_critic import ActorCritic
+from modules.critic import ValueCritic
 from rl2_env import RL2Env
-from test_model import TestModel
 
 # This comes from the order of the game states as defined in the C++ source code.
 game_state = {
@@ -17,7 +19,13 @@ game_state = {
 def run_game():
 
     env = RL2Env()
-    model = TestModel(num_envs=env.num_envs, action_dim=env.game.get_action_size())
+    model = ActorCritic(
+        MultiDiscreteActor,
+        ValueCritic,
+        input_dim=10,
+        hidden_size=[16, 16],
+        output_dim=[3, 3],
+    )
 
     is_initialized = env.game.initialize()
 
@@ -33,27 +41,13 @@ def run_game():
     while env.game.get_game_state() != game_state["in_shutdown"]:
         env.game.process_input()
 
-        action = model(obs)
+        action, _, _ = model(obs)
         obs, reward, terminated, truncated, _ = env.step(action)
-
         dones = terminated | truncated
 
         env.game.render(1.0)
 
         next_tick += env.step_dt
-
-        # if torch.any(dones) == 1:
-        #     print(f"Terminated or truncated envs detected at count: {counter}")
-        #
-        # if torch.any(terminated) == 1:
-        #     print(f"Terminated envs detected at count: {counter}")
-        #
-        # if torch.any(truncated) == 1:
-        #     print(f"Truncated envs detected at count: {counter}")
-        #
-        # if counter % 50 == 0:
-        #     print(f"Rew buffer: {reward}")
-
         sleep_needed = next_tick - time.perf_counter()
 
         if sleep_needed > 0:

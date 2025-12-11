@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-
-from rl.networks import MLP
+from networks import MLP
 
 
 class ValueCritic(nn.Module):

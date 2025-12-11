@@ -1,4 +1,4 @@
-from rl.modules.critic import ValueCritic
+from modules.critic import ValueCritic
 
 
 def test_value_critic_shape(dummy_input, input_dim, hidden_size, batch_size):

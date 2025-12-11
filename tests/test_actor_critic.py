@@ -1,10 +1,9 @@
 import pytest
 import torch
 import torch.nn as nn
-
-from rl.modules.actor import DiscreteActor, GaussianActor, MultiDiscreteActor
-from rl.modules.actor_critic import BaseActorCritic
-from rl.modules.critic import ValueCritic
+from modules.actor import DiscreteActor, GaussianActor, MultiDiscreteActor
+from modules.actor_critic import ActorCritic
+from modules.critic import ValueCritic
 
 
 @pytest.mark.parametrize(
@@ -24,7 +23,7 @@ def test_actor_critic_forward_flow(
     else:
         current_output_dim = output_dim
 
-    ac = BaseActorCritic(
+    ac = ActorCritic(
         actor_class=actor_class,
         critic_class=ValueCritic,
         input_dim=input_dim,
@@ -62,7 +61,7 @@ def test_actor_critic_gradient_flow(
     else:
         current_output_dim = output_dim
 
-    ac = BaseActorCritic(
+    ac = ActorCritic(
         actor_class=actor_class,
         critic_class=ValueCritic,
         input_dim=input_dim,

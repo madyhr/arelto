@@ -9,7 +9,7 @@ if typing.TYPE_CHECKING:
     from rl.modules import BaseActor, ValueCritic
 
 
-class BaseActorCritic(nn.Module):
+class ActorCritic(nn.Module):
 
     def __init__(
         self,
@@ -17,8 +17,8 @@ class BaseActorCritic(nn.Module):
         critic_class: type[ValueCritic],
         input_dim: int,
         hidden_size: tuple[int] | list[int],
-        output_dim: int,
-        activation_func_class: type[nn.Module],
+        output_dim: int | list[int],
+        activation_func_class: type[nn.Module] = nn.Tanh,
     ) -> None:
         super().__init__()
 

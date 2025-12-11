@@ -1,6 +1,5 @@
 import torch
-
-from rl.modules.actor import DiscreteActor, GaussianActor, MultiDiscreteActor
+from modules.actor import DiscreteActor, GaussianActor, MultiDiscreteActor
 
 
 def test_gaussian_actor_forward_shape(

@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-
-from rl.networks import MLP
+from networks import MLP
 
 
 class BaseActor(nn.Module):
@@ -9,11 +8,17 @@ class BaseActor(nn.Module):
         self,
         input_dim: int,
         hidden_size: tuple[int] | list[int],
-        output_dim: int,
+        output_dim: int | list[int],
         activation_func_class: type[nn.Module] = nn.Tanh,
     ) -> None:
         super().__init__()
-        self.network = MLP(input_dim, hidden_size, output_dim, activation_func_class)
+        if isinstance(output_dim, list):
+            mlp_output_dim = sum(output_dim)
+        else:
+            mlp_output_dim = output_dim
+        self.network = MLP(
+            input_dim, hidden_size, mlp_output_dim, activation_func_class
+        )
 
     def forward(self, x: torch.Tensor):
         raise NotImplementedError
@@ -79,11 +84,7 @@ class MultiDiscreteActor(BaseActor):
     ) -> None:
 
         self.output_dim = output_dim
-        total_output_dim = sum(self.output_dim)
-
-        super().__init__(
-            input_dim, hidden_size, total_output_dim, activation_func_class
-        )
+        super().__init__(input_dim, hidden_size, self.output_dim, activation_func_class)
 
     def forward(self, x) -> list[torch.Tensor]:
         flat_logits = self.network(x)

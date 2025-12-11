@@ -2,7 +2,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from rl.modules.actor_critic import ActorCritic
+from rl.modules.actor_critic import BaseActorCritic
 from rl.networks.mlp import MLP, GaussianActor, ValueNetwork
 
 
@@ -89,7 +89,7 @@ def test_gaussian_actor_get_action(
     loss = action.sum() + log_prob.sum()
     loss.backward()
 
-    assert actor.mean_network.network[0].weight.grad is not None
+    assert actor.network.network[0].weight.grad is not None
     assert actor.log_std.grad is not None
 
 
@@ -103,7 +103,9 @@ def test_value_network_shape(dummy_input, input_dim, hidden_size, batch_size):
 def test_actor_critic_forward_flow(
     dummy_input, input_dim, output_dim, hidden_size, batch_size
 ):
-    ac = ActorCritic(input_dim, hidden_size, output_dim, activation_func_class=nn.Tanh)
+    ac = BaseActorCritic(
+        input_dim, hidden_size, output_dim, activation_func_class=nn.Tanh
+    )
 
     action, log_prob, value = ac(dummy_input)
 
@@ -115,14 +117,18 @@ def test_actor_critic_forward_flow(
 def test_actor_critic_get_value(
     dummy_input, input_dim, output_dim, hidden_size, batch_size
 ):
-    ac = ActorCritic(input_dim, hidden_size, output_dim, activation_func_class=nn.Tanh)
+    ac = BaseActorCritic(
+        input_dim, hidden_size, output_dim, activation_func_class=nn.Tanh
+    )
     value = ac.get_value(dummy_input)
 
     assert value.shape == (batch_size, 1)
 
 
 def test_actor_critic_gradient_flow(dummy_input, input_dim, output_dim, hidden_size):
-    ac = ActorCritic(input_dim, hidden_size, output_dim, activation_func_class=nn.Tanh)
+    ac = BaseActorCritic(
+        input_dim, hidden_size, output_dim, activation_func_class=nn.Tanh
+    )
 
     action, log_prob, value = ac(dummy_input)
 

@@ -1,1 +1,1 @@
-from .actor_critic import ActorCritic
+from .actor_critic import BaseActorCritic

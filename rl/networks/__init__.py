@@ -1,1 +1,1 @@
-from .mlp import MLP, GaussianActor, ValueNetwork
+from .mlp import MLP

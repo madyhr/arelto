@@ -4,7 +4,7 @@ import torch.nn as nn
 from rl.networks import MLP
 
 
-class ValueNetwork(nn.Module):
+class ValueCritic(nn.Module):
     def __init__(
         self,
         input_dim: int,

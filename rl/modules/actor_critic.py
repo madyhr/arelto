@@ -1,19 +1,20 @@
+from __future__ import annotations
+
 import typing
-from dataclasses import MISSING
 
 import torch
 import torch.nn as nn
 
-from rl.networks.mlp import DiscreteActor, GaussianActor, ValueNetwork
-
-if typing:
-    from rl.networks.mlp import Actor
+if typing.TYPE_CHECKING:
+    from rl.modules import BaseActor, ValueCritic
 
 
 class BaseActorCritic(nn.Module):
 
     def __init__(
         self,
+        actor_class: type[BaseActor],
+        critic_class: type[ValueCritic],
         input_dim: int,
         hidden_size: tuple[int] | list[int],
         output_dim: int,
@@ -21,11 +22,13 @@ class BaseActorCritic(nn.Module):
     ) -> None:
         super().__init__()
 
-        self.critic: ValueNetwork = ValueNetwork(
+        self.critic: ValueCritic = critic_class(
             input_dim, hidden_size, activation_func_class
         )
 
-        self.actor: Actor = MISSING
+        self.actor: BaseActor = actor_class(
+            input_dim, hidden_size, output_dim, activation_func_class
+        )
 
     def forward(self, state: torch.Tensor):
         action, log_prob = self.actor.get_action(state)
@@ -34,33 +37,3 @@ class BaseActorCritic(nn.Module):
 
     def get_value(self, state: torch.Tensor):
         return self.critic(state)
-
-
-class DiscreteActorCritic(BaseActorCritic):
-    def __init__(
-        self,
-        input_dim: int,
-        hidden_size: tuple[int] | list[int],
-        output_dim: int,
-        activation_func_class: type[nn.Module],
-    ) -> None:
-        super().__init__(input_dim, hidden_size, output_dim, activation_func_class)
-
-        self.actor: DiscreteActor = DiscreteActor(
-            input_dim, hidden_size, output_dim, activation_func_class
-        )
-
-
-class ContinuousActorCritic(BaseActorCritic):
-    def __init__(
-        self,
-        input_dim: int,
-        hidden_size: tuple[int] | list[int],
-        output_dim: int,
-        activation_func_class: type[nn.Module],
-    ) -> None:
-        super().__init__(input_dim, hidden_size, output_dim, activation_func_class)
-
-        self.actor: GaussianActor = GaussianActor(
-            input_dim, hidden_size, output_dim, activation_func_class
-        )

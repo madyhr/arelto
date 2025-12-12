@@ -9,7 +9,7 @@ constexpr int kWindowWidth = 1920;
 constexpr int kWindowHeight = 1080;
 
 // Game constats
-constexpr float kPhysicsDt = 0.001f;  // time in sec
+constexpr float kPhysicsDt = 0.001f;      // time in sec
 constexpr float kEpisodeTimeout = 20.0f;  // time in sec
 
 // UI constants
@@ -49,6 +49,10 @@ constexpr int kGameOverSpriteHeight = 88;
 // Map constants
 constexpr int kMapWidth = 2000;
 constexpr int kMapHeight = 2000;
+// the inverse map max distance is used for scaling distances.
+const float kInvMapMaxDistance =
+    1.0f / std::sqrt(static_cast<float>(kMapHeight) * kMapHeight +
+                     static_cast<float>(kMapWidth) * kMapWidth);
 constexpr int kOccupancyMapResolution = 25;
 constexpr int kOccupancyMapWidth =
     static_cast<int>(kMapWidth / kOccupancyMapResolution);
@@ -153,7 +157,6 @@ constexpr float kFrostboltCooldown = 2.0f;  // time in sec
 
 // Abilities constants
 constexpr int kNumPlayerSpells = 2;  // total number of spells
-
 
 }  // namespace rl2
 #endif

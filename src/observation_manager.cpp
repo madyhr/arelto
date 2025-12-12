@@ -33,15 +33,16 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr,
   int idx = 0;
 
   for (const Vector2D& enemy_pos : scene.enemy.position) {
-    buffer_ptr[idx++] = (scene.player.position_ - enemy_pos).Norm();
+    buffer_ptr[idx++] =
+        (scene.player.position_ - enemy_pos).Norm() * kInvMapMaxDistance;
   }
 
   for (const Vector2D& enemy_pos : scene.enemy.position) {
-    buffer_ptr[idx++] = enemy_pos.x;
+    buffer_ptr[idx++] = enemy_pos.x / kMapWidth;
   }
 
   for (const Vector2D& enemy_pos : scene.enemy.position) {
-    buffer_ptr[idx++] = enemy_pos.y;
+    buffer_ptr[idx++] = enemy_pos.y / kMapHeight;
   }
 
   for (const Vector2D& enemy_vel : scene.enemy.velocity) {
@@ -52,24 +53,24 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr,
     buffer_ptr[idx++] = enemy_vel.y;
   }
 
-  for (const Size2D& enemy_size : scene.enemy.sprite_size) {
-    buffer_ptr[idx++] = static_cast<float>(enemy_size.width);
+  for (const Collider& enemy_collider : scene.enemy.collider) {
+    buffer_ptr[idx++] = static_cast<float>(enemy_collider.size.width) / kEnemyColliderWidth;
   }
 
-  for (const Size2D& enemy_size : scene.enemy.sprite_size) {
-    buffer_ptr[idx++] = static_cast<float>(enemy_size.height);
+  for (const Collider& enemy_collider : scene.enemy.collider) {
+    buffer_ptr[idx++] = static_cast<float>(enemy_collider.size.height) / kEnemyColliderHeight;
   }
 
   for (const int& enemy_health : scene.enemy.health_points) {
-    buffer_ptr[idx++] = static_cast<float>(enemy_health);
+    buffer_ptr[idx++] = static_cast<float>(enemy_health) / kEnemyHealth;
   }
 
   for (const float& enemy_inv_mass : scene.enemy.inv_mass) {
-    buffer_ptr[idx++] = enemy_inv_mass;
+    buffer_ptr[idx++] = enemy_inv_mass / kEnemyInvMass;
   }
 
   for (const float& enemy_movement_speed : scene.enemy.movement_speed) {
-    buffer_ptr[idx++] = enemy_movement_speed;
+    buffer_ptr[idx++] = enemy_movement_speed / kEnemySpeed;
   }
 
   // for (int i = 0; i < kNumEnemies; ++i) {

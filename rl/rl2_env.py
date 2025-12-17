@@ -15,17 +15,23 @@ class RL2Env:
 
         self._obs_size: int = self.game.get_observation_size()
         self._act_size: int = self.game.get_action_size()
-        self._rew_size: int = self.game.get_reward_size()
         self._np_obs_buf = np.zeros((self._obs_size, self.num_envs), dtype=np.float32)
         self._np_rew_buf = np.zeros((self.num_envs,), dtype=np.float32)
         self._np_terminated_buf = np.zeros((self.num_envs,), dtype=bool)
         self._np_truncated_buf = np.zeros((self.num_envs,), dtype=bool)
 
+        print(f" ---- Game  -----")
+        print(f"Number of environments: {self.num_envs}")
+        print(f"Observation size: {self._obs_size}")
+        print(f"Action size: {self._act_size}")
+
     def step(
         self, action: torch.Tensor | None
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         assert action is not None
-        self.game.apply_action(action.t().detach().cpu().numpy())
+        self.game.apply_action(
+            np.ascontiguousarray(action.t().detach().cpu().numpy().astype(np.int32))
+        )
         self.game.step(self.step_dt)
         self.game.fill_observation_buffer(self._np_obs_buf)
         self.game.fill_reward_buffer(self._np_rew_buf)

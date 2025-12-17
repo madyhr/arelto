@@ -14,21 +14,25 @@ class PPO:
         input_dim: int,
         hidden_size: tuple[int] | list[int],
         output_dim: list[int],
-        num_mini_batches: int = 4,
+        num_mini_batches: int = 8,
         num_epochs: int = 4,
         gamma: float = 0.99,
         lam: float = 0.95,
-        learning_rate: float = 0.001,
+        learning_rate: float = 1e-3,
         device: str = "cpu",
-        total_timesteps: int = 1000000,
         clip_coef: float = 0.2,
-        entropy_loss_coef: float = 0.01,
+        entropy_loss_coef: float = 0.05,
         value_loss_coef: float = 0.5,
         max_grad_norm: float = 0.5,
     ) -> None:
         self.device = device
         self.policy = ActorCritic(
-            MultiDiscreteActor, ValueCritic, input_dim, hidden_size, output_dim
+            MultiDiscreteActor,
+            ValueCritic,
+            input_dim,
+            hidden_size,
+            output_dim,
+            activation_func_class=torch.nn.ReLU,
         )
 
         self.policy.to(self.device)
@@ -132,7 +136,7 @@ class PPO:
                 # only used for diagnostics
                 approx_kl = ((ratio - 1) - logratio).mean()
                 metrics["tech/kl_divergence"].append(approx_kl.item())
-                # Calculate how often we are clipping (useful debug stat)
+                # calculate how often we are clipping (useful debug stat)
                 clip_frac = (torch.abs(ratio - 1.0) > self.clip_coef).float().mean()
                 metrics["tech/clip_fraction"].append(clip_frac.item())
 

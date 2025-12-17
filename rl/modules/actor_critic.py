@@ -30,10 +30,10 @@ class ActorCritic(nn.Module):
             input_dim, hidden_size, output_dim, activation_func_class
         )
 
-    def forward(self, state: torch.Tensor):
-        action, log_prob = self.actor.get_action(state)
-        value = self.critic(state)
-        return action, log_prob, value
+    def forward(self, obs: torch.Tensor, action: torch.Tensor | None = None):
+        action, log_prob, entropy = self.actor.get_action(obs, action)
+        value = self.critic(obs)
+        return action, log_prob, entropy, value
 
-    def get_value(self, state: torch.Tensor):
-        return self.critic(state)
+    def get_value(self, obs: torch.Tensor):
+        return self.critic(obs)

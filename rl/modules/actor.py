@@ -22,10 +22,10 @@ class BaseActor(nn.Module):
             input_dim, hidden_size, mlp_output_dim, activation_func_class
         )
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, obs: torch.Tensor):
         raise NotImplementedError
 
-    def get_action(self, x: torch.Tensor):
+    def get_action(self, obs: torch.Tensor, action: torch.Tensor | None = None):
         raise NotImplementedError
 
 
@@ -40,14 +40,16 @@ class GaussianActor(BaseActor):
         super().__init__(input_dim, hidden_size, output_dim, activation_func_class)
         self.log_std = nn.Parameter(torch.zeros(output_dim))
 
-    def forward(self, x) -> tuple[torch.Tensor, torch.Tensor]:
-        mean = self.network(x)
+    def forward(self, obs) -> tuple[torch.Tensor, torch.Tensor]:
+        mean = self.network(obs)
         std = torch.exp(self.log_std)
 
         return mean, std.expand_as(mean)
 
-    def get_action(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        mean, std = self(x)
+    def get_action(
+        self, obs: torch.Tensor, action: torch.Tensor | None = None
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        mean, std = self(obs)
         dist = torch.distributions.Normal(mean, std)
         sample = dist.sample()
         log_prob = dist.log_prob(sample).sum(dim=-1)
@@ -65,11 +67,13 @@ class DiscreteActor(BaseActor):
     ) -> None:
         super().__init__(input_dim, hidden_size, output_dim, activation_func_class)
 
-    def forward(self, x) -> torch.Tensor:
-        return self.network(x)
+    def forward(self, obs) -> torch.Tensor:
+        return self.network(obs)
 
-    def get_action(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        logits = self(x)
+    def get_action(
+        self, obs: torch.Tensor, action: torch.Tensor | None = None
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        logits = self(obs)
         dist = torch.distributions.Categorical(logits=logits)
         sample = dist.sample()
         log_prob = dist.log_prob(sample)
@@ -88,24 +92,34 @@ class MultiDiscreteActor(BaseActor):
         self.output_dim = output_dim
         super().__init__(input_dim, hidden_size, self.output_dim, activation_func_class)
 
-    def forward(self, x) -> list[torch.Tensor]:
-        flat_logits = self.network(x)
+    def forward(self, obs: torch.Tensor) -> tuple[torch.Tensor, ...]:
+        flat_logits = self.network(obs)
         split_logits = torch.split(flat_logits, self.output_dim, dim=-1)
-        return list(split_logits)
+        return split_logits
 
-    def get_action(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        split_logits = self(x)
+    def get_action(
+        self, obs: torch.Tensor, action: torch.Tensor | None = None
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        split_logits = self(obs)
 
-        actions = []
-        log_probs = []
+        multi_categoricals = [
+            torch.distributions.Categorical(logits=logits) for logits in split_logits
+        ]
 
-        for logits in split_logits:
-            dist = torch.distributions.Categorical(logits=logits)
-            sample = dist.sample()
-            actions.append(sample)
-            log_probs.append(dist.log_prob(sample))
+        if action is None:
+            action = torch.stack([dist.sample() for dist in multi_categoricals], dim=-1)
 
-        action_tensor = torch.stack(actions, dim=-1)
-        log_prob_tensor = torch.stack(log_probs, dim=-1).sum(dim=-1)
+        log_prob = torch.stack(
+            [
+                dist.log_prob(sample)
+                for dist, sample in zip(multi_categoricals, action.T)
+            ],
+            dim=-1,
+        ).sum(dim=-1)
 
-        return action_tensor, log_prob_tensor
+        entropy = torch.stack(
+            [dist.entropy() for dist in multi_categoricals],
+            dim=-1,
+        ).sum(dim=-1)
+
+        return action, log_prob, entropy

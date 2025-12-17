@@ -2,12 +2,10 @@ import torch
 from algorithms.ppo import PPO
 from rl2_env import RL2Env
 
-import wandb
-
 TOTAL_TIMESTEPS = 1_000_000
-TRANSITIONS_PER_ENV = 500
-INPUT_DIM = 10
-HIDDEN_SIZE = [32, 32, 32]
+TRANSITIONS_PER_ENV = 100
+INPUT_DIM = 2
+HIDDEN_SIZE = [64, 64]
 OUTPUT_DIM = [3, 3]
 EXP_NAME = "rl2_ppo_interactive"
 DEVICE = "cuda"
@@ -23,7 +21,7 @@ game_state = {
 
 
 def run_learner():
-    env = RL2Env()  #
+    env = RL2Env(step_dt=0.2)
     num_envs = env.num_envs
 
     ppo = PPO(
@@ -33,19 +31,18 @@ def run_learner():
         hidden_size=HIDDEN_SIZE,
         output_dim=OUTPUT_DIM,
         device=DEVICE,
-    )  #
+    )
 
     if not env.game.initialize():
         return
 
     obs, _ = env.reset()
 
-    while env.game.get_game_state != 4:
+    while env.game.get_game_state() != 4:
         for _ in range(TRANSITIONS_PER_ENV):
 
             env.game.process_input()
             if env.game.get_game_state() == game_state["in_shutdown"]:
-                wandb.finish()
                 return
 
             with torch.inference_mode():
@@ -61,6 +58,9 @@ def run_learner():
         with torch.inference_mode():
             ppo.compute_returns(obs.to(DEVICE))
 
+        # print(f"Action: {action} ")
+        # print(f"Obs: {obs} ")
+        # print(f"Reward: {reward} ")
         train_metrics = ppo.update()
 
         print(train_metrics)

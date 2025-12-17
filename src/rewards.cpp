@@ -16,7 +16,7 @@ void RewardManager::RegisterRewardTerms() {
             for (int i = 0; i < kNumEnemies; ++i) {
               float distance_to_player =
                   (scene.player.position_ - scene.enemy.position[i]).Norm();
-              value_array[i] = -distance_to_player;
+              value_array[i] = -(distance_to_player * kInvMapMaxDistance);
             }
 
             return value_array;

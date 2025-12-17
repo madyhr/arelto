@@ -73,8 +73,8 @@ def test_multi_discrete_actor_get_action(
     action, log_prob, entropy = actor.get_action(dummy_input)
 
     assert action.shape == (batch_size, len(multi_discrete_output_dims))
-    assert log_prob.shape == (batch_size,)
-    assert entropy.shape == (batch_size,)
+    assert log_prob.shape == (batch_size, 1)
+    assert entropy.shape == (batch_size, 1)
 
     for i, dim in enumerate(multi_discrete_output_dims):
         assert (action[:, i] >= 0).all()

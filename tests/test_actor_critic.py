@@ -39,8 +39,8 @@ def test_actor_critic_forward_flow(
     else:
         assert action.shape == (batch_size,)
 
-    assert log_prob.shape == (batch_size,)
-    assert entropy.shape == (batch_size,)
+    assert log_prob.shape == (batch_size, 1)
+    assert entropy.shape == (batch_size, 1)
     assert value.shape == (batch_size, 1)
 
 

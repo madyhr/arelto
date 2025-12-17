@@ -115,11 +115,11 @@ class MultiDiscreteActor(BaseActor):
                 for dist, sample in zip(multi_categoricals, action.T)
             ],
             dim=-1,
-        ).sum(dim=-1)
+        ).sum(dim=-1, keepdim=True)
 
         entropy = torch.stack(
             [dist.entropy() for dist in multi_categoricals],
             dim=-1,
-        ).sum(dim=-1)
+        ).sum(dim=-1, keepdim=True)
 
         return action, log_prob, entropy

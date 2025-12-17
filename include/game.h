@@ -48,7 +48,7 @@ class Game {
   bool InitializeCamera();
   void StepGamePhysics();
   Vector2D GetCursorPositionWorld();
-  void ProcessPlayerInput();
+  void ProcessPlayerInput(uint32_t mouse_state);
   void CachePreviousState();
 };
 

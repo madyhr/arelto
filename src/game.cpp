@@ -1,6 +1,7 @@
 // src/game.cpp
 #include "game.h"
 #include <SDL2/SDL_timer.h>
+#include <SDL_mouse.h>
 #include <SDL_render.h>
 #include <SDL_surface.h>
 #include <array>
@@ -190,19 +191,18 @@ void Game::ProcessInput() {
       }
     }
   }
-  cursor_position_ = GetCursorPositionWorld();
-  Game::ProcessPlayerInput();
+
+  int cursor_pos_x, cursor_pos_y;
+  uint32_t mouse_state = SDL_GetMouseState(&cursor_pos_x, &cursor_pos_y);
+
+  cursor_position_ = {
+      (float)(cursor_pos_x + render_manager_.camera_.position_.x),
+      (float)(cursor_pos_y + render_manager_.camera_.position_.y)};
+
+  Game::ProcessPlayerInput(mouse_state);
 }
 
-Vector2D Game::GetCursorPositionWorld() {
-  int cursor_x, cursor_y;
-  uint32_t cursor_mask = SDL_GetMouseState(&cursor_x, &cursor_y);
-
-  return {(float)(cursor_x + render_manager_.camera_.position_.x),
-          (float)(cursor_y + render_manager_.camera_.position_.y)};
-};
-
-void Game::ProcessPlayerInput() {
+void Game::ProcessPlayerInput(uint32_t mouse_state) {
   scene_.player.velocity_ = {0.0f, 0.0f};
   const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
   if (currentKeyStates[SDL_SCANCODE_W]) {
@@ -217,7 +217,7 @@ void Game::ProcessPlayerInput() {
   if (currentKeyStates[SDL_SCANCODE_D]) {
     scene_.player.velocity_.x += 1.0f;
   }
-  if (currentKeyStates[SDL_SCANCODE_F]) {
+  if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
     std::optional<ProjectileData> fireball = scene_.player.CastProjectileSpell(
         scene_.player.fireball_, time_, cursor_position_);
 
@@ -225,7 +225,7 @@ void Game::ProcessPlayerInput() {
       scene_.projectiles.AddProjectile(*fireball);
     }
   }
-  if (currentKeyStates[SDL_SCANCODE_I]) {
+  if (mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
     std::optional<ProjectileData> frostbolt = scene_.player.CastProjectileSpell(
         scene_.player.frostbolt_, time_, cursor_position_);
 

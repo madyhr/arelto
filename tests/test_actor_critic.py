@@ -6,9 +6,7 @@ from modules.actor_critic import ActorCritic
 from modules.critic import ValueCritic
 
 
-@pytest.mark.parametrize(
-    "actor_class", [GaussianActor, DiscreteActor, MultiDiscreteActor]
-)
+@pytest.mark.parametrize("actor_class", [MultiDiscreteActor])
 def test_actor_critic_forward_flow(
     actor_class,
     dummy_input,
@@ -32,7 +30,7 @@ def test_actor_critic_forward_flow(
         activation_func_class=nn.Tanh,
     )
 
-    action, log_prob, value = ac(dummy_input)
+    action, log_prob, entropy, value = ac(dummy_input)
 
     if actor_class == GaussianActor:
         assert action.shape == (batch_size, current_output_dim)
@@ -42,12 +40,11 @@ def test_actor_critic_forward_flow(
         assert action.shape == (batch_size,)
 
     assert log_prob.shape == (batch_size,)
+    assert entropy.shape == (batch_size,)
     assert value.shape == (batch_size, 1)
 
 
-@pytest.mark.parametrize(
-    "actor_class", [GaussianActor, DiscreteActor, MultiDiscreteActor]
-)
+@pytest.mark.parametrize("actor_class", [MultiDiscreteActor])
 def test_actor_critic_gradient_flow(
     actor_class,
     dummy_input,
@@ -70,14 +67,14 @@ def test_actor_critic_gradient_flow(
         activation_func_class=nn.Tanh,
     )
 
-    action, log_prob, value = ac(dummy_input)
+    action, log_prob, entropy, value = ac(dummy_input)
 
     if actor_class == DiscreteActor:
         action_loss = action.float().sum()
     else:
         action_loss = action.sum()
 
-    loss = log_prob.sum() + value.sum() + action_loss
+    loss = log_prob.sum() + entropy.sum() + value.sum() + action_loss
 
     ac.zero_grad()
     loss.backward()

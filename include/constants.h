@@ -10,7 +10,7 @@ constexpr int kWindowHeight = 1080;
 
 // Game constats
 constexpr float kPhysicsDt = 0.001f;      // time in sec
-constexpr float kEpisodeTimeout = 20.0f;  // time in sec
+constexpr float kEpisodeTimeout = 120.0f;  // time in sec
 
 // UI constants
 constexpr float kHealthBarGroupX = 50.0f;
@@ -47,8 +47,8 @@ constexpr int kGameOverSpriteWidth = 610;
 constexpr int kGameOverSpriteHeight = 88;
 
 // Map constants
-constexpr int kMapWidth = 2000;
-constexpr int kMapHeight = 2000;
+constexpr int kMapWidth = 5000;
+constexpr int kMapHeight = 5000;
 // the inverse map max distance is used for scaling distances.
 const float kInvMapMaxDistance =
     1.0f / std::sqrt(static_cast<float>(kMapHeight) * kMapHeight +
@@ -102,7 +102,7 @@ constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
 constexpr float kPlayerInvulnerableWindow = 0.1;    // time in sec
 
 // Enemy constants
-constexpr int kNumEnemies = 5;
+constexpr int kNumEnemies = 100;
 constexpr int kEnemyHealth = 10;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;

@@ -9,12 +9,12 @@ namespace rl2 {
 
 int ObservationManager::GetObservationSize(const Scene& scene) {
   return 2  // relative position to player
-         // 2 +  // enemy position: x,y
-         // 2 +  // enemy velocity: x,y
-         // 2 +  // enemy size: w,h
-         // 1 +  // enemy health_points
-         // 1 +  // enemy inv mass
-         // 1    // enemy movement speed
+            // 2 +  // enemy position: x,y
+            // 2 +  // enemy velocity: x,y
+            // 2 +  // enemy size: w,h
+            // 1 +  // enemy health_points
+            // 1 +  // enemy inv mass
+            // 1    // enemy movement speed
       ;
 };
 

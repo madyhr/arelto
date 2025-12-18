@@ -221,10 +221,10 @@ void PhysicsManager::UpdateEnemyStatus(Enemy& enemy, const Player& player) {
       enemy.is_terminated_latched[i] = true;
     };
 
-    if (enemy.timeout_timer[i] >= kEpisodeTimeout) {
-      enemy.is_done[i] = true;
-      enemy.is_truncated_latched[i] = true;
-    }
+    // if (enemy.timeout_timer[i] >= kEpisodeTimeout) {
+    //   enemy.is_done[i] = true;
+    //   enemy.is_truncated_latched[i] = true;
+    // }
   };
 };
 

@@ -3,7 +3,7 @@ from algorithms.ppo import PPO
 from rl2_env import RL2Env
 
 TOTAL_TIMESTEPS = 1_000_000
-TRANSITIONS_PER_ENV = 100
+TRANSITIONS_PER_ENV = 250
 INPUT_DIM = 2
 HIDDEN_SIZE = [64, 64]
 OUTPUT_DIM = [3, 3]
@@ -21,7 +21,7 @@ game_state = {
 
 
 def run_learner():
-    env = RL2Env(step_dt=0.2)
+    env = RL2Env(step_dt=0.02)
     num_envs = env.num_envs
 
     ppo = PPO(

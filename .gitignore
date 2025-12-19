@@ -47,3 +47,6 @@ Thumbs.db
 .cache/*
 python/__pycache__/
 *.py[codi]
+
+# checkpoints
+checkpoints/

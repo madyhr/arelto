@@ -1,3 +1,7 @@
+import argparse
+import datetime
+import os
+
 import torch
 from algorithms.ppo import PPO
 from rl2_env import RL2Env
@@ -20,7 +24,10 @@ game_state = {
 }
 
 
-def run_learner():
+def run_learner(args):
+    checkpoint_path: str = args.load_checkpoint
+    device: str = args.device
+
     env = RL2Env(step_dt=0.02)
     num_envs = env.num_envs
 
@@ -30,8 +37,16 @@ def run_learner():
         input_dim=INPUT_DIM,
         hidden_size=HIDDEN_SIZE,
         output_dim=OUTPUT_DIM,
-        device=DEVICE,
+        device=device,
     )
+    if checkpoint_path and os.path.exists(checkpoint_path):
+        print(f"Loading checkpoint from: {checkpoint_path}")
+        state_dict = torch.load(checkpoint_path, map_location=device)
+        ppo.policy.load_state_dict(state_dict)
+    elif checkpoint_path:
+        print(
+            f"Checkpoint path {checkpoint_path} provided but file not found. Starting from scratch."
+        )
 
     if not env.game.initialize():
         return
@@ -43,28 +58,52 @@ def run_learner():
 
             env.game.process_input()
             if env.game.get_game_state() == game_state["in_shutdown"]:
-                return
+                break
 
             with torch.inference_mode():
 
                 env.game.process_input()
-                action = ppo.act(obs.to(DEVICE))
+                action = ppo.act(obs.to(device))
                 obs, reward, terminated, truncated, _ = env.step(action)
                 dones = terminated | truncated
-                ppo.process_env_step(reward.to(DEVICE), dones.to(DEVICE))
+                ppo.process_env_step(reward.to(device), dones.to(device))
 
                 env.game.render(1.0)
 
         with torch.inference_mode():
-            ppo.compute_returns(obs.to(DEVICE))
+            ppo.compute_returns(obs.to(device))
 
-        # print(f"Action: {action} ")
-        # print(f"Obs: {obs} ")
-        # print(f"Reward: {reward} ")
         train_metrics = ppo.update()
 
         print(train_metrics)
 
+    save_dir = "checkpoints"
+    os.makedirs(save_dir, exist_ok=True)
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    save_filename = f"{timestamp}_ppo_policy.pt"
+    save_path = os.path.join(save_dir, save_filename)
+
+    torch.save(ppo.policy.state_dict(), save_path)
+    print(f"Final policy saved to: {save_path}")
+
 
 if __name__ == "__main__":
-    run_learner()
+    parser = argparse.ArgumentParser(description="RL2 PPO Learner")
+
+    parser.add_argument(
+        "--load-checkpoint",
+        type=str,
+        default=None,
+        help="Path to a specific .pt file to load weights from",
+    )
+
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cuda",
+        help="Path to a specific .pt file to load weights from",
+    )
+
+    args = parser.parse_args()
+    run_learner(args)

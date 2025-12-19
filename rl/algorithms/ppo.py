@@ -10,20 +10,20 @@ class PPO:
     def __init__(
         self,
         num_envs: int,
-        num_transitions_per_env: int,
-        input_dim: int,
-        hidden_size: tuple[int] | list[int],
-        output_dim: list[int],
+        num_transitions_per_env: int = 250,
+        input_dim: int = 2,
+        hidden_size: tuple[int] | list[int] = [64, 64],
+        output_dim: list[int] = [3, 3],
         num_mini_batches: int = 4,
         num_epochs: int = 4,
         gamma: float = 0.99,
         lam: float = 0.95,
         learning_rate: float = 3e-4,
-        device: str = "cpu",
         clip_coef: float = 0.2,
         entropy_loss_coef: float = 0.01,
         value_loss_coef: float = 0.5,
         max_grad_norm: float = 0.5,
+        device: str = "cpu",
     ) -> None:
         self.device = device
         self.policy = ActorCritic(

@@ -6,14 +6,6 @@ import torch
 from algorithms.ppo import PPO
 from rl2_env import RL2Env
 
-TOTAL_TIMESTEPS = 1_000_000
-TRANSITIONS_PER_ENV = 250
-INPUT_DIM = 2
-HIDDEN_SIZE = [64, 64]
-OUTPUT_DIM = [3, 3]
-EXP_NAME = "rl2_ppo_interactive"
-DEVICE = "cuda"
-
 # Map C++ game states
 game_state = {
     "in_start_screen": 0,
@@ -33,10 +25,6 @@ def run_learner(args):
 
     ppo = PPO(
         num_envs=num_envs,
-        num_transitions_per_env=TRANSITIONS_PER_ENV,
-        input_dim=INPUT_DIM,
-        hidden_size=HIDDEN_SIZE,
-        output_dim=OUTPUT_DIM,
         device=device,
     )
     if checkpoint_path and os.path.exists(checkpoint_path):
@@ -54,7 +42,7 @@ def run_learner(args):
     obs, _ = env.reset()
 
     while env.game.get_game_state() != 4:
-        for _ in range(TRANSITIONS_PER_ENV):
+        for _ in range(ppo.num_transitions_per_env):
 
             env.game.process_input()
             if env.game.get_game_state() == game_state["in_shutdown"]:

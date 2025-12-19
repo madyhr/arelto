@@ -1,6 +1,6 @@
 {
-  "venvPath": "/home/madyhr/miniconda3/envs",
-  "venv": "rl2_conda_env",
+  "venvPath": "/home/madyhr/rl2/",
+  "venv": "rl2_venv",
   "extraPaths": [
     "build",
     "rl",

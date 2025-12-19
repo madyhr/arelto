@@ -49,6 +49,9 @@ add_executable(game_app src/main.cpp)
 target_link_libraries(game_app PRIVATE rl2_core)
 
 pybind11_add_module(rl2_py src/bindings.cpp)
+set_target_properties(rl2_py PROPERTIES 
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/rl"
+)
 target_link_libraries(rl2_py PRIVATE rl2_core)
 
 file(GLOB_RECURSE ASSETS_TO_COPY "assets/*")

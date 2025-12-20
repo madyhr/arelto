@@ -130,8 +130,8 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
   SetupProjectileGeometry(scene.projectiles, alpha);
   RenderProjectiles(scene.projectiles);
   if (debug_mode) {
-    // RenderDebugWorldOccupancyMap(occupancy_map);
-    RenderDebugEnemyOccupancyMap(scene.enemy, scene.occupancy_map, alpha);
+    RenderDebugWorldOccupancyMap(scene.occupancy_map);
+    // RenderDebugEnemyOccupancyMap(scene.enemy, scene.occupancy_map, alpha);
   };
 
   RenderUI(scene, time);

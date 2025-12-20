@@ -34,7 +34,6 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
-.clang-format
 
 # vcpkg (C++ package manager)
 vcpkg_installed/

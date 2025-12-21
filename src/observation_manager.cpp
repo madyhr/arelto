@@ -32,11 +32,6 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr,
 
   int idx = 0;
 
-  // for (const Vector2D& enemy_pos : scene.enemy.position) {
-  //   buffer_ptr[idx++] =
-  //       (scene.player.position_ - enemy_pos).Norm() * kInvMapMaxDistance;
-  // }
-  //
   for (const Vector2D& enemy_pos : scene.enemy.position) {
     buffer_ptr[idx++] =
         (scene.player.position_.x - enemy_pos.x) / kPositionObservationScale;
@@ -46,53 +41,6 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr,
     buffer_ptr[idx++] =
         (scene.player.position_.y - enemy_pos.y) / kPositionObservationScale;
   }
-  //
-  // for (const Vector2D& enemy_pos : scene.enemy.position) {
-  //   buffer_ptr[idx++] = enemy_pos.x / kPositionObservationScale;
-  // }
-  //
-  // for (const Vector2D& enemy_pos : scene.enemy.position) {
-  //   buffer_ptr[idx++] = enemy_pos.y / kPositionObservationScale;
-  // }
-  //
-  // for (const Vector2D& enemy_vel : scene.enemy.velocity) {
-  //   buffer_ptr[idx++] = enemy_vel.x / kPositionObservationScale;
-  // }
-  //
-  // for (const Vector2D& enemy_vel : scene.enemy.velocity) {
-  //   buffer_ptr[idx++] = enemy_vel.y / kPositionObservationScale;
-  // }
-  //
-  // for (const Collider& enemy_collider : scene.enemy.collider) {
-  //   buffer_ptr[idx++] =
-  //       static_cast<float>(enemy_collider.size.width) / kEnemyColliderWidth;
-  // }
-  //
-  // for (const Collider& enemy_collider : scene.enemy.collider) {
-  //   buffer_ptr[idx++] =
-  //       static_cast<float>(enemy_collider.size.height) / kEnemyColliderHeight;
-  // }
-  //
-  // for (const int& enemy_health : scene.enemy.health_points) {
-  //   buffer_ptr[idx++] = static_cast<float>(enemy_health) / kEnemyHealth;
-  // }
-  //
-  // for (const float& enemy_inv_mass : scene.enemy.inv_mass) {
-  //   buffer_ptr[idx++] = enemy_inv_mass / kEnemyInvMass;
-  // }
-  //
-  // for (const float& enemy_movement_speed : scene.enemy.movement_speed) {
-  //   buffer_ptr[idx++] = enemy_movement_speed / kPositionObservationScale;
-  // }
-  //
-  // for (int i = 0; i < kNumEnemies; ++i) {
-  //   const EntityType* map_data = scene.enemy.occupancy_map[i].Data();
-  //   size_t total_cells = scene.enemy.occupancy_map[i].kTotalCells;
-  //
-  //   for (size_t k = 0; k < total_cells; ++k) {
-  //     buffer_ptr[idx++] = static_cast<float>(map_data[k]);
-  //   }
-  // }
 
   return;
 };

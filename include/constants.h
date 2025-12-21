@@ -55,9 +55,9 @@ const float kInvMapMaxDistance =
                      static_cast<float>(kMapWidth) * kMapWidth);
 constexpr int kOccupancyMapResolution = 25;
 constexpr int kOccupancyMapWidth =
-    static_cast<int>(kMapWidth / kOccupancyMapResolution);
+    (kMapWidth + kOccupancyMapResolution - 1) / kOccupancyMapResolution;
 constexpr int kOccupancyMapHeight =
-    static_cast<int>(kMapHeight / kOccupancyMapResolution);
+    (kMapHeight + kOccupancyMapResolution - 1) / kOccupancyMapResolution;
 // number of physics steps per occupancy map update
 constexpr int kOccupancyMapTimeDecimation = 100;
 // Tiles are used for rendering
@@ -102,7 +102,7 @@ constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
 constexpr float kPlayerInvulnerableWindow = 0.1;    // time in sec
 
 // Enemy constants
-constexpr int kNumEnemies = 1;
+constexpr int kNumEnemies = 3;
 constexpr int kEnemyHealth = 10;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;
@@ -160,6 +160,11 @@ constexpr int kNumPlayerSpells = 2;  // total number of spells
 
 // Observation constants
 constexpr float kPositionObservationScale = 1000.0f;
+
+// Raycaster constants
+constexpr int kNumRays = 72;
+constexpr float kMaxRayDistance = 1000.0f;
+constexpr float kMinRayDistance = 30.0f;  // offset from start in dir of ray
 
 }  // namespace rl2
 #endif

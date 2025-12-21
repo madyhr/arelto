@@ -8,6 +8,7 @@
 #include "abilities.h"
 #include "constants.h"
 #include "map.h"
+#include "ray_caster.h"
 #include "types.h"
 
 namespace rl2 {
@@ -16,7 +17,7 @@ class Projectiles {
  public:
   std::vector<int> owner_id_;
   std::vector<Vector2D> position_;
-  std::vector<Vector2D> prev_position_; 
+  std::vector<Vector2D> prev_position_;
   std::vector<Vector2D> direction_;
   std::vector<float> speed_;
   std::vector<Size2D> sprite_size_;
@@ -57,6 +58,8 @@ struct Enemy {
   std::array<bool, kNumEnemies> is_truncated_latched;
   // this is used for enemy terminations that happen before a timeout
   std::array<bool, kNumEnemies> is_terminated_latched;
+
+  EnemyRayCaster ray_caster;
   EntityType entity_type = EntityType::enemy;
 };
 
@@ -82,10 +85,12 @@ class Player {
 };
 
 Vector2D GetCentroid(const Vector2D& position, const Size2D& size);
-AABB GetAABB(const Vector2D& position, const Size2D& size, const EntityType& type = EntityType::None,
+AABB GetAABB(const Vector2D& position, const Size2D& size,
+             const EntityType& type = EntityType::None,
              const int& storage_index = 0);
 AABB GetCollisionAABB(const Vector2D& centroid, const Size2D& size,
-                      const EntityType& type = EntityType::None, const int& storage_index = 0);
+                      const EntityType& type = EntityType::None,
+                      const int& storage_index = 0);
 void UpdateEnemyStatus(Enemy& enemy, const Player& player);
 void UpdateProjectilesStatus(Projectiles& projectiles);
 void RespawnEnemy(Enemy& enemy, const Player& player);

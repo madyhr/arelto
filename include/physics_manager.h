@@ -41,6 +41,9 @@ class PhysicsManager {
       Enemy& enemy,
       FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
   void UpdateEnemyStatus(Enemy& enemy, const Player& player);
+  void UpdateEnemyRayCaster(
+      Enemy& enemy,
+      const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
   void UpdateProjectilesStatus(Projectiles& projectiles);
 };
 

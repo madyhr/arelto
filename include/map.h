@@ -23,7 +23,6 @@ class TileManager {
   void SetupTileSelector();
 };
 
-
 template <size_t width, size_t height>
 class FixedMap {
   // Example with width = 3, height = 2;
@@ -36,16 +35,20 @@ class FixedMap {
   static constexpr size_t kTotalCells = width * height;
   std::array<EntityType, kTotalCells> data_;
   FixedMap() { Clear(); };
-  virtual ~FixedMap(){};
+  virtual ~FixedMap() {};
 
   void Clear() { data_.fill(EntityType::None); };
 
-  int GetDataIdx(int x, int y) const{
-    if (x < 0 || x > width || y < 0 || y > height) {
+  int GetDataIdx(int x, int y) const {
+    if (x < 0 || x >= width || y < 0 || y >= height) {
       return -1;
     };
     return x + y * width;
   };
+
+  inline EntityType GetUnchecked(int x, int y) const {
+    return data_[x + y * width];
+  }
 
   EntityType Get(int x, int y) const {
     int data_idx = GetDataIdx(x, y);
@@ -69,6 +72,17 @@ class FixedMap {
       for (int j = 0; j < h + 1; ++j) {
         Set(x + i, y + j, type);
       }
+    }
+  }
+
+  void AddBorder(EntityType type) {
+    for (size_t x = 0; x < width; ++x) {
+      data_[x] = type;                         // Top (y=0)
+      data_[x + (height - 1) * width] = type;  // Bottom
+    }
+    for (size_t y = 0; y < height; ++y) {
+      data_[y * width] = type;              // Left (x=0)
+      data_[width - 1 + y * width] = type;  // Right
     }
   }
 
@@ -108,7 +122,6 @@ class FixedMap {
     };
   };
 };
-
 
 }  // namespace rl2
 

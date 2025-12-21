@@ -15,7 +15,7 @@
 
 namespace rl2 {
 
-RenderManager::RenderManager(){};
+RenderManager::RenderManager() {};
 RenderManager::~RenderManager() {
   Shutdown();
 };
@@ -132,6 +132,7 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
   if (debug_mode) {
     RenderDebugWorldOccupancyMap(scene.occupancy_map);
     // RenderDebugEnemyOccupancyMap(scene.enemy, scene.occupancy_map, alpha);
+    RenderDebugRayCaster(scene.enemy, alpha);
   };
 
   RenderUI(scene, time);
@@ -411,8 +412,8 @@ void RenderManager::RenderDebugWorldOccupancyMap(
   SDL_GetRenderDrawBlendMode(resources_.renderer, &original_blend_mode);
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
 
-  int grid_width_cells = kMapWidth / kOccupancyMapResolution;
-  int grid_height_cells = kMapHeight / kOccupancyMapResolution;
+  int grid_width_cells = kOccupancyMapWidth;
+  int grid_height_cells = kOccupancyMapHeight;
 
   int top_left_x =
       static_cast<int>(camera_.render_position_.x / kOccupancyMapResolution);
@@ -432,10 +433,10 @@ void RenderManager::RenderDebugWorldOccupancyMap(
     for (int j = start_y; j < end_y; ++j) {
 
       SDL_Rect render_rect;
-      render_rect.x =
-          static_cast<int>(i * kOccupancyMapResolution - camera_.render_position_.x);
-      render_rect.y =
-          static_cast<int>(j * kOccupancyMapResolution - camera_.render_position_.y);
+      render_rect.x = static_cast<int>(i * kOccupancyMapResolution -
+                                       camera_.render_position_.x);
+      render_rect.y = static_cast<int>(j * kOccupancyMapResolution -
+                                       camera_.render_position_.y);
       render_rect.w = kOccupancyMapResolution;
       render_rect.h = kOccupancyMapResolution;
 
@@ -560,6 +561,69 @@ void RenderManager::RenderDebugEnemyOccupancyMap(
   SDL_SetRenderDrawBlendMode(resources_.renderer, originalBlendMode);
 };
 
+void RenderManager::RenderDebugRayCaster(const Enemy& enemy, float alpha) {
+  SDL_BlendMode original_blend_mode;
+  SDL_GetRenderDrawBlendMode(resources_.renderer, &original_blend_mode);
+  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
+
+  for (int i = 0; i < kNumEnemies; ++i) {
+    if (!enemy.is_alive[i]) {
+      continue;
+    }
+
+    // 1. Get the interpolated world position (Top-Left)
+    Vector2D enemy_pos_world =
+        LerpVector2D(enemy.prev_position[i], enemy.position[i], alpha);
+
+    // 2. Calculate the World Center
+    Vector2D center_world = enemy_pos_world + enemy.collider[i].offset;
+
+    // 3. Replicate the offset logic from UpdateEnemyRayCaster
+    float half_w = enemy.collider[i].size.width * 0.5f;
+    float half_h = enemy.collider[i].size.height * 0.5f;
+    float ray_offset_dist = std::max(half_h, half_w) + kMinRayDistance;
+
+    for (int k = 0; k < kNumRays; ++k) {
+      float dist = enemy.ray_caster.ray_hit_distances[k][i];
+      Vector2D dir = enemy.ray_caster.pattern.ray_dir[k];
+      EntityType type = enemy.ray_caster.ray_hit_types[k][i];
+
+      // 4. Calculate the actual start and end points in World Space
+      // The ray started 'ray_offset_dist' away from the center
+      Vector2D ray_start_world = center_world + dir * ray_offset_dist;
+      Vector2D ray_end_world = ray_start_world + dir * dist;
+
+      // 5. Convert to Screen Space
+      Vector2D start_screen = ray_start_world - camera_.render_position_;
+      Vector2D end_screen = ray_end_world - camera_.render_position_;
+
+      // Color selection
+      switch (type) {
+        case EntityType::player:
+          SDL_SetRenderDrawColor(resources_.renderer, 255, 0, 0, 150);  // Red
+          break;
+        case EntityType::terrain:
+          SDL_SetRenderDrawColor(resources_.renderer, 0, 255, 0, 50);  // Green
+          break;
+        case EntityType::enemy:
+          SDL_SetRenderDrawColor(resources_.renderer, 255, 165, 0,
+                                 150);  // Orange
+          break;
+        default:
+          SDL_SetRenderDrawColor(resources_.renderer, 200, 200, 200,
+                                 50);  // Grey
+          break;
+      }
+
+      SDL_RenderDrawLine(resources_.renderer, static_cast<int>(start_screen.x),
+                         static_cast<int>(start_screen.y),
+                         static_cast<int>(end_screen.x),
+                         static_cast<int>(end_screen.y));
+    }
+  }
+
+  SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
+}
 void RenderManager::RenderUI(const Scene& scene, float time) {
   ui_manager_.UpdateUI(scene, time);
 

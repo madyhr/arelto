@@ -38,7 +38,8 @@ class RenderManager {
   bool Initialize(bool is_headless);
   void Shutdown();
 
-  void Render(const Scene& scene, float alpha, bool debug_mode, float time, GameState game_state);
+  void Render(const Scene& scene, float alpha, bool debug_mode, float time,
+              GameState game_state);
   void RenderGameOver();
 
   Camera camera_;
@@ -61,8 +62,10 @@ class RenderManager {
       const Enemy& enemy,
       const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
       float alpha);
+  void RenderDebugRayCaster(const Enemy& enemy, float alpha);
   void RenderUI(const Scene& scene, float time);
-  void RenderDigitString(const std::string& text, int start_x, int start_y, Size2D sprite_size, Size2D char_size);
+  void RenderDigitString(const std::string& text, int start_x, int start_y,
+                         Size2D sprite_size, Size2D char_size);
 };
 
 }  // namespace rl2

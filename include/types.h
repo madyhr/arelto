@@ -2,6 +2,7 @@
 #ifndef RL2_TYPES_H_
 #define RL2_TYPES_H_
 #include <cstdint>
+#include <numbers>
 #include "constants.h"
 #include "utils.h"
 
@@ -172,6 +173,18 @@ inline auto WorldToGrid(auto pos) {
   return (pos / kOccupancyMapResolution);
 }
 
+inline auto GridToWorld(auto pos) {
+  return (pos * kOccupancyMapResolution);
+}
+
+inline float Deg2Rad(float deg) {
+  return deg * (std::numbers::pi / 180);
+}
+
+inline float Rad2Deg(float rad) {
+  return rad * (180 / std::numbers::pi);
+}
+
 struct GameStatus {
   FrameStats frame_stats;
   bool is_debug;
@@ -185,7 +198,6 @@ enum GameState : int {
   is_gameover,
   in_shutdown,
 };
-
 
 }  // namespace rl2
 #endif

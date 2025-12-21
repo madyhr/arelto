@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "entity.h"
 #include "random.h"
+#include "ray_caster.h"
 #include "types.h"
 
 namespace rl2 {
@@ -45,6 +46,7 @@ struct Scene {
     std::fill(enemy.attack_cooldown.begin(), enemy.attack_cooldown.end(), 0.0f);
     std::fill(enemy.attack_damage.begin(), enemy.attack_damage.end(), 1);
     RespawnEnemy(enemy, player);
+    SetupEnemyRayCasterPattern(enemy.ray_caster);
 
     // Add slight variation to each enemy to make it more interesting.
     for (int i = 0; i < kNumEnemies; ++i) {

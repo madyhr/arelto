@@ -23,14 +23,14 @@ void Game::SignalHandler(int signal) {
   stop_request_ = 1;
 }
 
-Game::Game(){};
+Game::Game() {};
 Game::~Game() {}
 
 bool Game::Initialize() {
 
   std::signal(SIGINT, SignalHandler);
   std::signal(SIGKILL, SignalHandler);
-  game_status_.is_debug = false;
+  game_status_.is_debug = true;
   game_status_.is_headless = false;
 
   if (!(render_manager_.Initialize(game_status_.is_headless))) {

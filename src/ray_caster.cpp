@@ -1,0 +1,88 @@
+// src/ray_caster.cpp
+#include "ray_caster.h"
+#include "constants.h"
+#include "types.h"
+
+namespace rl2 {
+
+// This function assumes that the occupancy map is surrounded by grid cells
+// that have an EntityType other than None.
+RayHit CastRay(
+    const Vector2D& start_pos, const Vector2D& ray_dir,
+    const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
+
+  int step_x, step_y;
+  float side_dist_x, side_dist_y;
+  bool hit_side_x;
+  RayHit ray_hit = {0.0f, EntityType::None};
+
+  Vector2D grid_pos = WorldToGrid(start_pos);
+  int map_grid_x = static_cast<int>(grid_pos.x);
+  int map_grid_y = static_cast<int>(grid_pos.y);
+
+  float delta_dist_x = std::abs(1 / ray_dir.x);
+  float delta_dist_y = std::abs(1 / ray_dir.y);
+
+  if (ray_dir.x < 0) {
+    step_x = -1;
+    side_dist_x = (grid_pos.x - map_grid_x) * delta_dist_x;
+  } else {
+    step_x = 1;
+    side_dist_x = (map_grid_x + 1 - grid_pos.x) * delta_dist_x;
+  }
+
+  if (ray_dir.y < 0) {
+    step_y = -1;
+    side_dist_y = (grid_pos.y - map_grid_y) * delta_dist_y;
+  } else {
+    step_y = 1;
+    side_dist_y = (map_grid_y + 1 - grid_pos.y) * delta_dist_y;
+  }
+
+  EntityType hit_type = EntityType::None;
+  while (true) {
+
+    if (side_dist_x < side_dist_y) {
+      map_grid_x += step_x;
+      side_dist_x += delta_dist_x;
+      hit_side_x = true;
+    } else {
+      map_grid_y += step_y;
+      side_dist_y += delta_dist_y;
+      hit_side_x = false;
+    }
+
+    // We use the unchecked get to avoid checking bounds for performance reasons
+    hit_type = occupancy_map.GetUnchecked(map_grid_x, map_grid_y);
+
+    if (hit_type != EntityType::None) {
+      break;
+    }
+  }
+
+  if (hit_side_x) {
+    ray_hit.distance = side_dist_x - delta_dist_x;
+  } else {
+    ray_hit.distance = side_dist_y - delta_dist_y;
+  }
+
+  ray_hit.entity_type = hit_type;
+
+  // Convert back to world coordinates
+  ray_hit.distance = GridToWorld(ray_hit.distance);
+
+  return ray_hit;
+};
+
+void SetupEnemyRayCasterPattern(EnemyRayCaster& ray_caster) {
+
+  size_t num_rays = ray_caster.pattern.ray_dir.size();
+
+  for (int i = 0; i < num_rays; ++i) {
+    float degree = i * (360.0f / num_rays);
+    ray_caster.pattern.ray_dir[i] = {std::cos(Deg2Rad(degree)),
+                                     std::sin(Deg2Rad(degree))};
+  }
+};
+
+}  // namespace rl2

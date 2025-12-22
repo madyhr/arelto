@@ -1,6 +1,8 @@
 // src/physics_manager.cpp
 #include "physics_manager.h"
 #include <algorithm>
+#include <iostream>
+#include <iterator>
 #include "collision_manager.h"
 #include "constants.h"
 #include "entity.h"
@@ -337,8 +339,11 @@ void PhysicsManager::UpdateEnemyRayCaster(
       // center position, we need to check if we are about to cast through
       // terrain which could lead to a ray going OOB. In that case, we should
       // just skip the ray casting altogether and we can set the distance to 0.
+      bool out_of_bounds = grid_pos.x >= kOccupancyMapWidth - 1 ||
+                           grid_pos.y >= kOccupancyMapHeight - 1 ||
+                           grid_pos.x <= 1 || grid_pos.y <= 1;
       RayHit ray_hit;
-      if (start_cell_type == EntityType::terrain) {
+      if (out_of_bounds) {
         ray_hit = {0.0f, EntityType::terrain};
       } else {
         ray_hit = CastRay(start_pos, dir, occupancy_map);

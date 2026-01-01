@@ -1,7 +1,7 @@
 import pytest
 import torch
 import torch.nn as nn
-from modules.actor import DiscreteActor, GaussianActor, MultiDiscreteActor
+from modules.actor import MultiDiscreteActor
 from modules.actor_critic import ActorCritic
 from modules.critic import ValueCritic
 
@@ -32,12 +32,8 @@ def test_actor_critic_forward_flow(
 
     action, log_prob, entropy, value = ac(dummy_input)
 
-    if actor_class == GaussianActor:
-        assert action.shape == (batch_size, current_output_dim)
-    elif actor_class == MultiDiscreteActor:
+    if actor_class == MultiDiscreteActor:
         assert action.shape == (batch_size, len(current_output_dim))
-    else:
-        assert action.shape == (batch_size,)
 
     assert log_prob.shape == (batch_size, 1)
     assert entropy.shape == (batch_size, 1)
@@ -69,10 +65,7 @@ def test_actor_critic_gradient_flow(
 
     action, log_prob, entropy, value = ac(dummy_input)
 
-    if actor_class == DiscreteActor:
-        action_loss = action.float().sum()
-    else:
-        action_loss = action.sum()
+    action_loss = action.sum()
 
     loss = log_prob.sum() + entropy.sum() + value.sum() + action_loss
 

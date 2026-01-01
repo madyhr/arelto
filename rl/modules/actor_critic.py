@@ -27,7 +27,10 @@ class ActorCritic(nn.Module):
         )
 
         self.actor: BaseActor = actor_class(
-            input_dim, hidden_size, output_dim, activation_func_class
+            input_dim,
+            hidden_size,
+            output_dim,
+            activation_func_class,
         )
 
     def forward(self, obs: torch.Tensor, action: torch.Tensor | None = None):

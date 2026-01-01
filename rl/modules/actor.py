@@ -29,57 +29,6 @@ class BaseActor(nn.Module):
         raise NotImplementedError
 
 
-class GaussianActor(BaseActor):
-    def __init__(
-        self,
-        input_dim: int,
-        hidden_size: tuple[int] | list[int],
-        output_dim: int,
-        activation_func_class: type[nn.Module] = nn.Tanh,
-    ) -> None:
-        super().__init__(input_dim, hidden_size, output_dim, activation_func_class)
-        self.log_std = nn.Parameter(torch.zeros(output_dim))
-
-    def forward(self, obs) -> tuple[torch.Tensor, torch.Tensor]:
-        mean = self.network(obs)
-        std = torch.exp(self.log_std)
-
-        return mean, std.expand_as(mean)
-
-    def get_action(
-        self, obs: torch.Tensor, action: torch.Tensor | None = None
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        mean, std = self(obs)
-        dist = torch.distributions.Normal(mean, std)
-        sample = dist.sample()
-        log_prob = dist.log_prob(sample).sum(dim=-1)
-
-        return sample, log_prob
-
-
-class DiscreteActor(BaseActor):
-    def __init__(
-        self,
-        input_dim: int,
-        hidden_size: tuple[int] | list[int],
-        output_dim: int,
-        activation_func_class: type[nn.Module] = nn.Tanh,
-    ) -> None:
-        super().__init__(input_dim, hidden_size, output_dim, activation_func_class)
-
-    def forward(self, obs) -> torch.Tensor:
-        return self.network(obs)
-
-    def get_action(
-        self, obs: torch.Tensor, action: torch.Tensor | None = None
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        logits = self(obs)
-        dist = torch.distributions.Categorical(logits=logits)
-        sample = dist.sample()
-        log_prob = dist.log_prob(sample)
-        return sample, log_prob
-
-
 class MultiDiscreteActor(BaseActor):
     def __init__(
         self,

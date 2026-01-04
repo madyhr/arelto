@@ -72,7 +72,6 @@ int Game::GetGameState() {
 };
 
 void Game::StepGamePhysics() {
-  CachePreviousState();
   physics_manager_.StepPhysics(scene_);
   reward_manager_.UpdateRewardTerms(scene_);
   time_ += physics_manager_.GetPhysicsDt();
@@ -80,6 +79,7 @@ void Game::StepGamePhysics() {
   if (scene_.player.stats_.health <= 0) {
     game_state_ = is_gameover;
   };
+  CachePreviousState();
 };
 
 void Game::RenderGame(float alpha) {
@@ -241,6 +241,7 @@ void Game::CachePreviousState() {
   for (int i = 0; i < kNumEnemies; ++i) {
     if (scene_.enemy.is_alive[i]) {
       scene_.enemy.prev_position[i] = scene_.enemy.position[i];
+      scene_.enemy.prev_velocity[i] = scene_.enemy.velocity[i];
     }
   }
 

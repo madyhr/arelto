@@ -39,6 +39,7 @@ struct Enemy {
   std::array<Vector2D, kNumEnemies> position;
   std::array<Vector2D, kNumEnemies> prev_position;
   std::array<Vector2D, kNumEnemies> velocity;
+  std::array<Vector2D, kNumEnemies> prev_velocity;
   std::array<int, kNumEnemies> health_points;
   std::array<float, kNumEnemies> movement_speed;
   std::array<Size2D, kNumEnemies> sprite_size;

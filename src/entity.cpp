@@ -56,6 +56,7 @@ void RespawnEnemy(Enemy& enemy, const Player& player) {
 
     enemy.position[i] = potential_pos;
     enemy.prev_position[i] = potential_pos;
+    enemy.prev_velocity[i] = {0.0f, 0.0f};
     enemy.health_points[i] = kEnemyHealth;
     enemy.damage_dealt_sim_step[i] = 0;
     enemy.is_alive[i] = true;

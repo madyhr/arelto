@@ -74,9 +74,9 @@ PYBIND11_MODULE(rl2_py, m) {
                throw std::runtime_error("Action buffer must be 2D array");
              }
 
-             self.action_manager_.ReadActionBuffer(
-                 static_cast<int*>(info.ptr), static_cast<int>(info.size),
-                 self.scene_);
+             self.action_manager_.ReadActionBuffer(static_cast<int*>(info.ptr),
+                                                   static_cast<int>(info.size),
+                                                   self.scene_);
            })
       .def("get_action_size",
            [](rl2::Game& self) {
@@ -96,6 +96,7 @@ PYBIND11_MODULE(rl2_py, m) {
            })
       .def("get_reward_size",
            [](rl2::Game& self) { return self.reward_manager_.GetRewardSize(); })
+      .def("get_enemy_num_rays", [](rl2::Game& self) { return rl2::kNumRays; })
       .def("shutdown", &rl2::Game::Shutdown)
       .def("get_game_state", &rl2::Game::GetGameState);
 };

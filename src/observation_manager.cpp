@@ -1,21 +1,15 @@
 // src/observation_manager.cpp
 #include "observation_manager.h"
+#include <algorithm>
 #include <stdexcept>
 #include "constants.h"
 #include "scene.h"
-#include "types.h"
 
 namespace rl2 {
 
 int ObservationManager::GetObservationSize(const Scene& scene) {
-  return 2  // relative position to player
-            // 2 +  // enemy position: x,y
-            // 2 +  // enemy velocity: x,y
-            // 2 +  // enemy size: w,h
-            // 1 +  // enemy health_points
-            // 1 +  // enemy inv mass
-            // 1    // enemy movement speed
-      ;
+  return kNumRays * 2;
+  ;
 };
 
 // Function that fills an observation buffer to be used for learning.
@@ -32,14 +26,21 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr,
 
   int idx = 0;
 
-  for (const Vector2D& enemy_pos : scene.enemy.position) {
-    buffer_ptr[idx++] =
-        (scene.player.position_.x - enemy_pos.x) / kPositionObservationScale;
+  for (int ray_idx = 0; ray_idx < kNumRays; ++ray_idx) {
+    for (int enemy_idx = 0; enemy_idx < kNumEnemies; ++enemy_idx) {
+      float val = scene.enemy.ray_caster.ray_hit_distances[ray_idx][enemy_idx] /
+                  kMaxRayDistance;
+
+      buffer_ptr[idx++] = std::clamp(val, -1.0f, 1.0f);
+    }
   }
 
-  for (const Vector2D& enemy_pos : scene.enemy.position) {
-    buffer_ptr[idx++] =
-        (scene.player.position_.y - enemy_pos.y) / kPositionObservationScale;
+  for (int ray_idx = 0; ray_idx < kNumRays; ++ray_idx) {
+    for (int enemy_idx = 0; enemy_idx < kNumEnemies; ++enemy_idx) {
+      buffer_ptr[idx++] =
+          1.0f + static_cast<float>(
+                     scene.enemy.ray_caster.ray_hit_types[ray_idx][enemy_idx]);
+    }
   }
 
   return;

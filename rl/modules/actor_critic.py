@@ -4,6 +4,7 @@ import typing
 
 import torch
 import torch.nn as nn
+from modules.ray_encoder import RayEncoder
 
 if typing.TYPE_CHECKING:
     from rl.modules import BaseActor, ValueCritic
@@ -19,18 +20,16 @@ class ActorCritic(nn.Module):
         hidden_size: tuple[int] | list[int],
         output_dim: int | list[int],
         activation_func_class: type[nn.Module] = nn.Tanh,
+        encoder: RayEncoder | None = None,
     ) -> None:
         super().__init__()
 
         self.critic: ValueCritic = critic_class(
-            input_dim, hidden_size, activation_func_class
+            input_dim, hidden_size, activation_func_class, encoder
         )
 
         self.actor: BaseActor = actor_class(
-            input_dim,
-            hidden_size,
-            output_dim,
-            activation_func_class,
+            input_dim, hidden_size, output_dim, activation_func_class, encoder
         )
 
     def forward(self, obs: torch.Tensor, action: torch.Tensor | None = None):

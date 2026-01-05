@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from modules.ray_encoder import RayEncoder
 from networks import MLP
 
 
@@ -10,8 +11,12 @@ class BaseActor(nn.Module):
         hidden_size: tuple[int] | list[int],
         output_dim: int | list[int],
         activation_func_class: type[nn.Module] = nn.Tanh,
+        encoder: RayEncoder | None = None,
     ) -> None:
         super().__init__()
+
+        mlp_input_dim = encoder.output_dim if encoder else input_dim
+
         # As the MLP class expects a one-dimensional output dim, we have to sum
         # the output dimensions in case it is not one-dimensional.
         if isinstance(output_dim, list):
@@ -19,8 +24,10 @@ class BaseActor(nn.Module):
         else:
             mlp_output_dim = output_dim
         self.network = MLP(
-            input_dim, hidden_size, mlp_output_dim, activation_func_class
+            mlp_input_dim, hidden_size, mlp_output_dim, activation_func_class
         )
+
+        self.encoder = encoder
 
     def forward(self, obs: torch.Tensor):
         raise NotImplementedError
@@ -36,12 +43,17 @@ class MultiDiscreteActor(BaseActor):
         hidden_size: tuple[int] | list[int],
         output_dim: list[int],
         activation_func_class: type[nn.Module] = nn.Tanh,
+        encoder: RayEncoder | None = None,
     ) -> None:
 
         self.output_dim = output_dim
-        super().__init__(input_dim, hidden_size, self.output_dim, activation_func_class)
+        super().__init__(
+            input_dim, hidden_size, self.output_dim, activation_func_class, encoder
+        )
 
     def forward(self, obs: torch.Tensor) -> tuple[torch.Tensor, ...]:
+        if self.encoder:
+            obs = self.encoder(obs)
         flat_logits = self.network(obs)
         split_logits = torch.split(flat_logits, self.output_dim, dim=-1)
         return split_logits

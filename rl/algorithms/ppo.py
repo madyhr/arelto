@@ -2,6 +2,7 @@ import torch
 from modules.actor import MultiDiscreteActor
 from modules.actor_critic import ActorCritic
 from modules.critic import ValueCritic
+from modules.ray_encoder import RayEncoder
 from storage.rollout_storage import RolloutStorage, Transition
 
 
@@ -10,10 +11,10 @@ class PPO:
     def __init__(
         self,
         num_envs: int,
-        num_transitions_per_env: int = 250,
-        input_dim: int = 2,
-        hidden_size: tuple[int] | list[int] = [64, 64],
+        input_dim: int,
+        hidden_size: tuple[int] | list[int] = [128, 128],
         output_dim: list[int] = [3, 3],
+        num_transitions_per_env: int = 100,
         num_mini_batches: int = 4,
         num_epochs: int = 4,
         gamma: float = 0.99,
@@ -23,9 +24,19 @@ class PPO:
         entropy_loss_coef: float = 0.01,
         value_loss_coef: float = 0.5,
         max_grad_norm: float = 0.5,
+        num_rays: int = 72,
+        num_ray_types: int = 5,
+        encoder_output_dim: int = 128,
         device: str = "cpu",
     ) -> None:
         self.device = device
+
+        encoder = RayEncoder(
+            num_rays=num_rays,
+            num_ray_types=num_ray_types,
+            output_dim=encoder_output_dim,
+        )
+
         self.policy = ActorCritic(
             MultiDiscreteActor,
             ValueCritic,
@@ -33,6 +44,7 @@ class PPO:
             hidden_size,
             output_dim,
             activation_func_class=torch.nn.ReLU,
+            encoder=encoder,
         )
 
         self.policy.to(self.device)
@@ -61,6 +73,11 @@ class PPO:
         self.num_mini_batches = num_mini_batches
         self.num_epochs = num_epochs
         self.batch_size = self.num_envs * self.num_transitions_per_env
+
+        print(f" --- PPO Params --- ")
+        print(f"Hidden shape: {hidden_size}")
+        print(f"Num epochs: {num_epochs}")
+        print(f"Num mini batches: {num_mini_batches}")
 
     def act(self, obs: torch.Tensor) -> torch.Tensor | None:
         self.transition.observation = obs
@@ -175,6 +192,7 @@ class PPO:
             metrics["loss/value"].append(value_loss.item())
             metrics["loss/entropy"].append(entropy_loss.item())
             metrics["loss/total"].append(loss.item())
-            self.storage.clear()
+
+        self.storage.clear()
 
         return {k: sum(v) / len(v) for k, v in metrics.items()}

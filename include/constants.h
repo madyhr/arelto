@@ -162,6 +162,7 @@ constexpr int kNumPlayerSpells = 2;  // total number of spells
 constexpr float kPositionObservationScale = 1000.0f;
 
 // Raycaster constants
+constexpr int kRayHistoryLength = 1;
 constexpr int kNumRays = 72;
 constexpr float kMaxRayDistance = 1000.0f;
 constexpr float kMinRayDistance = 30.0f;  // offset from start in dir of ray

@@ -571,47 +571,45 @@ void RenderManager::RenderDebugRayCaster(const Enemy& enemy, float alpha) {
       continue;
     }
 
-    // 1. Get the interpolated world position (Top-Left)
     Vector2D enemy_pos_world =
         LerpVector2D(enemy.prev_position[i], enemy.position[i], alpha);
 
-    // 2. Calculate the World Center
     Vector2D center_world = enemy_pos_world + enemy.collider[i].offset;
 
-    // 3. Replicate the offset logic from UpdateEnemyRayCaster
     float half_w = enemy.collider[i].size.width * 0.5f;
     float half_h = enemy.collider[i].size.height * 0.5f;
     float ray_offset_dist = std::max(half_h, half_w) + kMinRayDistance;
 
-    for (int k = 0; k < kNumRays; ++k) {
-      float dist = enemy.ray_caster.ray_hit_distances[k][i];
-      Vector2D dir = enemy.ray_caster.pattern.ray_dir[k];
-      EntityType type = enemy.ray_caster.ray_hit_types[k][i];
+    int ray_history_idx =
+        (enemy.ray_caster.history_idx - 1 + kRayHistoryLength) %
+        kRayHistoryLength;
 
-      // 4. Calculate the actual start and end points in World Space
+    for (int k = 0; k < kNumRays; ++k) {
+      float dist = enemy.ray_caster.ray_hit_distances[ray_history_idx][k][i];
+      Vector2D dir = enemy.ray_caster.pattern.ray_dir[k];
+      EntityType type = enemy.ray_caster.ray_hit_types[ray_history_idx][k][i];
+
       // The ray started 'ray_offset_dist' away from the center
       Vector2D ray_start_world = center_world + dir * ray_offset_dist;
       Vector2D ray_end_world = ray_start_world + dir * dist;
 
-      // 5. Convert to Screen Space
       Vector2D start_screen = ray_start_world - camera_.render_position_;
       Vector2D end_screen = ray_end_world - camera_.render_position_;
 
-      // Color selection
       switch (type) {
         case EntityType::player:
           SDL_SetRenderDrawColor(resources_.renderer, 255, 0, 0, 150);  // Red
           break;
         case EntityType::terrain:
-          SDL_SetRenderDrawColor(resources_.renderer, 0, 255, 0, 50);  // Green
+          SDL_SetRenderDrawColor(resources_.renderer, 200, 200, 200,
+                                 50);  // Gray
           break;
         case EntityType::enemy:
           SDL_SetRenderDrawColor(resources_.renderer, 255, 165, 0,
                                  150);  // Orange
           break;
         default:
-          SDL_SetRenderDrawColor(resources_.renderer, 200, 200, 200,
-                                 50);  // Grey
+          SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 50);
           break;
       }
 

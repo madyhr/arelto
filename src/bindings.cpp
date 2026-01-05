@@ -97,6 +97,8 @@ PYBIND11_MODULE(rl2_py, m) {
       .def("get_reward_size",
            [](rl2::Game& self) { return self.reward_manager_.GetRewardSize(); })
       .def("get_enemy_num_rays", [](rl2::Game& self) { return rl2::kNumRays; })
+      .def("get_enemy_ray_history_length",
+           [](rl2::Game& self) { return rl2::kRayHistoryLength; })
       .def("shutdown", &rl2::Game::Shutdown)
       .def("get_game_state", &rl2::Game::GetGameState);
 };

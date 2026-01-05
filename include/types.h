@@ -100,7 +100,7 @@ inline Vector2D LerpVector2D(const Vector2D& start, const Vector2D& end,
   return start * (1 - alpha) + end * alpha;
 };
 
-enum class EntityType : int { None = -1, terrain, player, enemy, projectile };
+enum class EntityType : int { None = 0, terrain, player, enemy, projectile };
 
 struct Size2D {
   uint32_t width;

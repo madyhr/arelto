@@ -312,6 +312,8 @@ void PhysicsManager::UpdateEnemyRayCaster(
     Enemy& enemy,
     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
 
+  int history_idx = enemy.ray_caster.history_idx;
+
   for (int ray_idx = 0; ray_idx < kNumRays; ++ray_idx) {
     Vector2D dir = enemy.ray_caster.pattern.ray_dir[ray_idx];
 
@@ -349,10 +351,15 @@ void PhysicsManager::UpdateEnemyRayCaster(
         ray_hit = CastRay(start_pos, dir, occupancy_map);
       }
 
-      enemy.ray_caster.ray_hit_distances[ray_idx][enemy_idx] = ray_hit.distance;
-      enemy.ray_caster.ray_hit_types[ray_idx][enemy_idx] = ray_hit.entity_type;
+      enemy.ray_caster.ray_hit_distances[history_idx][ray_idx][enemy_idx] =
+          ray_hit.distance;
+      enemy.ray_caster.ray_hit_types[history_idx][ray_idx][enemy_idx] =
+          ray_hit.entity_type;
     }
   }
+
+  enemy.ray_caster.history_idx =
+      (enemy.ray_caster.history_idx + 1) % kRayHistoryLength;
 };
 
 void PhysicsManager::UpdateProjectilesStatus(Projectiles& projectiles) {

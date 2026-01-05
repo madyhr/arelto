@@ -29,8 +29,14 @@ struct RayCasterPattern {
 struct EnemyRayCaster {
   RayCasterPattern<kNumRays> pattern;
   std::array<Vector2D, kNumEnemies> ray_start_pos;
-  std::array<std::array<float, kNumEnemies>, kNumRays> ray_hit_distances;
-  std::array<std::array<EntityType, kNumEnemies>, kNumRays> ray_hit_types;
+  std::array<std::array<std::array<float, kNumEnemies>, kNumRays>,
+             kRayHistoryLength>
+      ray_hit_distances = {};
+  std::array<std::array<std::array<EntityType, kNumEnemies>, kNumRays>,
+             kRayHistoryLength>
+      ray_hit_types = {};
+  // the current head of the history buffer
+  int history_idx = 0;
 };
 
 void SetupEnemyRayCasterPattern(EnemyRayCaster& pattern);

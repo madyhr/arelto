@@ -82,8 +82,8 @@ constexpr float kMaxFrameTime = 0.1;  // in seconds
 
 // Player constants
 constexpr int kPlayerInitMaxHealth = 100;
-constexpr float kPlayerInitX = 500.0f;
-constexpr float kPlayerInitY = 500.0f;
+constexpr float kPlayerInitX = 1500.0f;
+constexpr float kPlayerInitY = 1500.0f;
 constexpr float kPlayerSpeed = 200.0f;
 constexpr int kPlayerSpriteWidth = 60;
 // Derived from the generated wizard png
@@ -102,7 +102,7 @@ constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
 constexpr float kPlayerInvulnerableWindow = 0.1;    // time in sec
 
 // Enemy constants
-constexpr int kNumEnemies = 1000;
+constexpr int kNumEnemies = 25;
 constexpr int kEnemyHealth = 10;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;

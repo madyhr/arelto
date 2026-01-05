@@ -25,11 +25,13 @@ def run_learner(args):
 
     obs_size = env.game.get_observation_size()
     num_rays = env.game.get_enemy_num_rays()
+    ray_history_length = env.game.get_enemy_ray_history_length()
 
     ppo = PPO(
         input_dim=obs_size,
         num_envs=num_envs,
         num_rays=num_rays,
+        ray_history_length=ray_history_length,
         device=device,
     )
     if checkpoint_path and os.path.exists(checkpoint_path):

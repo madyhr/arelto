@@ -12,11 +12,11 @@ class PPO:
         self,
         num_envs: int,
         input_dim: int,
-        hidden_size: tuple[int] | list[int] = [128, 128],
+        hidden_size: tuple[int] | list[int] = [256, 256, 256],
         output_dim: list[int] = [3, 3],
-        num_transitions_per_env: int = 100,
-        num_mini_batches: int = 4,
-        num_epochs: int = 4,
+        num_transitions_per_env: int = 150,
+        num_mini_batches: int = 8,
+        num_epochs: int = 2,
         gamma: float = 0.99,
         lam: float = 0.95,
         learning_rate: float = 3e-4,
@@ -26,6 +26,7 @@ class PPO:
         max_grad_norm: float = 0.5,
         num_rays: int = 72,
         num_ray_types: int = 5,
+        ray_history_length: int = 1,
         encoder_output_dim: int = 128,
         device: str = "cpu",
     ) -> None:
@@ -34,6 +35,7 @@ class PPO:
         encoder = RayEncoder(
             num_rays=num_rays,
             num_ray_types=num_ray_types,
+            history_length=ray_history_length,
             output_dim=encoder_output_dim,
         )
 

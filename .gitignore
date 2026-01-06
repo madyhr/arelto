@@ -42,6 +42,9 @@ vcpkg_installed/
 .DS_Store
 Thumbs.db
 
+# Pyproject files
+*.egg-info
+
 # Caches
 .cache/*
 python/__pycache__/

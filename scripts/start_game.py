@@ -2,10 +2,12 @@ import argparse
 import datetime
 import os
 
+
+
 import torch
 
 from rl.algorithms.ppo import PPO
-from rl.rl2_env import RL2Env
+from rl import RL2Env
 
 # TODO: Refactor this into a pybinding that gets a dict directly from RL2Env.
 # Map C++ game states

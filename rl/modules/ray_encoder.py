@@ -35,7 +35,9 @@ class RayEncoder(nn.Module):
 
         # 1 for distance and the rest depends on embedding dim
         # We multiply by history_length because we stack frames channel-wise
-        in_channels = history_length * (1 + embedding_dim)
+        self.num_ray_channels = 1 + embedding_dim
+        in_channels = history_length * self.num_ray_channels
+        self.total_rays = num_rays * history_length
 
         layers = []
         current_channels = in_channels
@@ -68,40 +70,36 @@ class RayEncoder(nn.Module):
         self.fc = nn.Linear(self.flatten_dim, output_dim)
 
     def forward(self, obs: torch.Tensor) -> torch.Tensor:
-        # Obs layout: [All Distances (T*N), All Types (T*N)]
-        # T = history_length
-        # N = num_rays
+        # B = Number of enemies (batch size/num envs)
+        # T = history length
+        # N = number of rays
+        # E = embedding dim
 
-        total_rays = self.num_rays * self.history_length
-        ray_distances_flat = obs[:, :total_rays]
-        ray_types_flat = obs[:, total_rays:].long()
-
-        # Reshape to (B, T, N)
-        # We assume the order in obs is [Frame0_Rays, Frame1_Rays, ...]
         batch_size = obs.shape[0]
-        ray_distances = ray_distances_flat.view(
+
+        # (B, T, N)
+        ray_distances = obs[:, : self.total_rays].view(
             batch_size, self.history_length, self.num_rays
-        )  # (B, T, N)
-        ray_types = ray_types_flat.view(
-            batch_size, self.history_length, self.num_rays
-        )  # (B, T, N)
+        )
+        ray_types = (
+            obs[:, self.total_rays :]
+            .view(batch_size, self.history_length, self.num_rays)
+            .long()
+        )
 
-        embedded_types = self.type_embed(ray_types)  # (B, T, N, E)
-        ray_distances = ray_distances.unsqueeze(-1)  # (B, T, N, 1)
+        # (B, T, N) -> (B, T, 1, N)
+        ray_distances = ray_distances.unsqueeze(2)
 
-        # Concatenate: (B, T, N, 1 + E)
-        combined = torch.cat([ray_distances, embedded_types], dim=-1)
+        # (B, T, N) -> (B, T, N, E) -> (B, T, E, N)
+        embedded_types = self.type_embed(ray_types).permute(0, 1, 3, 2)
 
-        # Reshape to stack channels: (B, N, T * (1 + E))
-        # First permute to (B, N, T, 1+E)
-        combined = combined.permute(0, 2, 1, 3)
-        # Then flatten the last two dims
-        combined = combined.reshape(batch_size, self.num_rays, -1)
+        # (B, T, 1+E, N)
+        combined = torch.cat([ray_distances, embedded_types], dim=2)
 
-        # Permute for Conv1d: (B, Channels, N)
-        combined = combined.permute(0, 2, 1).contiguous()
+        # (B, T * (1+E), N)
+        combined = combined.flatten(1, 2)
 
         conv_out = self.conv_net(combined)
-        flat_out = conv_out.view(conv_out.size(0), -1)
+        flat_out = conv_out.view(batch_size, -1)
 
         return self.fc(flat_out)

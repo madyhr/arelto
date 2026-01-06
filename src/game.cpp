@@ -71,6 +71,10 @@ int Game::GetGameState() {
   return static_cast<int>(game_state_);
 };
 
+void Game::SetGameState(int game_state) {
+  game_state_ = static_cast<GameState>(game_state);
+}
+
 void Game::StepGamePhysics() {
   physics_manager_.StepPhysics(scene_);
   reward_manager_.UpdateRewardTerms(scene_);
@@ -135,8 +139,11 @@ void Game::RunGameLoop() {
         break;
       }
 
-      case in_start_screen:
+      case in_start_screen: {
+        ProcessInput();
+        RenderGame(0.0f);
         break;
+      }
 
       case is_gameover:
         break;
@@ -201,6 +208,11 @@ void Game::ProcessInput() {
           }
           break;
 
+        case SDLK_ESCAPE:
+          ResetGame();
+          game_state_ = in_start_screen;
+          break;
+
         case SDLK_p:
           if (game_state_ == is_running) {
             game_state_ = is_paused;
@@ -216,6 +228,25 @@ void Game::ProcessInput() {
 
   int cursor_pos_x, cursor_pos_y;
   uint32_t mouse_state = SDL_GetMouseState(&cursor_pos_x, &cursor_pos_y);
+
+  if (game_state_ == in_start_screen) {
+    if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+
+      // TODO: Formalize the button and separate the start screen into their own textures/elements
+      // (one of which is the button). Current button position/size is just eyeballed.
+      int btn_w = 800;
+      int btn_h = 360;
+      int btn_x = (kWindowWidth - btn_w) / 2;
+      int btn_y = 2 * (kWindowHeight) / 3 - btn_h / 2;
+
+      if (cursor_pos_x >= btn_x && cursor_pos_x <= btn_x + btn_w &&
+          cursor_pos_y >= btn_y && cursor_pos_y <= btn_y + btn_h) {
+        game_state_ = is_running;
+        std::cout << "Game Started!" << std::endl;
+      }
+    }
+    return;
+  }
 
   cursor_position_ = {
       (float)(cursor_pos_x + render_manager_.camera_.position_.x),
@@ -276,7 +307,6 @@ void Game::CachePreviousState() {
 }
 
 void Game::Shutdown() {
-
   render_manager_.Shutdown();
 }
 

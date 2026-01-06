@@ -16,6 +16,8 @@ struct UIResources {
   SDL_Texture* health_bar_texture = nullptr;
   SDL_Texture* timer_hourglass_texture = nullptr;
   SDL_Texture* game_over_texture = nullptr;
+  SDL_Texture* start_screen_texture = nullptr;
+  SDL_Texture* paused_texture = nullptr;
 };
 
 enum UIElementGroupType : int {

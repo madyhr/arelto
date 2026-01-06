@@ -100,5 +100,6 @@ PYBIND11_MODULE(rl2_py, m) {
       .def("get_enemy_ray_history_length",
            [](rl2::Game& self) { return rl2::kRayHistoryLength; })
       .def("shutdown", &rl2::Game::Shutdown)
+      .def("set_game_state", &rl2::Game::SetGameState)
       .def("get_game_state", &rl2::Game::GetGameState);
 };

@@ -45,6 +45,8 @@ constexpr int kTimerTextCharWidth = 50;
 constexpr int kTimerTextCharHeight = 72;
 constexpr int kGameOverSpriteWidth = 610;
 constexpr int kGameOverSpriteHeight = 88;
+constexpr int kPausedSpriteWidth = 610;
+constexpr int kPausedSpriteHeight = 120;
 
 // Map constants
 constexpr int kMapWidth = 10000;

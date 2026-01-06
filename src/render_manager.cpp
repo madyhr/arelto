@@ -77,6 +77,10 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.renderer, "assets/textures/frostbolt_sprite_sheet.png"));
   resources_.ui_resources.health_bar_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/health_bar.png");
+  resources_.ui_resources.start_screen_texture = IMG_LoadTexture(
+      resources_.renderer, "assets/textures/ui/start_screen.png");
+  resources_.ui_resources.paused_texture =
+      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/paused.png");
   resources_.ui_resources.game_over_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/game_over.png");
   resources_.ui_resources.digit_font_texture = IMG_LoadTexture(
@@ -90,6 +94,8 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.ui_resources.health_bar_texture == nullptr ||
       resources_.ui_resources.timer_hourglass_texture == nullptr ||
       resources_.ui_resources.game_over_texture == nullptr ||
+      resources_.ui_resources.start_screen_texture == nullptr ||
+      resources_.ui_resources.paused_texture == nullptr ||
       std::any_of(
           resources_.projectile_textures.begin(),
           resources_.projectile_textures.end(),
@@ -116,29 +122,37 @@ bool RenderManager::InitializeCamera(const Player& player) {
 void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
                            float time, GameState game_state) {
 
-  UpdateCameraPosition(scene.player);
-
-  camera_.render_position_ =
-      LerpVector2D(camera_.prev_position_, camera_.position_, alpha);
   SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
   SDL_RenderClear(resources_.renderer);
-  RenderTiledMap();
-  RenderPlayer(scene.player, alpha);
 
-  int num_enemy_vertices = SetupEnemyGeometry(scene.enemy, alpha);
-  RenderEnemies(scene.enemy, num_enemy_vertices);
-  SetupProjectileGeometry(scene.projectiles, alpha);
-  RenderProjectiles(scene.projectiles);
-  if (debug_mode) {
-    RenderDebugWorldOccupancyMap(scene.occupancy_map);
-    // RenderDebugEnemyOccupancyMap(scene.enemy, scene.occupancy_map, alpha);
-    RenderDebugRayCaster(scene.enemy, alpha);
-  };
+  if (game_state == in_start_screen) {
+    RenderStartScreen();
+  } else {
 
-  RenderUI(scene, time);
-  if (game_state == is_gameover) {
-    RenderGameOver();
-  };
+    UpdateCameraPosition(scene.player);
+
+    camera_.render_position_ =
+        LerpVector2D(camera_.prev_position_, camera_.position_, alpha);
+    RenderTiledMap();
+    RenderPlayer(scene.player, alpha);
+
+    int num_enemy_vertices = SetupEnemyGeometry(scene.enemy, alpha);
+    RenderEnemies(scene.enemy, num_enemy_vertices);
+    SetupProjectileGeometry(scene.projectiles, alpha);
+    RenderProjectiles(scene.projectiles);
+    if (debug_mode) {
+      RenderDebugWorldOccupancyMap(scene.occupancy_map);
+      // RenderDebugEnemyOccupancyMap(scene.enemy, scene.occupancy_map, alpha);
+      RenderDebugRayCaster(scene.enemy, alpha);
+    };
+
+    RenderUI(scene, time);
+    if (game_state == is_gameover) {
+      RenderGameOver();
+    } else if (game_state == is_paused) {
+      RenderPaused();
+    };
+  }
 
   SDL_RenderPresent(resources_.renderer);
 };
@@ -709,6 +723,20 @@ void RenderManager::RenderDigitString(const std::string& text, int start_x,
   };
 };
 
+void RenderManager::RenderStartScreen() {
+  SDL_Rect dst_rect;
+  dst_rect.x = 0;
+  dst_rect.y = 0;
+  dst_rect.w = kWindowWidth;
+  dst_rect.h = kWindowHeight;
+
+  SDL_RenderCopy(resources_.renderer,
+                 resources_.ui_resources.start_screen_texture, nullptr,
+                 &dst_rect);
+
+  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
+};
+
 void RenderManager::RenderGameOver() {
 
   SDL_Rect render_rect;
@@ -728,6 +756,30 @@ void RenderManager::RenderGameOver() {
   dst_rect.h = kGameOverSpriteHeight;
 
   SDL_RenderCopy(resources_.renderer, resources_.ui_resources.game_over_texture,
+                 nullptr, &dst_rect);
+
+  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
+};
+
+void RenderManager::RenderPaused() {
+
+  SDL_Rect render_rect;
+  render_rect.x = 0;
+  render_rect.y = kWindowHeight / 3;
+  render_rect.w = kWindowWidth;
+  render_rect.h = kWindowHeight / 3;
+
+  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
+  SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 128);
+  SDL_RenderFillRect(resources_.renderer, &render_rect);
+
+  SDL_Rect dst_rect;
+  dst_rect.x = (kWindowWidth - kPausedSpriteWidth) / 2;
+  dst_rect.y = (kWindowHeight - kPausedSpriteHeight) / 2;
+  dst_rect.w = kPausedSpriteWidth;
+  dst_rect.h = kPausedSpriteHeight;
+
+  SDL_RenderCopy(resources_.renderer, resources_.ui_resources.paused_texture,
                  nullptr, &dst_rect);
 
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);

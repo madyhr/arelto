@@ -41,6 +41,8 @@ class RenderManager {
   void Render(const Scene& scene, float alpha, bool debug_mode, float time,
               GameState game_state);
   void RenderGameOver();
+  void RenderStartScreen();
+  void RenderPaused();
 
   Camera camera_;
 

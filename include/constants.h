@@ -47,8 +47,8 @@ constexpr int kGameOverSpriteWidth = 610;
 constexpr int kGameOverSpriteHeight = 88;
 
 // Map constants
-constexpr int kMapWidth = 3000;
-constexpr int kMapHeight = 3000;
+constexpr int kMapWidth = 10000;
+constexpr int kMapHeight = 10000;
 // the inverse map max distance is used for scaling distances.
 const float kInvMapMaxDistance =
     1.0f / std::sqrt(static_cast<float>(kMapHeight) * kMapHeight +
@@ -82,8 +82,8 @@ constexpr float kMaxFrameTime = 0.1;  // in seconds
 
 // Player constants
 constexpr int kPlayerInitMaxHealth = 100;
-constexpr float kPlayerInitX = 1500.0f;
-constexpr float kPlayerInitY = 1500.0f;
+constexpr float kPlayerInitX = kMapWidth * 0.5f;
+constexpr float kPlayerInitY = kMapHeight * 0.5f;
 constexpr float kPlayerSpeed = 200.0f;
 constexpr int kPlayerSpriteWidth = 60;
 // Derived from the generated wizard png
@@ -102,7 +102,7 @@ constexpr int kPlayerAnimationFrameDuration = 150;  // time in ms
 constexpr float kPlayerInvulnerableWindow = 0.1;    // time in sec
 
 // Enemy constants
-constexpr int kNumEnemies = 25;
+constexpr int kNumEnemies = 100;
 constexpr int kEnemyHealth = 10;
 constexpr float kEnemyInitX = 100.0f;
 constexpr float kEnemyInitY = 100.0f;
@@ -162,9 +162,9 @@ constexpr int kNumPlayerSpells = 2;  // total number of spells
 constexpr float kPositionObservationScale = 1000.0f;
 
 // Raycaster constants
-constexpr int kRayHistoryLength = 1;
+constexpr int kRayHistoryLength = 4;
 constexpr int kNumRays = 72;
-constexpr float kMaxRayDistance = 1000.0f;
+constexpr float kMaxRayDistance = 5000.0f;
 constexpr float kMinRayDistance = 30.0f;  // offset from start in dir of ray
 
 }  // namespace rl2

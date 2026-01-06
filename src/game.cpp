@@ -52,7 +52,7 @@ bool Game::Initialize() {
   }
 
   time_ = (float)(SDL_GetTicks64() / 1000.0f);
-  game_state_ = GameState::is_running;
+  game_state_ = is_running;
 
   return true;
 }
@@ -141,6 +141,17 @@ void Game::RunGameLoop() {
       case is_gameover:
         break;
 
+      case is_paused: {
+        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
+        current_time = new_time;
+
+        if (game_status_.is_headless) {
+          break;
+        }
+        RenderGame(0.0f);
+        break;
+      }
+
       default:
         break;
     }
@@ -162,7 +173,7 @@ void Game::ProcessInput() {
 
   // To be able to quit while in headless mode we need to capture ctrl+C signals
   if (stop_request_) {
-    game_state_ = GameState::in_shutdown;
+    game_state_ = in_shutdown;
     std::cout << "Signal received. Exiting..." << std::endl;
     return;
   };
@@ -175,12 +186,12 @@ void Game::ProcessInput() {
 
   while (SDL_PollEvent(&e) != 0) {
     if (e.type == SDL_QUIT) {
-      game_state_ = GameState::in_shutdown;
+      game_state_ = in_shutdown;
     } else if (e.type == SDL_KEYDOWN) {
 
       switch (e.key.keysym.sym) {
         case SDLK_q:
-          game_state_ = GameState::in_shutdown;
+          game_state_ = in_shutdown;
           std::cout << "Key 'q' pressed! Exiting..." << std::endl;
           break;
 
@@ -188,6 +199,17 @@ void Game::ProcessInput() {
           if (game_state_ == is_gameover) {
             ResetGame();
           }
+          break;
+
+        case SDLK_p:
+          if (game_state_ == is_running) {
+            game_state_ = is_paused;
+            std::cout << "Game Paused" << std::endl;
+          } else if (game_state_ == is_paused) {
+            game_state_ = is_running;
+            std::cout << "Game Resumed" << std::endl;
+          }
+          break;
       }
     }
   }

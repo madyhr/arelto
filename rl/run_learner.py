@@ -13,6 +13,7 @@ game_state = {
     "is_running": 2,
     "is_gameover": 3,
     "in_shutdown": 4,
+    "is_paused": 5,
 }
 
 
@@ -48,22 +49,31 @@ def run_learner(args):
 
     obs, _ = env.reset()
 
-    while env.game.get_game_state() != 4:
-        for _ in range(ppo.num_transitions_per_env):
-
+    while env.game.get_game_state() != game_state["in_shutdown"]:
+        step = 0
+        while step < ppo.num_transitions_per_env:
             env.game.process_input()
-            if env.game.get_game_state() == game_state["in_shutdown"]:
+            state = env.game.get_game_state()
+
+            if state == game_state["in_shutdown"]:
                 break
 
-            with torch.inference_mode():
+            if state == game_state["is_paused"]:
+                env.game.render(1.0)
+                continue
 
+            with torch.inference_mode():
                 env.game.process_input()
                 action = ppo.act(obs.to(device))
                 obs, reward, terminated, truncated, _ = env.step(action)
                 dones = terminated | truncated
                 ppo.process_env_step(reward.to(device), dones.to(device))
-
                 env.game.render(1.0)
+
+            step += 1
+
+        if env.game.get_game_state() == game_state["in_shutdown"]:
+            break
 
         with torch.inference_mode():
             ppo.compute_returns(obs.to(device))

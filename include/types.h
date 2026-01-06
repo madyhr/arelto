@@ -197,6 +197,7 @@ enum GameState : int {
   is_running,
   is_gameover,
   in_shutdown,
+  is_paused,
 };
 
 }  // namespace rl2

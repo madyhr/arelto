@@ -1,9 +1,10 @@
 import torch
-from modules.actor import MultiDiscreteActor
-from modules.actor_critic import ActorCritic
-from modules.critic import ValueCritic
-from modules.ray_encoder import RayEncoder
-from storage.rollout_storage import RolloutStorage, Transition
+
+from rl.modules.actor import MultiDiscreteActor
+from rl.modules.actor_critic import ActorCritic
+from rl.modules.critic import ValueCritic
+from rl.modules.ray_encoder import RayEncoder
+from rl.storage.rollout_storage import RolloutStorage, Transition
 
 
 class PPO:

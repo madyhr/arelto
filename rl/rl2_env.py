@@ -1,14 +1,15 @@
 # python/rl2_env.py
 
 import numpy as np
-import rl2_py
 import torch
+
+import rl.rl2_py as rl2
 
 
 class RL2Env:
 
     def __init__(self, step_dt: float = 0.02) -> None:
-        self.game = rl2_py.Game()
+        self.game = rl2.Game()
 
         self.step_dt: float = step_dt
         self.num_envs: int = self.game.num_enemies

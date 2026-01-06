@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
-from modules.ray_encoder import RayEncoder
-from networks import MLP
+
+from rl.modules.ray_encoder import RayEncoder
+from rl.networks import MLP
 
 
 class ValueCritic(nn.Module):

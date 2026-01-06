@@ -4,7 +4,8 @@ import typing
 
 import torch
 import torch.nn as nn
-from modules.ray_encoder import RayEncoder
+
+from rl.modules.ray_encoder import RayEncoder
 
 if typing.TYPE_CHECKING:
     from rl.modules import BaseActor, ValueCritic

@@ -85,4 +85,17 @@ void SetupEnemyRayCasterPattern(EnemyRayCaster& ray_caster) {
   }
 };
 
+bool IsEntityTypePresent(const RayHistoryTypes& ray_hit_types,
+                         size_t history_idx, size_t enemy_idx,
+                         EntityType target) {
+  const auto& history_frame = ray_hit_types[history_idx];
+
+  for (size_t r = 0; r < kNumRays; ++r) {
+    if (history_frame[r][enemy_idx] == target) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace rl2

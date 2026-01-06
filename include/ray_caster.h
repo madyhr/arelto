@@ -9,6 +9,14 @@
 #include "types.h"
 namespace rl2 {
 
+using RayHistoryDistances =
+    std::array<std::array<std::array<float, kNumEnemies>, kNumRays>,
+               kRayHistoryLength>;
+
+using RayHistoryTypes =
+    std::array<std::array<std::array<EntityType, kNumEnemies>, kNumRays>,
+               kRayHistoryLength>;
+
 struct RayCaster {
   Vector2D ray_start;
   std::vector<Vector2D> ray_dirs;
@@ -29,12 +37,8 @@ struct RayCasterPattern {
 struct EnemyRayCaster {
   RayCasterPattern<kNumRays> pattern;
   std::array<Vector2D, kNumEnemies> ray_start_pos;
-  std::array<std::array<std::array<float, kNumEnemies>, kNumRays>,
-             kRayHistoryLength>
-      ray_hit_distances = {};
-  std::array<std::array<std::array<EntityType, kNumEnemies>, kNumRays>,
-             kRayHistoryLength>
-      ray_hit_types = {};
+  RayHistoryDistances ray_hit_distances = {};
+  RayHistoryTypes ray_hit_types = {};
   // the current head of the history buffer
   int history_idx = 0;
 };
@@ -43,6 +47,10 @@ void SetupEnemyRayCasterPattern(EnemyRayCaster& pattern);
 RayHit CastRay(
     const Vector2D& start_pos, const Vector2D& ray_dir,
     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
+bool IsEntityTypePresent(const RayHistoryTypes& ray_hit_types,
+                         size_t history_idx, size_t enemy_idx,
+                         EntityType target);
+
 }  // namespace rl2
 
 #endif

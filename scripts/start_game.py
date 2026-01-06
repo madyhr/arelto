@@ -2,12 +2,10 @@ import argparse
 import datetime
 import os
 
-
-
 import torch
 
 from rl.algorithms.ppo import PPO
-from rl import RL2Env
+from rl.rl2_env import RL2Env
 
 # TODO: Refactor this into a pybinding that gets a dict directly from RL2Env.
 # Map C++ game states
@@ -30,13 +28,16 @@ def start_game(args):
     num_rays = env.game.get_enemy_num_rays()
     ray_history_length = env.game.get_enemy_ray_history_length()
 
-    ppo = PPO(
-        input_dim=obs_size,
-        num_envs=num_envs,
-        num_rays=num_rays,
-        ray_history_length=ray_history_length,
-        device=device,
-    )
+    def create_agent() -> PPO:
+        return PPO(
+            input_dim=obs_size,
+            num_envs=num_envs,
+            num_rays=num_rays,
+            ray_history_length=ray_history_length,
+            device=device,
+        )
+
+    ppo = create_agent()
 
     if checkpoint_path and os.path.exists(checkpoint_path):
         print(f"Loading checkpoint from: {checkpoint_path}")
@@ -81,6 +82,8 @@ def start_game(args):
                     break
                 if state == game_state["in_start_screen"]:
                     print("Returned to Menu")
+                    print("Resetting policy parameters...")
+                    ppo = create_agent()
                     break
                 if state == game_state["is_paused"]:
                     env.game.render(1.0)

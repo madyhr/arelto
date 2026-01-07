@@ -10,6 +10,7 @@ namespace rl2 {
 
 void UIManager::SetupUI() {
   SetupHealthBar();
+  SetupExpBar();
   SetupTimer();
 };
 
@@ -18,15 +19,16 @@ void UIManager::SetupHealthBar() {
   health_bar_.screen_position = {kHealthBarGroupX, kHealthBarGroupY};
 
   UIElement health_bar_container = {
-      SDL_Rect{kHealthBarContainerSpriteOffsetX, kHealthBarContainerSpriteOffsetY,
-       kHealthBarContainerSpriteWidth, kHealthBarContainerSpriteHeight},
+      SDL_Rect{kHealthBarContainerSpriteOffsetX,
+               kHealthBarContainerSpriteOffsetY, kHealthBarContainerSpriteWidth,
+               kHealthBarContainerSpriteHeight},
       Vector2D{kHealthBarContainerRelOffsetX, kHealthBarContainerRelOffsetY},
       Size2D{kHealthBarContainerSpriteWidth, kHealthBarContainerSpriteHeight},
       UIElement::Tag::background};
 
   UIElement health_bar_fill = {
-      SDL_Rect{kHealthBarSpriteOffsetX, kHealthBarSpriteOffsetY, kHealthBarSpriteWidth,
-       kHealthBarSpriteHeight},
+      SDL_Rect{kHealthBarSpriteOffsetX, kHealthBarSpriteOffsetY,
+               kHealthBarSpriteWidth, kHealthBarSpriteHeight},
       Vector2D{kHealthBarRelOffsetX, kHealthBarRelOffsetY},
       Size2D{kHealthBarSpriteWidth, kHealthBarSpriteHeight},
       UIElement::Tag::fill};
@@ -34,14 +36,42 @@ void UIManager::SetupHealthBar() {
   UIElement health_bar_text = {
       SDL_Rect{0, 0, kDigitSpriteWidth, kDigitSpriteHeight},
       Vector2D{kHealthBarTextRelOffsetX, kHealthBarTextRelOffsetY},
-      Size2D{kDigitSpriteWidth, kDigitSpriteHeight},
-      UIElement::Tag::text,
+      Size2D{kDigitSpriteWidth, kDigitSpriteHeight}, UIElement::Tag::text,
       Size2D{kHealthBarTextCharWidth, kHealthBarTextCharHeight}};
 
   // Order matters here, as the first element in elements is also rendered first.
   health_bar_.elements.push_back(health_bar_container);
   health_bar_.elements.push_back(health_bar_fill);
   health_bar_.elements.push_back(health_bar_text);
+}
+
+void UIManager::SetupExpBar() {
+  exp_bar_.type = UIElementGroupType::exp_bar;
+  exp_bar_.screen_position = {kExpBarGroupX, kExpBarGroupY};
+
+  UIElement exp_bar_container = {
+      SDL_Rect{kExpBarContainerSpriteOffsetX, kExpBarContainerSpriteOffsetY,
+               kExpBarContainerSpriteWidth, kExpBarContainerSpriteHeight},
+      Vector2D{kExpBarContainerRelOffsetX, kExpBarContainerRelOffsetY},
+      Size2D{kExpBarContainerSpriteWidth, kExpBarContainerSpriteHeight},
+      UIElement::Tag::background};
+
+  UIElement exp_bar_fill = {SDL_Rect{kExpBarSpriteOffsetX, kExpBarSpriteOffsetY,
+                                     kExpBarSpriteWidth, kExpBarSpriteHeight},
+                            Vector2D{kExpBarRelOffsetX, kExpBarRelOffsetY},
+                            Size2D{kExpBarSpriteWidth, kExpBarSpriteHeight},
+                            UIElement::Tag::fill};
+
+  UIElement exp_bar_text = {
+      SDL_Rect{0, 0, kDigitSpriteWidth, kDigitSpriteHeight},
+      Vector2D{kExpBarTextRelOffsetX, kExpBarTextRelOffsetY},
+      Size2D{kDigitSpriteWidth, kDigitSpriteHeight}, UIElement::Tag::text,
+      Size2D{kExpBarTextCharWidth, kExpBarTextCharHeight}};
+
+  // Order matters here, as the first element in elements is also rendered first.
+  exp_bar_.elements.push_back(exp_bar_container);
+  exp_bar_.elements.push_back(exp_bar_fill);
+  exp_bar_.elements.push_back(exp_bar_text);
 }
 
 void UIManager::SetupTimer() {

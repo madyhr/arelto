@@ -9,7 +9,7 @@ constexpr int kDigitSpriteHeight = 50;
 
 // Health bar
 constexpr float kHealthBarGroupX = 50.0f;
-constexpr float kHealthBarGroupY = 900.0f;
+constexpr float kHealthBarGroupY = 850.0f;
 constexpr int kHealthBarContainerSpriteOffsetX = 0;
 constexpr int kHealthBarContainerSpriteOffsetY = 0;
 constexpr int kHealthBarContainerSpriteWidth = 404;
@@ -56,13 +56,15 @@ constexpr int kExpBarContainerSpriteHeight = 92;
 constexpr float kExpBarContainerRelOffsetX = 0.0f;
 constexpr float kExpBarContainerRelOffsetY = 0.0f;
 constexpr float kExpBarRelOffsetX = 80.0f;
-constexpr float kExpBarRelOffsetY = 32.0f;
+constexpr float kExpBarRelOffsetY = 30.0f;
 constexpr int kExpBarSpriteOffsetX = 0;
 constexpr int kExpBarSpriteOffsetY = 128;
 constexpr int kExpBarSpriteWidth = 299;
 constexpr int kExpBarSpriteHeight = 28;
 constexpr int kExpBarTextRelOffsetX = 100;
 constexpr int kExpBarTextRelOffsetY = 32;
+constexpr int kExpBarTextCharWidth = 20;
+constexpr int kExpBarTextCharHeight = 25;
 }  // namespace rl2
 
 #endif

@@ -14,6 +14,7 @@ namespace rl2 {
 struct UIResources {
   SDL_Texture* digit_font_texture = nullptr;
   SDL_Texture* health_bar_texture = nullptr;
+  SDL_Texture* exp_bar_texture = nullptr;
   SDL_Texture* timer_hourglass_texture = nullptr;
   SDL_Texture* game_over_texture = nullptr;
   SDL_Texture* start_screen_texture = nullptr;
@@ -22,6 +23,7 @@ struct UIResources {
 
 enum UIElementGroupType : int {
   health_bar = 0,
+  exp_bar,
   timer,
 };
 
@@ -61,13 +63,16 @@ class UIManager {
 
  public:
   UIElementGroup health_bar_;
+  UIElementGroup exp_bar_;
   UIElementGroup timer_;
 
   void SetupUI();
   void SetupHealthBar();
+  void SetupExpBar();
   void SetupTimer();
   void UpdateUI(const Scene& scene, float time);
   void UpdateHealthBar(const Scene& scene);
+  void UpdateExpBar(const Scene& scene);
   void UpdateTimer(float time);
 
  private:

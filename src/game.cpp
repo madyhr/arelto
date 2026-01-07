@@ -174,6 +174,10 @@ void Game::StepGame(float dt) {
     accumulator_step_ -= physics_manager_.GetPhysicsDt();
   }
 
+  // The RespawnEnemy function is called outside of the accumulator loop to
+  // make sure that an enemy stays dead between calls of StepGame(). This
+  // could otherwise corrupt the termination signals if the enemy died,
+  // respawned and died again in the same accumulator loop.
   RespawnEnemy(scene_.enemy, scene_.player);
 };
 

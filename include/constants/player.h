@@ -29,5 +29,7 @@ constexpr float kPlayerInvulnerableWindow = 0.1;    // time in sec
 // Abilities constants
 constexpr int kNumPlayerSpells = 2;  // total number of spells
 
+constexpr int kPlayerInitialExpRequirement = 10;
+constexpr float kPlayerExpRequiredScale = 1.1;
 }  // namespace rl2
 #endif

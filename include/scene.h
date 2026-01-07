@@ -2,8 +2,8 @@
 #ifndef RL2_SCENE_H_
 #define RL2_SCENE_H_
 
-#include "constants/player.h"
 #include "constants/enemy.h"
+#include "constants/player.h"
 #include "entity.h"
 #include "random.h"
 #include "ray_caster.h"
@@ -29,6 +29,9 @@ struct Scene {
     player.stats_.health = player.stats_.max_health;
     player.stats_.inv_mass = kPlayerInvMass;
     player.stats_.movement_speed = kPlayerSpeed;
+    player.stats_.level = 0;
+    player.stats_.exp_points = 0;
+    player.stats_.exp_points_required = kPlayerInitialExpRequirement;
     player.position_ = Vector2D{kPlayerInitX, kPlayerInitY};
     player.prev_position_ = player.position_;
     player.UpdateAllSpellStats();

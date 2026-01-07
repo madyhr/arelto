@@ -115,6 +115,9 @@ struct Collider {
 };
 
 struct Stats {
+  int level;
+  int exp_points;
+  int exp_points_required;
   int health;
   int max_health;
   float movement_speed;

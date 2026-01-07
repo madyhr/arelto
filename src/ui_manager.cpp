@@ -2,7 +2,7 @@
 #include "ui_manager.h"
 #include <algorithm>
 #include <string>
-#include "constants.h"
+#include "constants/ui.h"
 #include "scene.h"
 #include "types.h"
 

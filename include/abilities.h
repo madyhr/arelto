@@ -4,7 +4,7 @@
 #include <SDL2/SDL_render.h>
 #include <array>
 #include <cstdint>
-#include "constants.h"
+#include "constants/projectile.h"
 #include "types.h"
 
 namespace rl2 {

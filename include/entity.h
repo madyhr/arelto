@@ -6,7 +6,9 @@
 #include <unordered_set>
 #include <vector>
 #include "abilities.h"
-#include "constants.h"
+#include "constants/enemy.h"
+#include "constants/player.h"
+#include "constants/projectile.h"
 #include "map.h"
 #include "ray_caster.h"
 #include "types.h"

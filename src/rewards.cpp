@@ -1,6 +1,7 @@
 // src/rewards.cpp
 #include <array>
-#include "constants.h"
+#include "constants/enemy.h"
+#include "constants/ray_caster.h"
 #include "ray_caster.h"
 #include "reward_manager.h"
 #include "scene.h"

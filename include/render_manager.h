@@ -5,7 +5,9 @@
 #include <SDL2/SDL_ttf.h>
 #include <map>
 #include <string>
-#include "constants.h"
+#include "constants/enemy.h"
+#include "constants/game.h"
+#include "constants/map.h"
 #include "entity.h"
 #include "map.h"
 #include "scene.h"

@@ -2,7 +2,8 @@
 #ifndef RL2_SCENE_H_
 #define RL2_SCENE_H_
 
-#include "constants.h"
+#include "constants/player.h"
+#include "constants/enemy.h"
 #include "entity.h"
 #include "random.h"
 #include "ray_caster.h"

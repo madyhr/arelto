@@ -3,7 +3,8 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <stdexcept>
-#include "constants.h"
+#include "constants/enemy.h"
+#include "constants/ray_caster.h"
 #include "game.h"
 
 namespace py = pybind11;

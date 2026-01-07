@@ -4,7 +4,8 @@
 
 #include <array>
 #include <vector>
-#include "constants.h"
+#include "constants/enemy.h"
+#include "constants/ray_caster.h"
 #include "map.h"
 #include "types.h"
 namespace rl2 {

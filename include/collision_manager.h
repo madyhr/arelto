@@ -2,7 +2,7 @@
 #ifndef RL2_COLLISION_MANAGER_H_
 #define RL2_COLLISION_MANAGER_H_
 #include <SDL2/SDL_render.h>
-#include <constants.h>
+#include <SDL2/SDL_render.h>
 #include <sys/types.h>
 #include <array>
 #include <vector>

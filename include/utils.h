@@ -3,7 +3,7 @@
 #define RL2_UTILS_H_
 
 #include <array>
-#include "constants.h"
+#include "constants/game.h"
 
 namespace rl2 {
 

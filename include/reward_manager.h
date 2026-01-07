@@ -7,7 +7,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "constants.h"
+#include "constants/enemy.h"
 #include "scene.h"
 
 namespace rl2 {

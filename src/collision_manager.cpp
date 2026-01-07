@@ -3,10 +3,9 @@
 #include <SDL_rect.h>
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <vector>
 #include "abilities.h"
-#include "constants.h"
+#include "constants/enemy.h"
 #include "entity.h"
 #include "scene.h"
 #include "types.h"

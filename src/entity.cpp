@@ -1,7 +1,8 @@
 // src/entity.cpp
 #include "entity.h"
 #include <algorithm>
-#include "constants.h"
+#include "constants/enemy.h"
+#include "constants/map.h"
 #include "random.h"
 #include "types.h"
 

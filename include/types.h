@@ -3,7 +3,7 @@
 #define RL2_TYPES_H_
 #include <cstdint>
 #include <numbers>
-#include "constants.h"
+#include "constants/map.h"
 #include "utils.h"
 
 namespace rl2 {

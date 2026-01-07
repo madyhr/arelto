@@ -4,7 +4,7 @@
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
 #include <vector>
-#include "constants.h"
+#include "constants/map.h"
 #include "types.h"
 
 namespace rl2 {

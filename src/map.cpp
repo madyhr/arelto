@@ -4,7 +4,7 @@
 #include <SDL_render.h>
 #include <SDL_surface.h>
 #include <math.h>
-#include "constants.h"
+#include "constants/map.h"
 #include "random.h"
 
 namespace rl2 {

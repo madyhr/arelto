@@ -9,7 +9,8 @@
 #include <cstdio>
 #include <iostream>
 #include <vector>
-#include "constants.h"
+#include "constants/enemy.h"
+#include "constants/game.h"
 #include "entity.h"
 #include "physics_manager.h"
 #include "render_manager.h"

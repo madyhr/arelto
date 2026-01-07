@@ -3,7 +3,7 @@
 #define RL2_PHYSICS_MANAGER_H_
 #include <SDL2/SDL_render.h>
 #include "collision_manager.h"
-#include "constants.h"
+#include "constants/map.h"
 #include "entity.h"
 #include "map.h"
 #include "scene.h"

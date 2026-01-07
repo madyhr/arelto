@@ -2,7 +2,7 @@
 #include "reward_manager.h"
 #include <array>
 #include <stdexcept>
-#include "constants.h"
+#include "constants/enemy.h"
 #include "scene.h"
 
 namespace rl2 {

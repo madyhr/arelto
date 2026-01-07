@@ -2,7 +2,8 @@
 #include "observation_manager.h"
 #include <algorithm>
 #include <stdexcept>
-#include "constants.h"
+#include "constants/enemy.h"
+#include "constants/ray_caster.h"
 #include "scene.h"
 
 namespace rl2 {

@@ -1,10 +1,11 @@
 // src/physics_manager.cpp
 #include "physics_manager.h"
 #include <algorithm>
-#include <iostream>
-#include <iterator>
 #include "collision_manager.h"
-#include "constants.h"
+#include "constants/enemy.h"
+#include "constants/game.h"
+#include "constants/map.h"
+#include "constants/ray_caster.h"
 #include "entity.h"
 #include "types.h"
 

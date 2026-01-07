@@ -1,6 +1,6 @@
 // src/ray_caster.cpp
 #include "ray_caster.h"
-#include "constants.h"
+#include "constants/map.h"
 #include "types.h"
 
 namespace rl2 {

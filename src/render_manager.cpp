@@ -7,7 +7,14 @@
 #include <SDL_render.h>
 #include <algorithm>
 #include <iostream>
-#include "constants.h"
+#include "constants/enemy.h"
+#include "constants/game.h"
+#include "constants/map.h"
+#include "constants/player.h"
+#include "constants/projectile.h"
+#include "constants/ray_caster.h"
+#include "constants/render.h"
+#include "constants/ui.h"
 #include "entity.h"
 #include "scene.h"
 #include "types.h"

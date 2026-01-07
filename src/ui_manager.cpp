@@ -97,6 +97,7 @@ void UIManager::SetupTimer() {
 
 void UIManager::UpdateUI(const Scene& scene, float time) {
   UpdateHealthBar(scene);
+  UpdateExpBar(scene);
   UpdateTimer(time);
 };
 
@@ -120,6 +121,29 @@ void UIManager::UpdateHealthBar(const Scene& scene) {
   if (text_elem) {
     text_elem->text_value =
         std::to_string(current_hp) + "/" + std::to_string(max_hp);
+  }
+};
+
+void UIManager::UpdateExpBar(const Scene& scene) {
+  int current_exp = scene.player.stats_.exp_points;
+  int max_exp = scene.player.stats_.exp_points_required;
+  float percent = static_cast<float>(current_exp) / max_exp;
+  // the percentage is clamped to avoid having a negative sprite width;
+  percent = std::clamp(percent, 0.0f, 1.0f);
+
+  UIElement* fill_bar = exp_bar_.GetElemByTag(UIElement::Tag::fill);
+
+  if (fill_bar) {
+    fill_bar->sprite_size.width =
+        static_cast<int>(kExpBarSpriteWidth * percent);
+    fill_bar->src_rect.w = static_cast<int>(kExpBarSpriteWidth * percent);
+  }
+
+  UIElement* text_elem = exp_bar_.GetElemByTag(UIElement::Tag::text);
+
+  if (text_elem) {
+    text_elem->text_value =
+        std::to_string(current_exp) + "/" + std::to_string(max_exp);
   }
 };
 

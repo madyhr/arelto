@@ -65,6 +65,21 @@ constexpr int kExpBarTextRelOffsetX = 100;
 constexpr int kExpBarTextRelOffsetY = 32;
 constexpr int kExpBarTextCharWidth = 20;
 constexpr int kExpBarTextCharHeight = 25;
+
+// Level indicator
+constexpr int kLevelGroupX = 42;
+constexpr int kLevelGroupY = 150;
+constexpr int kLevelIconSpriteOffsetX = 0;
+constexpr int kLevelIconSpriteOffsetY = 0;
+constexpr int kLevelIconSpriteWidth = 70;
+constexpr int kLevelIconSpriteHeight = 74;
+constexpr int kLevelIconRelOffsetX = 0;
+constexpr int kLevelIconRelOffsetY = 0;
+constexpr int kLevelTextRelOffsetX = 68;
+constexpr int kLevelTextRelOffsetY = 0;
+constexpr int kLevelTextCharWidth = 50;
+constexpr int kLevelTextCharHeight = 72;
+
 }  // namespace rl2
 
 #endif

@@ -11,6 +11,7 @@ namespace rl2 {
 void UIManager::SetupUI() {
   SetupHealthBar();
   SetupExpBar();
+  SetupLevelIndicator();
   SetupTimer();
 };
 
@@ -74,6 +75,30 @@ void UIManager::SetupExpBar() {
   exp_bar_.elements.push_back(exp_bar_text);
 }
 
+void UIManager::SetupLevelIndicator() {
+  level_indicator_.type = UIElementGroupType::level_indicator;
+  level_indicator_.screen_position = {kLevelGroupX, kLevelGroupY};
+
+  UIElement level_indicator_icon = {
+      SDL_Rect{kLevelIconSpriteOffsetX, kLevelIconSpriteOffsetY,
+               kLevelIconSpriteWidth, kLevelIconSpriteHeight},
+      Vector2D{kLevelIconRelOffsetX, kLevelIconRelOffsetY},
+      Size2D{kLevelIconSpriteWidth, kLevelIconSpriteHeight},
+      UIElement::Tag::icon};
+
+  UIElement level_indicator_text = {
+      SDL_Rect{0, 0, kDigitSpriteWidth, kDigitSpriteHeight},
+      Vector2D{kLevelTextRelOffsetX, kLevelTextRelOffsetY},
+      Size2D{kDigitSpriteWidth, kDigitSpriteHeight}, UIElement::Tag::text,
+      Size2D{kLevelTextCharWidth, kLevelTextCharHeight}};
+
+  // Order matters here, as the first element in elements is also rendered first.
+  level_indicator_.elements.push_back(level_indicator_icon);
+  level_indicator_.elements.push_back(level_indicator_text);
+}
+
+
+
 void UIManager::SetupTimer() {
   timer_.type = UIElementGroupType::timer;
   timer_.screen_position = {kTimerGroupX, kTimerGroupY};
@@ -98,6 +123,7 @@ void UIManager::SetupTimer() {
 void UIManager::UpdateUI(const Scene& scene, float time) {
   UpdateHealthBar(scene);
   UpdateExpBar(scene);
+  UpdateLevelIndicator(scene);
   UpdateTimer(time);
 };
 
@@ -144,6 +170,15 @@ void UIManager::UpdateExpBar(const Scene& scene) {
   if (text_elem) {
     text_elem->text_value =
         std::to_string(current_exp) + "/" + std::to_string(max_exp);
+  }
+};
+
+void UIManager::UpdateLevelIndicator(const Scene& scene) {
+  int level = scene.player.stats_.level;
+  UIElement* text_elem = level_indicator_.GetElemByTag(UIElement::Tag::text);
+
+  if (text_elem) {
+    text_elem->text_value = std::to_string(level);
   }
 };
 

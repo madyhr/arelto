@@ -15,6 +15,7 @@ struct UIResources {
   SDL_Texture* digit_font_texture = nullptr;
   SDL_Texture* health_bar_texture = nullptr;
   SDL_Texture* exp_bar_texture = nullptr;
+  SDL_Texture* level_indicator_texture = nullptr;
   SDL_Texture* timer_hourglass_texture = nullptr;
   SDL_Texture* game_over_texture = nullptr;
   SDL_Texture* start_screen_texture = nullptr;
@@ -24,6 +25,7 @@ struct UIResources {
 enum UIElementGroupType : int {
   health_bar = 0,
   exp_bar,
+  level_indicator,
   timer,
 };
 
@@ -65,14 +67,17 @@ class UIManager {
   UIElementGroup health_bar_;
   UIElementGroup exp_bar_;
   UIElementGroup timer_;
+  UIElementGroup level_indicator_;
 
   void SetupUI();
   void SetupHealthBar();
   void SetupExpBar();
+  void SetupLevelIndicator();
   void SetupTimer();
   void UpdateUI(const Scene& scene, float time);
   void UpdateHealthBar(const Scene& scene);
   void UpdateExpBar(const Scene& scene);
+  void UpdateLevelIndicator(const Scene& scene);
   void UpdateTimer(float time);
 
  private:

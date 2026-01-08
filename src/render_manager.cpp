@@ -91,6 +91,8 @@ bool RenderManager::Initialize(bool is_headless) {
       IMG_LoadTexture(resources_.renderer, "assets/textures/exp_gem_epic.png"));
   resources_.gem_textures.push_back(IMG_LoadTexture(
       resources_.renderer, "assets/textures/exp_gem_legendary.png"));
+  resources_.ui_resources.level_indicator_texture = IMG_LoadTexture(
+      resources_.renderer, "assets/textures/ui/level_indicator.png");
   resources_.ui_resources.health_bar_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/health_bar.png");
   resources_.ui_resources.exp_bar_texture =
@@ -110,6 +112,7 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.player_texture == nullptr ||
       resources_.enemy_texture == nullptr ||
       resources_.ui_resources.health_bar_texture == nullptr ||
+      resources_.ui_resources.level_indicator_texture == nullptr ||
       resources_.ui_resources.exp_bar_texture == nullptr ||
       resources_.ui_resources.timer_hourglass_texture == nullptr ||
       resources_.ui_resources.game_over_texture == nullptr ||
@@ -769,6 +772,28 @@ void RenderManager::RenderUI(const Scene& scene, float time) {
     SDL_RenderCopy(resources_.renderer,
                    resources_.ui_resources.health_bar_texture, &el.src_rect,
                    &dst_rect);
+  }
+  group_x = static_cast<int>(ui_manager_.level_indicator_.screen_position.x);
+  group_y = static_cast<int>(ui_manager_.level_indicator_.screen_position.y);
+
+  for (const auto& el : ui_manager_.level_indicator_.elements) {
+    SDL_Rect dst_rect;
+    dst_rect.x = group_x + el.relative_offset.x;
+    dst_rect.y = group_y + el.relative_offset.y;
+    dst_rect.w = el.sprite_size.width;
+    dst_rect.h = el.sprite_size.height;
+
+    if (el.tag == UIElement::Tag::text) {
+      RenderDigitString(el.text_value,
+                        group_x + static_cast<int>(el.relative_offset.x),
+                        group_y + static_cast<int>(el.relative_offset.y),
+                        el.sprite_size, el.char_size);
+      continue;
+    }
+
+    SDL_RenderCopy(resources_.renderer,
+                   resources_.ui_resources.level_indicator_texture,
+                   &el.src_rect, &dst_rect);
   }
 
   group_x = static_cast<int>(ui_manager_.exp_bar_.screen_position.x);

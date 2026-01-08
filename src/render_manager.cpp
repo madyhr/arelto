@@ -84,13 +84,13 @@ bool RenderManager::Initialize(bool is_headless) {
   resources_.projectile_textures.push_back(IMG_LoadTexture(
       resources_.renderer, "assets/textures/frostbolt_sprite_sheet.png"));
   resources_.gem_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/exp_gem_small.png"));
+      resources_.renderer, "assets/textures/exp_gem_common.png"));
+  resources_.gem_textures.push_back(
+      IMG_LoadTexture(resources_.renderer, "assets/textures/exp_gem_rare.png"));
+  resources_.gem_textures.push_back(
+      IMG_LoadTexture(resources_.renderer, "assets/textures/exp_gem_epic.png"));
   resources_.gem_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/exp_gem_medium.png"));
-  resources_.gem_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/exp_gem_large.png"));
-  resources_.gem_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/exp_gem_huge.png"));
+      resources_.renderer, "assets/textures/exp_gem_legendary.png"));
   resources_.ui_resources.health_bar_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/health_bar.png");
   resources_.ui_resources.exp_bar_texture =

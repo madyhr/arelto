@@ -9,61 +9,61 @@ namespace rl2 {
 constexpr std::array<int, ExpGemType::Count> kExpGemValues = {1, 2, 4, 8};
 constexpr int kExpGemVertices = 6;
 
-constexpr int kExpGemSmallSpriteWidth = 25;
-constexpr int kExpGemSmallSpriteHeight = 33;
-constexpr int kExpGemSmallColliderWidth =
-    kExpGemSmallSpriteWidth - kSpriteColliderMargin / 2;
-constexpr int kExpGemSmallColliderHeight =
-    kExpGemSmallSpriteHeight - kSpriteColliderMargin / 2;
+constexpr int kExpGemCommonSpriteWidth = 25;
+constexpr int kExpGemCommonSpriteHeight = 33;
+constexpr int kExpGemCommonColliderWidth =
+    kExpGemCommonSpriteWidth - kSpriteColliderMargin / 2;
+constexpr int kExpGemCommonColliderHeight =
+    kExpGemCommonSpriteHeight - kSpriteColliderMargin / 2;
 
-constexpr Size2D kExpGemSmallSpriteSize = {kExpGemSmallSpriteWidth,
-                                           kExpGemSmallSpriteHeight};
+constexpr Size2D kExpGemCommonSpriteSize = {kExpGemCommonSpriteWidth,
+                                            kExpGemCommonSpriteHeight};
 
-constexpr Collider kExpGemSmallCollider = {
-    {0.5 * kExpGemSmallSpriteWidth, 0.5 * kExpGemSmallSpriteHeight},
-    {kExpGemSmallColliderWidth, kExpGemSmallColliderHeight}};
+constexpr Collider kExpGemCommonCollider = {
+    {0.5 * kExpGemCommonSpriteWidth, 0.5 * kExpGemCommonSpriteHeight},
+    {kExpGemCommonColliderWidth, kExpGemCommonColliderHeight}};
 
-constexpr int kExpGemMediumSpriteWidth = 30;
-constexpr int kExpGemMediumSpriteHeight = 40;
-constexpr int kExpGemMediumColliderWidth =
-    kExpGemMediumSpriteWidth - kSpriteColliderMargin / 2;
-constexpr int kExpGemMediumColliderHeight =
-    kExpGemMediumSpriteHeight - kSpriteColliderMargin / 2;
+constexpr int kExpGemRareSpriteWidth = 30;
+constexpr int kExpGemRareSpriteHeight = 40;
+constexpr int kExpGemRareColliderWidth =
+    kExpGemRareSpriteWidth - kSpriteColliderMargin / 2;
+constexpr int kExpGemRareColliderHeight =
+    kExpGemRareSpriteHeight - kSpriteColliderMargin / 2;
 
-constexpr Size2D kExpGemMediumSpriteSize = {kExpGemMediumSpriteWidth,
-                                            kExpGemMediumSpriteHeight};
+constexpr Size2D kExpGemRareSpriteSize = {kExpGemRareSpriteWidth,
+                                          kExpGemRareSpriteHeight};
 
-constexpr Collider kExpGemMediumCollider = {
-    {0.5 * kExpGemMediumSpriteWidth, 0.5 * kExpGemMediumSpriteHeight},
-    {kExpGemMediumColliderWidth, kExpGemMediumColliderHeight}};
+constexpr Collider kExpGemRareCollider = {
+    {0.5 * kExpGemRareSpriteWidth, 0.5 * kExpGemRareSpriteHeight},
+    {kExpGemRareColliderWidth, kExpGemRareColliderHeight}};
 
-constexpr int kExpGemLargeSpriteWidth = 40;
-constexpr int kExpGemLargeSpriteHeight = 53;
-constexpr int kExpGemLargeColliderWidth =
-    kExpGemLargeSpriteWidth - kSpriteColliderMargin / 2;
-constexpr int kExpGemLargeColliderHeight =
-    kExpGemLargeSpriteHeight - kSpriteColliderMargin / 2;
+constexpr int kExpGemEpicSpriteWidth = 50;
+constexpr int kExpGemEpicSpriteHeight = 70;
+constexpr int kExpGemEpicColliderWidth =
+    kExpGemEpicSpriteWidth - kSpriteColliderMargin / 2;
+constexpr int kExpGemEpicColliderHeight =
+    kExpGemEpicSpriteHeight - kSpriteColliderMargin / 2;
 
-constexpr Size2D kExpGemLargeSpriteSize = {kExpGemLargeSpriteWidth,
-                                           kExpGemLargeSpriteHeight};
+constexpr Size2D kExpGemEpicSpriteSize = {kExpGemEpicSpriteWidth,
+                                          kExpGemEpicSpriteHeight};
 
-constexpr Collider kExpGemLargeCollider = {
-    {0.5 * kExpGemLargeSpriteWidth, 0.5 * kExpGemLargeSpriteHeight},
-    {kExpGemLargeColliderWidth, kExpGemLargeColliderHeight}};
+constexpr Collider kExpGemEpicCollider = {
+    {0.5 * kExpGemEpicSpriteWidth, 0.5 * kExpGemEpicSpriteHeight},
+    {kExpGemEpicColliderWidth, kExpGemEpicColliderHeight}};
 
-constexpr int kExpGemHugeSpriteWidth = 50;
-constexpr int kExpGemHugeSpriteHeight = 65;
-constexpr int kExpGemHugeColliderWidth =
-    kExpGemHugeSpriteWidth - kSpriteColliderMargin / 2;
-constexpr int kExpGemHugeColliderHeight =
-    kExpGemHugeSpriteHeight - kSpriteColliderMargin / 2;
+constexpr int kExpGemLegendarySpriteWidth = 70;
+constexpr int kExpGemLegendarySpriteHeight = 100;
+constexpr int kExpGemLegendaryColliderWidth =
+    kExpGemLegendarySpriteWidth - kSpriteColliderMargin / 2;
+constexpr int kExpGemLegendaryColliderHeight =
+    kExpGemLegendarySpriteHeight - kSpriteColliderMargin / 2;
 
-constexpr Size2D kExpGemHugeSpriteSize = {kExpGemHugeSpriteWidth,
-                                          kExpGemHugeSpriteHeight};
+constexpr Size2D kExpGemLegendarySpriteSize = {kExpGemLegendarySpriteWidth,
+                                               kExpGemLegendarySpriteHeight};
 
-constexpr Collider kExpGemHugeCollider = {
-    {0.5 * kExpGemHugeSpriteWidth, 0.5 * kExpGemHugeSpriteHeight},
-    {kExpGemHugeColliderWidth, kExpGemHugeColliderHeight}};
+constexpr Collider kExpGemLegendaryCollider = {
+    {0.5 * kExpGemLegendarySpriteWidth, 0.5 * kExpGemLegendarySpriteHeight},
+    {kExpGemLegendaryColliderWidth, kExpGemLegendaryColliderHeight}};
 
 }  // namespace rl2
 #endif

@@ -212,7 +212,7 @@ enum GameState : int {
   is_paused,
 };
 
-enum ExpGemType : int { small, medium, large, huge, Count };
+enum ExpGemType : int { common, rare, epic, legendary, Count };
 
 struct ExpGemData {
   ExpGemType gem_type;

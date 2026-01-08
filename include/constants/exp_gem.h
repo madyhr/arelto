@@ -6,6 +6,7 @@
 #include "types.h"
 
 namespace rl2 {
+constexpr std::array<int, ExpGemType::Count> kExpGemValues = {1, 2, 4, 8};
 constexpr int kExpGemVertices = 6;
 
 constexpr int kExpGemSmallSpriteWidth = 25;

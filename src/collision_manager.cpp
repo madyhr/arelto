@@ -239,7 +239,7 @@ void CollisionManager::ResolvePlayerGemCollision(const CollisionPair& cp,
   int gem_idx = a_is_gem ? cp.index_a : cp.index_b;
 
   exp_gem.to_be_destroyed_.insert(gem_idx);
-  player.stats_.exp_points += 1;
+  player.stats_.exp_points += kExpGemValues[exp_gem.gem_type_[gem_idx]];
 };
 
 }  // namespace rl2

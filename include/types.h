@@ -1,6 +1,7 @@
 // include/types.h
 #ifndef RL2_TYPES_H_
 #define RL2_TYPES_H_
+#include <array>
 #include <cstdint>
 #include <numbers>
 #include "constants/map.h"
@@ -211,7 +212,7 @@ enum GameState : int {
   is_paused,
 };
 
-enum ExpGemType : int { small, medium, large, huge };
+enum ExpGemType : int { small, medium, large, huge, Count };
 
 struct ExpGemData {
   ExpGemType gem_type;

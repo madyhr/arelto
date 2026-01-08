@@ -84,7 +84,8 @@ struct Scene {
         ExpGemType random_type =
             static_cast<ExpGemType>(GenerateRandomInt(0, 3));
         ExpGemData gem_data = {random_type, enemy_centroid, enemy_centroid,
-                               kExpGemSmallCollider, kExpGemSmallSpriteSize};
+                               kExpGemCollider[random_type],
+                               kExpGemSpriteSize[random_type]};
         exp_gem.AddExpGem(gem_data);
       }
     }

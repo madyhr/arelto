@@ -6,7 +6,6 @@
 #include "types.h"
 
 namespace rl2 {
-constexpr std::array<int, ExpGemType::Count> kExpGemValues = {1, 2, 4, 8};
 constexpr int kExpGemVertices = 6;
 
 constexpr int kExpGemCommonSpriteWidth = 25;
@@ -37,8 +36,8 @@ constexpr Collider kExpGemRareCollider = {
     {0.5 * kExpGemRareSpriteWidth, 0.5 * kExpGemRareSpriteHeight},
     {kExpGemRareColliderWidth, kExpGemRareColliderHeight}};
 
-constexpr int kExpGemEpicSpriteWidth = 50;
-constexpr int kExpGemEpicSpriteHeight = 70;
+constexpr int kExpGemEpicSpriteWidth = 35;
+constexpr int kExpGemEpicSpriteHeight = 45;
 constexpr int kExpGemEpicColliderWidth =
     kExpGemEpicSpriteWidth - kSpriteColliderMargin / 2;
 constexpr int kExpGemEpicColliderHeight =
@@ -51,8 +50,8 @@ constexpr Collider kExpGemEpicCollider = {
     {0.5 * kExpGemEpicSpriteWidth, 0.5 * kExpGemEpicSpriteHeight},
     {kExpGemEpicColliderWidth, kExpGemEpicColliderHeight}};
 
-constexpr int kExpGemLegendarySpriteWidth = 70;
-constexpr int kExpGemLegendarySpriteHeight = 100;
+constexpr int kExpGemLegendarySpriteWidth = 45;
+constexpr int kExpGemLegendarySpriteHeight = 60;
 constexpr int kExpGemLegendaryColliderWidth =
     kExpGemLegendarySpriteWidth - kSpriteColliderMargin / 2;
 constexpr int kExpGemLegendaryColliderHeight =
@@ -64,6 +63,15 @@ constexpr Size2D kExpGemLegendarySpriteSize = {kExpGemLegendarySpriteWidth,
 constexpr Collider kExpGemLegendaryCollider = {
     {0.5 * kExpGemLegendarySpriteWidth, 0.5 * kExpGemLegendarySpriteHeight},
     {kExpGemLegendaryColliderWidth, kExpGemLegendaryColliderHeight}};
+
+constexpr std::array<int, ExpGemType::Count> kExpGemValues = {1, 2, 4, 8};
+constexpr std::array<Size2D, ExpGemType::Count> kExpGemSpriteSize = {
+    kExpGemCommonSpriteSize, kExpGemRareSpriteSize, kExpGemEpicSpriteSize,
+    kExpGemLegendarySpriteSize};
+
+constexpr std::array<Collider, ExpGemType::Count> kExpGemCollider = {
+    kExpGemCommonCollider, kExpGemRareCollider, kExpGemEpicCollider,
+    kExpGemLegendaryCollider};
 
 }  // namespace rl2
 #endif

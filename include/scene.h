@@ -3,6 +3,7 @@
 #define RL2_SCENE_H_
 
 #include "constants/enemy.h"
+#include "constants/exp_gem.h"
 #include "constants/player.h"
 #include "entity.h"
 #include "random.h"
@@ -77,9 +78,11 @@ struct Scene {
   void SpawnExpGem() {
     for (int i = 0; i < kNumEnemies; ++i) {
       if (enemy.is_done[i]) {
-        ExpGemData gem_data = {ExpGemType::small, enemy.position[i],
-                               enemy.prev_position[i], enemy.collider[i],
-                               enemy.sprite_size[i]};
+        Vector2D enemy_centroid =
+            GetCentroid(enemy.position[i], enemy.collider[i].size);
+        ExpGemData gem_data = {ExpGemType::small, enemy_centroid,
+                               enemy_centroid, kExpGemSmallCollider,
+                               kExpGemSmallSpriteSize};
         exp_gem.AddExpGem(gem_data);
       }
     }

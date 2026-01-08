@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iostream>
 #include "constants/enemy.h"
+#include "constants/exp_gem.h"
 #include "constants/game.h"
 #include "constants/map.h"
 #include "constants/player.h"
@@ -484,7 +485,7 @@ void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
     float vertex_left = is_facing_right ? u_left : u_right;
     float vertex_right = is_facing_right ? u_right : u_left;
 
-    SDL_Vertex vertices[kProjectileVertices];
+    SDL_Vertex vertices[kExpGemVertices];
 
     // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
     // 1. Top-Left
@@ -502,7 +503,7 @@ void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
     // 6. Top-Right
     vertices[5] = {{x + w, y}, {255, 255, 255, 255}, {vertex_right, v_top}};
 
-    for (int j = 0; j < kProjectileVertices; ++j) {
+    for (int j = 0; j < kExpGemVertices; ++j) {
       resources_.gem_vertices_grouped_[texture_id].push_back(vertices[j]);
     }
   }

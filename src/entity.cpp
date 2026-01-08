@@ -162,7 +162,7 @@ std::optional<ProjectileData> Player::CastProjectileSpell(
 };
 
 void ExpGem::AddExpGem(ExpGemData gem) {
-  gem_type_.push_back(gem.gem_type);
+  rarity_.push_back(gem.rarity);
   position_.push_back(gem.position);
   // upon initialization prev pos should be set to initial pos to
   // avoid errors during render interpolation.
@@ -174,14 +174,14 @@ void ExpGem::AddExpGem(ExpGemData gem) {
 void ExpGem::DestroyExpGem(int idx) {
   size_t last_idx = position_.size() - 1;
   if (idx != last_idx) {
-    gem_type_[idx] = std::move(gem_type_[last_idx]);
+    rarity_[idx] = std::move(rarity_[last_idx]);
     position_[idx] = std::move(position_[last_idx]);
     prev_position_[idx] = std::move(prev_position_[last_idx]);
     collider_[idx] = std::move(collider_[last_idx]);
     sprite_size_[idx] = std::move(sprite_size_[last_idx]);
   }
 
-  gem_type_.pop_back();
+  rarity_.pop_back();
   position_.pop_back();
   prev_position_.pop_back();
   collider_.pop_back();
@@ -204,7 +204,7 @@ void ExpGem::DestroyExpGems() {
 };
 
 void ExpGem::ResetAllExpGems() {
-  gem_type_.clear();
+  rarity_.clear();
   position_.clear();
   prev_position_.clear();
   sprite_size_.clear();

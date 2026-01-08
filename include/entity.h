@@ -89,7 +89,7 @@ class Player {
 
 class ExpGem {
  public:
-  std::vector<ExpGemType> gem_type_;
+  std::vector<Rarity> rarity_;
   std::vector<Vector2D> position_;
   std::vector<Vector2D> prev_position_;
   std::vector<Collider> collider_;
@@ -97,7 +97,7 @@ class ExpGem {
   std::unordered_set<int> to_be_destroyed_;
   EntityType entity_type_ = EntityType::exp_gem;
 
-  size_t GetNumExpGems() const { return gem_type_.size(); };
+  size_t GetNumExpGems() const { return rarity_.size(); };
   void AddExpGem(ExpGemData exp_gem_data);
   void DestroyExpGem(int idx);
   void DestroyExpGems();

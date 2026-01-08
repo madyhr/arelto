@@ -64,12 +64,12 @@ constexpr Collider kExpGemLegendaryCollider = {
     {0.5 * kExpGemLegendarySpriteWidth, 0.5 * kExpGemLegendarySpriteHeight},
     {kExpGemLegendaryColliderWidth, kExpGemLegendaryColliderHeight}};
 
-constexpr std::array<int, ExpGemType::Count> kExpGemValues = {1, 2, 4, 8};
-constexpr std::array<Size2D, ExpGemType::Count> kExpGemSpriteSize = {
+constexpr std::array<int, Rarity::Count> kExpGemValues = {1, 2, 4, 8};
+constexpr std::array<Size2D, Rarity::Count> kExpGemSpriteSize = {
     kExpGemCommonSpriteSize, kExpGemRareSpriteSize, kExpGemEpicSpriteSize,
     kExpGemLegendarySpriteSize};
 
-constexpr std::array<Collider, ExpGemType::Count> kExpGemCollider = {
+constexpr std::array<Collider, Rarity::Count> kExpGemCollider = {
     kExpGemCommonCollider, kExpGemRareCollider, kExpGemEpicCollider,
     kExpGemLegendaryCollider};
 

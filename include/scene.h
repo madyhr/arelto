@@ -81,11 +81,10 @@ struct Scene {
         Vector2D enemy_centroid =
             GetCentroid(enemy.position[i], enemy.collider[i].size);
 
-        ExpGemType random_type =
-            static_cast<ExpGemType>(GenerateRandomInt(0, 3));
-        ExpGemData gem_data = {random_type, enemy_centroid, enemy_centroid,
-                               kExpGemCollider[random_type],
-                               kExpGemSpriteSize[random_type]};
+        Rarity random_rarity = static_cast<Rarity>(GenerateRandomInt(0, 3));
+        ExpGemData gem_data = {random_rarity, enemy_centroid, enemy_centroid,
+                               kExpGemCollider[random_rarity],
+                               kExpGemSpriteSize[random_rarity]};
         exp_gem.AddExpGem(gem_data);
       }
     }

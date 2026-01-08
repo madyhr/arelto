@@ -480,7 +480,7 @@ void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
     float x = gem_render_pos.x - camera_.render_position_.x;
     float y = gem_render_pos.y - camera_.render_position_.y;
 
-    int texture_id = exp_gem.gem_type_[i];
+    int texture_id = exp_gem.rarity_[i];
 
     int frame_idx = 0;
 

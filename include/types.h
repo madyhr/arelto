@@ -1,7 +1,6 @@
 // include/types.h
 #ifndef RL2_TYPES_H_
 #define RL2_TYPES_H_
-#include <array>
 #include <cstdint>
 #include <numbers>
 #include "constants/map.h"
@@ -212,10 +211,10 @@ enum GameState : int {
   is_paused,
 };
 
-enum ExpGemType : int { common, rare, epic, legendary, Count };
+enum Rarity : int { common, rare, epic, legendary, Count };
 
 struct ExpGemData {
-  ExpGemType gem_type;
+  Rarity rarity;
   Vector2D position;
   Vector2D prev_position;
   Collider collider;

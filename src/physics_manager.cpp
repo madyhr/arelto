@@ -36,7 +36,9 @@ void PhysicsManager::StepPhysics(Scene& scene) {
   }
 
   UpdateEnemyStatus(scene.enemy, scene.player);
+  UpdatePlayerStatus(scene.player, scene.enemy);
   UpdateProjectilesStatus(scene.projectiles);
+  UpdateGemStatus(scene.exp_gem);
 
   tick_count_ += 1;
 }
@@ -147,49 +149,6 @@ void PhysicsManager::HandleProjectileOOB(Projectiles& projectiles) {
   }
 };
 
-// void PhysicsManager::UpdateWorldOccupancyMap(
-//     FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
-//     Player& player, Enemy& enemy, Projectiles& projectiles) {
-//
-//   occupancy_map.Clear();
-//   // A border is added for ray casting to always hit something.
-//   occupancy_map.AddBorder(EntityType::terrain);
-//
-//   auto GetGridTopLeft = [](Vector2D pos, Collider col) {
-//     Vector2D center = pos + col.offset;
-//     AABB collider_box = GetCollisionAABB(center, col.size);
-//     return WorldToGrid(Vector2D{collider_box.min_x, collider_box.min_y});
-//   };
-//
-//   Vector2D player_grid_pos = GetGridTopLeft(player.position_, player.collider_);
-//   int player_grid_width = WorldToGrid(player.collider_.size.width);
-//   int player_grid_height = WorldToGrid(player.collider_.size.height);
-//   occupancy_map.SetGrid(static_cast<int>(player_grid_pos.x),
-//                         static_cast<int>(player_grid_pos.y), player_grid_width,
-//                         player_grid_height, player.entity_type_);
-//
-//   for (int i = 0; i < kNumEnemies; ++i) {
-//     Vector2D enemygrid_pos =
-//         GetGridTopLeft(enemy.position[i], enemy.collider[i]);
-//     int enemy_grid_width = WorldToGrid(enemy.collider[i].size.width);
-//     int enemy_grid_height = WorldToGrid(enemy.collider[i].size.height);
-//     occupancy_map.SetGrid(static_cast<int>(enemygrid_pos.x),
-//                           static_cast<int>(enemygrid_pos.y), enemy_grid_width,
-//                           enemy_grid_height, enemy.entity_type);
-//   }
-//
-//   const size_t num_proj = projectiles.GetNumProjectiles();
-//   for (int i = 0; i < num_proj; ++i) {
-//     Vector2D proj_grid_pos =
-//         GetGridTopLeft(projectiles.position_[i], projectiles.collider_[i]);
-//     int proj_grid_width = WorldToGrid(projectiles.collider_[i].size.width);
-//     int proj_grid_height = WorldToGrid(projectiles.collider_[i].size.height);
-//     occupancy_map.SetGrid(static_cast<int>(proj_grid_pos.x),
-//                           static_cast<int>(proj_grid_pos.y), proj_grid_width,
-//                           proj_grid_height, projectiles.entity_type_);
-//   };
-// };
-
 void PhysicsManager::UpdateWorldOccupancyMap(
     FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
     Player& player, Enemy& enemy, Projectiles& projectiles) {
@@ -283,32 +242,19 @@ void PhysicsManager::UpdateEnemyStatus(Enemy& enemy, const Player& player) {
       enemy.is_done[i] = true;
       enemy.is_terminated_latched[i] = true;
     };
-
-    // if (enemy.timeout_timer[i] >= kEpisodeTimeout) {
-    //   enemy.is_done[i] = true;
-    //   enemy.is_truncated_latched[i] = true;
-    // }
   };
 };
 
-// void PhysicsManager::UpdateEnemyRayCaster(
-//     Enemy& enemy,
-//     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
-//
-//   for (int k = 0; k < kNumRays; ++k) {
-//     for (int i = 0; i < kNumEnemies; ++i) {
-//       Vector2D start_pos = enemy.position[i] + enemy.collider[i].offset;
-//       start_pos +=
-//           enemy.ray_caster.pattern.ray_dir[k] *
-//           std::max(enemy.collider[i].size.height, enemy.collider[i].size.width);
-//       RayHit ray_hit = CastRay(start_pos, enemy.ray_caster.pattern.ray_dir[k],
-//                                occupancy_map);
-//       enemy.ray_caster.ray_hit_distances[k][i] = ray_hit.distance;
-//       enemy.ray_caster.ray_hit_types[k][i] = ray_hit.entity_type;
-//     }
-//   }
-// };
-//
+void PhysicsManager::UpdatePlayerStatus(Player& player, const Enemy& enemy) {
+
+  while (player.stats_.exp_points >= player.stats_.exp_points_required) {
+    player.stats_.level++;
+    player.stats_.exp_points -= player.stats_.exp_points_required;
+    player.stats_.exp_points_required = static_cast<int>(
+        kPlayerExpRequiredScale * player.stats_.exp_points_required);
+  }
+};
+
 void PhysicsManager::UpdateEnemyRayCaster(
     Enemy& enemy,
     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
@@ -365,6 +311,10 @@ void PhysicsManager::UpdateEnemyRayCaster(
 
 void PhysicsManager::UpdateProjectilesStatus(Projectiles& projectiles) {
   projectiles.DestroyProjectiles();
+};
+
+void PhysicsManager::UpdateGemStatus(ExpGem& exp_gem) {
+  exp_gem.DestroyExpGems();
 };
 
 }  // namespace rl2

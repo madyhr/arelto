@@ -100,7 +100,14 @@ inline Vector2D LerpVector2D(const Vector2D& start, const Vector2D& end,
   return start * (1 - alpha) + end * alpha;
 };
 
-enum class EntityType : int { None = 0, terrain, player, enemy, projectile };
+enum class EntityType : int {
+  None = 0,
+  terrain,
+  player,
+  enemy,
+  projectile,
+  exp_gem
+};
 
 struct Size2D {
   uint32_t width;
@@ -158,6 +165,7 @@ enum class CollisionType : int {
   enemy_enemy,
   player_projectile,
   enemy_projectile,
+  player_gem,
 };
 
 struct EntityPosition {
@@ -201,6 +209,16 @@ enum GameState : int {
   is_gameover,
   in_shutdown,
   is_paused,
+};
+
+enum ExpGemType : int { small, medium, large, huge };
+
+struct ExpGemData {
+  ExpGemType gem_type;
+  Vector2D position;
+  Vector2D prev_position;
+  Collider collider;
+  Size2D sprite_size;
 };
 
 }  // namespace rl2

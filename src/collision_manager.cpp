@@ -13,8 +13,9 @@
 namespace rl2 {
 
 void CollisionManager::HandleCollisionsSAP(Scene& scene) {
-  size_t total_entities =
-      1 + kNumEnemies + scene.projectiles.GetNumProjectiles();
+  int num_proj = scene.projectiles.GetNumProjectiles();
+  int num_gem = scene.exp_gem.GetNumExpGems();
+  size_t total_entities = 1 + kNumEnemies + num_proj + num_gem;
 
   if (entity_aabb_.capacity() < total_entities) {
     entity_aabb_.reserve(total_entities * 2);
@@ -35,11 +36,18 @@ void CollisionManager::HandleCollisionsSAP(Scene& scene) {
         scene.enemy.collider[i].size, scene.enemy.entity_type, i + 1));
   }
 
-  for (int i = 0; i < scene.projectiles.GetNumProjectiles(); ++i) {
+  for (int i = 0; i < num_proj; ++i) {
     entity_aabb_.push_back(GetCollisionAABB(
         scene.projectiles.position_[i] + scene.projectiles.collider_[i].offset,
         scene.projectiles.collider_[i].size, scene.projectiles.entity_type_,
         i + 1 + kNumEnemies));
+  }
+
+  for (int i = 0; i < num_gem; ++i) {
+    entity_aabb_.push_back(GetCollisionAABB(
+        scene.exp_gem.position_[i] + scene.exp_gem.collider_[i].offset,
+        scene.exp_gem.collider_[i].size, scene.exp_gem.entity_type_,
+        i + 1 + kNumEnemies + num_proj));
   }
 
   std::sort(entity_aabb_.begin(), entity_aabb_.end(),
@@ -100,6 +108,10 @@ void CollisionManager::ResolveCollisionPairsSAP(Scene& scene) {
         ResolveEnemyProjectileCollision(cp, scene.enemy, scene.projectiles,
                                         scene.player);
         continue;
+      case CollisionType::player_gem:
+        ResolvePlayerGemCollision(cp, scene.projectiles, scene.player,
+                                  scene.exp_gem);
+        continue;
     }
   }
 };
@@ -115,6 +127,8 @@ CollisionType CollisionManager::GetCollisionType(const CollisionPair& cp) {
 
   if (type_a == EntityType::player && type_b == EntityType::enemy) {
     return CollisionType::player_enemy;
+  } else if (type_a == EntityType::player && type_b == EntityType::exp_gem) {
+    return CollisionType::player_gem;
   } else if (type_a == EntityType::enemy && type_b == EntityType::enemy) {
     return CollisionType::enemy_enemy;
   } else if (type_a == EntityType::enemy && type_b == EntityType::projectile) {
@@ -220,6 +234,21 @@ void CollisionManager::ResolveEnemyProjectileCollision(const CollisionPair& cp,
   int proj_id = projectiles.proj_id_[proj_idx];
   int spell_damage = player.spell_stats_.damage[proj_id];
   enemy.health_points[enemy_idx] -= spell_damage;
+};
+
+void CollisionManager::ResolvePlayerGemCollision(const CollisionPair& cp,
+                                                 const Projectiles& projectiles,
+                                                 Player& player,
+                                                 ExpGem& exp_gem) {
+
+  int num_proj = projectiles.GetNumProjectiles();
+  bool a_is_gem = cp.type_a == EntityType::exp_gem;
+
+  int gem_idx = a_is_gem ? cp.index_a - 1 - kNumEnemies - num_proj
+                         : cp.index_b - 1 - kNumEnemies - num_proj;
+
+  exp_gem.to_be_destroyed_.insert(gem_idx);
+  player.stats_.exp_points += 1;
 };
 
 }  // namespace rl2

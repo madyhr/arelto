@@ -12,8 +12,8 @@ Vector2D GetCentroid(const Vector2D& position, const Size2D& size) {
   return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
 }
 
-AABB GetAABB(const Vector2D& position, const Size2D& size, const EntityType& type,
-             const int& storage_index) {
+AABB GetAABB(const Vector2D& position, const Size2D& size,
+             const EntityType& type, const int& storage_index) {
   return {position.x,
           position.y,
           position.x + size.width,
@@ -22,8 +22,8 @@ AABB GetAABB(const Vector2D& position, const Size2D& size, const EntityType& typ
           storage_index};
 };
 
-AABB GetCollisionAABB(const Vector2D& centroid, const Size2D& size, const EntityType& type,
-                      const int& storage_index) {
+AABB GetCollisionAABB(const Vector2D& centroid, const Size2D& size,
+                      const EntityType& type, const int& storage_index) {
 
   float half_w = 0.5 * size.width;
   float half_h = 0.5 * size.height;
@@ -159,6 +159,57 @@ std::optional<ProjectileData> Player::CastProjectileSpell(
     return projectile_spell;
   }
   return std::nullopt;
+};
+
+void ExpGem::AddExpGem(ExpGemData gem) {
+  gem_type_.push_back(gem.gem_type);
+  position_.push_back(gem.position);
+  // upon initialization prev pos should be set to initial pos to
+  // avoid errors during render interpolation.
+  prev_position_.push_back(gem.position);
+  collider_.push_back(gem.collider);
+  sprite_size_.push_back(gem.sprite_size);
+};
+
+void ExpGem::DestroyExpGem(int idx) {
+  size_t last_idx = position_.size() - 1;
+  if (idx != last_idx) {
+    gem_type_[idx] = std::move(gem_type_[last_idx]);
+    position_[idx] = std::move(position_[last_idx]);
+    prev_position_[idx] = std::move(prev_position_[last_idx]);
+    collider_[idx] = std::move(collider_[last_idx]);
+    sprite_size_[idx] = std::move(sprite_size_[last_idx]);
+  }
+
+  gem_type_.pop_back();
+  position_.pop_back();
+  prev_position_.pop_back();
+  collider_.pop_back();
+  sprite_size_.pop_back();
+};
+
+void ExpGem::DestroyExpGems() {
+  if (to_be_destroyed_.empty()) {
+    return;
+  };
+  std::vector<int> sorted_indices(to_be_destroyed_.begin(),
+                                  to_be_destroyed_.end());
+  std::sort(sorted_indices.begin(), sorted_indices.end(), std::greater<int>());
+
+  for (int idx : sorted_indices) {
+    DestroyExpGem(idx);
+  };
+
+  to_be_destroyed_.clear();
+};
+
+void ExpGem::ResetAllExpGems() {
+  gem_type_.clear();
+  position_.clear();
+  prev_position_.clear();
+  sprite_size_.clear();
+  collider_.clear();
+  to_be_destroyed_.clear();
 };
 
 }  // namespace rl2

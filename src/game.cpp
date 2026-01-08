@@ -134,6 +134,7 @@ void Game::RunGameLoop() {
           break;
         }
 
+        scene_.SpawnExpGem();
         RespawnEnemy(scene_.enemy, scene_.player);
         RenderGame(alpha);
         game_status_.frame_stats.print_fps_running_average(frame_time);
@@ -178,6 +179,7 @@ void Game::StepGame(float dt) {
   // make sure that an enemy stays dead between calls of StepGame(). This
   // could otherwise corrupt the termination signals if the enemy died,
   // respawned and died again in the same accumulator loop.
+  scene_.SpawnExpGem();
   RespawnEnemy(scene_.enemy, scene_.player);
 };
 

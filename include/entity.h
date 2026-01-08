@@ -25,7 +25,7 @@ class Projectiles {
   std::vector<Size2D> sprite_size_;
   std::vector<Collider> collider_;
   std::vector<float> inv_mass_;
-  std::vector<int> proj_id_;
+  std::vector<int> proj_id_;  // TODO: Rename to proj_type_
   std::unordered_set<int> to_be_destroyed_;
   EntityType entity_type_ = EntityType::projectile;
   size_t num_sprite_cells_ = kProjectileNumSpriteCells;
@@ -87,6 +87,23 @@ class Player {
                                                     Vector2D cursor_position);
 };
 
+class ExpGem {
+ public:
+  std::vector<ExpGemType> gem_type_;
+  std::vector<Vector2D> position_;
+  std::vector<Vector2D> prev_position_;
+  std::vector<Collider> collider_;
+  std::vector<Size2D> sprite_size_;
+  std::unordered_set<int> to_be_destroyed_;
+  EntityType entity_type_ = EntityType::exp_gem;
+
+  size_t GetNumExpGems() const { return gem_type_.size(); };
+  void AddExpGem(ExpGemData exp_gem_data);
+  void DestroyExpGem(int idx);
+  void DestroyExpGems();
+  void ResetAllExpGems();
+};
+
 Vector2D GetCentroid(const Vector2D& position, const Size2D& size);
 AABB GetAABB(const Vector2D& position, const Size2D& size,
              const EntityType& type = EntityType::None,
@@ -94,10 +111,7 @@ AABB GetAABB(const Vector2D& position, const Size2D& size,
 AABB GetCollisionAABB(const Vector2D& centroid, const Size2D& size,
                       const EntityType& type = EntityType::None,
                       const int& storage_index = 0);
-void UpdateEnemyStatus(Enemy& enemy, const Player& player);
-void UpdateProjectilesStatus(Projectiles& projectiles);
 void RespawnEnemy(Enemy& enemy, const Player& player);
-
 }  // namespace rl2
 
 #endif

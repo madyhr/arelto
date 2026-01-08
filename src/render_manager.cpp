@@ -82,6 +82,8 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.renderer, "assets/textures/fireball_sprite_sheet.png"));
   resources_.projectile_textures.push_back(IMG_LoadTexture(
       resources_.renderer, "assets/textures/frostbolt_sprite_sheet.png"));
+  resources_.gem_textures.push_back(IMG_LoadTexture(
+      resources_.renderer, "assets/textures/exp_gem_small.png"));
   resources_.ui_resources.health_bar_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/health_bar.png");
   resources_.ui_resources.exp_bar_texture =
@@ -150,6 +152,8 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
     RenderEnemies(scene.enemy, num_enemy_vertices);
     SetupProjectileGeometry(scene.projectiles, alpha);
     RenderProjectiles(scene.projectiles);
+    SetupGemGeometry(scene.exp_gem, alpha);
+    RenderGem(scene.exp_gem);
     if (debug_mode) {
       RenderDebugWorldOccupancyMap(scene.occupancy_map);
       // RenderDebugEnemyOccupancyMap(scene.enemy, scene.occupancy_map, alpha);
@@ -424,6 +428,94 @@ void RenderManager::RenderProjectiles(const Projectiles& projectiles) {
       SDL_RenderGeometry(
           resources_.renderer, resources_.projectile_textures[texture_id],
           vertices.data(), static_cast<int>(vertices.size()), nullptr, 0);
+    };
+  };
+};
+
+void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
+  resources_.gem_vertices_grouped_.clear();
+  size_t num_gems = exp_gem.GetNumExpGems();
+  if (num_gems == 0) {
+    return;
+  }
+
+  int current_vertex_idx = 0;
+  float cell_uv_width = 1.0f;
+
+  float cull_left = camera_.render_position_.x;
+  float cull_right = camera_.render_position_.x + kWindowWidth;
+  float cull_top = camera_.render_position_.y;
+  float cull_bottom = camera_.render_position_.y + kWindowHeight;
+
+  cull_left -= kRenderCullPadding;
+  cull_right += kRenderCullPadding;
+  cull_top -= kRenderCullPadding;
+  cull_bottom += kRenderCullPadding;
+
+  for (int i = 0; i < num_gems; ++i) {
+    float w = exp_gem.sprite_size_[i].width;
+    float h = exp_gem.sprite_size_[i].height;
+
+    // Skip setting up the projectile geometry if they are not in view.
+    if (exp_gem.position_[i].x + w < cull_left ||
+        exp_gem.position_[i].x > cull_right ||
+        exp_gem.position_[i].y + h < cull_top ||
+        exp_gem.position_[i].y > cull_bottom) {
+      continue;
+    }
+
+    Vector2D gem_render_pos =
+        LerpVector2D(exp_gem.prev_position_[i], exp_gem.position_[i], alpha);
+
+    float x = gem_render_pos.x - camera_.render_position_.x;
+    float y = gem_render_pos.y - camera_.render_position_.y;
+
+    int texture_id = exp_gem.gem_type_[i];
+
+    int frame_idx = 0;
+
+    float u_left = frame_idx * cell_uv_width;
+    float u_right = u_left + cell_uv_width;
+    float v_top = kTexCoordTop;
+    float v_bottom = kTexCoordBottom;
+
+    bool is_facing_right = true;
+
+    float vertex_left = is_facing_right ? u_left : u_right;
+    float vertex_right = is_facing_right ? u_right : u_left;
+
+    SDL_Vertex vertices[kProjectileVertices];
+
+    // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
+    // 1. Top-Left
+    vertices[0] = {{x, y}, {255, 255, 255, 255}, {vertex_left, v_top}};
+    // 2. Bottom-Left
+    vertices[1] = {{x, y + h}, {255, 255, 255, 255}, {vertex_left, v_bottom}};
+    // 3. Bottom-Right
+    vertices[2] = {
+        {x + w, y + h}, {255, 255, 255, 255}, {vertex_right, v_bottom}};
+    // --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
+    // 4. Top-Left (Repeat)
+    vertices[3] = vertices[0];  // Same as vertex 1
+                                // 5. Bottom-Right (Repeat)
+    vertices[4] = vertices[2];  // Same as vertex 3
+    // 6. Top-Right
+    vertices[5] = {{x + w, y}, {255, 255, 255, 255}, {vertex_right, v_top}};
+
+    for (int j = 0; j < kProjectileVertices; ++j) {
+      resources_.gem_vertices_grouped_[texture_id].push_back(vertices[j]);
+    }
+  }
+};
+
+void RenderManager::RenderGem(const ExpGem& exp_gem) {
+  for (const auto& pair : resources_.gem_vertices_grouped_) {
+    int texture_id = pair.first;
+    const std::vector<SDL_Vertex>& vertices = pair.second;
+    if (texture_id >= 0 && texture_id < resources_.gem_textures.size()) {
+      SDL_RenderGeometry(resources_.renderer,
+                         resources_.gem_textures[texture_id], vertices.data(),
+                         static_cast<int>(vertices.size()), nullptr, 0);
     };
   };
 };

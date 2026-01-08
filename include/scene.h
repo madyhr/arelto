@@ -16,6 +16,7 @@ struct Scene {
   Player player;
   Enemy enemy;
   Projectiles projectiles;
+  ExpGem exp_gem;
   FixedMap<kOccupancyMapWidth, kOccupancyMapHeight> occupancy_map;
 
   void Reset() {
@@ -68,6 +69,20 @@ struct Scene {
 
     // -- Projectiles
     projectiles.ResetAllProjectiles();
+
+    // -- Exp Gems
+    exp_gem.ResetAllExpGems();
+  };
+
+  void SpawnExpGem() {
+    for (int i = 0; i < kNumEnemies; ++i) {
+      if (enemy.is_done[i]) {
+        ExpGemData gem_data = {ExpGemType::small, enemy.position[i],
+                               enemy.prev_position[i], enemy.collider[i],
+                               enemy.sprite_size[i]};
+        exp_gem.AddExpGem(gem_data);
+      }
+    }
   };
 };
 

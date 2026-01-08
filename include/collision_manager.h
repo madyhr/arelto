@@ -29,9 +29,8 @@ class CollisionManager {
   void ResolveEnemyEnemyCollision(const CollisionPair& cp, Enemy& enemy);
   void ResolvePlayerEnemyCollision(const CollisionPair& cp, Player& player,
                                    Enemy& enemy);
-  void ResolvePlayerGemCollision(const CollisionPair& cp,
-                                 const Projectiles& projectiles,
-                                 Player& player, ExpGem& exp_gem);
+  void ResolvePlayerGemCollision(const CollisionPair& cp, Player& player,
+                                 ExpGem& exp_gem);
   std::array<Vector2D, 2> GetDisplacementVectors(
       const std::array<AABB, 2>& aabbs,
       const std::array<Vector2D, 2>& centroids,

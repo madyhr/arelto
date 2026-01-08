@@ -154,16 +154,13 @@ void PhysicsManager::UpdateWorldOccupancyMap(
     Player& player, Enemy& enemy, Projectiles& projectiles) {
 
   occupancy_map.Clear();
-  // A border is added for ray casting to always hit something.
 
-  // Helper lambda to rasterize an entity's AABB onto the grid
+  // Helper lambda to use an entity's AABB to set the entity type on the
+  // world occupancy map accordingly.
   auto MarkOccupancy = [&](Vector2D pos, Collider col, EntityType type) {
     Vector2D center = pos + col.offset;
     AABB aabb = GetCollisionAABB(center, col.size);
 
-    // Convert world min/max directly to grid coordinates.
-    // This handles "straddling" correctly because it looks at the absolute
-    // start and end of the entity in the grid.
     Vector2D grid_min = WorldToGrid(Vector2D{aabb.min_x, aabb.min_y});
     Vector2D grid_max = WorldToGrid(Vector2D{aabb.max_x, aabb.max_y});
 
@@ -185,17 +182,14 @@ void PhysicsManager::UpdateWorldOccupancyMap(
     }
   };
 
-  // 1. Mark Player
   MarkOccupancy(player.position_, player.collider_, player.entity_type_);
 
-  // 2. Mark Enemies
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemy.is_alive[i]) {
       MarkOccupancy(enemy.position[i], enemy.collider[i], enemy.entity_type);
     }
   }
 
-  // 3. Mark Projectiles
   const size_t num_proj = projectiles.GetNumProjectiles();
   for (int i = 0; i < num_proj; ++i) {
     MarkOccupancy(projectiles.position_[i], projectiles.collider_[i],

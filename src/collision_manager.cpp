@@ -171,23 +171,20 @@ std::array<Vector2D, 2> CollisionManager::GetDisplacementVectors(
 void CollisionManager::ResolveEnemyEnemyCollision(const CollisionPair& cp,
                                                   Enemy& enemy) {
 
-  int enemy_idx_a = cp.index_a;
-  int enemy_idx_b = cp.index_b;
-
   Vector2D centroid_a =
-      enemy.position[enemy_idx_a] + enemy.collider[enemy_idx_a].offset;
+      enemy.position[cp.index_a] + enemy.collider[cp.index_a].offset;
   Vector2D centroid_b =
-      enemy.position[enemy_idx_b] + enemy.collider[enemy_idx_b].offset;
+      enemy.position[cp.index_b] + enemy.collider[cp.index_b].offset;
 
-  AABB aabb_a = GetCollisionAABB(centroid_a, enemy.collider[enemy_idx_a].size);
-  AABB aabb_b = GetCollisionAABB(centroid_b, enemy.collider[enemy_idx_b].size);
+  AABB aabb_a = GetCollisionAABB(centroid_a, enemy.collider[cp.index_a].size);
+  AABB aabb_b = GetCollisionAABB(centroid_b, enemy.collider[cp.index_b].size);
 
   std::array<Vector2D, 2> displacement_vectors = GetDisplacementVectors(
       {aabb_a, aabb_b}, {centroid_a, centroid_b},
-      {enemy.inv_mass[enemy_idx_a], enemy.inv_mass[enemy_idx_b]});
+      {enemy.inv_mass[cp.index_a], enemy.inv_mass[cp.index_b]});
 
-  enemy.position[enemy_idx_a] += displacement_vectors[0];
-  enemy.position[enemy_idx_b] += displacement_vectors[1];
+  enemy.position[cp.index_a] += displacement_vectors[0];
+  enemy.position[cp.index_b] += displacement_vectors[1];
 };
 
 void CollisionManager::ResolvePlayerEnemyCollision(const CollisionPair& cp,

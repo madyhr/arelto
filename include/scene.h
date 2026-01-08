@@ -80,9 +80,11 @@ struct Scene {
       if (enemy.is_done[i]) {
         Vector2D enemy_centroid =
             GetCentroid(enemy.position[i], enemy.collider[i].size);
-        ExpGemData gem_data = {ExpGemType::small, enemy_centroid,
-                               enemy_centroid, kExpGemSmallCollider,
-                               kExpGemSmallSpriteSize};
+
+        ExpGemType random_type =
+            static_cast<ExpGemType>(GenerateRandomInt(0, 3));
+        ExpGemData gem_data = {random_type, enemy_centroid, enemy_centroid,
+                               kExpGemSmallCollider, kExpGemSmallSpriteSize};
         exp_gem.AddExpGem(gem_data);
       }
     }

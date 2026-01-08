@@ -77,7 +77,7 @@ void Projectiles::AddProjectile(ProjectileData proj) {
   collider_.push_back(proj.collider);
   sprite_size_.push_back(proj.sprite_size);
   inv_mass_.push_back(proj.inv_mass);
-  proj_id_.push_back(proj.proj_id);
+  proj_type_.push_back(proj.proj_type);
 };
 
 void Projectiles::DestroyProjectile(int idx) {
@@ -91,7 +91,7 @@ void Projectiles::DestroyProjectile(int idx) {
     collider_[idx] = std::move(collider_[last_idx]);
     sprite_size_[idx] = std::move(sprite_size_[last_idx]);
     inv_mass_[idx] = std::move(inv_mass_[last_idx]);
-    proj_id_[idx] = std::move(proj_id_[last_idx]);
+    proj_type_[idx] = std::move(proj_type_[last_idx]);
   }
 
   owner_id_.pop_back();
@@ -102,7 +102,7 @@ void Projectiles::DestroyProjectile(int idx) {
   collider_.pop_back();
   sprite_size_.pop_back();
   inv_mass_.pop_back();
-  proj_id_.pop_back();
+  proj_type_.pop_back();
 };
 
 void Projectiles::DestroyProjectiles() {
@@ -129,7 +129,7 @@ void Projectiles::ResetAllProjectiles() {
   sprite_size_.clear();
   collider_.clear();
   inv_mass_.clear();
-  proj_id_.clear();
+  proj_type_.clear();
   to_be_destroyed_.clear();
 };
 

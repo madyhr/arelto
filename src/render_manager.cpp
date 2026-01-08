@@ -379,7 +379,7 @@ void RenderManager::SetupProjectileGeometry(const Projectiles& projectiles,
     float x = proj_render_pos.x - camera_.render_position_.x;
     float y = proj_render_pos.y - camera_.render_position_.y;
 
-    int texture_id = projectiles.proj_id_[i];
+    int texture_id = projectiles.proj_type_[i];
 
     uint16_t time_offset = i * 127;
     int frame_idx =

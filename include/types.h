@@ -140,7 +140,7 @@ struct ProjectileData {
   Collider collider;
   Size2D sprite_size;
   float inv_mass;
-  int proj_id;
+  int proj_type;
 };
 
 // entity type is used during collisions to handle each type of entity differently

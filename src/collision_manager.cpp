@@ -231,7 +231,7 @@ void CollisionManager::ResolveEnemyProjectileCollision(const CollisionPair& cp,
       a_is_proj ? cp.index_a - 1 - kNumEnemies : cp.index_b - 1 - kNumEnemies;
   int enemy_idx = a_is_proj ? cp.index_b - 1 : cp.index_a - 1;
   projectiles.to_be_destroyed_.insert(proj_idx);
-  int proj_id = projectiles.proj_id_[proj_idx];
+  int proj_id = projectiles.proj_type_[proj_idx];
   int spell_damage = player.spell_stats_.damage[proj_id];
   enemy.health_points[enemy_idx] -= spell_damage;
 };

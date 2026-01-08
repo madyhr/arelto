@@ -25,7 +25,7 @@ class Projectiles {
   std::vector<Size2D> sprite_size_;
   std::vector<Collider> collider_;
   std::vector<float> inv_mass_;
-  std::vector<int> proj_id_;  // TODO: Rename to proj_type_
+  std::vector<int> proj_type_;
   std::unordered_set<int> to_be_destroyed_;
   EntityType entity_type_ = EntityType::projectile;
   size_t num_sprite_cells_ = kProjectileNumSpriteCells;

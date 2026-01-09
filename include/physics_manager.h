@@ -34,19 +34,6 @@ class PhysicsManager {
   void HandlePlayerOOB(Player& player);
   void HandleEnemyOOB(Enemy& enemy);
   void HandleProjectileOOB(Projectiles& projectiles);
-  void UpdateWorldOccupancyMap(
-      FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
-      Player& player, Enemy& enemy, Projectiles& projectiles);
-  void UpdateEnemyOccupancyMap(
-      Enemy& enemy,
-      FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
-  void UpdatePlayerStatus(Player& player, const Enemy& enemy);
-  void UpdateEnemyStatus(Enemy& enemy, const Player& player);
-  void UpdateEnemyRayCaster(
-      Enemy& enemy,
-      const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
-  void UpdateProjectilesStatus(Projectiles& projectiles);
-  void UpdateGemStatus(ExpGem& exp_gem);
 };
 
 }  // namespace rl2

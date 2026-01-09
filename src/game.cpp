@@ -78,14 +78,19 @@ void Game::SetGameState(int game_state) {
 
 void Game::StepGamePhysics() {
   physics_manager_.StepPhysics(scene_);
-  reward_manager_.UpdateRewardTerms(scene_);
+  entity_manager_.Update(scene_, physics_manager_.GetPhysicsDt());
   time_ += physics_manager_.GetPhysicsDt();
-
-  if (scene_.player.stats_.health <= 0) {
-    game_state_ = is_gameover;
-  };
+  CheckGameStateRules();
+  reward_manager_.UpdateRewardTerms(scene_);
   CachePreviousState();
 };
+
+void Game::CheckGameStateRules() {
+  if (entity_manager_.IsPlayerDead(scene_.player)) {
+    game_state_ = is_gameover;
+    return;
+  }
+}
 
 void Game::RenderGame(float alpha) {
   render_manager_.Render(scene_, alpha, game_status_.is_debug, time_,
@@ -99,8 +104,8 @@ void Game::ResetGame() {
   game_state_ = is_running;
 };
 
+// Runs the game loop continuously.
 void Game::RunGameLoop() {
-  // Runs the game loop continuously.
   float current_time = static_cast<float>(SDL_GetTicks64() / 1000.0f);
   float accumulator = 0.0f;
 
@@ -259,7 +264,7 @@ void Game::ProcessInput() {
       (float)(cursor_pos_x + render_manager_.camera_.position_.x),
       (float)(cursor_pos_y + render_manager_.camera_.position_.y)};
 
-  Game::ProcessPlayerInput(mouse_state);
+  ProcessPlayerInput(mouse_state);
 }
 
 void Game::ProcessPlayerInput(uint32_t mouse_state) {

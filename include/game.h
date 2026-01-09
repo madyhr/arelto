@@ -7,6 +7,7 @@
 #include <SDL2/SDL_render.h>
 #include <csignal>
 #include "action_manager.h"
+#include "entity_manager.h"
 #include "observation_manager.h"
 #include "physics_manager.h"
 #include "render_manager.h"
@@ -39,6 +40,7 @@ class Game {
  private:
   RenderManager render_manager_;
   PhysicsManager physics_manager_;
+  EntityManager entity_manager_;
   GameStatus game_status_;
   GameState game_state_;
   Vector2D cursor_position_;
@@ -46,6 +48,7 @@ class Game {
   float accumulator_step_;
   static volatile std::sig_atomic_t stop_request_;
   bool InitializeCamera();
+  void CheckGameStateRules();
   void StepGamePhysics();
   Vector2D GetCursorPositionWorld();
   void ProcessPlayerInput(uint32_t mouse_state);

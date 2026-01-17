@@ -17,7 +17,7 @@ class BaseSpell {
  public:
   float cooldown_ = 1.0f;
   float time_of_last_use_ = -1.0f;
-  explicit BaseSpell(SpellId id) : id_(id){};
+  explicit BaseSpell(SpellId id) : id_(id) {};
   virtual ~BaseSpell() = default;
   virtual SpellId GetId() { return id_; };
   virtual float GetCooldown() { return cooldown_; };
@@ -34,7 +34,7 @@ class BaseProjectileSpell : public BaseSpell {
   Size2D sprite_size_;
 
  public:
-  BaseProjectileSpell(SpellId id) : BaseSpell(id){};
+  BaseProjectileSpell(SpellId id) : BaseSpell(id) {};
   virtual float GetSpeed() { return speed_; };
   virtual void SetSpeed(float speed) { speed_ = speed; };
   virtual float GetInvMass() { return inv_mass_; };
@@ -52,7 +52,7 @@ class Fireball : public BaseProjectileSpell {
   Fireball() : BaseProjectileSpell(SpellId::FireballId) {
     SetCooldown(kFireballCooldown);
     SetSpeed(kFireballSpeed);
-    SetCollider({{0.5*kFireballSpriteWidth, 0.5*kFireballSpriteHeight},
+    SetCollider({{0.5 * kFireballSpriteWidth, 0.5 * kFireballSpriteHeight},
                  {kFireballColliderWidth, kFireballColliderHeight}});
     SetSpriteSize({kFireballSpriteWidth, kFireballSpriteHeight});
     SetDamage(kFireBallDamage);
@@ -64,8 +64,8 @@ class Frostbolt : public BaseProjectileSpell {
   Frostbolt() : BaseProjectileSpell(SpellId::FrostboltId) {
     SetCooldown(kFrostboltCooldown);
     SetSpeed(kFrostboltSpeed);
-    SetCollider({{0.5*kFrostboltSpriteWidth, 0.5*kFrostboltSpriteHeight},
-                 {kFrostboltColliderWidth, kFrostboltColliderHeight }});
+    SetCollider({{0.5 * kFrostboltSpriteWidth, 0.5 * kFrostboltSpriteHeight},
+                 {kFrostboltColliderWidth, kFrostboltColliderHeight}});
     SetSpriteSize({kFrostboltSpriteWidth, kFrostboltSpriteHeight});
     SetDamage(kFrostboltDamage);
   }
@@ -80,8 +80,8 @@ struct SpellStats {
   std::array<Size2D, N> sprite_size;
   std::array<int, N> damage;
 
-  void SetProjectileSpellStats(BaseProjectileSpell spell) {
-    int id = spell.GetId();
+  void SetProjectileSpellStats(BaseProjectileSpell& spell) {
+    SpellId id = spell.GetId();
     cooldown[id] = spell.GetCooldown();
     speed[id] = spell.GetSpeed();
     collider[id] = spell.GetCollider();
@@ -90,7 +90,7 @@ struct SpellStats {
   };
 
   void ResetProjectileSpellStats(BaseProjectileSpell spell) {
-    int id = spell.GetId();
+    SpellId id = spell.GetId();
     time_of_last_use[id] = 0.0f;
   }
 };

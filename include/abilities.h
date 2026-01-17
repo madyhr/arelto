@@ -4,6 +4,7 @@
 #include <SDL2/SDL_render.h>
 #include <array>
 #include <cstdint>
+#include <string>
 #include "constants/projectile.h"
 #include "types.h"
 
@@ -32,9 +33,11 @@ class BaseProjectileSpell : public BaseSpell {
   uint32_t damage_ = 0;
   Collider collider_;
   Size2D sprite_size_;
+  std::string name_;
 
  public:
-  BaseProjectileSpell(SpellId id) : BaseSpell(id) {};
+  BaseProjectileSpell(SpellId id, std::string name)
+      : BaseSpell(id), name_(name) {};
   virtual float GetSpeed() { return speed_; };
   virtual void SetSpeed(float speed) { speed_ = speed; };
   virtual float GetInvMass() { return inv_mass_; };
@@ -45,11 +48,12 @@ class BaseProjectileSpell : public BaseSpell {
   virtual void SetCollider(Collider collider) { collider_ = collider; };
   virtual Size2D GetSpriteSize() { return sprite_size_; };
   virtual void SetSpriteSize(Size2D size) { sprite_size_ = size; };
+  std::string GetName() const { return name_; };
 };
 
 class Fireball : public BaseProjectileSpell {
  public:
-  Fireball() : BaseProjectileSpell(SpellId::FireballId) {
+  Fireball() : BaseProjectileSpell(SpellId::FireballId, "Fireball") {
     SetCooldown(kFireballCooldown);
     SetSpeed(kFireballSpeed);
     SetCollider({{0.5 * kFireballSpriteWidth, 0.5 * kFireballSpriteHeight},
@@ -61,7 +65,7 @@ class Fireball : public BaseProjectileSpell {
 
 class Frostbolt : public BaseProjectileSpell {
  public:
-  Frostbolt() : BaseProjectileSpell(SpellId::FrostboltId) {
+  Frostbolt() : BaseProjectileSpell(SpellId::FrostboltId, "Frostbolt") {
     SetCooldown(kFrostboltCooldown);
     SetSpeed(kFrostboltSpeed);
     SetCollider({{0.5 * kFrostboltSpriteWidth, 0.5 * kFrostboltSpriteHeight},
@@ -89,7 +93,7 @@ struct SpellStats {
     damage[id] = spell.GetDamage();
   };
 
-  void ResetProjectileSpellStats(BaseProjectileSpell spell) {
+  void ResetProjectileSpellStats(BaseProjectileSpell& spell) {
     SpellId id = spell.GetId();
     time_of_last_use[id] = 0.0f;
   }

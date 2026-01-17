@@ -85,6 +85,8 @@ class Player {
   std::optional<ProjectileData> CastProjectileSpell(BaseProjectileSpell& spell,
                                                     float time,
                                                     Vector2D cursor_position);
+  BaseProjectileSpell* GetSpell(SpellId id);
+  const BaseProjectileSpell* GetSpell(SpellId id) const;
 };
 
 class ExpGem {

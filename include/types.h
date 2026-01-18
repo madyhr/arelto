@@ -209,6 +209,7 @@ enum GameState : int {
   is_gameover,
   in_shutdown,
   is_paused,
+  in_level_up,
 };
 
 enum Rarity : int { common, rare, epic, legendary, Count };
@@ -220,6 +221,8 @@ struct ExpGemData {
   Collider collider;
   Size2D sprite_size;
 };
+
+enum class UpgradeType : int { damage = 0, speed, cooldown, size, count };
 
 }  // namespace rl2
 #endif

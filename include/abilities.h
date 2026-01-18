@@ -49,6 +49,38 @@ class BaseProjectileSpell : public BaseSpell {
   virtual Size2D GetSpriteSize() { return sprite_size_; };
   virtual void SetSpriteSize(Size2D size) { sprite_size_ = size; };
   std::string GetName() const { return name_; };
+
+  virtual void ModifyStat(UpgradeType type, float value) {
+    switch (type) {
+      case UpgradeType::damage:
+        SetDamage(static_cast<uint32_t>(value));
+        break;
+      case UpgradeType::speed:
+        SetSpeed(value);
+        break;
+      case UpgradeType::cooldown:
+        SetCooldown(value);
+        break;
+      case UpgradeType::size: {
+        float current_w = static_cast<float>(GetSpriteSize().width);
+        float current_h = static_cast<float>(GetSpriteSize().height);
+        if (current_w > 0) {
+          float ratio = current_h / current_w;
+          float new_w = value;
+          float new_h = new_w * ratio;
+          SetSpriteSize(
+              {static_cast<uint32_t>(new_w), static_cast<uint32_t>(new_h)});
+          // TODO:This is a placeholder way to set the collider. May require
+          // reworking how Colliders are defined in the worst case.
+          SetCollider({{static_cast<float>(0.5f * new_w),
+                        static_cast<float>(0.5f * new_h)},
+                       {static_cast<uint32_t>(new_w * 0.8f),
+                        static_cast<uint32_t>(new_h * 0.8f)}});
+        }
+        break;
+      }
+    }
+  }
 };
 
 class Fireball : public BaseProjectileSpell {

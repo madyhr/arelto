@@ -68,10 +68,6 @@ class RenderManager {
   void RenderGem(const ExpGem& exp_gem);
   void RenderDebugWorldOccupancyMap(
       const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
-  void RenderDebugEnemyOccupancyMap(
-      const Enemy& enemy,
-      const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
-      float alpha);
   void RenderDebugRayCaster(const Enemy& enemy, float alpha);
   void RenderUI(const Scene& scene, float time);
   void RenderDigitString(const std::string& text, int start_x, int start_y,

@@ -50,9 +50,6 @@ struct Enemy {
   std::array<float, kNumEnemies> last_horizontal_velocity;
   std::array<int, kNumEnemies> attack_damage;
   std::array<float, kNumEnemies> attack_cooldown;
-  std::array<FixedMap<kEnemyOccupancyMapWidth, kEnemyOccupancyMapHeight>,
-             kNumEnemies>
-      occupancy_map;
   std::array<int, kNumEnemies> damage_dealt_sim_step;
   // this is used for RL training and signifies the end of an episode if true.
   std::array<bool, kNumEnemies> is_done;

@@ -91,13 +91,20 @@ constexpr int kLevelUpCardHeight = 600;
 constexpr int kLevelUpCardGap = 100;
 // offsets relative to card top-left
 constexpr int kLevelUpIconOffsetY = 120;
-constexpr int kLevelUpIconSize = 64;
+constexpr int kLevelUpIconSize = 80;
 constexpr int kLevelUpNameOffsetY = 220;
 constexpr int kLevelUpNameOffsetX = 70;
 constexpr int kLevelUpDescOffsetY = 300;
 constexpr int kLevelUpDescOffsetX = 70;
 constexpr int kLevelUpStatsOffsetY = 350;
 constexpr int kLevelUpStatsOffsetX = 70;
+
+// Level Up Button
+constexpr int kLevelUpButtonTextureWidth = 300;
+constexpr int kLevelUpButtonTextureHeight = 160;
+constexpr int kLevelUpButtonWidth = 200;
+constexpr int kLevelUpButtonHeight = 50;
+constexpr int kLevelUpButtonOffsetY = 440;  // from card top
 
 }  // namespace rl2
 

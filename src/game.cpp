@@ -321,7 +321,7 @@ void Game::ProcessPlayerInput(uint32_t mouse_state) {
 }
 
 // This function processes inputs during a level up state and applies the
-// upgrade option according to which card was selected by left-clicking on it.
+// upgrade option according to which button was clicked.
 void Game::ProcessLevelUpInput(uint32_t mouse_state) {
   if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
     int total_width = kNumUpgradeOptions * kLevelUpCardWidth +
@@ -334,10 +334,16 @@ void Game::ProcessLevelUpInput(uint32_t mouse_state) {
 
     int selected_card_idx = -1;
 
-    if (mouse_y >= start_y && mouse_y <= start_y + kLevelUpCardHeight) {
+    int button_top = start_y + kLevelUpButtonOffsetY;
+    int button_bottom = button_top + kLevelUpButtonHeight;
+
+    if (mouse_y >= button_top && mouse_y <= button_bottom) {
       for (int i = 0; i < kNumUpgradeOptions; ++i) {
-        int x = start_x + i * (kLevelUpCardWidth + kLevelUpCardGap);
-        if (mouse_x >= x && mouse_x <= x + kLevelUpCardWidth) {
+        int card_x = start_x + i * (kLevelUpCardWidth + kLevelUpCardGap);
+        int button_x = card_x + (kLevelUpCardWidth - kLevelUpButtonWidth) / 2;
+        int button_right = button_x + kLevelUpButtonWidth;
+
+        if (mouse_x >= button_x && mouse_x <= button_right) {
           selected_card_idx = i;
           break;
         }

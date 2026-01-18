@@ -161,6 +161,28 @@ std::optional<ProjectileData> Player::CastProjectileSpell(
   return std::nullopt;
 };
 
+BaseProjectileSpell* Player::GetSpell(SpellId id) {
+  switch (id) {
+    case SpellId::FireballId:
+      return &fireball_;
+    case SpellId::FrostboltId:
+      return &frostbolt_;
+    default:
+      return nullptr;
+  }
+}
+
+const BaseProjectileSpell* Player::GetSpell(SpellId id) const {
+  switch (id) {
+    case SpellId::FireballId:
+      return &fireball_;
+    case SpellId::FrostboltId:
+      return &frostbolt_;
+    default:
+      return nullptr;
+  }
+}
+
 void ExpGem::AddExpGem(ExpGemData gem) {
   rarity_.push_back(gem.rarity);
   position_.push_back(gem.position);

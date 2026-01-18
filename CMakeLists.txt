@@ -73,3 +73,30 @@ add_custom_command(
     COMMENT "Generating Python interface stubs (.pyi) for rl2_py"
     VERBATIM
 )
+
+option(BUILD_TESTS "Build unit tests" ON)
+
+if(BUILD_TESTS)
+    add_subdirectory(extern/googletest)
+    enable_testing()
+    file(GLOB_RECURSE TEST_SOURCES "tests/cpp/*.cpp")
+
+if(TEST_SOURCES)
+        add_executable(rl2_tests ${TEST_SOURCES})
+        target_include_directories(rl2_tests PRIVATE
+            "${CMAKE_SOURCE_DIR}/include"
+            "${CMAKE_SOURCE_DIR}/tests/cpp"
+        )
+
+        target_link_libraries(rl2_tests PRIVATE
+            rl2_core
+            gtest
+            gtest_main
+        )
+
+        include(GoogleTest)
+        gtest_discover_tests(rl2_tests)
+    else()
+        message(STATUS "No test sources found in tests/cpp/, skipping test target")
+    endif()
+endif()

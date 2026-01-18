@@ -16,6 +16,7 @@ game_state = {
     "is_gameover": 3,
     "in_shutdown": 4,
     "is_paused": 5,
+    "is_level_up": 6,
 }
 
 
@@ -72,6 +73,7 @@ def start_game(args):
         elif (
             env.game.get_game_state() == game_state["is_running"]
             or env.game.get_game_state() == game_state["is_paused"]
+            or env.game.get_game_state() == game_state["is_level_up"]
         ):
             # We keep track of the number of steps to handle pauses correctly.
             step = 0
@@ -85,7 +87,10 @@ def start_game(args):
                     print("Resetting policy parameters...")
                     ppo = create_agent()
                     break
-                if state == game_state["is_paused"]:
+                if (
+                    state == game_state["is_paused"]
+                    or state == game_state["is_level_up"]
+                ):
                     env.game.render(1.0)
                     continue
                 with torch.inference_mode():

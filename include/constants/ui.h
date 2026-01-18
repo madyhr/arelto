@@ -3,6 +3,11 @@
 #define RL2_CONSTANTS_UI_H_
 
 namespace rl2 {
+
+// Font sizes
+constexpr int kFontSizeMedium = 26;
+constexpr int kFontSizeLarge = 40;
+
 // Digits
 constexpr int kDigitSpriteWidth = 30;
 constexpr int kDigitSpriteHeight = 50;
@@ -79,6 +84,20 @@ constexpr int kLevelTextRelOffsetX = 68;
 constexpr int kLevelTextRelOffsetY = 0;
 constexpr int kLevelTextCharWidth = 50;
 constexpr int kLevelTextCharHeight = 72;
+
+// Level Up Option Card
+constexpr int kLevelUpCardWidth = 400;
+constexpr int kLevelUpCardHeight = 600;
+constexpr int kLevelUpCardGap = 100;
+// offsets relative to card top-left
+constexpr int kLevelUpIconOffsetY = 120;
+constexpr int kLevelUpIconSize = 64;
+constexpr int kLevelUpNameOffsetY = 220;
+constexpr int kLevelUpNameOffsetX = 70;
+constexpr int kLevelUpDescOffsetY = 300;
+constexpr int kLevelUpDescOffsetX = 70;
+constexpr int kLevelUpStatsOffsetY = 350;
+constexpr int kLevelUpStatsOffsetX = 70;
 
 }  // namespace rl2
 

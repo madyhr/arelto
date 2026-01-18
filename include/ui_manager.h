@@ -20,6 +20,9 @@ struct UIResources {
   SDL_Texture* game_over_texture = nullptr;
   SDL_Texture* start_screen_texture = nullptr;
   SDL_Texture* paused_texture = nullptr;
+  TTF_Font* ui_font_medium = nullptr;
+  TTF_Font* ui_font_large = nullptr;
+  SDL_Texture* level_up_option_card_texture = nullptr;
 };
 
 enum UIElementGroupType : int {

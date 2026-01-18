@@ -2,6 +2,7 @@
 #ifndef RL2_SCENE_H_
 #define RL2_SCENE_H_
 
+#include <memory>
 #include "constants/enemy.h"
 #include "constants/exp_gem.h"
 #include "constants/player.h"
@@ -9,6 +10,7 @@
 #include "random.h"
 #include "ray_caster.h"
 #include "types.h"
+#include "upgrades.h"
 
 namespace rl2 {
 
@@ -19,6 +21,7 @@ struct Scene {
   Projectiles projectiles;
   ExpGem exp_gem;
   FixedMap<kOccupancyMapWidth, kOccupancyMapHeight> occupancy_map;
+  std::vector<std::unique_ptr<Upgrade>> level_up_options;
 
   void Reset() {
 

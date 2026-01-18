@@ -10,6 +10,7 @@
 #include "entity_manager.h"
 #include "observation_manager.h"
 #include "physics_manager.h"
+#include "progression_manager.h"
 #include "render_manager.h"
 #include "reward_manager.h"
 #include "scene.h"
@@ -41,17 +42,20 @@ class Game {
   RenderManager render_manager_;
   PhysicsManager physics_manager_;
   EntityManager entity_manager_;
+  ProgressionManager progression_manager_;
   GameStatus game_status_;
   GameState game_state_;
   Vector2D cursor_position_;
   float time_ = 0.0f;
   float accumulator_step_;
+
   static volatile std::sig_atomic_t stop_request_;
   bool InitializeCamera();
   void CheckGameStateRules();
   void StepGamePhysics();
   Vector2D GetCursorPositionWorld();
   void ProcessPlayerInput(uint32_t mouse_state);
+  void ProcessLevelUpInput(uint32_t mouse_state);
   void CachePreviousState();
 };
 

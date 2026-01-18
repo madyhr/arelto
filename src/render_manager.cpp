@@ -12,6 +12,7 @@
 #include "constants/game.h"
 #include "constants/map.h"
 #include "constants/player.h"
+#include "constants/progression_manager.h"
 #include "constants/projectile.h"
 #include "constants/ray_caster.h"
 #include "constants/render.h"
@@ -65,6 +66,12 @@ bool RenderManager::Initialize(bool is_headless) {
     return false;
   }
 
+  if (TTF_Init() == -1) {
+    std::cerr << "SDL_ttf could not be initialized: " << TTF_GetError()
+              << std::endl;
+    return false;
+  }
+
   resources_.tile_manager.SetupTileMap();
   resources_.tile_manager.SetupTiles();
   resources_.tile_manager.SetupTileSelector();
@@ -75,8 +82,6 @@ bool RenderManager::Initialize(bool is_headless) {
       "assets/dungeon_floor_tiles_tall.bmp", resources_.renderer);
   resources_.player_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/wizard_sprite_sheet_with_idle.png");
-  // resources_.enemy_texture = IMG_LoadTexture(
-  // resources_.renderer, "assets/textures/goblin_sprite_sheet.png");
   resources_.enemy_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/tentacle_being_sprite_sheet.png");
   resources_.projectile_textures.push_back(IMG_LoadTexture(
@@ -103,10 +108,23 @@ bool RenderManager::Initialize(bool is_headless) {
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/paused.png");
   resources_.ui_resources.game_over_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/game_over.png");
+  resources_.ui_resources.level_up_option_card_texture = IMG_LoadTexture(
+      resources_.renderer, "assets/textures/ui/level_up_option.png");
   resources_.ui_resources.digit_font_texture = IMG_LoadTexture(
       resources_.renderer, "assets/fonts/font_outlined_sprite_sheet.png");
   resources_.ui_resources.timer_hourglass_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/hourglass.png");
+  resources_.ui_resources.ui_font_medium =
+      TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeMedium);
+  resources_.ui_resources.ui_font_large =
+      TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeLarge);
+
+  if (resources_.ui_resources.ui_font_medium == nullptr ||
+      resources_.ui_resources.ui_font_large == nullptr) {
+    std::cerr << "TTF font could not be loaded: " << TTF_GetError()
+              << std::endl;
+    return false;
+  }
 
   if (resources_.tile_texture == nullptr ||
       resources_.player_texture == nullptr ||
@@ -118,6 +136,7 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.ui_resources.game_over_texture == nullptr ||
       resources_.ui_resources.start_screen_texture == nullptr ||
       resources_.ui_resources.paused_texture == nullptr ||
+      resources_.ui_resources.level_up_option_card_texture == nullptr ||
       std::any_of(
           resources_.projectile_textures.begin(),
           resources_.projectile_textures.end(),
@@ -175,6 +194,8 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
       RenderGameOver();
     } else if (game_state == is_paused) {
       RenderPaused();
+    } else if (game_state == in_level_up) {
+      RenderLevelUp(scene.level_up_options);
     };
   }
 
@@ -968,7 +989,24 @@ void RenderManager::Shutdown() {
     resources_.ui_resources.timer_hourglass_texture = nullptr;
   }
 
+  if (resources_.ui_resources.level_up_option_card_texture) {
+    SDL_DestroyTexture(resources_.ui_resources.level_up_option_card_texture);
+    resources_.ui_resources.level_up_option_card_texture = nullptr;
+  }
+
   IMG_Quit();
+
+  if (resources_.ui_resources.ui_font_medium) {
+    TTF_CloseFont(resources_.ui_resources.ui_font_medium);
+    resources_.ui_resources.ui_font_medium = nullptr;
+  }
+
+  if (resources_.ui_resources.ui_font_large) {
+    TTF_CloseFont(resources_.ui_resources.ui_font_large);
+    resources_.ui_resources.ui_font_large = nullptr;
+  }
+
+  TTF_Quit();
 
   if (resources_.renderer) {
     SDL_DestroyRenderer(resources_.renderer);
@@ -981,6 +1019,79 @@ void RenderManager::Shutdown() {
   }
 
   SDL_Quit();
+}
+
+void RenderManager::RenderLevelUp(
+    const std::vector<std::unique_ptr<Upgrade>>& options) {
+  SDL_Rect overlay_rect = {0, 0, kWindowWidth, kWindowHeight};
+  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
+  SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 150);
+  SDL_RenderFillRect(resources_.renderer, &overlay_rect);
+
+  int total_width = kNumUpgradeOptions * kLevelUpCardWidth +
+                    (kNumUpgradeOptions - 1) * kLevelUpCardGap;
+  int start_x = (kWindowWidth - total_width) / 2;
+  int start_y = (kWindowHeight - kLevelUpCardHeight) / 2;
+
+  for (size_t i = 0; i < options.size(); ++i) {
+    const std::unique_ptr<Upgrade>& upgrade = options[i];
+
+    int x =
+        start_x + static_cast<int>(i * (kLevelUpCardWidth + kLevelUpCardGap));
+
+    SDL_Rect card_rect = {x, start_y, kLevelUpCardWidth, kLevelUpCardHeight};
+
+    SDL_RenderCopy(resources_.renderer,
+                   resources_.ui_resources.level_up_option_card_texture,
+                   nullptr, &card_rect);
+
+    int spell_id = upgrade->GetSpellID();
+    SDL_Texture* icon = resources_.projectile_textures[spell_id];
+    SDL_Rect src_rect = {0, 0, kFireballSpriteWidth, kFireballSpriteHeight};
+    SDL_Rect dest_rect = {x + (kLevelUpCardWidth - kLevelUpIconSize) / 2,
+                          start_y + kLevelUpIconOffsetY, kLevelUpIconSize,
+                          kLevelUpIconSize};
+    SDL_RenderCopy(resources_.renderer, icon, &src_rect, &dest_rect);
+
+    std::string spell_name = upgrade->GetSpellName();
+    RenderText(spell_name, x, start_y + kLevelUpNameOffsetY, kColorWhite,
+               resources_.ui_resources.ui_font_large, kLevelUpCardWidth);
+
+    std::string description = upgrade->GetDescription();
+    RenderText(description, x, start_y + kLevelUpDescOffsetY, kColorGrey,
+               resources_.ui_resources.ui_font_medium, kLevelUpCardWidth);
+
+    // "current_val -> new_val"
+    std::string value_change =
+        upgrade->GetOldValueString() + " -> " + upgrade->GetNewValueString();
+    RenderText(value_change, x, start_y + kLevelUpStatsOffsetY, kColorGreen,
+               resources_.ui_resources.ui_font_medium, kLevelUpCardWidth);
+  }
+
+  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
+}
+
+// Render a string of text at a specified location (x,y) with a given color
+// and font.
+// Optional: If you specify a positive center_width, then it will center-align
+// the text along that center_width.
+void RenderManager::RenderText(const std::string& text, int x, int y,
+                               SDL_Color color, TTF_Font* font,
+                               int center_width) {
+  SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), color);
+  SDL_Texture* texture =
+      SDL_CreateTextureFromSurface(resources_.renderer, surface);
+
+  int render_x = x;
+  if (center_width > 0) {
+    render_x = x + (center_width - surface->w) / 2;
+  }
+
+  SDL_Rect dest = {render_x, y, surface->w, surface->h};
+  SDL_RenderCopy(resources_.renderer, texture, nullptr, &dest);
+
+  SDL_DestroyTexture(texture);
+  SDL_FreeSurface(surface);
 }
 
 }  // namespace rl2

@@ -11,6 +11,8 @@
 #include <vector>
 #include "constants/enemy.h"
 #include "constants/game.h"
+#include "constants/progression_manager.h"
+#include "constants/ui.h"
 #include "entity.h"
 #include "physics_manager.h"
 #include "render_manager.h"
@@ -90,6 +92,11 @@ void Game::CheckGameStateRules() {
     game_state_ = is_gameover;
     return;
   }
+
+  if (progression_manager_.CheckLevelUp(scene_.player)) {
+    game_state_ = in_level_up;
+    progression_manager_.GenerateLevelUpOptions(scene_);
+  }
 }
 
 void Game::RenderGame(float alpha) {
@@ -162,6 +169,14 @@ void Game::RunGameLoop() {
         if (game_status_.is_headless) {
           break;
         }
+        RenderGame(0.0f);
+        break;
+      }
+
+      case in_level_up: {
+        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
+        current_time = new_time;
+        ProcessLevelUpInput(SDL_GetMouseState(NULL, NULL));
         RenderGame(0.0f);
         break;
       }
@@ -260,6 +275,11 @@ void Game::ProcessInput() {
     return;
   }
 
+  if (game_state_ == in_level_up) {
+    ProcessLevelUpInput(SDL_GetMouseState(NULL, NULL));
+    return;
+  }
+
   cursor_position_ = {
       (float)(cursor_pos_x + render_manager_.camera_.position_.x),
       (float)(cursor_pos_y + render_manager_.camera_.position_.y)};
@@ -296,6 +316,37 @@ void Game::ProcessPlayerInput(uint32_t mouse_state) {
 
     if (frostbolt.has_value()) {
       scene_.projectiles.AddProjectile(*frostbolt);
+    }
+  }
+}
+
+// This function processes inputs during a level up state and applies the
+// upgrade option according to which card was selected by left-clicking on it.
+void Game::ProcessLevelUpInput(uint32_t mouse_state) {
+  if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+    int total_width = kNumUpgradeOptions * kLevelUpCardWidth +
+                      (kNumUpgradeOptions - 1) * kLevelUpCardGap;
+    int start_x = (kWindowWidth - total_width) / 2;
+    int start_y = (kWindowHeight - kLevelUpCardHeight) / 2;
+
+    int mouse_x, mouse_y;
+    SDL_GetMouseState(&mouse_x, &mouse_y);
+
+    int selected_card_idx = -1;
+
+    if (mouse_y >= start_y && mouse_y <= start_y + kLevelUpCardHeight) {
+      for (int i = 0; i < kNumUpgradeOptions; ++i) {
+        int x = start_x + i * (kLevelUpCardWidth + kLevelUpCardGap);
+        if (mouse_x >= x && mouse_x <= x + kLevelUpCardWidth) {
+          selected_card_idx = i;
+          break;
+        }
+      }
+    }
+
+    if (selected_card_idx != -1) {
+      progression_manager_.ApplyUpgrade(scene_, selected_card_idx);
+      game_state_ = is_running;
     }
   }
 }

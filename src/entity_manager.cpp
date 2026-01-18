@@ -106,6 +106,7 @@ void EntityManager::UpdateEnemyRayCaster(
     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
   int history_idx = enemy.ray_caster.history_idx;
 
+  #pragma omp parallel for
   for (int ray_idx = 0; ray_idx < kNumRays; ++ray_idx) {
     Vector2D dir = enemy.ray_caster.pattern.ray_dir[ray_idx];
 

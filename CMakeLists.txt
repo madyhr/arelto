@@ -25,6 +25,8 @@ find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED COMPONENTS PNG) 
 find_package(SDL2_ttf REQUIRED) 
 
+find_package(OpenMP REQUIRED)
+
 add_subdirectory(extern/pybind11)
 
 file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp")
@@ -43,6 +45,7 @@ target_link_libraries(rl2_core PUBLIC
   SDL2_image::SDL2_image
   SDL2_ttf::SDL2_ttf
   pybind11::embed
+  OpenMP::OpenMP_CXX
 )
 
 add_executable(game_app src/main.cpp)

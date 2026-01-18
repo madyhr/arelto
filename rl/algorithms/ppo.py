@@ -155,10 +155,10 @@ class PPO:
                 # k3 estimation as described in http://joschu.net/blog/kl-approx.html
                 # only used for diagnostics
                 approx_kl = ((ratio - 1) - logratio).mean()
-                metrics["tech/kl_divergence"].append(approx_kl.item())
+                metrics["tech/kl_divergence"].append(approx_kl)
                 # calculate how often we are clipping (useful debug stat)
                 clip_frac = (torch.abs(ratio - 1.0) > self.clip_coef).float().mean()
-                metrics["tech/clip_fraction"].append(clip_frac.item())
+                metrics["tech/clip_fraction"].append(clip_frac)
 
             pg_loss1 = -advantage_batch * ratio
             pg_loss2 = -advantage_batch * torch.clamp(
@@ -191,11 +191,11 @@ class PPO:
             torch.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
             self.optimizer.step()
 
-            metrics["loss/policy"].append(pg_loss.item())
-            metrics["loss/value"].append(value_loss.item())
-            metrics["loss/entropy"].append(entropy_loss.item())
-            metrics["loss/total"].append(loss.item())
+            metrics["loss/policy"].append(pg_loss.detach())
+            metrics["loss/value"].append(value_loss.detach())
+            metrics["loss/entropy"].append(entropy_loss.detach())
+            metrics["loss/total"].append(loss.detach())
 
         self.storage.clear()
 
-        return {k: sum(v) / len(v) for k, v in metrics.items()}
+        return {k: torch.stack(v).mean().item() for k, v in metrics.items()}

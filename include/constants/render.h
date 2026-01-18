@@ -13,9 +13,19 @@ constexpr int kSpriteColliderMargin = 30;
 constexpr float kRenderCullPadding = 50.0f;
 
 // Colors
-// Format is { R, G, B, A }, where A is opacity
+// Format is { R, G, B, A }, where A is opacity (alpha)
 constexpr SDL_Color kColorWhite = {255, 255, 255, 255};
 constexpr SDL_Color kColorGrey = {140, 140, 140, 255};
 constexpr SDL_Color kColorGreen = {0, 255, 0, 255};
+constexpr SDL_Color kColorBlue = {0, 0, 255, 255};
+constexpr SDL_Color kColorRed = {255, 0, 0, 255};
+constexpr SDL_Color kColorYellow = {255, 255, 0, 255};
+constexpr SDL_Color kColorOrange = {255, 165, 0, 255};
+constexpr SDL_Color kColorBlack = {0, 0, 0, 255};
+
+constexpr SDL_Color WithOpacity(SDL_Color color, Uint8 opacity) {
+  return {color.r, color.g, color.b, opacity};
+}
+
 }  // namespace rl2
 #endif

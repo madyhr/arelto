@@ -160,10 +160,15 @@ bool RenderManager::InitializeCamera(const Player& player) {
   return true;
 };
 
+void RenderManager::SetRenderColor(SDL_Renderer* renderer,
+                                   const SDL_Color& color) {
+  SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+}
+
 void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
                            float time, GameState game_state) {
 
-  SDL_SetRenderDrawColor(resources_.renderer, 0x00, 0x00, 0x00, 0xFF);
+  SetRenderColor(resources_.renderer, kColorBlack);
   SDL_RenderClear(resources_.renderer);
 
   if (game_state == in_start_screen) {
@@ -593,30 +598,26 @@ void RenderManager::RenderDebugWorldOccupancyMap(
         // Color coding based on type
         switch (type) {
           case EntityType::player:
-            SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 255,
-                                   128);  // Blue
+            SetRenderColor(resources_.renderer, WithOpacity(kColorBlue, 128));
             break;
           case EntityType::enemy:
-            SDL_SetRenderDrawColor(resources_.renderer, 255, 0, 0, 128);  // Red
+            SetRenderColor(resources_.renderer, WithOpacity(kColorRed, 128));
             break;
           case EntityType::projectile:
-            SDL_SetRenderDrawColor(resources_.renderer, 255, 255, 0,
-                                   128);  // Yellow
+            SetRenderColor(resources_.renderer, WithOpacity(kColorYellow, 128));
             break;
           case EntityType::terrain:
-            SDL_SetRenderDrawColor(resources_.renderer, 0, 255, 0,
-                                   128);  // Green
+            SetRenderColor(resources_.renderer, WithOpacity(kColorGreen, 128));
             break;
           default:
-            SDL_SetRenderDrawColor(resources_.renderer, 100, 100, 100,
-                                   128);  // Grey
+            SetRenderColor(resources_.renderer, WithOpacity(kColorGrey, 128));
             break;
         }
         // The rectangles are rendered first so the grid cells are on top.
         SDL_RenderFillRect(resources_.renderer, &render_rect);
       }
 
-      SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 50);
+      SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 50));
       SDL_RenderDrawRect(resources_.renderer, &render_rect);
     }
   }
@@ -660,7 +661,7 @@ void RenderManager::RenderDebugEnemyOccupancyMap(
     vision_rect.w = kEnemyOccupancyMapWidth * kOccupancyMapResolution;
     vision_rect.h = kEnemyOccupancyMapHeight * kOccupancyMapResolution;
 
-    SDL_SetRenderDrawColor(resources_.renderer, 255, 255, 255, 200);
+    SetRenderColor(resources_.renderer, WithOpacity(kColorWhite, 200));
     SDL_RenderDrawRect(resources_.renderer, &vision_rect);
 
     for (int local_y = 0; local_y < kEnemyOccupancyMapHeight; ++local_y) {
@@ -681,24 +682,26 @@ void RenderManager::RenderDebugEnemyOccupancyMap(
 
           switch (type) {
             case EntityType::player:
-              SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 255, 128);
+              SetRenderColor(resources_.renderer, WithOpacity(kColorBlue, 128));
               break;
             case EntityType::enemy:
-              SDL_SetRenderDrawColor(resources_.renderer, 255, 0, 0, 128);
+              SetRenderColor(resources_.renderer, WithOpacity(kColorRed, 128));
               break;
             case EntityType::projectile:
-              SDL_SetRenderDrawColor(resources_.renderer, 255, 255, 0, 128);
+              SetRenderColor(resources_.renderer,
+                             WithOpacity(kColorYellow, 128));
               break;
             case EntityType::terrain:
-              SDL_SetRenderDrawColor(resources_.renderer, 0, 255, 0, 128);
+              SetRenderColor(resources_.renderer,
+                             WithOpacity(kColorGreen, 128));
               break;
             default:
-              SDL_SetRenderDrawColor(resources_.renderer, 100, 100, 100, 128);
+              SetRenderColor(resources_.renderer, WithOpacity(kColorGrey, 128));
               break;
           }
           SDL_RenderFillRect(resources_.renderer, &render_rect);
 
-          SDL_SetRenderDrawColor(resources_.renderer, 255, 255, 255, 50);
+          SetRenderColor(resources_.renderer, WithOpacity(kColorWhite, 50));
           SDL_RenderDrawRect(resources_.renderer, &render_rect);
         }
       }
@@ -745,18 +748,16 @@ void RenderManager::RenderDebugRayCaster(const Enemy& enemy, float alpha) {
 
       switch (type) {
         case EntityType::player:
-          SDL_SetRenderDrawColor(resources_.renderer, 255, 0, 0, 150);  // Red
+          SetRenderColor(resources_.renderer, WithOpacity(kColorRed, 150));
           break;
         case EntityType::terrain:
-          SDL_SetRenderDrawColor(resources_.renderer, 200, 200, 200,
-                                 50);  // Gray
+          SetRenderColor(resources_.renderer, WithOpacity(kColorGrey, 50));
           break;
         case EntityType::enemy:
-          SDL_SetRenderDrawColor(resources_.renderer, 255, 165, 0,
-                                 150);  // Orange
+          SetRenderColor(resources_.renderer, WithOpacity(kColorOrange, 150));
           break;
         default:
-          SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 50);
+          SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 50));
           break;
       }
 
@@ -923,7 +924,7 @@ void RenderManager::RenderGameOver() {
   render_rect.h = kWindowHeight / 3;
 
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
-  SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 128);
+  SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 128));
   SDL_RenderFillRect(resources_.renderer, &render_rect);
 
   SDL_Rect dst_rect;
@@ -947,7 +948,7 @@ void RenderManager::RenderPaused() {
   render_rect.h = kWindowHeight / 3;
 
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
-  SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 128);
+  SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 128));
   SDL_RenderFillRect(resources_.renderer, &render_rect);
 
   SDL_Rect dst_rect;
@@ -1025,7 +1026,7 @@ void RenderManager::RenderLevelUp(
     const std::vector<std::unique_ptr<Upgrade>>& options) {
   SDL_Rect overlay_rect = {0, 0, kWindowWidth, kWindowHeight};
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
-  SDL_SetRenderDrawColor(resources_.renderer, 0, 0, 0, 150);
+  SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 150));
   SDL_RenderFillRect(resources_.renderer, &overlay_rect);
 
   int total_width = kNumUpgradeOptions * kLevelUpCardWidth +

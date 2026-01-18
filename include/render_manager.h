@@ -55,6 +55,7 @@ class RenderManager {
   RenderResources resources_;
   UIManager ui_manager_;
 
+  void SetRenderColor(SDL_Renderer* renderer, const SDL_Color& color);
   bool InitializeCamera(const Player& player);
   void UpdateCameraPosition(const Player& player);
   void RenderTiledMap();

@@ -14,6 +14,10 @@ bool ProgressionManager::CheckLevelUp(const Player& player) {
   return player.stats_.exp_points >= player.stats_.exp_points_required;
 }
 
+int ProgressionManager::ApplyExpScalingLaw(const int& current_exp_req) {
+  return static_cast<int>(current_exp_req * kPlayerExpRequiredScale);
+};
+
 void ProgressionManager::GenerateLevelUpOptions(Scene& scene) {
   scene.level_up_options.clear();
   for (int i = 0; i < kNumUpgradeOptions; ++i) {

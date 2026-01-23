@@ -120,8 +120,8 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ScalesExpRequired) {
   progression_manager_.ApplyUpgrade(scene_, 0);
 
   // TODO: Refactor exp scaling into a function to avoid defining it multiple places
-  int new_exp_required = static_cast<int>(
-      scene_.player.stats_.exp_points_required * kPlayerExpRequiredScale);
+  int new_exp_required =
+      static_cast<int>(initial_exp_required * kPlayerExpRequiredScale);
 
   EXPECT_EQ(scene_.player.stats_.exp_points_required, new_exp_required);
 }

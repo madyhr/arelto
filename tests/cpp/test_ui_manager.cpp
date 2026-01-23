@@ -40,7 +40,7 @@ TEST_F(UIManagerTest, UpdateHealthBar_FillWidthChangesWithHealth) {
   uint32_t half_health_width = fill->sprite_size.width;
 
   // Full health should show wider bar than half health
-  EXPECT_EQ(full_health_width, half_health_width / 2);
+  EXPECT_EQ(full_health_width / 2, half_health_width);
 }
 
 TEST_F(UIManagerTest, UpdateHealthBar_HandlesZeroHealth) {

@@ -3,7 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <stdexcept>
 #include <vector>
 
@@ -36,13 +35,12 @@ TEST_F(ObservationManagerTest, GetObservationSize_CorrectFormula) {
   EXPECT_EQ(actual_size, expected_size);
 }
 
-
-
 // =============================================================================
 // FillObservationBuffer Tests
 // =============================================================================
 
-TEST_F(ObservationManagerTest, FillObservationBuffer_ThrowsOnSizeMismatch_TooSmall) {
+TEST_F(ObservationManagerTest,
+       FillObservationBuffer_ThrowsOnSizeMismatch_TooSmall) {
   int size = obs_manager_.GetObservationSize(scene_);
   std::vector<float> buffer(kNumEnemies * size - 1);  // One less than expected
 
@@ -51,7 +49,8 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_ThrowsOnSizeMismatch_TooSma
       std::runtime_error);
 }
 
-TEST_F(ObservationManagerTest, FillObservationBuffer_ThrowsOnSizeMismatch_TooLarge) {
+TEST_F(ObservationManagerTest,
+       FillObservationBuffer_ThrowsOnSizeMismatch_TooLarge) {
   int size = obs_manager_.GetObservationSize(scene_);
   std::vector<float> buffer(kNumEnemies * size + 1);  // One more than expected
 
@@ -60,7 +59,8 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_ThrowsOnSizeMismatch_TooLar
       std::runtime_error);
 }
 
-TEST_F(ObservationManagerTest, FillObservationBuffer_DoesNotThrowOnCorrectSize) {
+TEST_F(ObservationManagerTest,
+       FillObservationBuffer_DoesNotThrowOnCorrectSize) {
   int size = obs_manager_.GetObservationSize(scene_);
   std::vector<float> buffer(kNumEnemies * size);
 
@@ -71,7 +71,8 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_DoesNotThrowOnCorrectSize) 
 TEST_F(ObservationManagerTest, FillObservationBuffer_NormalizesDistances) {
   // Set a known distance at max value
   int history_idx = scene_.enemy.ray_caster.history_idx;
-  scene_.enemy.ray_caster.ray_hit_distances[history_idx][0][0] = kMaxRayDistance;
+  scene_.enemy.ray_caster.ray_hit_distances[history_idx][0][0] =
+      kMaxRayDistance;
 
   int size = obs_manager_.GetObservationSize(scene_);
   std::vector<float> buffer(kNumEnemies * size);
@@ -85,7 +86,8 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_NormalizesDistances) {
   EXPECT_GE(first_val, -1.0f);
 }
 
-TEST_F(ObservationManagerTest, FillObservationBuffer_ClampsBetweenNegOneAndOne) {
+TEST_F(ObservationManagerTest,
+       FillObservationBuffer_ClampsBetweenNegOneAndOne) {
   // Set an extremely large distance that would exceed 1.0 when normalized
   int history_idx = scene_.enemy.ray_caster.history_idx;
   for (int ray = 0; ray < kNumRays; ++ray) {
@@ -107,7 +109,8 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_ClampsBetweenNegOneAndOne) 
   }
 }
 
-TEST_F(ObservationManagerTest, FillObservationBuffer_ZeroDistanceNormalizesToZero) {
+TEST_F(ObservationManagerTest,
+       FillObservationBuffer_ZeroDistanceNormalizesToZero) {
   // Set all distances to 0
   for (int h = 0; h < kRayHistoryLength; ++h) {
     for (int ray = 0; ray < kNumRays; ++ray) {
@@ -136,8 +139,9 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_ContainsTypeInformation) {
   int target_ray = 0;
   int target_enemy = 0;
   EntityType target_type = EntityType::player;
-  
-  scene_.enemy.ray_caster.ray_hit_types[history_idx][target_ray][target_enemy] = target_type;
+
+  scene_.enemy.ray_caster.ray_hit_types[history_idx][target_ray][target_enemy] =
+      target_type;
 
   int size = obs_manager_.GetObservationSize(scene_);
   std::vector<float> buffer(kNumEnemies * size);
@@ -145,19 +149,19 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_ContainsTypeInformation) {
 
   // The buffer structure is:
   // [Distances (history 0), Types (history 0), Distances (history 1), Types (history 1)...]
-  // Ideally we should know the exact offset. 
+  // Ideally we should know the exact offset.
   // Based on observation_manager.cpp (assumed), it likely iterates history -> type/dist -> rays
-  
-  // However, without seeing implementation, we can search for the specific value 
+
+  // However, without seeing implementation, we can search for the specific value
   // in the expected region.
   // The type value for EntityType::player (usually non-zero) should be present.
-  
+
   // A robust test would calculate the exact index.
   // Assuming strict ordering: history -> (distance_all_rays, type_all_rays) -> enemies
-  // or per enemy? 
+  // or per enemy?
   // Let's rely on finding the value but ensure it's in the "type" section of the data.
   // Actually, let's look for the specific value corresponding to "player".
-  
+
   bool found_specific_type = false;
   for (float val : buffer) {
     if (std::abs(val - static_cast<float>(target_type)) < 1e-5) {
@@ -165,7 +169,8 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_ContainsTypeInformation) {
       break;
     }
   }
-  EXPECT_TRUE(found_specific_type) << "Did not find the specific entity type value in buffer";
+  EXPECT_TRUE(found_specific_type)
+      << "Did not find the specific entity type value in buffer";
 }
 
 TEST_F(ObservationManagerTest, FillObservationBuffer_BufferFullyPopulated) {

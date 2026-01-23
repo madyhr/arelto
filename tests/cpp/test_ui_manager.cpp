@@ -47,7 +47,8 @@ TEST_F(UIManagerTest, SetupUI_InitializesLevelIndicator) {
 // =============================================================================
 
 TEST_F(UIManagerTest, SetupHealthBar_HasBackgroundElement) {
-  UIElement* bg = ui_manager_.health_bar_.GetElemByTag(UIElement::Tag::background);
+  UIElement* bg =
+      ui_manager_.health_bar_.GetElemByTag(UIElement::Tag::background);
   EXPECT_NE(bg, nullptr);
 }
 

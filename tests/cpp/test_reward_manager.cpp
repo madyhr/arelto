@@ -3,7 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <stdexcept>
 #include <vector>
 
@@ -118,45 +117,47 @@ TEST_F(RewardManagerTest, AddTerm_TermHasCorrectName) {
 
 TEST_F(RewardManagerTest, AddTerm_UpdatesExistingTerm) {
   std::string term_name = "duplicate_term";
-  
+
   // Add first version
-  reward_manager_.AddTerm(term_name, 1.0f,
-                          [](const Scene& scene) -> std::array<float, kNumEnemies> {
-                            std::array<float, kNumEnemies> result;
-                            result.fill(1.0f);
-                            return result;
-                          });
-                          
+  reward_manager_.AddTerm(
+      term_name, 1.0f,
+      [](const Scene& scene) -> std::array<float, kNumEnemies> {
+        std::array<float, kNumEnemies> result;
+        result.fill(1.0f);
+        return result;
+      });
+
   // Add second version with different weight
-  reward_manager_.AddTerm(term_name, 5.0f,
-                          [](const Scene& scene) -> std::array<float, kNumEnemies> {
-                            std::array<float, kNumEnemies> result;
-                            result.fill(1.0f);
-                            return result;
-                          });
-                          
+  reward_manager_.AddTerm(
+      term_name, 5.0f,
+      [](const Scene& scene) -> std::array<float, kNumEnemies> {
+        std::array<float, kNumEnemies> result;
+        result.fill(1.0f);
+        return result;
+      });
+
   reward_manager_.UpdateRewardTerms(scene_);
-  // CalculateTotalReward iterates over the vector of terms. 
+  // CalculateTotalReward iterates over the vector of terms.
   // If duplicates exist in vector, they both contribute.
   // We need to call it to update the last_value which GetLastRewardDict returns.
   reward_manager_.CalculateTotalReward(scene_);
-  
+
   auto reward_dict = reward_manager_.GetLastRewardDict();
   ASSERT_EQ(reward_dict.count(term_name), 1);
   EXPECT_FLOAT_EQ(reward_dict[term_name][0], 5.0f);
-  
+
   // Also verify total reward to ensure hidden duplicates aren't summing up
   // We need to subtract other terms?
   // Easier: check GetLastRewardDict size? No, that uses map.
   // We can implicitly trust that if the dict value is correct, the specific term is correct.
-  // But wait, if vector has {("test", 1.0), ("test", 5.0)}, 
+  // But wait, if vector has {("test", 1.0), ("test", 5.0)},
   // CalculateTotalReward sums both? No, it acts on terms.
   // term.last_value is updated.
-  // Map construction: `reward_dict[term.name] = term.last_value`. 
+  // Map construction: `reward_dict[term.name] = term.last_value`.
   // It overwrites. So dict value will be 5.0 (if last one is 5.0).
   // But total reward will be 1.0 + 5.0 = 6.0 in the bug case.
   // So we MUST check total reward or check that vector size didn't grow.
-  
+
   // Let's rely on the implementation fix which we know prevents vector growth.
   // But for the test to be robust against regression:
   // count number of times "duplicate_term" appears in GetLastRewardDict? Always 1.
@@ -261,16 +262,16 @@ TEST_F(RewardManagerTest, GetRewardSize_ReturnsNumEnemies) {
 TEST_F(RewardManagerTest, FillRewardBuffer_ThrowsOnSizeMismatch) {
   std::vector<float> buffer(kNumEnemies - 1);  // Wrong size
 
-  EXPECT_THROW(reward_manager_.FillRewardBuffer(buffer.data(), buffer.size(),
-                                                 scene_),
-               std::runtime_error);
+  EXPECT_THROW(
+      reward_manager_.FillRewardBuffer(buffer.data(), buffer.size(), scene_),
+      std::runtime_error);
 }
 
 TEST_F(RewardManagerTest, FillRewardBuffer_DoesNotThrowOnCorrectSize) {
   std::vector<float> buffer(kNumEnemies);
 
-  EXPECT_NO_THROW(reward_manager_.FillRewardBuffer(buffer.data(), buffer.size(),
-                                                    scene_));
+  EXPECT_NO_THROW(
+      reward_manager_.FillRewardBuffer(buffer.data(), buffer.size(), scene_));
 }
 
 TEST_F(RewardManagerTest, FillRewardBuffer_ContainsTotalRewards) {

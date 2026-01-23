@@ -235,25 +235,28 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
   scene_.player.stats_.exp_points_required = 100;
   // Ensure spell stats are initialized (cooldowns, damages, etc.)
   scene_.player.UpdateAllSpellStats();
-  
+
   // Manually create a deterministic upgrade option (Damage for first spell)
   // We avoid using GenerateLevelUpOptions to remove RNG flakiness.
   SpellId target_spell = SpellId::FireballId;
   std::string spell_name = "Fireball";
-  float initial_damage = static_cast<float>(scene_.player.spell_stats_.damage[target_spell]);
-  float new_damage = initial_damage + 10.0f; 
-  
-  auto upgrade = std::make_unique<SpellStatUpgrade>(
-      target_spell, spell_name, UpgradeType::damage, initial_damage, new_damage);
-      
+  float initial_damage =
+      static_cast<float>(scene_.player.spell_stats_.damage[target_spell]);
+  float new_damage = initial_damage + 10.0f;
+
+  auto upgrade = std::make_unique<SpellStatUpgrade>(target_spell, spell_name,
+                                                    UpgradeType::damage,
+                                                    initial_damage, new_damage);
+
   scene_.level_up_options.clear();
   scene_.level_up_options.push_back(std::move(upgrade));
-  
+
   // Apply the upgrade (index 0)
   progression_manager_.ApplyUpgrade(scene_, 0);
-  
+
   // Verify
-  float actual_damage = static_cast<float>(scene_.player.spell_stats_.damage[target_spell]);
+  float actual_damage =
+      static_cast<float>(scene_.player.spell_stats_.damage[target_spell]);
   EXPECT_GT(actual_damage, initial_damage);
   EXPECT_FLOAT_EQ(actual_damage, new_damage);
 }

@@ -3,7 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include "constants/enemy.h"
 #include "constants/game.h"
 #include "constants/map.h"
 #include "physics_manager.h"
@@ -228,7 +227,8 @@ TEST_F(PhysicsManagerTest, StepPhysics_EnemyClampsToMapBounds) {
 
 TEST_F(PhysicsManagerTest, StepPhysics_ProjectileOOB_MarkedForDestruction) {
   // Add projectile at edge moving out of bounds
-  ProjectileData proj = testing::CreateProjectileAt(-10.0f, 100.0f, -1.0f, 0.0f);
+  ProjectileData proj =
+      testing::CreateProjectileAt(-10.0f, 100.0f, -1.0f, 0.0f);
   scene_.projectiles.AddProjectile(proj);
 
   physics_manager_.StepPhysics(scene_);
@@ -262,20 +262,20 @@ TEST_F(PhysicsManagerTest, StepPhysics_ResolvesCollisions) {
   scene_.player.position_ = {100.0f, 100.0f};
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
-  
+
   // Set velocities to zero (so only collision resolution should move them)
   scene_.player.velocity_ = {0.0f, 0.0f};
   scene_.enemy.velocity[0] = {0.0f, 0.0f};
-  
+
   Vector2D initial_player = scene_.player.position_;
   Vector2D initial_enemy = scene_.enemy.position[0];
-  
+
   physics_manager_.StepPhysics(scene_);
-  
+
   // They should have moved apart
   EXPECT_NE(scene_.player.position_, initial_player);
   EXPECT_NE(scene_.enemy.position[0], initial_enemy);
-  
+
   float distance = (scene_.player.position_ - scene_.enemy.position[0]).Norm();
   EXPECT_GT(distance, 0.0f);
 }

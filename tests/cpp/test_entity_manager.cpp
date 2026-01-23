@@ -223,32 +223,36 @@ TEST_F(EntityManagerTest, Update_HandlesLargeDt) {
 TEST_F(EntityManagerTest, Update_UpdatesRayCaster) {
   // Place an enemy and player nearby
   scene_.player.position_ = {100.0f, 100.0f};
-  scene_.enemy.position[0] = {250.0f, 100.0f}; // Further away to ensure ray start is outside player grid cell
+  scene_.enemy.position[0] = {
+      250.0f,
+      100.0f};  // Further away to ensure ray start is outside player grid cell
   scene_.enemy.is_alive[0] = true;
-  
+
   // Clear any existing ray data
   int history_idx = scene_.enemy.ray_caster.history_idx;
   for (int r = 0; r < kNumRays; ++r) {
     scene_.enemy.ray_caster.ray_hit_distances[history_idx][r][0] = 0.0f;
   }
-  
+
   entity_manager_.Update(scene_, 0.016f);
-  
+
   // Check if ray caster data was updated
   // We expect some non-zero distances since player is nearby
   bool found_hit = false;
   // Note: history_idx might have changed, check all or current?
   // Update increments history_idx? Let's check the new current one.
   int new_history_idx = scene_.enemy.ray_caster.history_idx;
-  int checked_idx = (new_history_idx - 1 + kRayHistoryLength) % kRayHistoryLength;
-  
+  int checked_idx =
+      (new_history_idx - 1 + kRayHistoryLength) % kRayHistoryLength;
+
   for (int r = 0; r < kNumRays; ++r) {
     if (scene_.enemy.ray_caster.ray_hit_distances[checked_idx][r][0] > 0.0f) {
       found_hit = true;
       break;
     }
   }
-  EXPECT_TRUE(found_hit) << "Ray caster did not detect the nearby player after update";
+  EXPECT_TRUE(found_hit)
+      << "Ray caster did not detect the nearby player after update";
 }
 
 }  // namespace

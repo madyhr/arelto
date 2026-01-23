@@ -4,7 +4,6 @@
 #include <gtest/gtest.h>
 
 #include <array>
-#include <cmath>
 
 #include "collision_manager.h"
 #include "constants/enemy.h"
@@ -34,12 +33,7 @@ class CollisionManagerTest : public ::testing::Test {
 // HandleCollisionsSAP Integration Tests
 // =============================================================================
 
-
 TEST_F(CollisionManagerTest, HandleCollisionsSAP_NoCollisions_NoChanges) {
-  // Place player far from enemies
-  scene_.player.position_ = {0.0f, 0.0f};
-
-
   Vector2D initial_player_pos = scene_.player.position_;
   std::array<Vector2D, kNumEnemies> initial_enemy_pos;
   for (int i = 0; i < kNumEnemies; ++i) {
@@ -55,40 +49,35 @@ TEST_F(CollisionManagerTest, HandleCollisionsSAP_NoCollisions_NoChanges) {
   }
 }
 
-TEST_F(CollisionManagerTest, HandleCollisionsSAP_PlayerEnemyCollision_SeparatesEntities) {
+TEST_F(CollisionManagerTest,
+       HandleCollisionsSAP_PlayerEnemyCollision_SeparatesEntities) {
   // Place player and first enemy overlapping
   scene_.player.position_ = {100.0f, 100.0f};
   scene_.enemy.position[0] = {100.0f, 100.0f};  // Exact same position
   scene_.enemy.is_alive[0] = true;
 
-  // Move other enemies far away
-
-
   collision_manager_.HandleCollisionsSAP(scene_);
 
   // Player and enemy should be separated (positions should differ)
-  float distance =
-      (scene_.player.position_ - scene_.enemy.position[0]).Norm();
+  float distance = (scene_.player.position_ - scene_.enemy.position[0]).Norm();
   // They should have been pushed apart
   EXPECT_GT(distance, 0.0f);
 }
 
-TEST_F(CollisionManagerTest, HandleCollisionsSAP_EnemyEnemyCollision_SeparatesEntities) {
+TEST_F(CollisionManagerTest,
+       HandleCollisionsSAP_EnemyEnemyCollision_SeparatesEntities) {
   // Place two enemies overlapping
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.position[1] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
   scene_.enemy.is_alive[1] = true;
 
-  // Move player and other enemies far away
   scene_.player.position_ = {10000.0f, 10000.0f};
-
 
   collision_manager_.HandleCollisionsSAP(scene_);
 
   // Enemies should be separated
-  float distance =
-      (scene_.enemy.position[0] - scene_.enemy.position[1]).Norm();
+  float distance = (scene_.enemy.position[0] - scene_.enemy.position[1]).Norm();
   EXPECT_GT(distance, 0.0f);
 }
 
@@ -106,7 +95,8 @@ TEST_F(CollisionManagerTest, HandleCollisionsSAP_DeadEnemyIgnored) {
   testing::ExpectVector2DEq(scene_.player.position_, initial_player_pos);
 }
 
-TEST_F(CollisionManagerTest, HandleCollisionsSAP_PlayerEnemyCollision_DealsDamage) {
+TEST_F(CollisionManagerTest,
+       HandleCollisionsSAP_PlayerEnemyCollision_DealsDamage) {
   // Place player and enemy overlapping
   scene_.player.position_ = {100.0f, 100.0f};
   scene_.player.stats_.health = 100;
@@ -114,9 +104,6 @@ TEST_F(CollisionManagerTest, HandleCollisionsSAP_PlayerEnemyCollision_DealsDamag
   scene_.enemy.is_alive[0] = true;
   scene_.enemy.attack_cooldown[0] = -1.0f;  // Ready to attack
   scene_.enemy.attack_damage[0] = 10;
-
-  // Move other enemies away
-
 
   collision_manager_.HandleCollisionsSAP(scene_);
 
@@ -134,16 +121,14 @@ TEST_F(CollisionManagerTest,
   scene_.enemy.attack_cooldown[0] = 1.0f;  // On cooldown
   scene_.enemy.attack_damage[0] = 10;
 
-  // Move other enemies away
-
-
   collision_manager_.HandleCollisionsSAP(scene_);
 
   // Player should NOT have taken damage (enemy on cooldown)
   EXPECT_EQ(scene_.player.stats_.health, 100);
 }
 
-TEST_F(CollisionManagerTest, HandleCollisionsSAP_PlayerGemCollision_CollectsExp) {
+TEST_F(CollisionManagerTest,
+       HandleCollisionsSAP_PlayerGemCollision_CollectsExp) {
   // Place player overlapping with a gem
   scene_.player.position_ = {100.0f, 100.0f};
   scene_.player.stats_.exp_points = 0;
@@ -155,9 +140,6 @@ TEST_F(CollisionManagerTest, HandleCollisionsSAP_PlayerGemCollision_CollectsExp)
                       {{8.0f, 8.0f}, {16, 16}},
                       {16, 16}};
   scene_.exp_gem.AddExpGem(gem_data);
-
-  // Move enemies far away
-
 
   collision_manager_.HandleCollisionsSAP(scene_);
 
@@ -173,9 +155,6 @@ TEST_F(CollisionManagerTest,
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
   scene_.enemy.health_points[0] = 100;
-
-  // Move other enemies away
-
 
   // Add a projectile at enemy's position
   ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);

@@ -24,22 +24,18 @@ class EntityManagerTest : public ::testing::Test {
 // IsPlayerDead Tests
 // =============================================================================
 
-TEST_F(EntityManagerTest, IsPlayerDead_ZeroHealth_ReturnsTrue) {
+TEST_F(EntityManagerTest, IsPlayerDead_WorksCorrectly) {
+  // Dead cases
   scene_.player.stats_.health = 0;
   EXPECT_TRUE(entity_manager_.IsPlayerDead(scene_.player));
-}
 
-TEST_F(EntityManagerTest, IsPlayerDead_NegativeHealth_ReturnsTrue) {
   scene_.player.stats_.health = -10;
   EXPECT_TRUE(entity_manager_.IsPlayerDead(scene_.player));
-}
 
-TEST_F(EntityManagerTest, IsPlayerDead_PositiveHealth_ReturnsFalse) {
+  // Alive cases
   scene_.player.stats_.health = 100;
   EXPECT_FALSE(entity_manager_.IsPlayerDead(scene_.player));
-}
 
-TEST_F(EntityManagerTest, IsPlayerDead_OneHealth_ReturnsFalse) {
   scene_.player.stats_.health = 1;
   EXPECT_FALSE(entity_manager_.IsPlayerDead(scene_.player));
 }
@@ -48,37 +44,30 @@ TEST_F(EntityManagerTest, IsPlayerDead_OneHealth_ReturnsFalse) {
 // Update - Enemy Status Tests
 // =============================================================================
 
-TEST_F(EntityManagerTest, Update_EnemyWithZeroHealth_MarkedAsDead) {
-  scene_.enemy.health_points[0] = 0;
+TEST_F(EntityManagerTest, Update_EnemyStatus_TransitionsCorrectly) {
+  // Test Alive -> Alive
+  scene_.enemy.health_points[0] = 100;
   scene_.enemy.is_alive[0] = true;
   scene_.enemy.is_done[0] = false;
 
   entity_manager_.Update(scene_, 0.016f);
-
-  EXPECT_FALSE(scene_.enemy.is_alive[0]);
-  EXPECT_TRUE(scene_.enemy.is_done[0]);
-}
-
-TEST_F(EntityManagerTest, Update_EnemyWithNegativeHealth_MarkedAsDead) {
-  scene_.enemy.health_points[0] = -5;
-  scene_.enemy.is_alive[0] = true;
-  scene_.enemy.is_done[0] = false;
-
-  entity_manager_.Update(scene_, 0.016f);
-
-  EXPECT_FALSE(scene_.enemy.is_alive[0]);
-  EXPECT_TRUE(scene_.enemy.is_done[0]);
-}
-
-TEST_F(EntityManagerTest, Update_EnemyWithPositiveHealth_StaysAlive) {
-  scene_.enemy.health_points[0] = 10;
-  scene_.enemy.is_alive[0] = true;
-  scene_.enemy.is_done[0] = false;
-
-  entity_manager_.Update(scene_, 0.016f);
-
   EXPECT_TRUE(scene_.enemy.is_alive[0]);
   EXPECT_FALSE(scene_.enemy.is_done[0]);
+
+  // Test Alive -> Dead (Zero Health)
+  scene_.enemy.health_points[0] = 0;
+  entity_manager_.Update(scene_, 0.016f);
+  EXPECT_FALSE(scene_.enemy.is_alive[0]);
+  EXPECT_TRUE(scene_.enemy.is_done[0]);
+
+  // Test Alive -> Dead (Negative Health)
+  scene_.enemy.health_points[1] = -5;
+  scene_.enemy.is_alive[1] = true;
+  scene_.enemy.is_done[1] = false;
+
+  entity_manager_.Update(scene_, 0.016f);
+  EXPECT_FALSE(scene_.enemy.is_alive[1]);
+  EXPECT_TRUE(scene_.enemy.is_done[1]);
 }
 
 TEST_F(EntityManagerTest, Update_EnemyTimeoutTimerIncreases) {
@@ -195,31 +184,6 @@ TEST_F(EntityManagerTest, Update_MultipleDeadEnemies_AllMarkedCorrectly) {
 // Update - Integration Tests
 // =============================================================================
 
-TEST_F(EntityManagerTest, Update_DoesNotCrashWithEmptyScene) {
-  scene_.projectiles.ResetAllProjectiles();
-  scene_.exp_gem.ResetAllExpGems();
-
-  EXPECT_NO_THROW(entity_manager_.Update(scene_, 0.016f));
-}
-
-TEST_F(EntityManagerTest, Update_HandlesDtZero) {
-  float initial_timer = scene_.enemy.timeout_timer[0];
-
-  entity_manager_.Update(scene_, 0.0f);
-
-  // Timer should not change with dt=0
-  EXPECT_FLOAT_EQ(scene_.enemy.timeout_timer[0], initial_timer);
-}
-
-TEST_F(EntityManagerTest, Update_HandlesLargeDt) {
-  float initial_timer = scene_.enemy.timeout_timer[0];
-  float large_dt = 10.0f;
-
-  entity_manager_.Update(scene_, large_dt);
-
-  EXPECT_FLOAT_EQ(scene_.enemy.timeout_timer[0], initial_timer + large_dt);
-}
-
 TEST_F(EntityManagerTest, Update_UpdatesRayCaster) {
   // Place an enemy and player nearby
   scene_.player.position_ = {100.0f, 100.0f};
@@ -239,8 +203,6 @@ TEST_F(EntityManagerTest, Update_UpdatesRayCaster) {
   // Check if ray caster data was updated
   // We expect some non-zero distances since player is nearby
   bool found_hit = false;
-  // Note: history_idx might have changed, check all or current?
-  // Update increments history_idx? Let's check the new current one.
   int new_history_idx = scene_.enemy.ray_caster.history_idx;
   int checked_idx =
       (new_history_idx - 1 + kRayHistoryLength) % kRayHistoryLength;

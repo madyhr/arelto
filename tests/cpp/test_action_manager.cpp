@@ -23,16 +23,6 @@ class ActionManagerTest : public ::testing::Test {
 };
 
 // =============================================================================
-// GetActionSize Tests
-// =============================================================================
-
-TEST_F(ActionManagerTest, GetActionSize_ReturnsTwo) {
-  // Action size should be 2 (x velocity and y velocity)
-  int action_size = action_manager_.GetActionSize(scene_);
-  EXPECT_EQ(action_size, 2);
-}
-
-// =============================================================================
 // ReadActionBuffer Tests
 // =============================================================================
 

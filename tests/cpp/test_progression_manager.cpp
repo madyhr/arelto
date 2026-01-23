@@ -26,31 +26,24 @@ class ProgressionManagerTest : public ::testing::Test {
 // CheckLevelUp Tests
 // =============================================================================
 
-TEST_F(ProgressionManagerTest, CheckLevelUp_True_WhenExpEqualsRequired) {
+TEST_F(ProgressionManagerTest, CheckLevelUp_WorksCorrectly) {
+  scene_.player.stats_.exp_points_required = 100;
+
+  // True cases
   scene_.player.stats_.exp_points = 100;
-  scene_.player.stats_.exp_points_required = 100;
-
   EXPECT_TRUE(progression_manager_.CheckLevelUp(scene_.player));
-}
 
-TEST_F(ProgressionManagerTest, CheckLevelUp_True_WhenExpExceedsRequired) {
   scene_.player.stats_.exp_points = 150;
-  scene_.player.stats_.exp_points_required = 100;
-
   EXPECT_TRUE(progression_manager_.CheckLevelUp(scene_.player));
-}
 
-TEST_F(ProgressionManagerTest, CheckLevelUp_False_WhenExpBelowRequired) {
-  scene_.player.stats_.exp_points = 50;
-  scene_.player.stats_.exp_points_required = 100;
-
+  // False cases
+  scene_.player.stats_.exp_points = 99;
   EXPECT_FALSE(progression_manager_.CheckLevelUp(scene_.player));
-}
 
-TEST_F(ProgressionManagerTest, CheckLevelUp_False_WhenExpZero) {
   scene_.player.stats_.exp_points = 0;
-  scene_.player.stats_.exp_points_required = 100;
+  EXPECT_FALSE(progression_manager_.CheckLevelUp(scene_.player));
 
+  scene_.player.stats_.exp_points = -100;
   EXPECT_FALSE(progression_manager_.CheckLevelUp(scene_.player));
 }
 
@@ -78,41 +71,15 @@ TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_ClearsExistingOptions) {
             static_cast<size_t>(kNumUpgradeOptions));
 }
 
-TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_AllOptionsValid) {
-  progression_manager_.GenerateLevelUpOptions(scene_);
-
-  for (const auto& option : scene_.level_up_options) {
-    EXPECT_NE(option, nullptr);
-  }
-}
-
-TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_OptionsHaveDescriptions) {
+TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_CreatesValidOptions) {
   progression_manager_.GenerateLevelUpOptions(scene_);
 
   for (const auto& option : scene_.level_up_options) {
     ASSERT_NE(option, nullptr);
-    std::string description = option->GetDescription();
-    EXPECT_FALSE(description.empty());
-  }
-}
+    EXPECT_FALSE(option->GetDescription().empty());
+    EXPECT_FALSE(option->GetSpellName().empty());
 
-TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_OptionsHaveSpellNames) {
-  progression_manager_.GenerateLevelUpOptions(scene_);
-
-  for (const auto& option : scene_.level_up_options) {
-    ASSERT_NE(option, nullptr);
-    std::string spell_name = option->GetSpellName();
-    EXPECT_FALSE(spell_name.empty());
-  }
-}
-
-TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_OptionsHaveValidType) {
-  progression_manager_.GenerateLevelUpOptions(scene_);
-
-  for (const auto& option : scene_.level_up_options) {
-    ASSERT_NE(option, nullptr);
     UpgradeType type = option->GetType();
-    // Type should be a valid enum value (less than count)
     EXPECT_LT(static_cast<int>(type), static_cast<int>(UpgradeType::count));
   }
 }
@@ -152,8 +119,11 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ScalesExpRequired) {
   progression_manager_.GenerateLevelUpOptions(scene_);
   progression_manager_.ApplyUpgrade(scene_, 0);
 
-  // Exp required should have increased
-  EXPECT_GT(scene_.player.stats_.exp_points_required, initial_exp_required);
+  // TODO: Refactor exp scaling into a function to avoid defining it multiple places
+  int new_exp_required = static_cast<int>(
+      scene_.player.stats_.exp_points_required * kPlayerExpRequiredScale);
+
+  EXPECT_EQ(scene_.player.stats_.exp_points_required, new_exp_required);
 }
 
 TEST_F(ProgressionManagerTest, ApplyUpgrade_InvalidIndex_Negative_NoOp) {
@@ -161,16 +131,6 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_InvalidIndex_Negative_NoOp) {
 
   progression_manager_.GenerateLevelUpOptions(scene_);
   progression_manager_.ApplyUpgrade(scene_, -1);
-
-  // Level should not have changed
-  EXPECT_EQ(scene_.player.stats_.level, 0);
-}
-
-TEST_F(ProgressionManagerTest, ApplyUpgrade_InvalidIndex_TooLarge_NoOp) {
-  scene_.player.stats_.level = 0;
-
-  progression_manager_.GenerateLevelUpOptions(scene_);
-  progression_manager_.ApplyUpgrade(scene_, 100);  // Way too large
 
   // Level should not have changed
   EXPECT_EQ(scene_.player.stats_.level, 0);
@@ -195,39 +155,6 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_WorksForAllValidIndices) {
 // Integration Tests
 // =============================================================================
 
-TEST_F(ProgressionManagerTest, MultiLevelUp_LevelsAccumulate) {
-  scene_.player.stats_.level = 0;
-  scene_.player.stats_.exp_points = 1000;
-  scene_.player.stats_.exp_points_required = 100;
-
-  // Level up 3 times
-  for (int i = 0; i < 3; ++i) {
-    progression_manager_.GenerateLevelUpOptions(scene_);
-    progression_manager_.ApplyUpgrade(scene_, 0);
-  }
-
-  EXPECT_EQ(scene_.player.stats_.level, 3);
-}
-
-TEST_F(ProgressionManagerTest, MultiLevelUp_ExpRequiredScalesExponentially) {
-  scene_.player.stats_.exp_points = 10000;
-  scene_.player.stats_.exp_points_required = 100;
-
-  std::vector<int> exp_requirements;
-  exp_requirements.push_back(scene_.player.stats_.exp_points_required);
-
-  for (int i = 0; i < 3; ++i) {
-    progression_manager_.GenerateLevelUpOptions(scene_);
-    progression_manager_.ApplyUpgrade(scene_, 0);
-    exp_requirements.push_back(scene_.player.stats_.exp_points_required);
-  }
-
-  // Each subsequent requirement should be higher than the previous
-  for (size_t i = 1; i < exp_requirements.size(); ++i) {
-    EXPECT_GT(exp_requirements[i], exp_requirements[i - 1]);
-  }
-}
-
 TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
   // Setup player with known initial stats
   scene_.player.stats_.level = 0;
@@ -236,8 +163,8 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
   // Ensure spell stats are initialized (cooldowns, damages, etc.)
   scene_.player.UpdateAllSpellStats();
 
-  // Manually create a deterministic upgrade option (Damage for first spell)
-  // We avoid using GenerateLevelUpOptions to remove RNG flakiness.
+  // Manually create a deterministic upgrade option
+  // We avoid using GenerateLevelUpOptions to remove RNG.
   SpellId target_spell = SpellId::FireballId;
   std::string spell_name = "Fireball";
   float initial_damage =

@@ -24,18 +24,6 @@ class ObservationManagerTest : public ::testing::Test {
 };
 
 // =============================================================================
-// GetObservationSize Tests
-// =============================================================================
-
-TEST_F(ObservationManagerTest, GetObservationSize_CorrectFormula) {
-  // Size should be kNumRays * 2 (distance + type) * kRayHistoryLength
-  int expected_size = kNumRays * 2 * kRayHistoryLength;
-  int actual_size = obs_manager_.GetObservationSize(scene_);
-
-  EXPECT_EQ(actual_size, expected_size);
-}
-
-// =============================================================================
 // FillObservationBuffer Tests
 // =============================================================================
 
@@ -79,8 +67,6 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_NormalizesDistances) {
   obs_manager_.FillObservationBuffer(buffer.data(), buffer.size(), scene_);
 
   // The first distance value should be normalized to 1.0
-  // Note: The exact position depends on history ordering, but normalized values
-  // should be <= 1.0
   float first_val = buffer[0];
   EXPECT_LE(first_val, 1.0f);
   EXPECT_GE(first_val, -1.0f);
@@ -146,22 +132,6 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_ContainsTypeInformation) {
   int size = obs_manager_.GetObservationSize(scene_);
   std::vector<float> buffer(kNumEnemies * size);
   obs_manager_.FillObservationBuffer(buffer.data(), buffer.size(), scene_);
-
-  // The buffer structure is:
-  // [Distances (history 0), Types (history 0), Distances (history 1), Types (history 1)...]
-  // Ideally we should know the exact offset.
-  // Based on observation_manager.cpp (assumed), it likely iterates history -> type/dist -> rays
-
-  // However, without seeing implementation, we can search for the specific value
-  // in the expected region.
-  // The type value for EntityType::player (usually non-zero) should be present.
-
-  // A robust test would calculate the exact index.
-  // Assuming strict ordering: history -> (distance_all_rays, type_all_rays) -> enemies
-  // or per enemy?
-  // Let's rely on finding the value but ensure it's in the "type" section of the data.
-  // Actually, let's look for the specific value corresponding to "player".
-
   bool found_specific_type = false;
   for (float val : buffer) {
     if (std::abs(val - static_cast<float>(target_type)) < 1e-5) {

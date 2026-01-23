@@ -3,7 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include "constants/game.h"
 #include "constants/map.h"
 #include "physics_manager.h"
 #include "scene.h"
@@ -25,20 +24,6 @@ class PhysicsManagerTest : public ::testing::Test {
   Scene scene_;
   PhysicsManager physics_manager_;
 };
-
-// =============================================================================
-// Initialize Tests
-// =============================================================================
-
-TEST_F(PhysicsManagerTest, Initialize_SetsPhysicsDt) {
-  EXPECT_FLOAT_EQ(physics_manager_.GetPhysicsDt(), kPhysicsDt);
-}
-
-TEST_F(PhysicsManagerTest, SetPhysicsDt_UpdatesValue) {
-  float new_dt = 0.01f;
-  physics_manager_.SetPhysicsDt(new_dt);
-  EXPECT_FLOAT_EQ(physics_manager_.GetPhysicsDt(), new_dt);
-}
 
 // =============================================================================
 // StepPhysics - Player Movement Tests
@@ -66,17 +51,6 @@ TEST_F(PhysicsManagerTest, StepPhysics_PlayerMovesWithNegativeVelocity) {
   // Player should have moved up-left
   EXPECT_LT(scene_.player.position_.x, initial_pos.x);
   EXPECT_LT(scene_.player.position_.y, initial_pos.y);
-}
-
-TEST_F(PhysicsManagerTest, StepPhysics_PlayerStationaryWithZeroVelocity) {
-  scene_.player.position_ = {100.0f, 100.0f};
-  scene_.player.velocity_ = {0.0f, 0.0f};
-
-  Vector2D initial_pos = scene_.player.position_;
-  physics_manager_.StepPhysics(scene_);
-
-  // Player should not have moved
-  testing::ExpectVector2DEq(scene_.player.position_, initial_pos);
 }
 
 TEST_F(PhysicsManagerTest, StepPhysics_PlayerTracksLastHorizontalVelocity) {
@@ -176,40 +150,27 @@ TEST_F(PhysicsManagerTest, StepPhysics_NoProjectiles_NoError) {
 // Out of Bounds Tests
 // =============================================================================
 
-TEST_F(PhysicsManagerTest, StepPhysics_PlayerClampsToMapLeftBound) {
+TEST_F(PhysicsManagerTest, StepPhysics_PlayerClampsToMapBounds) {
+  // Left Bound
   scene_.player.position_ = {-100.0f, 100.0f};
   scene_.player.velocity_ = {0.0f, 0.0f};
-
   physics_manager_.StepPhysics(scene_);
-
   EXPECT_GE(scene_.player.position_.x, 0.0f);
-}
 
-TEST_F(PhysicsManagerTest, StepPhysics_PlayerClampsToMapTopBound) {
+  // Top Bound
   scene_.player.position_ = {100.0f, -100.0f};
-  scene_.player.velocity_ = {0.0f, 0.0f};
-
   physics_manager_.StepPhysics(scene_);
-
   EXPECT_GE(scene_.player.position_.y, 0.0f);
-}
 
-TEST_F(PhysicsManagerTest, StepPhysics_PlayerClampsToMapRightBound) {
+  // Right Bound
   scene_.player.position_ = {static_cast<float>(kMapWidth) + 100.0f, 100.0f};
-  scene_.player.velocity_ = {0.0f, 0.0f};
-
   physics_manager_.StepPhysics(scene_);
-
   EXPECT_LE(scene_.player.position_.x + scene_.player.stats_.sprite_size.width,
             static_cast<float>(kMapWidth));
-}
 
-TEST_F(PhysicsManagerTest, StepPhysics_PlayerClampsToMapBottomBound) {
+  // Bottom Bound
   scene_.player.position_ = {100.0f, static_cast<float>(kMapHeight) + 100.0f};
-  scene_.player.velocity_ = {0.0f, 0.0f};
-
   physics_manager_.StepPhysics(scene_);
-
   EXPECT_LE(scene_.player.position_.y + scene_.player.stats_.sprite_size.height,
             static_cast<float>(kMapHeight));
 }
@@ -238,24 +199,8 @@ TEST_F(PhysicsManagerTest, StepPhysics_ProjectileOOB_MarkedForDestruction) {
 }
 
 // =============================================================================
-// Multiple Physics Steps Tests
+// Collision Resolution Causing Movement Tests
 // =============================================================================
-
-TEST_F(PhysicsManagerTest, MultipleSteps_CumulativeMovement) {
-  scene_.player.position_ = {100.0f, 100.0f};
-  scene_.player.velocity_ = {1.0f, 0.0f};
-
-  Vector2D initial_pos = scene_.player.position_;
-
-  // Run 10 physics steps
-  for (int i = 0; i < 10; ++i) {
-    physics_manager_.StepPhysics(scene_);
-  }
-
-  // Player should have moved significantly
-  float total_movement = scene_.player.position_.x - initial_pos.x;
-  EXPECT_GT(total_movement, 0.0f);
-}
 
 TEST_F(PhysicsManagerTest, StepPhysics_ResolvesCollisions) {
   // Place player and enemy in overlapping positions

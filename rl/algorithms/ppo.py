@@ -31,6 +31,8 @@ class PPO:
         encoder_output_dim: int = 128,
         device: str = "cpu",
     ) -> None:
+        self.input_dim = input_dim
+        self.output_dim = output_dim
         self.device = device
 
         encoder = RayEncoder(
@@ -43,9 +45,9 @@ class PPO:
         self.policy = ActorCritic(
             MultiDiscreteActor,
             ValueCritic,
-            input_dim,
+            self.input_dim,
             hidden_size,
-            output_dim,
+            self.output_dim,
             activation_func_class=torch.nn.ReLU,
             encoder=encoder,
         )
@@ -58,8 +60,8 @@ class PPO:
         self.storage = RolloutStorage(
             num_envs,
             num_transitions_per_env,
-            torch.zeros(num_envs, input_dim),
-            torch.zeros(num_envs, len(output_dim)),
+            torch.zeros(num_envs, self.input_dim),
+            torch.zeros(num_envs, len(self.output_dim)),
             device=self.device,
         )
 

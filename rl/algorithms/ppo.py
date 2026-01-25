@@ -94,9 +94,11 @@ class PPO:
 
     def process_env_step(
         self,
+        obs: torch.Tensor,
         rewards: torch.Tensor,
         dones: torch.Tensor,
     ) -> None:
+        self.policy.update_normalization(obs)
         self.transition.reward = rewards
         self.transition.done = dones
         self.storage.add_transition(self.transition)

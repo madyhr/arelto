@@ -1,6 +1,5 @@
 // src/observation_manager.cpp
 #include "observation_manager.h"
-#include <algorithm>
 #include <stdexcept>
 #include "constants/enemy.h"
 #include "constants/ray_caster.h"
@@ -36,12 +35,10 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr,
 
     for (int ray_idx = 0; ray_idx < kNumRays; ++ray_idx) {
       for (int enemy_idx = 0; enemy_idx < kNumEnemies; ++enemy_idx) {
-        float val =
-            scene.enemy.ray_caster
-                .ray_hit_distances[history_buffer_idx][ray_idx][enemy_idx] /
-            kMaxRayDistance;
 
-        buffer_ptr[obs_buffer_idx++] = std::clamp(val, -1.0f, 1.0f);
+        buffer_ptr[obs_buffer_idx++] =
+            scene.enemy.ray_caster
+                .ray_hit_distances[history_buffer_idx][ray_idx][enemy_idx];
       }
     }
   }

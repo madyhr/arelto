@@ -110,7 +110,9 @@ def start_game(args):
                     action = ppo.act(obs.to(device))
                     obs, reward, terminated, truncated, _ = env.step(action)
                     dones = terminated | truncated
-                    ppo.process_env_step(reward.to(device), dones.to(device))
+                    ppo.process_env_step(
+                        obs.to(device), reward.to(device), dones.to(device)
+                    )
                     env.game.render(1.0)
 
                 step += 1

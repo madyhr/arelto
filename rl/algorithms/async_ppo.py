@@ -61,7 +61,10 @@ class AsyncPPO:
         self.transition.value = value.detach()
         return self.transition.action
 
-    def process_env_step(self, rewards: torch.Tensor, dones: torch.Tensor) -> None:
+    def process_env_step(
+        self, obs: torch.Tensor, rewards: torch.Tensor, dones: torch.Tensor
+    ) -> None:
+        self.inference_policy.update_normalization(obs)
         self.transition.reward = rewards
         self.transition.done = dones
         self.inference_storage.add_transition(self.transition)

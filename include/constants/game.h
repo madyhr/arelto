@@ -6,8 +6,6 @@ namespace rl2 {
 // Game constats
 constexpr float kPhysicsDt = 0.001f;      // time in sec
 constexpr float kEpisodeTimeout = 60.0f;  // time in sec
-// Used as scaling factor for position observations
-constexpr float kPositionObservationScale = 1000.0f;
 
 // Game status constants
 // number of frames to average over in fps counter

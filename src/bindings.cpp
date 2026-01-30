@@ -12,6 +12,16 @@ namespace py = pybind11;
 PYBIND11_MODULE(rl2_py, m) {
   m.doc() = "RL2 Game Python Bindings";
 
+  py::enum_<rl2::GameState>(m, "GameState")
+      .value("in_start_screen", rl2::GameState::in_start_screen)
+      .value("in_main_menu", rl2::GameState::in_main_menu)
+      .value("is_running", rl2::GameState::is_running)
+      .value("is_gameover", rl2::GameState::is_gameover)
+      .value("in_shutdown", rl2::GameState::in_shutdown)
+      .value("is_paused", rl2::GameState::is_paused)
+      .value("in_level_up", rl2::GameState::in_level_up)
+      .export_values();
+
   py::class_<rl2::Game>(m, "Game")
       .def_readonly_static("num_enemies", &rl2::kNumEnemies)
       .def(py::init())

@@ -14,6 +14,10 @@ class RL2Env:
         self.step_dt: float = step_dt
         self.num_envs: int = self.game.num_enemies
 
+        self.game_state_dict: dict = {
+            name: int(value) for name, value in rl2.GameState.__members__.items()
+        }
+
         self._obs_size: int = self.game.get_observation_size()
         self._act_size: int = self.game.get_action_size()
         self._np_obs_buf = np.zeros((self._obs_size, self.num_envs), dtype=np.float32)

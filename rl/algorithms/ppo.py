@@ -4,6 +4,7 @@ from rl.modules.actor import MultiDiscreteActor
 from rl.modules.actor_critic import ActorCritic
 from rl.modules.critic import ValueCritic
 from rl.modules.ray_encoder import RayEncoder
+from rl.networks.normalization import EmpiricalNormalization
 from rl.storage.rollout_storage import RolloutStorage, Transition
 
 
@@ -35,12 +36,18 @@ class PPO:
         self.output_dim = output_dim
         self.device = device
 
-        encoder = RayEncoder(
+        self.encoder = RayEncoder(
             num_rays=num_rays,
             num_ray_types=num_ray_types,
             history_length=ray_history_length,
             output_dim=encoder_output_dim,
         )
+
+        # The observation space contains 'total_rays' number of ray distances
+        # then 'total_rays' number of ray types. We only want to normalize
+        # the distances as the types are categorical.
+        self.norm_dim = self.encoder.total_rays
+        self.obs_normalizer = EmpiricalNormalization(self.norm_dim).to(self.device)
 
         self.policy = ActorCritic(
             MultiDiscreteActor,
@@ -48,7 +55,7 @@ class PPO:
             self.input_dim,
             hidden_size,
             self.output_dim,
-            encoder,
+            self.encoder,
             activation_func_class=torch.nn.ReLU,
         )
 
@@ -85,6 +92,7 @@ class PPO:
         print(f"Num mini batches: {num_mini_batches}")
 
     def act(self, obs: torch.Tensor) -> torch.Tensor | None:
+        obs = self._normalize_obs(obs)
         self.transition.observation = obs
         action, log_prob, _, value = self.policy(obs)
         self.transition.action = action.detach()
@@ -98,7 +106,7 @@ class PPO:
         rewards: torch.Tensor,
         dones: torch.Tensor,
     ) -> None:
-        self.policy.update_normalization(obs)
+        self.update_normalization(obs)
         self.transition.reward = rewards
         self.transition.done = dones
         self.storage.add_transition(self.transition)
@@ -106,6 +114,7 @@ class PPO:
         self.transition.clear()
 
     def compute_returns(self, obs: torch.Tensor) -> None:
+        obs = self._normalize_obs(obs)
         last_value = self.policy.get_value(obs).detach()
         advantage = 0
         for step in reversed(range(self.num_transitions_per_env)):
@@ -203,3 +212,12 @@ class PPO:
         self.storage.clear()
 
         return {k: torch.stack(v).mean().item() for k, v in metrics.items()}
+
+    def _normalize_obs(self, obs: torch.Tensor) -> torch.Tensor:
+        continuous = obs[:, : self.norm_dim]
+        categorical = obs[:, self.norm_dim :]
+        continuous_normalized = self.obs_normalizer(continuous)
+        return torch.cat([continuous_normalized, categorical], dim=-1)
+
+    def update_normalization(self, obs: torch.Tensor):
+        self.obs_normalizer.update(obs[:, : self.norm_dim])

@@ -52,6 +52,7 @@ class AsyncPPO:
         self.training_stream = torch.cuda.Stream(device=self.device, priority=1)
 
     def act(self, obs: torch.Tensor) -> torch.Tensor | None:
+        obs = self.learner._normalize_obs(obs)
         self.transition.observation = obs
         with torch.no_grad():
             action, log_prob, _, value = self.inference_policy(obs)
@@ -64,7 +65,7 @@ class AsyncPPO:
     def process_env_step(
         self, obs: torch.Tensor, rewards: torch.Tensor, dones: torch.Tensor
     ) -> None:
-        self.inference_policy.update_normalization(obs)
+        self.learner.update_normalization(obs)
         self.transition.reward = rewards
         self.transition.done = dones
         self.inference_storage.add_transition(self.transition)

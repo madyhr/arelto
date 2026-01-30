@@ -10,12 +10,12 @@ class ValueCritic(nn.Module):
         self,
         input_dim: int,
         hidden_size: tuple[int] | list[int],
+        encoder: RayEncoder,
         activation_func_class: type[nn.Module] = nn.Tanh,
-        encoder: RayEncoder | None = None,
     ) -> None:
         super().__init__()
 
-        mlp_input_dim = encoder.output_dim if encoder else input_dim
+        mlp_input_dim = encoder.output_dim
 
         self.network = MLP(
             input_dim=mlp_input_dim,
@@ -27,6 +27,5 @@ class ValueCritic(nn.Module):
         self.encoder = encoder
 
     def forward(self, obs: torch.Tensor) -> torch.Tensor:
-        if self.encoder:
-            obs = self.encoder(obs)
+        obs = self.encoder(obs)
         return self.network(obs)

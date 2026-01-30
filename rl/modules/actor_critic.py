@@ -21,25 +21,32 @@ class ActorCritic(nn.Module):
         input_dim: int,
         hidden_size: tuple[int] | list[int],
         output_dim: int | list[int],
+        encoder: RayEncoder,
         activation_func_class: type[nn.Module] = nn.Tanh,
-        encoder: RayEncoder | None = None,
     ) -> None:
         super().__init__()
 
         self.encoder = encoder
 
         self.critic: ValueCritic = critic_class(
-            input_dim, hidden_size, activation_func_class, self.encoder
+            input_dim,
+            hidden_size,
+            self.encoder,
+            activation_func_class,
         )
 
         self.actor: BaseActor = actor_class(
-            input_dim, hidden_size, output_dim, activation_func_class, self.encoder
+            input_dim,
+            hidden_size,
+            output_dim,
+            self.encoder,
+            activation_func_class,
         )
 
-        # The observation space contains total_rays number of ray distances
-        # then total_rays number of ray types. We only want to normalize
+        # The observation space contains 'total_rays' number of ray distances
+        # then 'total_rays' number of ray types. We only want to normalize
         # the distances as the types are categorical.
-        self.norm_dim = self.encoder.total_rays if self.encoder else input_dim
+        self.norm_dim = self.encoder.total_rays
         self.obs_normalizer = EmpiricalNormalization(self.norm_dim)
 
     def forward(self, obs: torch.Tensor, action: torch.Tensor | None = None):
@@ -53,16 +60,10 @@ class ActorCritic(nn.Module):
         return self.critic(obs)
 
     def _normalize_obs(self, obs: torch.Tensor) -> torch.Tensor:
-        if self.encoder:
-            continuous = obs[:, : self.norm_dim]
-            discrete = obs[:, self.norm_dim :]
-            norm_continuous = self.obs_normalizer(continuous)
-            return torch.cat([norm_continuous, discrete], dim=-1)
-        else:
-            return self.obs_normalizer(obs)
+        continuous = obs[:, : self.norm_dim]
+        categorical = obs[:, self.norm_dim :]
+        continuous_normalized = self.obs_normalizer(continuous)
+        return torch.cat([continuous_normalized, categorical], dim=-1)
 
     def update_normalization(self, obs: torch.Tensor):
-        if self.encoder:
-            self.obs_normalizer.update(obs[:, : self.norm_dim])
-        else:
-            self.obs_normalizer.update(obs)
+        self.obs_normalizer.update(obs[:, : self.norm_dim])

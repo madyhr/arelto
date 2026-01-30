@@ -48,8 +48,8 @@ class PPO:
             self.input_dim,
             hidden_size,
             self.output_dim,
+            encoder,
             activation_func_class=torch.nn.ReLU,
-            encoder=encoder,
         )
 
         self.policy.to(self.device)

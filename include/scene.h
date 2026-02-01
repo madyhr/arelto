@@ -39,6 +39,7 @@ struct Scene {
     player.stats_.exp_points_required = kPlayerInitialExpRequirement;
     player.position_ = Vector2D{kPlayerInitX, kPlayerInitY};
     player.prev_position_ = player.position_;
+    player.last_horizontal_velocity_ = 0.0f;
     player.UpdateAllSpellStats();
 
     // -- Enemies

@@ -260,31 +260,49 @@ void RenderManager::RenderTiledMap() {
 };
 
 void RenderManager::RenderPlayer(const Player& player, float alpha) {
-
   Vector2D player_render_pos =
       LerpVector2D(player.prev_position_, player.position_, alpha);
-  SDL_Rect player_render_box = {
-      static_cast<int>(player_render_pos.x - camera_.render_position_.x),
-      static_cast<int>(player_render_pos.y - camera_.render_position_.y),
-      static_cast<int>(player.stats_.sprite_size.width),
-      static_cast<int>(player.stats_.sprite_size.height)};
+
+  float x = player_render_pos.x - camera_.render_position_.x;
+  float y = player_render_pos.y - camera_.render_position_.y;
+  float w = static_cast<float>(player.stats_.sprite_size.width);
+  float h = static_cast<float>(player.stats_.sprite_size.height);
 
   bool is_standing_still = player.velocity_.Norm() < 1e-3;
   bool is_facing_right = player.last_horizontal_velocity_ >= 0.0f;
 
-  SDL_Rect src_rect;
-  src_rect.w = kPlayerSpriteCellWidth;
-  src_rect.h = kPlayerSpriteCellHeight;
-  src_rect.y = is_standing_still ? 0 : kPlayerSpriteCellHeight;
-  src_rect.x = ((SDL_GetTicks64() / kPlayerAnimationFrameDuration) %
-                kPlayerNumSpriteCells) *
-               src_rect.w;
+  int src_x = ((SDL_GetTicks64() / kPlayerAnimationFrameDuration) %
+               kPlayerNumSpriteCells) *
+              kPlayerSpriteCellWidth;
+  int src_y = is_standing_still ? 0 : kPlayerSpriteCellHeight;
 
-  SDL_RendererFlip is_flipped =
-      is_facing_right ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
+  int texture_w, texture_h;
+  SDL_QueryTexture(resources_.player_texture, nullptr, nullptr, &texture_w,
+                   &texture_h);
 
-  SDL_RenderCopyEx(resources_.renderer, resources_.player_texture, &src_rect,
-                   &player_render_box, 0.0, nullptr, is_flipped);
+  float u_left = static_cast<float>(src_x) / texture_w;
+  float u_right =
+      static_cast<float>(src_x + kPlayerSpriteCellWidth) / texture_w;
+  float v_top = static_cast<float>(src_y) / texture_h;
+  float v_bottom =
+      static_cast<float>(src_y + kPlayerSpriteCellHeight) / texture_h;
+
+  float vertex_left = is_facing_right ? u_left : u_right;
+  float vertex_right = is_facing_right ? u_right : u_left;
+
+  SDL_Color c = {255, 255, 255, 255};
+
+  SDL_Vertex vertices[6] = {// Triangle 1 (Top-Left, Bottom-Left, Bottom-Right)
+                            {{x, y}, c, {vertex_left, v_top}},
+                            {{x, y + h}, c, {vertex_left, v_bottom}},
+                            {{x + w, y + h}, c, {vertex_right, v_bottom}},
+                            // Triangle 2 (Top-Left, Bottom-Right, Top-Right)
+                            {{x, y}, c, {vertex_left, v_top}},
+                            {{x + w, y + h}, c, {vertex_right, v_bottom}},
+                            {{x + w, y}, c, {vertex_right, v_top}}};
+
+  SDL_RenderGeometry(resources_.renderer, resources_.player_texture, vertices,
+                     6, nullptr, 0);
 };
 
 int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {

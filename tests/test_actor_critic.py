@@ -15,6 +15,7 @@ def test_actor_critic_forward_flow(
     multi_discrete_output_dims,
     hidden_size,
     batch_size,
+    dummy_encoder,
 ):
     if actor_class == MultiDiscreteActor:
         current_output_dim = multi_discrete_output_dims
@@ -27,6 +28,7 @@ def test_actor_critic_forward_flow(
         input_dim=input_dim,
         hidden_size=hidden_size,
         output_dim=current_output_dim,
+        encoder=dummy_encoder,
         activation_func_class=nn.Tanh,
     )
 
@@ -48,6 +50,7 @@ def test_actor_critic_gradient_flow(
     output_dim,
     multi_discrete_output_dims,
     hidden_size,
+    dummy_encoder,
 ):
     if actor_class == MultiDiscreteActor:
         current_output_dim = multi_discrete_output_dims
@@ -60,6 +63,7 @@ def test_actor_critic_gradient_flow(
         input_dim=input_dim,
         hidden_size=hidden_size,
         output_dim=current_output_dim,
+        encoder=dummy_encoder,
         activation_func_class=nn.Tanh,
     )
 

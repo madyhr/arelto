@@ -55,7 +55,8 @@ RayHit CastRay(
     // We use the unchecked get to avoid checking bounds for performance reasons
     hit_type = occupancy_map.GetUnchecked(map_grid_x, map_grid_y);
 
-    if (hit_type != EntityType::None) {
+    if (hit_type != EntityType::None && hit_type != EntityType::enemy &&
+        hit_type != EntityType::projectile) {
       break;
     }
   }

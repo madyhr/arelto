@@ -5,7 +5,7 @@
 #include "constants/render.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 constexpr int kExpGemVertices = 6;
 
 constexpr int kExpGemCommonSpriteWidth = 25;
@@ -73,5 +73,5 @@ constexpr std::array<Collider, Rarity::Count> kExpGemCollider = {
     kExpGemCommonCollider, kExpGemRareCollider, kExpGemEpicCollider,
     kExpGemLegendaryCollider};
 
-}  // namespace rl2
+}  // namespace arelto
 #endif

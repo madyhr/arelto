@@ -2,7 +2,7 @@
 #ifndef RL2_CONSTANTS_RAY_CASTER_H_
 #define RL2_CONSTANTS_RAY_CASTER_H_
 
-namespace rl2 {
+namespace arelto {
 // Observation constants
 
 
@@ -12,5 +12,5 @@ constexpr int kNumRays = 72;
 constexpr float kMaxRayDistance = 5000.0f;
 constexpr float kMinRayDistance = 30.0f;  // offset from start in dir of ray
 
-}  // namespace rl2
+}  // namespace arelto
 #endif

@@ -7,7 +7,7 @@
 #include "constants/map.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 class TileManager {
  public:
@@ -123,6 +123,6 @@ class FixedMap {
   };
 };
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

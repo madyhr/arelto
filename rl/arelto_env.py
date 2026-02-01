@@ -3,19 +3,19 @@
 import numpy as np
 import torch
 
-import rl.rl2_py as rl2
+import rl.arelto_py as arelto
 
 
-class RL2Env:
+class AreltoEnv:
 
     def __init__(self, step_dt: float = 0.02) -> None:
-        self.game = rl2.Game()
+        self.game = arelto.Game()
 
         self.step_dt: float = step_dt
         self.num_envs: int = self.game.num_enemies
 
         self.game_state_dict: dict = {
-            name: int(value) for name, value in rl2.GameState.__members__.items()
+            name: int(value) for name, value in arelto.GameState.__members__.items()
         }
 
         self._obs_size: int = self.game.get_observation_size()

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(rl2 VERSION 1.0)
+project(arelto VERSION 1.0)
 
 if(DEFINED ENV{CONDA_PREFIX})
     message(STATUS "Using Conda prefix: $ENV{CONDA_PREFIX}")
@@ -33,14 +33,14 @@ file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp")
 list(FILTER ENGINE_SOURCES EXCLUDE REGEX "src/main.cpp")
 list(FILTER ENGINE_SOURCES EXCLUDE REGEX "src/bindings.cpp")
 
-add_library(rl2_core SHARED ${ENGINE_SOURCES})
+add_library(arelto_core SHARED ${ENGINE_SOURCES})
 
-target_include_directories(rl2_core 
+target_include_directories(arelto_core 
     PUBLIC 
     "${CMAKE_SOURCE_DIR}/include"
 )
 
-target_link_libraries(rl2_core PUBLIC
+target_link_libraries(arelto_core PUBLIC
   SDL2::SDL2
   SDL2_image::SDL2_image
   SDL2_ttf::SDL2_ttf
@@ -49,31 +49,31 @@ target_link_libraries(rl2_core PUBLIC
 )
 
 add_executable(game_app src/main.cpp)
-target_link_libraries(game_app PRIVATE rl2_core)
+target_link_libraries(game_app PRIVATE arelto_core)
 
-pybind11_add_module(rl2_py src/bindings.cpp)
-set_target_properties(rl2_py PROPERTIES 
+pybind11_add_module(arelto_py src/bindings.cpp)
+set_target_properties(arelto_py PROPERTIES 
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/rl"
 )
-target_link_libraries(rl2_py PRIVATE rl2_core)
+target_link_libraries(arelto_py PRIVATE arelto_core)
 
 file(GLOB_RECURSE ASSETS_TO_COPY "assets/*")
 
-add_custom_command(TARGET rl2_core POST_BUILD
+add_custom_command(TARGET arelto_core POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_SOURCE_DIR}/assets"
-        "$<TARGET_FILE_DIR:rl2_core>/assets"
+        "$<TARGET_FILE_DIR:arelto_core>/assets"
 )
 
 find_program(STUBGEN_EXE pybind11-stubgen REQUIRED)
 
 add_custom_command(
-    TARGET rl2_py POST_BUILD
+    TARGET arelto_py POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E env 
-        PYTHONPATH=$<TARGET_FILE_DIR:rl2_py> 
-        LD_LIBRARY_PATH=$<TARGET_FILE_DIR:rl2_core> 
-        ${STUBGEN_EXE} rl2_py --output-dir $<TARGET_FILE_DIR:rl2_py>
-    COMMENT "Generating Python interface stubs (.pyi) for rl2_py"
+        PYTHONPATH=$<TARGET_FILE_DIR:arelto_py> 
+        LD_LIBRARY_PATH=$<TARGET_FILE_DIR:arelto_core> 
+        ${STUBGEN_EXE} arelto_py --output-dir $<TARGET_FILE_DIR:arelto_py>
+    COMMENT "Generating Python interface stubs (.pyi) for arelto_py"
     VERBATIM
 )
 
@@ -85,20 +85,20 @@ if(BUILD_TESTS)
     file(GLOB_RECURSE TEST_SOURCES "tests/cpp/*.cpp")
 
 if(TEST_SOURCES)
-        add_executable(rl2_tests ${TEST_SOURCES})
-        target_include_directories(rl2_tests PRIVATE
+        add_executable(arelto_tests ${TEST_SOURCES})
+        target_include_directories(arelto_tests PRIVATE
             "${CMAKE_SOURCE_DIR}/include"
             "${CMAKE_SOURCE_DIR}/tests/cpp"
         )
 
-        target_link_libraries(rl2_tests PRIVATE
-            rl2_core
+        target_link_libraries(arelto_tests PRIVATE
+            arelto_core
             gtest
             gtest_main
         )
 
         include(GoogleTest)
-        gtest_discover_tests(rl2_tests)
+        gtest_discover_tests(arelto_tests)
     else()
         message(STATUS "No test sources found in tests/cpp/, skipping test target")
     endif()

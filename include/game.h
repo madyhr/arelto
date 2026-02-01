@@ -16,7 +16,7 @@
 #include "scene.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 class Game {
  public:
@@ -59,5 +59,5 @@ class Game {
   void CachePreviousState();
 };
 
-}  // namespace rl2
+}  // namespace arelto
 #endif

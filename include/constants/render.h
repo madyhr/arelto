@@ -3,7 +3,7 @@
 #define RL2_CONSTANTS_RENDER_H_
 
 #include <SDL_pixels.h>
-namespace rl2 {
+namespace arelto {
 // Render constants
 constexpr float kTexCoordTop = 0.0f;
 constexpr float kTexCoordBottom = 1.0f;
@@ -27,5 +27,5 @@ constexpr SDL_Color WithOpacity(SDL_Color color, Uint8 opacity) {
   return {color.r, color.g, color.b, opacity};
 }
 
-}  // namespace rl2
+}  // namespace arelto
 #endif

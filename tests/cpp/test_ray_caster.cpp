@@ -8,7 +8,7 @@
 #include "ray_caster.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 namespace {
 
 class RayCasterTest : public ::testing::Test {
@@ -204,4 +204,4 @@ TEST_F(RayCasterTest, IsEntityTypePresent_NotFound) {
 }
 
 }  // namespace
-}  // namespace rl2
+}  // namespace arelto

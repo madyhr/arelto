@@ -11,7 +11,7 @@
 #include "scene.h"
 #include "test_helpers.h"
 
-namespace rl2 {
+namespace arelto {
 namespace {
 
 class ActionManagerTest : public ::testing::Test {
@@ -146,4 +146,4 @@ TEST_F(ActionManagerTest, ReadActionBuffer_AllEnemiesReceiveActions) {
 }
 
 }  // namespace
-}  // namespace rl2
+}  // namespace arelto

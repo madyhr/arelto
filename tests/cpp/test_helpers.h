@@ -10,7 +10,7 @@
 #include "scene.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 namespace testing {
 
 // Create a Scene with predictable initial state
@@ -48,6 +48,6 @@ inline void ExpectVector2DEq(const Vector2D& a, const Vector2D& b,
 }
 
 }  // namespace testing
-}  // namespace rl2
+}  // namespace arelto
 
 #endif  // RL2_TEST_HELPERS_H_

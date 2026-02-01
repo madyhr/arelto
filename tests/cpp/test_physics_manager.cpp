@@ -8,7 +8,7 @@
 #include "scene.h"
 #include "test_helpers.h"
 
-namespace rl2 {
+namespace arelto {
 namespace {
 
 class PhysicsManagerTest : public ::testing::Test {
@@ -226,4 +226,4 @@ TEST_F(PhysicsManagerTest, StepPhysics_ResolvesCollisions) {
 }
 
 }  // namespace
-}  // namespace rl2
+}  // namespace arelto

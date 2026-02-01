@@ -6,7 +6,7 @@
 #include "reward_manager.h"
 #include "scene.h"
 
-namespace rl2 {
+namespace arelto {
 
 // This function is used to define all the reward terms.
 void RewardManager::RegisterRewardTerms() {
@@ -45,4 +45,4 @@ void RewardManager::RegisterRewardTerms() {
           });
 }
 
-}  // namespace rl2
+}  // namespace arelto

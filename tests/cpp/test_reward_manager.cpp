@@ -11,7 +11,7 @@
 #include "scene.h"
 #include "test_helpers.h"
 
-namespace rl2 {
+namespace arelto {
 namespace {
 
 class RewardManagerTest : public ::testing::Test {
@@ -134,4 +134,4 @@ TEST_F(RewardManagerTest, FillRewardBuffer_ContainsTotalRewards) {
 }
 
 }  // namespace
-}  // namespace rl2
+}  // namespace arelto

@@ -4,7 +4,7 @@
 #include <cstddef>
 #include "constants/render.h"
 
-namespace rl2 {
+namespace arelto {
 // Enemy constants
 constexpr int kNumEnemies = 100;
 constexpr int kEnemyHealth = 10;
@@ -33,5 +33,5 @@ constexpr size_t kEnemyOccupancyMapWidth = 20;
 constexpr size_t kEnemyOccupancyMapHeight = 20;
 constexpr int kEnemyVertices = 6;
 constexpr int kTotalEnemyVertices = kEnemyVertices * kNumEnemies;
-}  // namespace rl2
+}  // namespace arelto
 #endif

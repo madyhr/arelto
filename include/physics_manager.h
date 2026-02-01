@@ -8,7 +8,7 @@
 #include "map.h"
 #include "scene.h"
 
-namespace rl2 {
+namespace arelto {
 
 class PhysicsManager {
 
@@ -36,6 +36,6 @@ class PhysicsManager {
   void HandleProjectileOOB(Projectiles& projectiles);
 };
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

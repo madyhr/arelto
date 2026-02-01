@@ -6,7 +6,7 @@
 #include "random.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 Vector2D GetCentroid(const Vector2D& position, const Size2D& size) {
   return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
@@ -234,4 +234,4 @@ void ExpGem::ResetAllExpGems() {
   to_be_destroyed_.clear();
 };
 
-}  // namespace rl2
+}  // namespace arelto

@@ -4,7 +4,7 @@
 #include "constants/map.h"
 #include "constants/render.h"
 
-namespace rl2 {
+namespace arelto {
 // Player constants
 constexpr int kPlayerInitMaxHealth = 100;
 constexpr float kPlayerInitX = kMapWidth * 0.5f;
@@ -31,5 +31,5 @@ constexpr int kNumPlayerSpells = 2;  // total number of spells
 
 constexpr int kPlayerInitialExpRequirement = 10;
 constexpr float kPlayerExpRequiredScale = 1.1;
-}  // namespace rl2
+}  // namespace arelto
 #endif

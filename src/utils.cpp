@@ -2,7 +2,7 @@
 #include "utils.h"
 #include <iostream>
 
-namespace rl2 {
+namespace arelto {
 
 void FrameStats::update_frame_time_buffer(float new_value) {
   float oldest_value = frame_time_buffer[head_index];
@@ -36,4 +36,4 @@ void FrameStats::print_fps_running_average(float dt) {
   accumulated_time += dt;
 };
 
-}  // namespace rl2
+}  // namespace arelto

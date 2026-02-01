@@ -3,7 +3,7 @@
 #include "constants/map.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 // This function assumes that the occupancy map is surrounded by grid cells
 // that have an EntityType other than None.
@@ -99,4 +99,4 @@ bool IsEntityTypePresent(const RayHistoryTypes& ray_hit_types,
   return false;
 }
 
-}  // namespace rl2
+}  // namespace arelto

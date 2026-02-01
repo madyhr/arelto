@@ -18,7 +18,7 @@
 #include "render_manager.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 volatile std::sig_atomic_t Game::stop_request_ = 0;
 
@@ -379,4 +379,4 @@ void Game::Shutdown() {
   render_manager_.Shutdown();
 }
 
-}  // namespace rl2
+}  // namespace arelto

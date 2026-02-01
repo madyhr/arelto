@@ -8,7 +8,7 @@
 #include "constants/ray_caster.h"
 #include "map.h"
 #include "types.h"
-namespace rl2 {
+namespace arelto {
 
 using RayHistoryDistances =
     std::array<std::array<std::array<float, kNumEnemies>, kNumRays>,
@@ -52,6 +52,6 @@ bool IsEntityTypePresent(const RayHistoryTypes& ray_hit_types,
                          size_t history_idx, size_t enemy_idx,
                          EntityType target);
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

@@ -7,7 +7,7 @@
 #include "constants/map.h"
 #include "random.h"
 
-namespace rl2 {
+namespace arelto {
 
 SDL_Texture* TileManager::GetTileTexture(const char* file,
                                          SDL_Renderer* renderer) {
@@ -56,4 +56,4 @@ void TileManager::SetupTileSelector() {
   }
 };
 
-}  // namespace rl2
+}  // namespace arelto

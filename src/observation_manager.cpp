@@ -5,7 +5,7 @@
 #include "constants/ray_caster.h"
 #include "scene.h"
 
-namespace rl2 {
+namespace arelto {
 
 int ObservationManager::GetObservationSize(const Scene& scene) {
   return kNumRays * 2 * kRayHistoryLength;
@@ -59,4 +59,4 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr,
   return;
 };
 
-}  // namespace rl2
+}  // namespace arelto

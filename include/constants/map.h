@@ -3,7 +3,7 @@
 #define RL2_CONSTANTS_MAP_H_
 #include <cmath>
 
-namespace rl2 {
+namespace arelto {
 // Map constants
 constexpr int kMapWidth = 10000;
 constexpr int kMapHeight = 10000;
@@ -24,5 +24,5 @@ constexpr int kTileHeight = 119;
 constexpr int kNumTileTypes = 44;
 constexpr int kNumTilesX = ((kMapWidth + kTileWidth - 1) / kTileWidth);
 constexpr int kNumTilesY = ((kMapHeight + kTileHeight - 1) / kTileHeight);
-}  // namespace rl2
+}  // namespace arelto
 #endif

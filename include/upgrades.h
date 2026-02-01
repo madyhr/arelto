@@ -8,7 +8,7 @@
 #include "entity.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 class Upgrade {
  public:
@@ -84,6 +84,6 @@ class SpellStatUpgrade : public Upgrade {
   float new_value_;
 };
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

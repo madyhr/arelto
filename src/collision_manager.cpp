@@ -10,7 +10,7 @@
 #include "scene.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 void CollisionManager::HandleCollisionsSAP(Scene& scene) {
   int num_proj = scene.projectiles.GetNumProjectiles();
@@ -242,4 +242,4 @@ void CollisionManager::ResolvePlayerGemCollision(const CollisionPair& cp,
   player.stats_.exp_points += kExpGemValues[exp_gem.rarity_[gem_idx]];
 };
 
-}  // namespace rl2
+}  // namespace arelto

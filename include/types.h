@@ -6,7 +6,7 @@
 #include "constants/map.h"
 #include "utils.h"
 
-namespace rl2 {
+namespace arelto {
 
 struct Vector2D {
   float x;
@@ -224,5 +224,5 @@ struct ExpGemData {
 
 enum class UpgradeType : int { damage = 0, speed, cooldown, size, count };
 
-}  // namespace rl2
+}  // namespace arelto
 #endif

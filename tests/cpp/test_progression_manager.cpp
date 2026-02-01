@@ -11,7 +11,7 @@
 #include "test_helpers.h"
 #include "upgrades.h"
 
-namespace rl2 {
+namespace arelto {
 namespace {
 
 class ProgressionManagerTest : public ::testing::Test {
@@ -188,4 +188,4 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
 }
 
 }  // namespace
-}  // namespace rl2
+}  // namespace arelto

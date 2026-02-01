@@ -9,30 +9,30 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(rl2_py, m) {
-  m.doc() = "RL2 Game Python Bindings";
+PYBIND11_MODULE(arelto_py, m) {
+  m.doc() = "Arelto Game Python Bindings";
 
-  py::enum_<rl2::GameState>(m, "GameState")
-      .value("in_start_screen", rl2::GameState::in_start_screen)
-      .value("in_main_menu", rl2::GameState::in_main_menu)
-      .value("is_running", rl2::GameState::is_running)
-      .value("is_gameover", rl2::GameState::is_gameover)
-      .value("in_shutdown", rl2::GameState::in_shutdown)
-      .value("is_paused", rl2::GameState::is_paused)
-      .value("in_level_up", rl2::GameState::in_level_up)
+  py::enum_<arelto::GameState>(m, "GameState")
+      .value("in_start_screen", arelto::GameState::in_start_screen)
+      .value("in_main_menu", arelto::GameState::in_main_menu)
+      .value("is_running", arelto::GameState::is_running)
+      .value("is_gameover", arelto::GameState::is_gameover)
+      .value("in_shutdown", arelto::GameState::in_shutdown)
+      .value("is_paused", arelto::GameState::is_paused)
+      .value("in_level_up", arelto::GameState::in_level_up)
       .export_values();
 
-  py::class_<rl2::Game>(m, "Game")
-      .def_readonly_static("num_enemies", &rl2::kNumEnemies)
+  py::class_<arelto::Game>(m, "Game")
+      .def_readonly_static("num_enemies", &arelto::kNumEnemies)
       .def(py::init())
-      .def("initialize", &rl2::Game::Initialize)
-      .def("process_input", &rl2::Game::ProcessInput)
-      .def("run", &rl2::Game::RunGameLoop)
-      .def("step", &rl2::Game::StepGame)
-      .def("render", &rl2::Game::RenderGame)
-      .def("reset", &rl2::Game::ResetGame)
+      .def("initialize", &arelto::Game::Initialize)
+      .def("process_input", &arelto::Game::ProcessInput)
+      .def("run", &arelto::Game::RunGameLoop)
+      .def("step", &arelto::Game::StepGame)
+      .def("render", &arelto::Game::RenderGame)
+      .def("reset", &arelto::Game::ResetGame)
       .def("fill_terminated_buffer",
-           [](rl2::Game& self, py::array_t<bool> buffer) {
+           [](arelto::Game& self, py::array_t<bool> buffer) {
              py::buffer_info info = buffer.request();
 
              if (info.ndim != 1) {
@@ -41,13 +41,13 @@ PYBIND11_MODULE(rl2_py, m) {
 
              bool* info_ptr = static_cast<bool*>(info.ptr);
 
-             for (int i = 0; i < rl2::kNumEnemies; ++i) {
+             for (int i = 0; i < arelto::kNumEnemies; ++i) {
                info_ptr[i] = self.scene_.enemy.is_terminated_latched[i];
                self.scene_.enemy.is_terminated_latched[i] = false;
              }
            })
       .def("fill_truncated_buffer",
-           [](rl2::Game& self, py::array_t<bool> buffer) {
+           [](arelto::Game& self, py::array_t<bool> buffer) {
              py::buffer_info info = buffer.request();
 
              if (info.ndim != 1) {
@@ -56,13 +56,13 @@ PYBIND11_MODULE(rl2_py, m) {
 
              bool* info_ptr = static_cast<bool*>(info.ptr);
 
-             for (int i = 0; i < rl2::kNumEnemies; ++i) {
+             for (int i = 0; i < arelto::kNumEnemies; ++i) {
                info_ptr[i] = self.scene_.enemy.is_truncated_latched[i];
                self.scene_.enemy.is_truncated_latched[i] = false;
              }
            })
       .def("fill_observation_buffer",
-           [](rl2::Game& self, py::array_t<float> buffer) {
+           [](arelto::Game& self, py::array_t<float> buffer) {
              py::buffer_info info = buffer.request();
 
              if (info.ndim != 2) {
@@ -74,11 +74,11 @@ PYBIND11_MODULE(rl2_py, m) {
                  self.scene_);
            })
       .def("get_observation_size",
-           [](rl2::Game& self) {
+           [](arelto::Game& self) {
              return self.obs_manager_.GetObservationSize(self.scene_);
            })
       .def("apply_action",
-           [](rl2::Game& self, py::array_t<int> buffer) {
+           [](arelto::Game& self, py::array_t<int> buffer) {
              py::buffer_info info = buffer.request();
 
              if (info.ndim != 2) {
@@ -90,11 +90,11 @@ PYBIND11_MODULE(rl2_py, m) {
                                                    self.scene_);
            })
       .def("get_action_size",
-           [](rl2::Game& self) {
+           [](arelto::Game& self) {
              return self.action_manager_.GetActionSize(self.scene_);
            })
       .def("fill_reward_buffer",
-           [](rl2::Game& self, py::array_t<float> buffer) {
+           [](arelto::Game& self, py::array_t<float> buffer) {
              py::buffer_info info = buffer.request();
 
              if (info.ndim != 1) {
@@ -106,11 +106,11 @@ PYBIND11_MODULE(rl2_py, m) {
                  self.scene_);
            })
       .def("get_reward_size",
-           [](rl2::Game& self) { return self.reward_manager_.GetRewardSize(); })
-      .def("get_enemy_num_rays", [](rl2::Game& self) { return rl2::kNumRays; })
+           [](arelto::Game& self) { return self.reward_manager_.GetRewardSize(); })
+      .def("get_enemy_num_rays", [](arelto::Game& self) { return arelto::kNumRays; })
       .def("get_enemy_ray_history_length",
-           [](rl2::Game& self) { return rl2::kRayHistoryLength; })
-      .def("shutdown", &rl2::Game::Shutdown)
-      .def("set_game_state", &rl2::Game::SetGameState)
-      .def("get_game_state", &rl2::Game::GetGameState);
+           [](arelto::Game& self) { return arelto::kRayHistoryLength; })
+      .def("shutdown", &arelto::Game::Shutdown)
+      .def("set_game_state", &arelto::Game::SetGameState)
+      .def("get_game_state", &arelto::Game::GetGameState);
 };

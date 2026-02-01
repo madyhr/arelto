@@ -7,7 +7,7 @@
 #include "test_helpers.h"
 #include "ui_manager.h"
 
-namespace rl2 {
+namespace arelto {
 namespace {
 
 class UIManagerTest : public ::testing::Test {
@@ -117,4 +117,4 @@ TEST_F(UIManagerTest, UpdateLevelIndicator_UpdatesText) {
 }
 
 }  // namespace
-}  // namespace rl2
+}  // namespace arelto

@@ -13,7 +13,7 @@
 #include "ray_caster.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 class Projectiles {
  public:
@@ -111,6 +111,6 @@ AABB GetCollisionAABB(const Vector2D& centroid, const Size2D& size,
                       const EntityType& type = EntityType::None,
                       const int& storage_index = 0);
 void RespawnEnemy(Enemy& enemy, const Player& player);
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

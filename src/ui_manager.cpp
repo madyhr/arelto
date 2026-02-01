@@ -6,7 +6,7 @@
 #include "scene.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 void UIManager::SetupUI() {
   SetupHealthBar();
@@ -189,4 +189,4 @@ void UIManager::UpdateTimer(float time) {
   }
 };
 
-}  // namespace rl2
+}  // namespace arelto

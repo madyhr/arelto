@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <random>
 
-namespace rl2 {
+namespace arelto {
 
 static std::mt19937 s_generator(std::random_device{}());
 
@@ -17,4 +17,4 @@ float GenerateRandomFloat(float min_val, float max_val) {
   return distrib(s_generator);
 };
 
-}  // namespace rl2
+}  // namespace arelto

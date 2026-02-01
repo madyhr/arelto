@@ -22,7 +22,7 @@
 #include "types.h"
 #include "ui_manager.h"
 
-namespace rl2 {
+namespace arelto {
 
 RenderManager::RenderManager() {};
 RenderManager::~RenderManager() {
@@ -212,7 +212,7 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
 
 void RenderManager::UpdateCameraPosition(const Player& player) {
   Vector2D player_centroid =
-      rl2::GetCentroid(player.position_, player.stats_.sprite_size);
+      arelto::GetCentroid(player.position_, player.stats_.sprite_size);
   camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
   camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
 
@@ -1060,4 +1060,4 @@ void RenderManager::RenderText(const std::string& text, int x, int y,
   SDL_FreeSurface(surface);
 }
 
-}  // namespace rl2
+}  // namespace arelto

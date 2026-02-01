@@ -6,7 +6,7 @@ import time
 import torch
 
 from rl.algorithms.async_ppo import AsyncPPO
-from rl.rl2_env import RL2Env
+from rl.arelto_env import AreltoEnv
 
 TARGET_FPS = 60
 TARGET_FRAME_TIME = 1 / TARGET_FPS
@@ -15,7 +15,7 @@ TARGET_FRAME_TIME = 1 / TARGET_FPS
 def start_game(args):
     checkpoint_path: str = args.load_checkpoint
     device: str = "cuda"
-    env = RL2Env(step_dt=0.02)
+    env = AreltoEnv(step_dt=0.02)
     num_envs = env.num_envs
     obs_size = env.game.get_observation_size()
     num_rays = env.game.get_enemy_num_rays()
@@ -124,7 +124,7 @@ def start_game(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="RL2 Start Menu Game")
+    parser = argparse.ArgumentParser(description="Arelto Start Menu Game")
     parser.add_argument(
         "--load-checkpoint",
         type=str,

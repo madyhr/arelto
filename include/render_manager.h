@@ -14,7 +14,7 @@
 #include "types.h"
 #include "ui_manager.h"
 
-namespace rl2 {
+namespace arelto {
 
 struct RenderResources {
   SDL_Window* window = nullptr;
@@ -76,5 +76,5 @@ class RenderManager {
                   TTF_Font* font, int center_width = 0);
 };
 
-}  // namespace rl2
+}  // namespace arelto
 #endif

@@ -4,7 +4,7 @@
 #include "constants/enemy.h"
 #include "scene.h"
 
-namespace rl2 {
+namespace arelto {
 
 int ActionManager::GetActionSize(const Scene& scene) {
   return 2;  // enemy velocity (x,y)
@@ -33,4 +33,4 @@ void ActionManager::ReadActionBuffer(int* buffer_ptr, int buffer_size,
   return;
 };
 
-}  // namespace rl2
+}  // namespace arelto

@@ -5,13 +5,13 @@ import os
 import torch
 
 from rl.algorithms.ppo import PPO
-from rl.rl2_env import RL2Env
+from rl.arelto_env import AreltoEnv
 
 
 def start_game(args):
     checkpoint_path: str = args.load_checkpoint
     device: str = args.device
-    env = RL2Env(step_dt=0.02)
+    env = AreltoEnv(step_dt=0.02)
     num_envs = env.num_envs
     obs_size = env.game.get_observation_size()
     num_rays = env.game.get_enemy_num_rays()
@@ -116,7 +116,7 @@ def start_game(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="RL2 Start Menu Game")
+    parser = argparse.ArgumentParser(description="Arelto Start Menu Game")
     parser.add_argument(
         "--load-checkpoint",
         type=str,

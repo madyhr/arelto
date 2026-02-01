@@ -9,7 +9,7 @@
 #include "scene.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 class CollisionManager {
 
@@ -36,6 +36,6 @@ class CollisionManager {
       const std::array<Vector2D, 2>& centroids,
       const std::array<float, 2>& inv_masses);
 };
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

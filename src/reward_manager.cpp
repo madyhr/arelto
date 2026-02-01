@@ -5,7 +5,7 @@
 #include "constants/enemy.h"
 #include "scene.h"
 
-namespace rl2 {
+namespace arelto {
 
 bool RewardManager::Initialize() {
   terms_.clear();
@@ -99,4 +99,4 @@ void RewardManager::FillRewardBuffer(float* buffer_ptr, int buffer_size,
   return;
 };
 
-}  // namespace rl2
+}  // namespace arelto

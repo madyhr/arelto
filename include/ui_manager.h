@@ -9,7 +9,7 @@
 #include "scene.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 struct UIResources {
   SDL_Texture* digit_font_texture = nullptr;
@@ -87,6 +87,6 @@ class UIManager {
  private:
 };
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

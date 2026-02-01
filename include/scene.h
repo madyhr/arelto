@@ -12,7 +12,7 @@
 #include "types.h"
 #include "upgrades.h"
 
-namespace rl2 {
+namespace arelto {
 
 struct Scene {
 
@@ -95,6 +95,6 @@ struct Scene {
   };
 };
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

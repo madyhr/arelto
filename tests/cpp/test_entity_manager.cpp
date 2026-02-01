@@ -9,7 +9,7 @@
 #include "scene.h"
 #include "test_helpers.h"
 
-namespace rl2 {
+namespace arelto {
 namespace {
 
 class EntityManagerTest : public ::testing::Test {
@@ -218,4 +218,4 @@ TEST_F(EntityManagerTest, Update_UpdatesRayCaster) {
 }
 
 }  // namespace
-}  // namespace rl2
+}  // namespace arelto

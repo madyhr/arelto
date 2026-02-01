@@ -6,7 +6,7 @@
 #include "scene.h"
 #include "upgrades.h"
 
-namespace rl2 {
+namespace arelto {
 
 class ProgressionManager {
  public:
@@ -22,6 +22,6 @@ class ProgressionManager {
   std::unique_ptr<Upgrade> GenerateRandomOption(const Player& player);
 };
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

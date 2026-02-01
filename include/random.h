@@ -3,11 +3,11 @@
 #define RL2_RANDOM_H_
 
 #include <cstdint>
-namespace rl2 {
+namespace arelto {
 
 uint32_t GenerateRandomInt(uint32_t min_val, uint32_t max_val);
 float GenerateRandomFloat(float min_val, float max_val);
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

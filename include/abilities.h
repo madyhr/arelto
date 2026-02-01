@@ -8,7 +8,7 @@
 #include "constants/projectile.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 enum SpellId : int { FireballId, FrostboltId };
 
@@ -130,5 +130,5 @@ struct SpellStats {
     time_of_last_use[id] = 0.0f;
   }
 };
-};  // namespace rl2
+};  // namespace arelto
 #endif

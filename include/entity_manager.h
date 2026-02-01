@@ -6,7 +6,7 @@
 #include "map.h"
 #include "scene.h"
 
-namespace rl2 {
+namespace arelto {
 
 class EntityManager {
  public:
@@ -31,6 +31,6 @@ class EntityManager {
       const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
 };
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

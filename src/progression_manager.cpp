@@ -5,7 +5,7 @@
 #include "constants/progression_manager.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 ProgressionManager::ProgressionManager() {}
 ProgressionManager::~ProgressionManager() {}
@@ -86,4 +86,4 @@ void ProgressionManager::ApplyUpgrade(Scene& scene, int option_index) {
       scene.player.stats_.exp_points_required * kPlayerExpRequiredScale);
 }
 
-}  // namespace rl2
+}  // namespace arelto

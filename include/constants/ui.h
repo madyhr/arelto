@@ -2,7 +2,7 @@
 #ifndef RL2_CONSTANTS_UI_H_
 #define RL2_CONSTANTS_UI_H_
 
-namespace rl2 {
+namespace arelto {
 
 // Font sizes
 constexpr int kFontSizeMedium = 26;
@@ -106,6 +106,6 @@ constexpr int kLevelUpButtonWidth = 200;
 constexpr int kLevelUpButtonHeight = 50;
 constexpr int kLevelUpButtonOffsetY = 440;  // from card top
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

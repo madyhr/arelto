@@ -10,7 +10,7 @@
 #include "constants/enemy.h"
 #include "scene.h"
 
-namespace rl2 {
+namespace arelto {
 
 using RewardFunction =
     std::function<std::array<float, kNumEnemies>(const Scene& current_scene)>;
@@ -46,6 +46,6 @@ class RewardManager {
   std::vector<RewardTerm> terms_;
 };
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

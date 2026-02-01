@@ -3,7 +3,7 @@ import time
 import numpy as np
 import torch
 
-from rl.rl2_env import RL2Env
+from rl.arelto_env import AreltoEnv
 
 game_state = {
     "in_start_screen": 0,
@@ -15,8 +15,8 @@ game_state = {
 
 
 def diagnose_custom_env():
-    env = RL2Env()
-    print(f"\n=== Diagnostics for RL2Env (Baseline Mode) ===")
+    env = AreltoEnv()
+    print(f"\n=== Diagnostics for AreltoEnv (Baseline Mode) ===")
 
     is_initialized = env.game.initialize()
     if not is_initialized:

@@ -4,7 +4,7 @@
 
 #include "scene.h"
 
-namespace rl2 {
+namespace arelto {
 
 class ActionManager {
 
@@ -13,6 +13,6 @@ class ActionManager {
   void ReadActionBuffer(int* buffer_ptr, int buffer_size, Scene& scene);
 };
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

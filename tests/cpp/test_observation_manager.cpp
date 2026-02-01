@@ -12,7 +12,7 @@
 #include "scene.h"
 #include "test_helpers.h"
 
-namespace rl2 {
+namespace arelto {
 namespace {
 
 class ObservationManagerTest : public ::testing::Test {
@@ -158,4 +158,4 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_BufferFullyPopulated) {
 }
 
 }  // namespace
-}  // namespace rl2
+}  // namespace arelto

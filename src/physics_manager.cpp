@@ -7,7 +7,7 @@
 #include "entity.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 PhysicsManager::PhysicsManager() {};
 PhysicsManager::~PhysicsManager() {};
 
@@ -135,4 +135,4 @@ void PhysicsManager::HandleProjectileOOB(Projectiles& projectiles) {
   }
 };
 
-}  // namespace rl2
+}  // namespace arelto

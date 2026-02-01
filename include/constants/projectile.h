@@ -3,7 +3,7 @@
 #define RL2_CONSTANTS_PROJECTILE_H_
 #include "constants/render.h"
 
-namespace rl2 {
+namespace arelto {
 // Projectiles constants
 constexpr int kProjectileVertices = 6;
 constexpr int kProjectileNumSpriteCells = 12;
@@ -28,5 +28,5 @@ constexpr int kFrostboltColliderHeight =
 constexpr float kFrostboltSpeed = 250.0f;
 constexpr int kFrostboltDamage = 10;
 constexpr float kFrostboltCooldown = 2.0f;  // time in sec
-}  // namespace rl2
+}  // namespace arelto
 #endif

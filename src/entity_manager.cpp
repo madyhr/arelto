@@ -5,7 +5,7 @@
 #include "constants/ray_caster.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 
 EntityManager::EntityManager() {}
 EntityManager::~EntityManager() {}
@@ -153,4 +153,4 @@ void EntityManager::UpdateEnemyRayCaster(
       (enemy.ray_caster.history_idx + 1) % kRayHistoryLength;
 }
 
-}  // namespace rl2
+}  // namespace arelto

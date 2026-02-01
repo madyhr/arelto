@@ -4,7 +4,7 @@
 
 #include "scene.h"
 
-namespace rl2 {
+namespace arelto {
 
 class ObservationManager {
 
@@ -14,6 +14,6 @@ class ObservationManager {
                              const Scene& scene);
 };
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

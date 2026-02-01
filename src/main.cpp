@@ -2,7 +2,7 @@
 #include "game.h"
 
 int main(int argc, char* args[]) {
-  rl2::Game game;
+  arelto::Game game;
 
   if (game.Initialize()) {
     game.RunGameLoop();

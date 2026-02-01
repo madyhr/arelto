@@ -12,7 +12,7 @@
 #include "test_helpers.h"
 #include "types.h"
 
-namespace rl2 {
+namespace arelto {
 namespace {
 
 class CollisionManagerTest : public ::testing::Test {
@@ -175,4 +175,4 @@ TEST_F(CollisionManagerTest,
 }
 
 }  // namespace
-}  // namespace rl2
+}  // namespace arelto

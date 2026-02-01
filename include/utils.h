@@ -5,7 +5,7 @@
 #include <array>
 #include "constants/game.h"
 
-namespace rl2 {
+namespace arelto {
 
 class FrameStats {
  public:
@@ -19,6 +19,6 @@ class FrameStats {
   void print_fps_running_average(float dt);
 };
 
-}  // namespace rl2
+}  // namespace arelto
 
 #endif

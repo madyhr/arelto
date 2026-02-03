@@ -4,7 +4,7 @@ A Reinforcement Learning Rogue-Lite (RL2) game where the enemies get smarter ove
 
 ## Prerequisites
 
-Before installing, ensure you have the following system dependencies installed.
+Before installing, ensure you have the following system dependencies installed and *that you are using an [NVIDIA GPU](https://developer.nvidia.com/cuda/gpus)*[^1].
 
 ### Linux
 #### Debian/Ubuntu
@@ -20,7 +20,9 @@ sudo apt install libomp-dev
 sudo pacman -S cmake base-devel python sdl2 sdl2_image sdl2_ttf
 ```
 
-![NOTE]: Windows and macOS are currently not supported.
+> [!NOTE]
+> Windows and macOS are currently not supported.
+
 
 ### Python
 - Python 3.10 or higher.
@@ -86,3 +88,5 @@ This will automatically handle CMake configuration and build steps using `scikit
     ```bash
     ./build/arelto_tests
     ```
+
+[^1]: An NVIDIA GPU is required as the default experience using an asynchronous learning agent. Here the training and inference are both run on the GPU in parallel CUDA streams, while the game itself runs on the CPU. This is to create a smooth gameplay experience while also being able to train the agent in a reasonable amount of time.

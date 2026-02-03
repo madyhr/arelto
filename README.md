@@ -1,4 +1,5 @@
 # Arelto
+[Arelto Gameplay](https://github.com/user-attachments/assets/38dcf214-c69f-4897-913f-577f8ad94488)
 
 A Reinforcement Learning Rogue-Lite (RL2) game where the enemies get smarter over time. Try to survive for as long as you can!
 

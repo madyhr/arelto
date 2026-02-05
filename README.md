@@ -32,7 +32,7 @@ sudo pacman -S cmake base-devel python sdl2 sdl2_image sdl2_ttf
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/yourusername/arelto.git
+    git clone https://github.com/madyhr/arelto.git
     cd arelto
     ```
 
@@ -89,6 +89,8 @@ This will automatically handle CMake configuration and build steps using `scikit
     ```bash
     ./build/arelto_tests
     ```
+    > ![NOTE]
+    > This requires you to build using `cmake`.
 
 ## Generative AI Disclaimer
 

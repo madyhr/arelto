@@ -1,0 +1,54 @@
+# Executables and object files
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+
+# Build directories and outputs 
+build/
+bin/
+Debug/
+Release/
+out/
+_bin/
+_build/
+
+# IDE/Editor specific files
+.vscode/
+.idea/
+*.suo
+*.user
+*.ncb
+*.aps
+*.plg
+*.bak
+*.VC.db
+.vs/
+
+# CMake artifacts
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+
+# vcpkg (C++ package manager)
+vcpkg_installed/
+
+# Other common system files
+.DS_Store
+Thumbs.db
+
+# Pyproject files
+*.egg-info
+
+# Caches
+.cache/*
+python/__pycache__/
+*.py[codi]
+
+# checkpoints
+checkpoints/

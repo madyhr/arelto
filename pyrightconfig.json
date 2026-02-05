@@ -1,0 +1,10 @@
+{
+  "venvPath": "/home/madyhr/rl2/",
+  "venv": "rl2_venv",
+  "extraPaths": [
+    "build",
+    "rl",
+    "tests"
+  ],
+  "typeCheckingMode": "standard"
+}

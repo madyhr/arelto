@@ -1,0 +1,18 @@
+// include/action_manager.h
+#ifndef RL2_ACTION_MANAGER_H_
+#define RL2_ACTION_MANAGER_H_
+
+#include "scene.h"
+
+namespace arelto {
+
+class ActionManager {
+
+ public:
+  int GetActionSize(const Scene& scene);
+  void ReadActionBuffer(int* buffer_ptr, int buffer_size, Scene& scene);
+};
+
+}  // namespace arelto
+
+#endif

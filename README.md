@@ -89,8 +89,8 @@ This will automatically handle CMake configuration and build steps using `scikit
     ```bash
     ./build/arelto_tests
     ```
-    > [!NOTE]
-    > This requires you to build using `cmake`.
+> [!NOTE]
+> This requires you to build using something like `cmake -B build -G Ninja`.
 
 ## Generative AI Disclaimer
 

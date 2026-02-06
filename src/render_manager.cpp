@@ -112,6 +112,8 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.renderer, "assets/textures/ui/level_up_option.png");
   resources_.ui_resources.button_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/ui/button_texture.png");
+  resources_.ui_resources.begin_button_texture = IMG_LoadTexture(
+      resources_.renderer, "assets/textures/ui/begin_button_texture.png");
   resources_.ui_resources.digit_font_texture = IMG_LoadTexture(
       resources_.renderer, "assets/fonts/font_outlined_sprite_sheet.png");
   resources_.ui_resources.timer_hourglass_texture =
@@ -120,9 +122,12 @@ bool RenderManager::Initialize(bool is_headless) {
       TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeMedium);
   resources_.ui_resources.ui_font_large =
       TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeLarge);
+  resources_.ui_resources.ui_font_huge =
+      TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeHuge);
 
   if (resources_.ui_resources.ui_font_medium == nullptr ||
-      resources_.ui_resources.ui_font_large == nullptr) {
+      resources_.ui_resources.ui_font_large == nullptr ||
+      resources_.ui_resources.ui_font_huge == nullptr) {
     std::cerr << "TTF font could not be loaded: " << TTF_GetError()
               << std::endl;
     return false;
@@ -140,6 +145,7 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.ui_resources.paused_texture == nullptr ||
       resources_.ui_resources.level_up_option_card_texture == nullptr ||
       resources_.ui_resources.button_texture == nullptr ||
+      resources_.ui_resources.begin_button_texture == nullptr ||
       std::any_of(
           resources_.projectile_textures.begin(),
           resources_.projectile_textures.end(),
@@ -837,6 +843,7 @@ void RenderManager::RenderDigitString(const std::string& text, int start_x,
 };
 
 void RenderManager::RenderStartScreen() {
+
   SDL_Rect dst_rect;
   dst_rect.x = 0;
   dst_rect.y = 0;
@@ -847,6 +854,32 @@ void RenderManager::RenderStartScreen() {
                  resources_.ui_resources.start_screen_texture, nullptr,
                  &dst_rect);
 
+  int button_x = kBeginButtonX;
+  int button_y = kBeginButtonY;
+
+  int mouse_x, mouse_y;
+  SDL_GetMouseState(&mouse_x, &mouse_y);
+  bool is_hovered =
+      (mouse_x >= button_x && mouse_x <= button_x + kBeginButtonWidth &&
+       mouse_y >= button_y && mouse_y <= button_y + kBeginButtonHeight);
+
+  // button texture map has both default and hover state so y composant of top
+  // left coord on the source rect depends on the hover state.
+  SDL_Rect btn_src_rect = {0, is_hovered ? kBeginButtonTextureHeight / 2 : 0,
+                           kBeginButtonTextureWidth,
+                           kBeginButtonTextureHeight / 2};
+
+  SDL_Rect btn_dst_rect = {button_x, button_y, kBeginButtonWidth,
+                           kBeginButtonHeight};
+
+  SDL_RenderCopy(resources_.renderer,
+                 resources_.ui_resources.begin_button_texture, &btn_src_rect,
+                 &btn_dst_rect);
+
+  // RenderText("BEGIN", button_x, button_y + (kBeginButtonHeight - 26) / 2,
+  //            kColorWhite, resources_.ui_resources.ui_font_huge,
+  //            kBeginButtonWidth);
+  //
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
 };
 
@@ -935,6 +968,11 @@ void RenderManager::Shutdown() {
     resources_.ui_resources.button_texture = nullptr;
   }
 
+  if (resources_.ui_resources.begin_button_texture) {
+    SDL_DestroyTexture(resources_.ui_resources.begin_button_texture);
+    resources_.ui_resources.begin_button_texture = nullptr;
+  }
+
   IMG_Quit();
 
   if (resources_.ui_resources.ui_font_medium) {
@@ -945,6 +983,11 @@ void RenderManager::Shutdown() {
   if (resources_.ui_resources.ui_font_large) {
     TTF_CloseFont(resources_.ui_resources.ui_font_large);
     resources_.ui_resources.ui_font_large = nullptr;
+  }
+
+  if (resources_.ui_resources.ui_font_huge) {
+    TTF_CloseFont(resources_.ui_resources.ui_font_huge);
+    resources_.ui_resources.ui_font_huge = nullptr;
   }
 
   TTF_Quit();

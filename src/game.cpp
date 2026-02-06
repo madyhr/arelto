@@ -259,12 +259,10 @@ void Game::ProcessInput() {
   if (game_state_ == in_start_screen) {
     if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
 
-      // TODO: Formalize the button and separate the start screen into their own textures/elements
-      // (one of which is the button). Current button position/size is just eyeballed.
-      int btn_w = 800;
-      int btn_h = 360;
-      int btn_x = (kWindowWidth - btn_w) / 2;
-      int btn_y = 2 * (kWindowHeight) / 3 - btn_h / 2;
+      int btn_w = kBeginButtonWidth;
+      int btn_h = kBeginButtonHeight;
+      int btn_x = kBeginButtonX;
+      int btn_y = kBeginButtonY;
 
       if (cursor_pos_x >= btn_x && cursor_pos_x <= btn_x + btn_w &&
           cursor_pos_y >= btn_y && cursor_pos_y <= btn_y + btn_h) {

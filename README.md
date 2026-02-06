@@ -67,6 +67,27 @@ Alternatively, there is also a synchronous agent variant. However, the game paus
 python scripts/start_game.py
 ```
 
+## How to play
+
+### Game state management 
+
+- **Exiting**: Press the 'q' key to quit and close the game.
+
+- **Restarting**: Press the 'ESC' key to go back to the main menu.
+
+- **Pausing**: Press the 'SPACE' key to pause the game. 
+
+- **Respawn**: If you have died, you can press the 'R' key to respawn.
+
+### Gameplay
+
+- **Movement**: Use 'WASD' to move the character around. 
+
+- **Actions**: Use 'MB1' to shoot a 'Fireball' or 'MB2' to shoot a 'Frostbolt' towards the cursor. 
+
+- **Leveling up**: Once you gather enough experience points, you will be given a choice between 3 upgrades.
+
+
 ## Development
 
 ### Building

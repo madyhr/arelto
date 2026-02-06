@@ -24,6 +24,7 @@ struct UIResources {
   TTF_Font* ui_font_large = nullptr;
   SDL_Texture* level_up_option_card_texture = nullptr;
   SDL_Texture* button_texture = nullptr;
+  SDL_Texture* begin_button_texture = nullptr;
 };
 
 enum UIElementGroupType : int {

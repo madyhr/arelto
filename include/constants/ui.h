@@ -2,11 +2,13 @@
 #ifndef RL2_CONSTANTS_UI_H_
 #define RL2_CONSTANTS_UI_H_
 
+#include "constants/game.h"
 namespace arelto {
 
 // Font sizes
 constexpr int kFontSizeMedium = 26;
 constexpr int kFontSizeLarge = 40;
+constexpr int kFontSizeHuge = 72;
 
 // Digits
 constexpr int kDigitSpriteWidth = 30;
@@ -105,6 +107,14 @@ constexpr int kLevelUpButtonTextureHeight = 160;
 constexpr int kLevelUpButtonWidth = 200;
 constexpr int kLevelUpButtonHeight = 50;
 constexpr int kLevelUpButtonOffsetY = 440;  // from card top
+
+// Start screen
+constexpr int kBeginButtonTextureWidth = 638;
+constexpr int kBeginButtonTextureHeight = 540;
+constexpr int kBeginButtonWidth = 450;
+constexpr int kBeginButtonHeight = 175;
+constexpr int kBeginButtonX = (kWindowWidth - kBeginButtonWidth) / 2;
+constexpr int kBeginButtonY = 5 * (kWindowHeight - kBeginButtonHeight) / 7;
 
 }  // namespace arelto
 

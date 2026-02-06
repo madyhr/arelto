@@ -22,6 +22,7 @@ struct UIResources {
   SDL_Texture* paused_texture = nullptr;
   TTF_Font* ui_font_medium = nullptr;
   TTF_Font* ui_font_large = nullptr;
+  TTF_Font* ui_font_huge = nullptr;
   SDL_Texture* level_up_option_card_texture = nullptr;
   SDL_Texture* button_texture = nullptr;
   SDL_Texture* begin_button_texture = nullptr;

@@ -122,9 +122,12 @@ bool RenderManager::Initialize(bool is_headless) {
       TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeMedium);
   resources_.ui_resources.ui_font_large =
       TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeLarge);
+  resources_.ui_resources.ui_font_huge =
+      TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeHuge);
 
   if (resources_.ui_resources.ui_font_medium == nullptr ||
-      resources_.ui_resources.ui_font_large == nullptr) {
+      resources_.ui_resources.ui_font_large == nullptr ||
+      resources_.ui_resources.ui_font_huge == nullptr) {
     std::cerr << "TTF font could not be loaded: " << TTF_GetError()
               << std::endl;
     return false;
@@ -980,6 +983,11 @@ void RenderManager::Shutdown() {
   if (resources_.ui_resources.ui_font_large) {
     TTF_CloseFont(resources_.ui_resources.ui_font_large);
     resources_.ui_resources.ui_font_large = nullptr;
+  }
+
+  if (resources_.ui_resources.ui_font_huge) {
+    TTF_CloseFont(resources_.ui_resources.ui_font_huge);
+    resources_.ui_resources.ui_font_huge = nullptr;
   }
 
   TTF_Quit();

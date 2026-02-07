@@ -4,12 +4,9 @@
 #include <SDL_mouse.h>
 #include <SDL_render.h>
 #include <SDL_surface.h>
-#include <array>
 #include <csignal>
 #include <cstdio>
 #include <iostream>
-#include <vector>
-#include "constants/enemy.h"
 #include "constants/game.h"
 #include "constants/progression_manager.h"
 #include "constants/ui.h"
@@ -55,7 +52,7 @@ bool Game::Initialize() {
   }
 
   time_ = (float)(SDL_GetTicks64() / 1000.0f);
-  game_state_ = is_running;
+  SetGameState(is_running);
 
   return true;
 }
@@ -75,7 +72,8 @@ int Game::GetGameState() {
 };
 
 void Game::SetGameState(int game_state) {
-  game_state_ = static_cast<GameState>(game_state);
+  GameState new_state = static_cast<GameState>(game_state);
+  game_state_ = new_state;
 }
 
 void Game::StepGamePhysics() {
@@ -89,12 +87,12 @@ void Game::StepGamePhysics() {
 
 void Game::CheckGameStateRules() {
   if (entity_manager_.IsPlayerDead(scene_.player)) {
-    game_state_ = is_gameover;
+    SetGameState(is_gameover);
     return;
   }
 
   if (progression_manager_.CheckLevelUp(scene_.player)) {
-    game_state_ = in_level_up;
+    SetGameState(in_level_up);
     progression_manager_.GenerateLevelUpOptions(scene_);
   }
 }
@@ -108,7 +106,7 @@ void Game::ResetGame() {
   scene_.Reset();
   time_ = 0.0f;
   accumulator_step_ = 0.0f;
-  game_state_ = is_running;
+  SetGameState(is_running);
 };
 
 // Runs the game loop continuously.
@@ -207,7 +205,7 @@ void Game::ProcessInput() {
 
   // To be able to quit while in headless mode we need to capture ctrl+C signals
   if (stop_request_) {
-    game_state_ = in_shutdown;
+    SetGameState(in_shutdown);
     std::cout << "Signal received. Exiting..." << std::endl;
     return;
   };
@@ -220,12 +218,12 @@ void Game::ProcessInput() {
 
   while (SDL_PollEvent(&e) != 0) {
     if (e.type == SDL_QUIT) {
-      game_state_ = in_shutdown;
+      SetGameState(in_shutdown);
     } else if (e.type == SDL_KEYDOWN) {
 
       switch (e.key.keysym.sym) {
         case SDLK_q:
-          game_state_ = in_shutdown;
+          SetGameState(in_shutdown);
           std::cout << "Key 'q' pressed! Exiting..." << std::endl;
           break;
 
@@ -237,15 +235,15 @@ void Game::ProcessInput() {
 
         case SDLK_ESCAPE:
           ResetGame();
-          game_state_ = in_start_screen;
+          SetGameState(in_start_screen);
           break;
 
         case SDLK_p:
           if (game_state_ == is_running) {
-            game_state_ = is_paused;
+            SetGameState(is_paused);
             std::cout << "Game Paused" << std::endl;
           } else if (game_state_ == is_paused) {
-            game_state_ = is_running;
+            SetGameState(is_running);
             std::cout << "Game Resumed" << std::endl;
           }
           break;
@@ -266,7 +264,7 @@ void Game::ProcessInput() {
 
       if (cursor_pos_x >= btn_x && cursor_pos_x <= btn_x + btn_w &&
           cursor_pos_y >= btn_y && cursor_pos_y <= btn_y + btn_h) {
-        game_state_ = is_running;
+        SetGameState(is_running);
         std::cout << "Game Started!" << std::endl;
       }
     }
@@ -350,7 +348,7 @@ void Game::ProcessLevelUpInput(uint32_t mouse_state) {
 
     if (selected_card_idx != -1) {
       progression_manager_.ApplyUpgrade(scene_, selected_card_idx);
-      game_state_ = is_running;
+      SetGameState(is_running);
     }
   }
 }

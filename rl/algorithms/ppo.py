@@ -3,8 +3,8 @@ import torch
 from rl.modules.actor import MultiDiscreteActor
 from rl.modules.actor_critic import ActorCritic
 from rl.modules.critic import ValueCritic
+from rl.modules.normalization import EmpiricalNormalization
 from rl.modules.ray_encoder import RayEncoder
-from rl.networks.normalization import EmpiricalNormalization
 from rl.storage.rollout_storage import RolloutStorage, Transition
 
 
@@ -86,7 +86,7 @@ class PPO:
         self.num_epochs = num_epochs
         self.batch_size = self.num_envs * self.num_transitions_per_env
 
-        print(f" --- PPO Params --- ")
+        print(" --- PPO Params --- ")
         print(f"Hidden shape: {hidden_size}")
         print(f"Num epochs: {num_epochs}")
         print(f"Num mini batches: {num_mini_batches}")

@@ -1,12 +1,14 @@
 // src/game.cpp
 #include "game.h"
 #include <SDL2/SDL_timer.h>
+#include <SDL_mixer.h>
 #include <SDL_mouse.h>
 #include <SDL_render.h>
 #include <SDL_surface.h>
 #include <csignal>
 #include <cstdio>
 #include <iostream>
+#include "audio_manager.h"
 #include "constants/game.h"
 #include "constants/progression_manager.h"
 #include "constants/ui.h"
@@ -45,6 +47,10 @@ bool Game::Initialize() {
     return false;
   }
 
+  if (!(audio_manager_.Initialize())) {
+    return false;
+  }
+
   scene_.Reset();
 
   if (!(Game::InitializeCamera())) {
@@ -73,6 +79,12 @@ int Game::GetGameState() {
 
 void Game::SetGameState(int game_state) {
   GameState new_state = static_cast<GameState>(game_state);
+
+  if (new_state == in_start_screen) {
+    audio_manager_.StopMusic();
+  } else {
+    audio_manager_.PlayMusic();
+  }
   game_state_ = new_state;
 }
 
@@ -373,6 +385,7 @@ void Game::CachePreviousState() {
 
 void Game::Shutdown() {
   render_manager_.Shutdown();
+  audio_manager_.Shutdown();
 }
 
 }  // namespace arelto

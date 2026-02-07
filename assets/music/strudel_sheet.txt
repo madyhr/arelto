@@ -1,0 +1,43 @@
+// Song was generated using Gemini-3-Pro in Antigravity with the following prompt:
+// "Based on the vibes coming from the code please create a songtrack written in strudel."
+// Commit: a6ee808d8110d92b26970a8bf9358f98557e3f39
+
+
+// Arelto: The Asynchronous Agent
+// Vibe: Dark Rogue-lite meets Neural Network Optimization
+
+stack(
+  // 1. The Game Loop (Fixed State Step)
+  // A steady, driving industrial beat representing the environment ticking away
+  s("bd [~ bd] sd [bd sd]")
+    .bank("RolandTR909")
+    .distort(0.2)
+    .shape(0.8)
+    .lpf(2000),
+
+  // 2. The Dungeon (Observation Space)
+  // Dark, breathing pads representing the fog of war and hostile environment
+  note("c3 . eb3 . g3 . bb3")
+    .s("superSaw")
+    .lpf(sine.range(400, 3000).slow(16)) // The environment shifting
+    .lpq(5)
+    .legato(1)
+    .room(2),
+
+  // 3. The Agent (AsyncPPO Policy)
+  // Fast, frantic calculations. The '?' adds randomness, simulating exploration/exploitation steps
+  note("0 [7,12]? . [~ 5] [0,12*2]?")
+    .scale("c:minor")
+    .s("square")
+    .decay(0.1).sustain(0.1)
+    .speed(sine.range(0.98, 1.02).slow(4)) // Neural drift / Gradient updates
+    .pan(rand) // Exploring the action space
+    .clip(1),
+
+  // 4. Backward Pass (Gradients)
+  // Glitchy artifacts representing the learning process rewriting the brain
+  s("glitch:2 [~ glitch:4]?")
+    .speed("2 4 8")
+    .euclid(3, 8)
+    .gain(0.6)
+).slow(0.55) // Heavy, rogue-lite tempo

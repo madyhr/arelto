@@ -15,6 +15,13 @@ out/
 _bin/
 _build/
 
+# C++ Dependencies / Testing Frameworks
+include/gmock/
+include/gtest/
+
+# Compiled Libraries
+lib/
+
 # IDE/Editor specific files
 .vscode/
 .idea/

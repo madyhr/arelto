@@ -12,13 +12,13 @@ Before installing, ensure you have the following system dependencies installed a
 ```bash
 sudo apt update
 sudo apt install cmake build-essential python3-dev
-sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev
+sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer
 sudo apt install libomp-dev
 ```
 
 #### Arch
 ```bash
-sudo pacman -S cmake base-devel python sdl2 sdl2_image sdl2_ttf
+sudo pacman -S cmake base-devel python sdl2 sdl2_image sdl2_ttf sdl2_mixer
 ```
 
 > [!NOTE]
@@ -91,13 +91,21 @@ python scripts/start_game.py
 ## Development
 
 ### Building
-For development, it is recommended that you use an editable pip install:
+For development, it is recommended that you use `cmake` instead of `pip`:
 
 ```bash
-pip install -e . -v
+cmake -B build -G Ninja -DCMAKE_INSTALL_PREFIX=.
 ```
 
-This will automatically handle CMake configuration and build steps using `scikit-build-core`.
+```bash
+ninja -C build install
+```
+
+In the case that you have already installed `arelto` as a package in your virtual environment, you may want to explicitly set the `PYTHONPATH`.
+```bash
+# If you are in path/to/arelto/:
+EXPORT PYTHONPATH=$PWD
+```
 
 ### Tests
 - **Running Tests:**
@@ -111,7 +119,7 @@ This will automatically handle CMake configuration and build steps using `scikit
     ./build/arelto_tests
     ```
 > [!NOTE]
-> This requires you to build using something like `cmake -B build -G Ninja`.
+> The C++ tests require you build using `cmake` as described in the Development section.
 
 ## Generative AI Disclaimer
 

@@ -1,0 +1,12 @@
+---
+Checks: '-*,
+         misc-unused-*,
+         bugprone-*,
+         performance-*,
+         readability-const-return-type,
+         cppcoreguidelines-interfaces-global-init'
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: 'src/|include/|arelto/'
+...

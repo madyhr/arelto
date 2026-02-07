@@ -4,9 +4,11 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_render.h>
 #include <csignal>
 #include "action_manager.h"
+#include "audio_manager.h"
 #include "entity_manager.h"
 #include "observation_manager.h"
 #include "physics_manager.h"
@@ -43,6 +45,7 @@ class Game {
   PhysicsManager physics_manager_;
   EntityManager entity_manager_;
   ProgressionManager progression_manager_;
+  AudioManager audio_manager_;
   GameStatus game_status_;
   GameState game_state_;
   Vector2D cursor_position_;

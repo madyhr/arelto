@@ -14,6 +14,7 @@ set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED COMPONENTS PNG) 
 find_package(SDL2_ttf REQUIRED) 
+find_package(SDL2_mixer REQUIRED)
 
 find_package(OpenMP REQUIRED)
 
@@ -34,6 +35,7 @@ target_link_libraries(arelto_core PUBLIC
   SDL2::SDL2
   SDL2_image::SDL2_image
   SDL2_ttf::SDL2_ttf
+  SDL2_mixer::SDL2_mixer
   pybind11::embed
   OpenMP::OpenMP_CXX
 )

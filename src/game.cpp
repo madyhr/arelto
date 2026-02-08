@@ -1,6 +1,7 @@
 // src/game.cpp
 #include "game.h"
 #include <SDL2/SDL_timer.h>
+#include <SDL_keycode.h>
 #include <SDL_mixer.h>
 #include <SDL_mouse.h>
 #include <SDL_render.h>
@@ -258,6 +259,18 @@ void Game::ProcessInput() {
             SetGameState(is_running);
             std::cout << "Game Resumed" << std::endl;
           }
+          break;
+
+        case SDLK_m:
+          audio_manager_.ToggleMusic();
+          break;
+
+        case SDLK_COMMA:
+          audio_manager_.DecreaseMusicVolume();
+          break;
+
+        case SDLK_PERIOD:
+          audio_manager_.IncreaseMusicVolume();
           break;
       }
     }

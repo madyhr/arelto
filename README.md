@@ -11,8 +11,6 @@
   - [Installation](#installation)
   - [Running the Game](#running-the-game)
   - [How to play](#how-to-play)
-    - [Game state management](#game-state-management)
-    - [Gameplay](#gameplay)
   - [Development](#development)
     - [Building](#building)
     - [Tests](#tests)

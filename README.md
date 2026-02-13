@@ -23,7 +23,7 @@ A Reinforcement Learning Rogue-Lite (RL2) game where the enemies get smarter ove
 
 ## Prerequisites
 
-Before installing, ensure you have the following system dependencies installed and *that you are using an [NVIDIA GPU](https://developer.nvidia.com/cuda/gpus)*[^1].
+Before installing, ensure you have the following system dependencies installed and that you are using an [NVIDIA GPU](https://developer.nvidia.com/cuda/gpus)[^1].
 
 ### Linux
 
@@ -115,7 +115,7 @@ In the case that you have already installed `arelto` as a package in your virtua
 
 ```bash
 # If you are in path/to/arelto/:
-EXPORT PYTHONPATH=$PWD
+export PYTHONPATH=$PWD
 ```
 
 ### Tests

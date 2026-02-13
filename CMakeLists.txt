@@ -16,6 +16,18 @@ find_package(SDL2_image REQUIRED COMPONENTS PNG)
 find_package(SDL2_ttf REQUIRED) 
 find_package(SDL2_mixer REQUIRED)
 
+if(NOT TARGET SDL2_image::SDL2_image AND TARGET SDL2_image)
+    add_library(SDL2_image::SDL2_image ALIAS SDL2_image)
+endif()
+
+if(NOT TARGET SDL2_ttf::SDL2_ttf AND TARGET SDL2_ttf)
+    add_library(SDL2_ttf::SDL2_ttf ALIAS SDL2_ttf)
+endif()
+
+if(NOT TARGET SDL2_mixer::SDL2_mixer AND TARGET SDL2_mixer)
+    add_library(SDL2_mixer::SDL2_mixer ALIAS SDL2_mixer)
+endif()
+
 find_package(OpenMP REQUIRED)
 
 add_subdirectory(extern/pybind11)

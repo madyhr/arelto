@@ -21,6 +21,7 @@ class AudioManager {
   void SetMusicVolume(float volume);
   float GetMusicVolume();
   void ToggleMusic();
+  bool IsMusicMuted() { return is_music_muted; };
 
  private:
   Mix_Music* soundtrack_ = nullptr;

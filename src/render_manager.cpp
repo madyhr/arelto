@@ -114,6 +114,10 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.renderer, "assets/textures/ui/button_texture.png");
   resources_.ui_resources.begin_button_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/ui/begin_button_texture.png");
+  resources_.ui_resources.settings_menu_background_texture = IMG_LoadTexture(
+      resources_.renderer, "assets/textures/ui/settings_menu_background.png");
+  resources_.ui_resources.slider_texture = IMG_LoadTexture(
+      resources_.renderer, "assets/textures/ui/slider_texture.png");
   resources_.ui_resources.digit_font_texture = IMG_LoadTexture(
       resources_.renderer, "assets/fonts/font_outlined_sprite_sheet.png");
   resources_.ui_resources.timer_hourglass_texture =
@@ -146,6 +150,8 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.ui_resources.level_up_option_card_texture == nullptr ||
       resources_.ui_resources.button_texture == nullptr ||
       resources_.ui_resources.begin_button_texture == nullptr ||
+      resources_.ui_resources.settings_menu_background_texture == nullptr ||
+      resources_.ui_resources.slider_texture == nullptr ||
       std::any_of(
           resources_.projectile_textures.begin(),
           resources_.projectile_textures.end(),
@@ -206,8 +212,8 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
     RenderUI(scene, time);
     if (game_state == is_gameover) {
       RenderGameOver();
-    } else if (game_state == is_paused) {
-      RenderPaused();
+    } else if (game_state == in_settings_menu) {
+      RenderSettingsMenuState();
     } else if (game_state == in_level_up) {
       RenderLevelUp(scene.level_up_options);
     };
@@ -907,29 +913,129 @@ void RenderManager::RenderGameOver() {
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
 };
 
-void RenderManager::RenderPaused() {
-
+// Renders the settings menu state with overlay.
+void RenderManager::RenderSettingsMenuState() {
   SDL_Rect render_rect;
   render_rect.x = 0;
-  render_rect.y = kWindowHeight / 3;
+  render_rect.y = 0;
   render_rect.w = kWindowWidth;
-  render_rect.h = kWindowHeight / 3;
+  render_rect.h = kWindowHeight;
 
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
-  SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 128));
+  SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 200));
   SDL_RenderFillRect(resources_.renderer, &render_rect);
 
-  SDL_Rect dst_rect;
-  dst_rect.x = (kWindowWidth - kPausedSpriteWidth) / 2;
-  dst_rect.y = (kWindowHeight - kPausedSpriteHeight) / 2;
-  dst_rect.w = kPausedSpriteWidth;
-  dst_rect.h = kPausedSpriteHeight;
-
-  SDL_RenderCopy(resources_.renderer, resources_.ui_resources.paused_texture,
-                 nullptr, &dst_rect);
+  RenderSettingsMenu();
 
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
 };
+
+void RenderManager::UpdateSettingsMenuState(float volume, bool is_muted) {
+  ui_manager_.UpdateSettingsMenu(volume, is_muted);
+}
+
+void RenderManager::RenderSettingsMenu() {
+  int module_x = static_cast<int>(ui_manager_.settings_menu_.screen_position.x);
+  int module_y = static_cast<int>(ui_manager_.settings_menu_.screen_position.y);
+
+  for (const auto& el : ui_manager_.settings_menu_.module_elements) {
+    SDL_Rect dst_rect;
+    dst_rect.x = module_x + el.relative_offset.x;
+    dst_rect.y = module_y + el.relative_offset.y;
+    dst_rect.w = el.sprite_size.width;
+    dst_rect.h = el.sprite_size.height;
+
+    if (el.tag == UIElement::Tag::text) {
+      bool has_alpha = false;
+      for (char c : el.text_value) {
+        if (std::isalpha(c)) {
+          has_alpha = true;
+          break;
+        }
+      }
+
+      if (has_alpha) {
+        RenderText(
+            el.text_value, module_x + static_cast<int>(el.relative_offset.x),
+            module_y + static_cast<int>(el.relative_offset.y), kColorWhite,
+            resources_.ui_resources.ui_font_huge, kSettingsMenuWidth);
+      } else {
+        RenderDigitString(el.text_value,
+                          module_x + static_cast<int>(el.relative_offset.x),
+                          module_y + static_cast<int>(el.relative_offset.y),
+                          el.sprite_size, el.char_size);
+      }
+      continue;
+    }
+
+    SDL_RenderCopy(resources_.renderer,
+                   resources_.ui_resources.settings_menu_background_texture,
+                   &el.src_rect, &dst_rect);
+  }
+
+  for (const auto& group : ui_manager_.settings_menu_.element_groups) {
+    for (const auto& el : group.elements) {
+      SDL_Rect dst_rect;
+      dst_rect.x =
+          group.screen_position.x + static_cast<int>(el.relative_offset.x);
+      dst_rect.y =
+          group.screen_position.y + static_cast<int>(el.relative_offset.y);
+      dst_rect.w = el.sprite_size.width;
+      dst_rect.h = el.sprite_size.height;
+
+      if (el.tag == UIElement::Tag::text) {
+        bool has_alpha = false;
+        for (char c : el.text_value) {
+          if (std::isalpha(c)) {
+            has_alpha = true;
+            break;
+          }
+        }
+
+        if (has_alpha) {
+          // Centering relative to the group's X position, assuming the group
+          // is aligned with the menu.
+          RenderText(el.text_value, dst_rect.x, dst_rect.y, kColorWhite,
+                     resources_.ui_resources.ui_font_large, kSettingsMenuWidth);
+        } else {
+          RenderDigitString(el.text_value, dst_rect.x, dst_rect.y,
+                            el.sprite_size, el.char_size);
+        }
+      } else if (el.tag == UIElement::Tag::button) {
+        int mouse_x, mouse_y;
+        SDL_GetMouseState(&mouse_x, &mouse_y);
+        bool is_hovered =
+            (mouse_x >= dst_rect.x && mouse_x <= dst_rect.x + dst_rect.w &&
+             mouse_y >= dst_rect.y && mouse_y <= dst_rect.y + dst_rect.h);
+
+        SDL_Rect btn_src_rect = {
+            0, is_hovered ? kLevelUpButtonTextureHeight / 2 : 0,
+            kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight / 2};
+
+        SDL_RenderCopy(resources_.renderer,
+                       resources_.ui_resources.button_texture, &btn_src_rect,
+                       &dst_rect);
+
+        RenderText(el.text_value, dst_rect.x,
+                   dst_rect.y + (dst_rect.h - 26) / 2, kColorWhite,
+                   resources_.ui_resources.ui_font_medium, dst_rect.w);
+
+      } else if (el.tag == UIElement::Tag::background) {
+        SDL_RenderCopy(resources_.renderer,
+                       resources_.ui_resources.slider_texture, &el.src_rect,
+                       &dst_rect);
+      } else if (el.tag == UIElement::Tag::fill) {
+        SDL_RenderCopy(resources_.renderer,
+                       resources_.ui_resources.slider_texture, &el.src_rect,
+                       &dst_rect);
+      } else if (el.tag == UIElement::Tag::icon) {
+        SDL_RenderCopy(resources_.renderer,
+                       resources_.ui_resources.button_texture, &el.src_rect,
+                       &dst_rect);
+      }
+    }
+  }
+}
 
 void RenderManager::Shutdown() {
 
@@ -971,6 +1077,17 @@ void RenderManager::Shutdown() {
   if (resources_.ui_resources.begin_button_texture) {
     SDL_DestroyTexture(resources_.ui_resources.begin_button_texture);
     resources_.ui_resources.begin_button_texture = nullptr;
+  }
+
+  if (resources_.ui_resources.settings_menu_background_texture) {
+    SDL_DestroyTexture(
+        resources_.ui_resources.settings_menu_background_texture);
+    resources_.ui_resources.settings_menu_background_texture = nullptr;
+  }
+
+  if (resources_.ui_resources.slider_texture) {
+    SDL_DestroyTexture(resources_.ui_resources.slider_texture);
+    resources_.ui_resources.slider_texture = nullptr;
   }
 
   IMG_Quit();

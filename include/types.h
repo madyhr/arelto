@@ -208,7 +208,7 @@ enum GameState : int {
   is_running,
   is_gameover,
   in_shutdown,
-  is_paused,
+  in_settings_menu,
   in_level_up,
 };
 

@@ -11,7 +11,7 @@ find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 
 find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED COMPONENTS PNG)
+find_package(SDL2_image REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(SDL2_mixer REQUIRED)
 find_package(OpenMP REQUIRED)

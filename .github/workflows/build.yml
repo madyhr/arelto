@@ -76,7 +76,7 @@ jobs:
 
       - name: Install C++ dependencies (vcpkg)
         run: |
-          vcpkg install sdl2 sdl2-image[png] sdl2-ttf sdl2-mixer --triplet x64-windows
+          vcpkg install sdl2 sdl2-image sdl2-ttf sdl2-mixer --triplet x64-windows
 
       - name: Build and install game
         env:

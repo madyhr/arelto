@@ -55,6 +55,8 @@ create_sdl2_target_if_missing(SDL2_image SDL2_image::SDL2_image SDL2_IMAGE)
 create_sdl2_target_if_missing(SDL2_ttf   SDL2_ttf::SDL2_ttf     SDL2_TTF)
 create_sdl2_target_if_missing(SDL2_mixer SDL2_mixer::SDL2_mixer SDL2_MIXER)find_package(OpenMP REQUIRED)
 
+find_package(OpenMP REQUIRED)
+
 add_subdirectory(extern/pybind11)
 
 file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp")

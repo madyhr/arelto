@@ -32,7 +32,7 @@ Game::~Game() {}
 bool Game::Initialize() {
 
   std::signal(SIGINT, SignalHandler);
-  std::signal(SIGKILL, SignalHandler);
+  std::signal(SIGTERM, SignalHandler);
   game_status_.is_debug = false;
   game_status_.is_headless = false;
 

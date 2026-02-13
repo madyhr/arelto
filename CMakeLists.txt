@@ -12,10 +12,11 @@ find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 
 find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED COMPONENTS PNG) 
-find_package(SDL2_ttf REQUIRED) 
+find_package(SDL2_image REQUIRED COMPONENTS PNG)
+find_package(SDL2_ttf REQUIRED)
 find_package(SDL2_mixer REQUIRED)
 
+# --- MACRO START ---
 macro(create_sdl2_target_if_missing NAME TARGET_NAME VAR_PREFIX)
     if(NOT TARGET ${TARGET_NAME})
         # 1. If a non-namespaced target exists (e.g. 'SDL2_image'), alias it
@@ -50,10 +51,11 @@ macro(create_sdl2_target_if_missing NAME TARGET_NAME VAR_PREFIX)
         endif()
     endif()
 endmacro()
+# --- MACRO END ---
 
 create_sdl2_target_if_missing(SDL2_image SDL2_image::SDL2_image SDL2_IMAGE)
 create_sdl2_target_if_missing(SDL2_ttf   SDL2_ttf::SDL2_ttf     SDL2_TTF)
-create_sdl2_target_if_missing(SDL2_mixer SDL2_mixer::SDL2_mixer SDL2_MIXER)find_package(OpenMP REQUIRED)
+create_sdl2_target_if_missing(SDL2_mixer SDL2_mixer::SDL2_mixer SDL2_MIXER)
 
 find_package(OpenMP REQUIRED)
 
@@ -65,8 +67,8 @@ list(FILTER ENGINE_SOURCES EXCLUDE REGEX "src/bindings.cpp")
 
 add_library(arelto_core SHARED ${ENGINE_SOURCES})
 
-target_include_directories(arelto_core 
-    PUBLIC 
+target_include_directories(arelto_core
+    PUBLIC
     "${CMAKE_SOURCE_DIR}/include"
 )
 
@@ -123,7 +125,7 @@ if(BUILD_TESTS)
     enable_testing()
     file(GLOB_RECURSE TEST_SOURCES "tests/cpp/*.cpp")
 
-if(TEST_SOURCES)
+    if(TEST_SOURCES)
         add_executable(arelto_tests ${TEST_SOURCES})
         target_include_directories(arelto_tests PRIVATE
             "${CMAKE_SOURCE_DIR}/include"

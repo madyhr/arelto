@@ -61,9 +61,15 @@ install(TARGETS arelto_py DESTINATION rl)
 
 find_program(STUBGEN_EXE pybind11-stubgen REQUIRED)
 
+if(WIN32)
+    set(PYTHONPATH_SEP ";")
+else()
+    set(PYTHONPATH_SEP ":")
+endif()
+
 add_custom_command(
     TARGET arelto_py POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=$<TARGET_FILE_DIR:arelto_py>:${CMAKE_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} -E env "PYTHONPATH=$<TARGET_FILE_DIR:arelto_py>${PYTHONPATH_SEP}${CMAKE_SOURCE_DIR}${PYTHONPATH_SEP}$ENV{PYTHONPATH}"
     ${STUBGEN_EXE} -o $<TARGET_FILE_DIR:arelto_py> arelto_py
     COMMENT "Generating Python interface stubs (.pyi)"
     VERBATIM

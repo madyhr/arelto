@@ -46,8 +46,9 @@ class RenderManager {
               GameState game_state);
   void RenderGameOver();
   void RenderStartScreen();
-  void RenderPaused();
+  void RenderSettingsMenuState();
   void RenderLevelUp(const std::vector<std::unique_ptr<Upgrade>>& options);
+  void UpdateSettingsMenuState(float volume, bool is_muted);
 
   Camera camera_;
 
@@ -70,6 +71,7 @@ class RenderManager {
       const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
   void RenderDebugRayCaster(const Enemy& enemy, float alpha);
   void RenderUI(const Scene& scene, float time);
+  void RenderSettingsMenu();
   void RenderDigitString(const std::string& text, int start_x, int start_y,
                          Size2D sprite_size, Size2D char_size);
   void RenderText(const std::string& text, int x, int y, SDL_Color color,

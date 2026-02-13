@@ -13,6 +13,7 @@ void UIManager::SetupUI() {
   SetupExpBar();
   SetupLevelIndicator();
   SetupTimer();
+  SetupSettingsMenu();
 };
 
 void UIManager::SetupHealthBar() {
@@ -97,8 +98,6 @@ void UIManager::SetupLevelIndicator() {
   level_indicator_.elements.push_back(level_indicator_text);
 }
 
-
-
 void UIManager::SetupTimer() {
   timer_.type = UIElementGroupType::timer;
   timer_.screen_position = {kTimerGroupX, kTimerGroupY};
@@ -119,6 +118,117 @@ void UIManager::SetupTimer() {
   timer_.elements.push_back(timer_icon);
   timer_.elements.push_back(timer_text);
 };
+
+void UIManager::SetupSettingsBackground() {
+  UIElement title_text = {
+      SDL_Rect{0, 0, kDigitSpriteWidth, kDigitSpriteHeight},
+      Vector2D{0.0f, static_cast<float>(kSettingsMenuTitleY)},
+      Size2D{kDigitSpriteWidth, kDigitSpriteHeight}, UIElement::Tag::text,
+      Size2D{30, 40}};
+  title_text.text_value = "SETTINGS";
+
+  UIElement settings_menu_background = {
+      SDL_Rect{0, 0, kSettingsMenuBackgroundSpriteWidth,
+               kSettingsMenuBackgroundSpriteHeight},
+      {0.0, 0.0},
+      {kSettingsMenuWidth, kSettingsMenuHeight},
+      UIElement::Tag::background};
+
+  settings_menu_.module_elements.push_back(settings_menu_background);
+  settings_menu_.module_elements.push_back(title_text);
+}
+
+void UIManager::SetupSettingsVolumeControl() {
+  UIElementGroup volume_control;
+  volume_control.group_tag = UIElementGroup::GroupTag::volume_control;
+  volume_control.screen_position =
+      settings_menu_.screen_position +
+      Vector2D{kSettingsMenuVolumeControlGroupRelX,
+               kSettingsMenuVolumeControlGroupRelY};
+
+  UIElement volume_label = {
+      SDL_Rect{0, 0, 0, 0},
+      Vector2D{0.0f, static_cast<float>(kSettingsMenuVolumeY)}, Size2D{0, 0},
+      UIElement::Tag::text, Size2D{20, 25}};
+  volume_label.text_value = "MUSIC VOLUME";
+  volume_control.elements.push_back(volume_label);
+
+  UIElement volume_slider_background = {
+      SDL_Rect{kSliderContainerSpriteOffsetX, kSliderContainerSpriteOffsetY,
+               kSliderContainerSpriteWidth, kSliderContainerSpriteHeight},
+      Vector2D{static_cast<float>(kSettingsMenuVolumeSliderX),
+               static_cast<float>(kSettingsMenuVolumeSliderY)},
+      Size2D{kSettingsMenuVolumeSliderWidth, kSettingsMenuVolumeSliderHeight},
+      UIElement::Tag::background};
+  volume_control.elements.push_back(volume_slider_background);
+
+  UIElement volume_slider_fill = {
+      SDL_Rect{kSliderBarSpriteOffsetX, kSliderBarSpriteOffsetY,
+               kSliderBarSpriteWidth, kSliderBarSpriteHeight},
+      Vector2D{static_cast<float>(kSettingsMenuVolumeSliderX +
+                                  kVolumeSliderFillOffsetX),
+               static_cast<float>(kSettingsMenuVolumeSliderY +
+                                  kVolumeSliderFillOffsetY)},
+      Size2D{kVolumeSliderFillWidth, kVolumeSliderFillHeight},
+      UIElement::Tag::fill};
+  volume_control.elements.push_back(volume_slider_fill);
+
+  UIElement mute_btn = {
+      SDL_Rect{0, 0, kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight},
+      Vector2D{static_cast<float>(kSettingsMenuButtonX),
+               static_cast<float>(kSettingsMenuMuteY)},
+      Size2D{kSettingsMenuButtonWidth, kSettingsMenuButtonHeight},
+      UIElement::Tag::button};
+  mute_btn.text_value = "MUTE";
+  volume_control.elements.push_back(mute_btn);
+
+  settings_menu_.element_groups.push_back(volume_control);
+}
+
+void UIManager::SetupSettingsMainMenu() {
+  UIElementGroup main_menu_settings;
+  main_menu_settings.group_tag = UIElementGroup::GroupTag::main_menu_settings;
+  main_menu_settings.screen_position = settings_menu_.screen_position;
+
+  UIElement main_menu_btn = {
+      SDL_Rect{0, 0, kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight},
+      Vector2D{static_cast<float>(kSettingsMenuMainMenuX),
+               static_cast<float>(kSettingsMenuMainMenuY)},
+      Size2D{kSettingsMenuButtonWidth, kSettingsMenuButtonHeight},
+      UIElement::Tag::button};
+  main_menu_btn.text_value = "MAIN MENU";
+  main_menu_settings.elements.push_back(main_menu_btn);
+
+  settings_menu_.element_groups.push_back(main_menu_settings);
+}
+
+void UIManager::SetupSettingsResume() {
+  UIElementGroup resume_settings;
+  resume_settings.group_tag = UIElementGroup::GroupTag::resume_settings;
+  resume_settings.screen_position = settings_menu_.screen_position;
+
+  UIElement resume_btn = {
+      SDL_Rect{0, 0, kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight},
+      Vector2D{static_cast<float>(kSettingsMenuResumeX),
+               static_cast<float>(kSettingsMenuResumeY)},
+      Size2D{kSettingsMenuButtonWidth, kSettingsMenuButtonHeight},
+      UIElement::Tag::button};
+  resume_btn.text_value = "RESUME";
+  resume_settings.elements.push_back(resume_btn);
+
+  settings_menu_.element_groups.push_back(resume_settings);
+}
+
+void UIManager::SetupSettingsMenu() {
+  settings_menu_.type = UIElementGroupType::settings_menu;
+  settings_menu_.screen_position = {static_cast<float>(kSettingsMenuX),
+                                    static_cast<float>(kSettingsMenuY)};
+
+  SetupSettingsBackground();
+  SetupSettingsVolumeControl();
+  SetupSettingsMainMenu();
+  SetupSettingsResume();
+}
 
 void UIManager::UpdateUI(const Scene& scene, float time) {
   UpdateHealthBar(scene);
@@ -188,5 +298,29 @@ void UIManager::UpdateTimer(float time) {
     text_elem->text_value = std::to_string(static_cast<int>(time));
   }
 };
+
+void UIManager::UpdateSettingsMenu(float volume, bool is_muted) {
+  // Update volume slider fill
+  UIElementGroup* volume_control = settings_menu_.GetElemGroupByTag(
+      UIElementGroup::GroupTag::volume_control);
+
+  if (!volume_control) {
+    return;
+  }
+
+  UIElement* fill = volume_control->GetElemByTag(UIElement::Tag::fill);
+  if (fill) {
+    float vol_percent = std::clamp(volume / 128.0f, 0.0f, 1.0f);
+    fill->sprite_size.width =
+        static_cast<int>(kVolumeSliderFillWidth * vol_percent);
+    fill->src_rect.w = static_cast<int>(kSliderBarSpriteWidth * vol_percent);
+  }
+
+  // Update mute text
+  UIElement* mute_txt = volume_control->GetElemByTag(UIElement::Tag::button);
+  if (mute_txt) {
+    mute_txt->text_value = is_muted ? "UNMUTE" : "MUTE";
+  }
+}
 
 }  // namespace arelto

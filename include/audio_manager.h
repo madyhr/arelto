@@ -16,12 +16,18 @@ class AudioManager {
 
   void StopMusic();
   void PlayMusic();
-  void SetMusicVolume(int volume);
-  int GetMusicVolume();
+  void IncreaseMusicVolume();
+  void DecreaseMusicVolume();
+  void SetMusicVolume(float volume);
+  float GetMusicVolume();
+  void ToggleMusic();
+  bool IsMusicMuted() { return is_music_muted; };
 
  private:
   Mix_Music* soundtrack_ = nullptr;
-  int music_volume_;
+  // Music volume is a value between 0 and 1.
+  float music_volume_;
+  bool is_music_muted = false;
 };
 
 }  // namespace arelto

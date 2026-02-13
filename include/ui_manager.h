@@ -26,6 +26,8 @@ struct UIResources {
   SDL_Texture* level_up_option_card_texture = nullptr;
   SDL_Texture* button_texture = nullptr;
   SDL_Texture* begin_button_texture = nullptr;
+  SDL_Texture* settings_menu_background_texture = nullptr;
+  SDL_Texture* slider_texture = nullptr;
 };
 
 enum UIElementGroupType : int {
@@ -33,6 +35,7 @@ enum UIElementGroupType : int {
   exp_bar,
   level_indicator,
   timer,
+  settings_menu,
 };
 
 struct UIElement {
@@ -43,7 +46,14 @@ struct UIElement {
   // size to actually draw on screen
   Size2D sprite_size;
   // tag for easier access
-  enum Tag { none, background, fill, icon, text } tag = none;
+  enum Tag {
+    none,
+    background,
+    fill,
+    icon,
+    text,
+    button,
+  } tag = none;
 
   // TODO: Refactor to a more polymorphic setup to not just use a "fat struct".
   Size2D char_size = {0, 0};
@@ -56,11 +66,34 @@ struct UIElementGroup {
   std::vector<UIElement> elements;
   // TODO: Add is_visible property and a UIElementGroup by type func to uimanager,
   // to easily toggle the visibility of certain ui groups.
+  // TODO: Find a better more generalizable way to define group tags useful for
+  // UI modules.
+  enum GroupTag {
+    none,
+    volume_control,
+    main_menu_settings,
+    resume_settings,
+  } group_tag = none;
 
   UIElement* GetElemByTag(UIElement::Tag tag) {
     for (UIElement& el : elements) {
       if (el.tag == tag) {
         return &el;
+      }
+    }
+    return nullptr;
+  };
+};
+
+struct UIElementModule {
+  UIElementGroupType type;
+  Vector2D screen_position;
+  std::vector<UIElement> module_elements;
+  std::vector<UIElementGroup> element_groups;
+  UIElementGroup* GetElemGroupByTag(UIElementGroup::GroupTag tag) {
+    for (UIElementGroup& el_group : element_groups) {
+      if (el_group.group_tag == tag) {
+        return &el_group;
       }
     }
     return nullptr;
@@ -74,19 +107,26 @@ class UIManager {
   UIElementGroup exp_bar_;
   UIElementGroup timer_;
   UIElementGroup level_indicator_;
+  UIElementModule settings_menu_;
 
   void SetupUI();
   void SetupHealthBar();
   void SetupExpBar();
   void SetupLevelIndicator();
   void SetupTimer();
+  void SetupSettingsMenu();
   void UpdateUI(const Scene& scene, float time);
   void UpdateHealthBar(const Scene& scene);
   void UpdateExpBar(const Scene& scene);
   void UpdateLevelIndicator(const Scene& scene);
   void UpdateTimer(float time);
+  void UpdateSettingsMenu(float volume, bool is_muted);
 
  private:
+  void SetupSettingsBackground();
+  void SetupSettingsVolumeControl();
+  void SetupSettingsMainMenu();
+  void SetupSettingsResume();
 };
 
 }  // namespace arelto

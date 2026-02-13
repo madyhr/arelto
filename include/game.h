@@ -6,6 +6,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_render.h>
+#include <SDL_events.h>
 #include <csignal>
 #include "action_manager.h"
 #include "audio_manager.h"
@@ -59,6 +60,8 @@ class Game {
   Vector2D GetCursorPositionWorld();
   void ProcessPlayerInput(uint32_t mouse_state);
   void ProcessLevelUpInput(uint32_t mouse_state);
+  void ProcessSettingsMenuInput(uint32_t mouse_state);
+  void ProcessSettingsMenuEvent(const SDL_Event& e);
   void CachePreviousState();
 };
 

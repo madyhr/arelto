@@ -18,7 +18,7 @@ PYBIND11_MODULE(arelto_py, m) {
       .value("is_running", arelto::GameState::is_running)
       .value("is_gameover", arelto::GameState::is_gameover)
       .value("in_shutdown", arelto::GameState::in_shutdown)
-      .value("is_paused", arelto::GameState::is_paused)
+      .value("in_settings_menu", arelto::GameState::in_settings_menu)
       .value("in_level_up", arelto::GameState::in_level_up)
       .export_values();
 
@@ -106,8 +106,11 @@ PYBIND11_MODULE(arelto_py, m) {
                  self.scene_);
            })
       .def("get_reward_size",
-           [](arelto::Game& self) { return self.reward_manager_.GetRewardSize(); })
-      .def("get_enemy_num_rays", [](arelto::Game& self) { return arelto::kNumRays; })
+           [](arelto::Game& self) {
+             return self.reward_manager_.GetRewardSize();
+           })
+      .def("get_enemy_num_rays",
+           [](arelto::Game& self) { return arelto::kNumRays; })
       .def("get_enemy_ray_history_length",
            [](arelto::Game& self) { return arelto::kRayHistoryLength; })
       .def("shutdown", &arelto::Game::Shutdown)

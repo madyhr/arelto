@@ -43,7 +43,6 @@ def diagnose_custom_env():
         while (
             counter < N_STEPS and env.game.get_game_state() != game_state["in_shutdown"]
         ):
-
             env.game.process_input()
 
             action = torch.randint(
@@ -72,7 +71,7 @@ def diagnose_custom_env():
 
     print(f"\n=== Statistics over {counter} steps ===")
 
-    print(f"\n--- Observation Stats (Input Normalization Check) ---")
+    print(f"\n--- Observation Stats ---")
     print(f"{'Dim':<5} | {'Mean':<10} | {'Std':<10} | {'Min':<10} | {'Max':<10}")
     print("-" * 55)
     for i in range(obs_data.shape[1]):
@@ -81,7 +80,7 @@ def diagnose_custom_env():
             f"{i:<5} | {col.mean():<10.3f} | {col.std():<10.3f} | {col.min():<10.3f} | {col.max():<10.3f}"
         )
 
-    print(f"\n--- Reward Stats (Reward Scaling Check) ---")
+    print(f"\n--- Reward Stats ---")
     print(f"Mean: {rew_data.mean():.4f}")
     print(f"Std:  {rew_data.std():.4f}")
     print(f"Min:  {rew_data.min():.4f}")

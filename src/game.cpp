@@ -1,6 +1,7 @@
 // src/game.cpp
 #include "game.h"
 #include <SDL2/SDL_timer.h>
+#include <SDL_keycode.h>
 #include <SDL_mixer.h>
 #include <SDL_mouse.h>
 #include <SDL_render.h>
@@ -172,7 +173,7 @@ void Game::RunGameLoop() {
       case is_gameover:
         break;
 
-      case is_paused: {
+      case in_settings_menu: {
         float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         current_time = new_time;
 
@@ -231,8 +232,15 @@ void Game::ProcessInput() {
   while (SDL_PollEvent(&e) != 0) {
     if (e.type == SDL_QUIT) {
       SetGameState(in_shutdown);
-    } else if (e.type == SDL_KEYDOWN) {
+      return;
+    }
 
+    if (game_state_ == in_settings_menu) {
+      ProcessSettingsMenuEvent(e);
+      continue;
+    }
+
+    if (e.type == SDL_KEYDOWN) {
       switch (e.key.keysym.sym) {
         case SDLK_q:
           SetGameState(in_shutdown);
@@ -246,19 +254,44 @@ void Game::ProcessInput() {
           break;
 
         case SDLK_ESCAPE:
-          ResetGame();
-          SetGameState(in_start_screen);
-          break;
-
-        case SDLK_p:
           if (game_state_ == is_running) {
-            SetGameState(is_paused);
-            std::cout << "Game Paused" << std::endl;
-          } else if (game_state_ == is_paused) {
+            SetGameState(in_settings_menu);
+          } else if (game_state_ == in_settings_menu) {
             SetGameState(is_running);
-            std::cout << "Game Resumed" << std::endl;
+          } else {
+            ResetGame();
+            SetGameState(in_start_screen);
           }
           break;
+
+        case SDLK_m:
+          audio_manager_.ToggleMusic();
+          break;
+
+        case SDLK_COMMA:
+          audio_manager_.DecreaseMusicVolume();
+          break;
+
+        case SDLK_PERIOD:
+          audio_manager_.IncreaseMusicVolume();
+          break;
+      }
+
+    } else if (e.type == SDL_MOUSEBUTTONDOWN) {
+      if (game_state_ == in_start_screen) {
+        int mouse_x = e.button.x;
+        int mouse_y = e.button.y;
+
+        int btn_w = kBeginButtonWidth;
+        int btn_h = kBeginButtonHeight;
+        int btn_x = kBeginButtonX;
+        int btn_y = kBeginButtonY;
+
+        if (mouse_x >= btn_x && mouse_x <= btn_x + btn_w && mouse_y >= btn_y &&
+            mouse_y <= btn_y + btn_h) {
+          SetGameState(is_running);
+          std::cout << "Game Started!" << std::endl;
+        }
       }
     }
   }
@@ -266,25 +299,13 @@ void Game::ProcessInput() {
   int cursor_pos_x, cursor_pos_y;
   uint32_t mouse_state = SDL_GetMouseState(&cursor_pos_x, &cursor_pos_y);
 
-  if (game_state_ == in_start_screen) {
-    if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-
-      int btn_w = kBeginButtonWidth;
-      int btn_h = kBeginButtonHeight;
-      int btn_x = kBeginButtonX;
-      int btn_y = kBeginButtonY;
-
-      if (cursor_pos_x >= btn_x && cursor_pos_x <= btn_x + btn_w &&
-          cursor_pos_y >= btn_y && cursor_pos_y <= btn_y + btn_h) {
-        SetGameState(is_running);
-        std::cout << "Game Started!" << std::endl;
-      }
-    }
+  if (game_state_ == in_level_up) {
+    ProcessLevelUpInput(SDL_GetMouseState(NULL, NULL));
     return;
   }
 
-  if (game_state_ == in_level_up) {
-    ProcessLevelUpInput(SDL_GetMouseState(NULL, NULL));
+  if (game_state_ == in_settings_menu) {
+    ProcessSettingsMenuInput(mouse_state);
     return;
   }
 
@@ -326,6 +347,78 @@ void Game::ProcessPlayerInput(uint32_t mouse_state) {
       scene_.projectiles.AddProjectile(*frostbolt);
     }
   }
+}
+
+void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
+  if (e.type == SDL_KEYDOWN) {
+    switch (e.key.keysym.sym) {
+      case SDLK_q:
+        SetGameState(in_shutdown);
+        std::cout << "Key 'q' pressed! Exiting..." << std::endl;
+        break;
+      case SDLK_ESCAPE:
+        SetGameState(is_running);
+        break;
+      case SDLK_m:
+        audio_manager_.ToggleMusic();
+        break;
+      case SDLK_COMMA:
+        audio_manager_.DecreaseMusicVolume();
+        break;
+      case SDLK_PERIOD:
+        audio_manager_.IncreaseMusicVolume();
+        break;
+    }
+  } else if (e.type == SDL_MOUSEBUTTONDOWN) {
+    int mouse_x = e.button.x;
+    int mouse_y = e.button.y;
+    int btn_w = kSettingsMenuButtonWidth;
+    int btn_h = kSettingsMenuButtonHeight;
+
+    int mute_x = kSettingsMenuX + kSettingsMenuButtonX;
+    int mute_y = kSettingsMenuY + kSettingsMenuMuteY;
+    if (mouse_x >= mute_x && mouse_x <= mute_x + btn_w && mouse_y >= mute_y &&
+        mouse_y <= mute_y + btn_h) {
+      audio_manager_.ToggleMusic();
+    }
+
+    int main_x = kSettingsMenuX + kSettingsMenuMainMenuX;
+    int main_y = kSettingsMenuY + kSettingsMenuMainMenuY;
+    if (mouse_x >= main_x && mouse_x <= main_x + btn_w && mouse_y >= main_y &&
+        mouse_y <= main_y + btn_h) {
+      ResetGame();
+      SetGameState(in_start_screen);
+    }
+
+    int resume_x = kSettingsMenuX + kSettingsMenuResumeX;
+    int resume_y = kSettingsMenuY + kSettingsMenuResumeY;
+    if (mouse_x >= resume_x && mouse_x <= resume_x + btn_w &&
+        mouse_y >= resume_y && mouse_y <= resume_y + btn_h) {
+      SetGameState(is_running);
+    }
+  }
+}
+
+void Game::ProcessSettingsMenuInput(uint32_t mouse_state) {
+  if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+    int mouse_x, mouse_y;
+    SDL_GetMouseState(&mouse_x, &mouse_y);
+
+    int slider_x = kSettingsMenuX + kSettingsMenuVolumeSliderX;
+    int slider_y = kSettingsMenuY + kSettingsMenuVolumeSliderY;
+    int slider_w = kSettingsMenuVolumeSliderWidth;
+    int slider_h = kSettingsMenuVolumeSliderHeight;
+
+    if (mouse_x >= slider_x && mouse_x <= slider_x + slider_w &&
+        mouse_y >= slider_y - 10 && mouse_y <= slider_y + slider_h + 10) {
+      float percent = static_cast<float>(mouse_x - slider_x) / slider_w;
+      audio_manager_.SetMusicVolume(percent);
+    }
+  }
+
+  // The SDL_mixer music volume goes from 0 to 128.
+  render_manager_.UpdateSettingsMenuState(
+      audio_manager_.GetMusicVolume() * 128.0f, audio_manager_.IsMusicMuted());
 }
 
 // This function processes inputs during a level up state and applies the

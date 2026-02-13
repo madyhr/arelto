@@ -116,6 +116,57 @@ constexpr int kBeginButtonHeight = 175;
 constexpr int kBeginButtonX = (kWindowWidth - kBeginButtonWidth) / 2;
 constexpr int kBeginButtonY = 5 * (kWindowHeight - kBeginButtonHeight) / 7;
 
+// Settings Menu
+constexpr int kSettingsMenuWidth = 450;
+constexpr int kSettingsMenuHeight = 700;
+constexpr int kSettingsMenuX = (kWindowWidth - kSettingsMenuWidth) / 2;
+constexpr int kSettingsMenuY = (kWindowHeight - kSettingsMenuHeight) / 2;
+constexpr int kSettingsMenuBackgroundSpriteWidth = 900;
+constexpr int kSettingsMenuBackgroundSpriteHeight = 1000;
+
+constexpr int kSettingsMenuTitleY = 100;
+constexpr int kSettingsMenuVolumeY = 200;
+constexpr int kSettingsMenuMuteY = 300;
+constexpr int kSettingsMenuMainMenuY = 575;
+constexpr int kSettingsMenuResumeY = 575;
+
+constexpr int kSettingsMenuButtonGroupRelX = 0;
+constexpr int kSettingsMenuButtonGroupRelY = 0;
+constexpr int kSettingsMenuButtonWidth = 150;
+constexpr int kSettingsMenuButtonHeight = 50;
+constexpr int kSettingsMenuButtonX =
+    (kSettingsMenuWidth - kSettingsMenuButtonWidth) / 2;
+
+constexpr int kSettingsMenuResumeX = 60;
+constexpr int kSettingsMenuMainMenuX =
+    kSettingsMenuWidth - kSettingsMenuButtonWidth - 60;
+
+constexpr int kSettingsMenuVolumeControlGroupRelX = 0;
+constexpr int kSettingsMenuVolumeControlGroupRelY = 0;
+constexpr int kSettingsMenuVolumeSliderWidth = 300;
+constexpr int kSettingsMenuVolumeSliderHeight = 30;
+constexpr int kSettingsMenuVolumeSliderX =
+    (kSettingsMenuWidth - kSettingsMenuVolumeSliderWidth) / 2;
+constexpr int kSettingsMenuVolumeSliderY = 250;
+
+constexpr int kVolumeSliderFillOffsetX = 15;
+constexpr int kVolumeSliderFillOffsetY = 5;
+constexpr int kVolumeSliderFillWidth = 275;
+constexpr int kVolumeSliderFillHeight = 20;
+
+constexpr float kVolumeSliderBarGroupX = 50.0f;
+constexpr float kVolumeSliderBarGroupY = 850.0f;
+
+// Generic slider and fill texture
+constexpr int kSliderContainerSpriteOffsetX = 0;
+constexpr int kSliderContainerSpriteOffsetY = 0;
+constexpr int kSliderContainerSpriteWidth = 882;
+constexpr int kSliderContainerSpriteHeight = 48;
+constexpr int kSliderBarSpriteOffsetX = 0;
+constexpr int kSliderBarSpriteOffsetY = 48;
+constexpr int kSliderBarSpriteWidth = 806;
+constexpr int kSliderBarSpriteHeight = 29;
+
 }  // namespace arelto
 
 #endif

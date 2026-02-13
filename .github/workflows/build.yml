@@ -46,7 +46,7 @@ jobs:
           python -m pytest tests
 
   build-windows:
-    name: Build on Windows (Conda)
+    name: Build on Windows (conda + vcpkg)
     runs-on: windows-latest
     defaults:
       run:
@@ -65,22 +65,23 @@ jobs:
           channels: pytorch, conda-forge, defaults
           activate-environment: arelto-env
 
-      - name: Install dependencies (conda)
+      - name: Install Python dependencies (conda)
         run: |
           conda install -y \
-            sdl2 \
-            sdl2_image \
-            sdl2_ttf \
-            sdl2_mixer \
             cmake \
             ninja \
             numpy \
             pytorch \
             cpuonly
 
+      - name: Install C++ dependencies (vcpkg)
+        run: |
+          vcpkg install sdl2 sdl2-image[png] sdl2-ttf sdl2-mixer --triplet x64-windows
+
       - name: Build and install game
         env:
-          CMAKE_PREFIX_PATH: ${{ env.CONDA_PREFIX }}/Library
+          CMAKE_TOOLCHAIN_FILE: ${{ env.VCPKG_INSTALLATION_ROOT }}/scripts/buildsystems/vcpkg.cmake
+          VCPKG_TARGET_TRIPLET: x64-windows
         run: |
           pip install -e .
 

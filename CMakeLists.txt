@@ -8,55 +8,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 set(CMAKE_INSTALL_RPATH "$ORIGIN")
 
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-
 set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED COMPONENTS PNG)
 find_package(SDL2_ttf REQUIRED)
 find_package(SDL2_mixer REQUIRED)
-
-# --- MACRO START ---
-macro(create_sdl2_target_if_missing NAME TARGET_NAME VAR_PREFIX)
-    if(NOT TARGET ${TARGET_NAME})
-        # 1. If a non-namespaced target exists (e.g. 'SDL2_image'), alias it
-        if(TARGET ${NAME})
-            add_library(${TARGET_NAME} ALIAS ${NAME})
-        # 2. If no target exists, create one from variables (LIBRARIES/INCLUDE_DIRS)
-        else()
-            message(STATUS "Target ${TARGET_NAME} not found. Creating manually from variables...")
-            add_library(${TARGET_NAME} INTERFACE IMPORTED)
-
-            # Link libraries (Try standard variable names)
-            if(DEFINED ${VAR_PREFIX}_LIBRARIES)
-                target_link_libraries(${TARGET_NAME} INTERFACE ${${VAR_PREFIX}_LIBRARIES})
-            elseif(DEFINED ${VAR_PREFIX}_LIBRARY)
-                target_link_libraries(${TARGET_NAME} INTERFACE ${${VAR_PREFIX}_LIBRARY})
-            elseif(DEFINED ${NAME}_LIBRARIES)
-                target_link_libraries(${TARGET_NAME} INTERFACE ${${NAME}_LIBRARIES})
-            elseif(DEFINED ${NAME}_LIBRARY)
-                target_link_libraries(${TARGET_NAME} INTERFACE ${${NAME}_LIBRARY})
-            endif()
-
-            # Include directories
-            if(DEFINED ${VAR_PREFIX}_INCLUDE_DIRS)
-                target_include_directories(${TARGET_NAME} INTERFACE ${${VAR_PREFIX}_INCLUDE_DIRS})
-            elseif(DEFINED ${VAR_PREFIX}_INCLUDE_DIR)
-                target_include_directories(${TARGET_NAME} INTERFACE ${${VAR_PREFIX}_INCLUDE_DIR})
-            elseif(DEFINED ${NAME}_INCLUDE_DIRS)
-                target_include_directories(${TARGET_NAME} INTERFACE ${${NAME}_INCLUDE_DIRS})
-            elseif(DEFINED ${NAME}_INCLUDE_DIR)
-                target_include_directories(${TARGET_NAME} INTERFACE ${${NAME}_INCLUDE_DIR})
-            endif()
-        endif()
-    endif()
-endmacro()
-# --- MACRO END ---
-
-create_sdl2_target_if_missing(SDL2_image SDL2_image::SDL2_image SDL2_IMAGE)
-create_sdl2_target_if_missing(SDL2_ttf   SDL2_ttf::SDL2_ttf     SDL2_TTF)
-create_sdl2_target_if_missing(SDL2_mixer SDL2_mixer::SDL2_mixer SDL2_MIXER)
-
 find_package(OpenMP REQUIRED)
 
 add_subdirectory(extern/pybind11)
@@ -87,7 +44,6 @@ add_executable(game_app src/main.cpp)
 target_link_libraries(game_app PRIVATE arelto_core)
 
 pybind11_add_module(arelto_py src/bindings.cpp)
-
 target_link_libraries(arelto_py PRIVATE arelto_core)
 
 file(GLOB_RECURSE ASSETS_TO_COPY "assets/*")

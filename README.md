@@ -4,10 +4,16 @@
 <!--toc:start-->
 - [Arelto](#arelto)
   - [Prerequisites](#prerequisites)
+    - [Python](#python)
     - [Linux](#linux)
       - [Debian/Ubuntu](#debianubuntu)
       - [Arch](#arch)
-    - [Python](#python)
+    - [Windows](#windows)
+      - [1. Install [Conda](https://www.anaconda.com/download) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)](#1-install-condahttpswwwanacondacomdownload-or-minicondahttpsdocscondaioenlatestminicondahtml)
+      - [2. Create a Conda Environment](#2-create-a-conda-environment)
+      - [3. Install Dependencies via Conda](#3-install-dependencies-via-conda)
+      - [4. Install [vcpkg](https://vcpkg.io/en/getting-started.html)](#4-install-vcpkghttpsvcpkgioengetting-startedhtml)
+      - [5. Install C++ Dependencies](#5-install-c-dependencies)
   - [Installation](#installation)
   - [Running the Game](#running-the-game)
   - [How to play](#how-to-play)
@@ -24,6 +30,10 @@ A Reinforcement Learning Rogue-Lite (RL2) game where the enemies get smarter ove
 ## Prerequisites
 
 Before installing, ensure you have the following system dependencies installed and that you are using an [NVIDIA GPU](https://developer.nvidia.com/cuda/gpus)[^1].
+
+### Python
+
+- Python 3.10 or higher.
 
 ### Linux
 
@@ -42,12 +52,41 @@ sudo apt install libomp-dev
 sudo pacman -S cmake base-devel python sdl2 sdl2_image sdl2_ttf sdl2_mixer
 ```
 
+### Windows
+
+#### 1. Install [Conda](https://www.anaconda.com/download) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+
+#### 2. Create a Conda Environment
+
+```bash
+conda create -n arelto-env python=3.10
+conda activate arelto-env
+```
+
+#### 3. Install Dependencies via Conda
+
+```bash
+conda install -y cmake ninja numpy pytorch -c pytorch -c conda-forge
+```
+
+#### 4. Install [vcpkg](https://vcpkg.io/en/getting-started.html)
+
+```bash
+git clone https://github.com/microsoft/vcpkg.git
+.\vcpkg\bootstrap-vcpkg.bat
+```
+
+#### 5. Install C++ Dependencies
+
+```bash
+.\vcpkg\vcpkg install sdl2 sdl2-image sdl2-ttf sdl2-mixer --triplet x64-windows
+```
+
 > [!NOTE]
-> Windows and macOS are currently not supported.
+> Ensure that `vcpkg` is accessible in your path or note down its installation location for the build step.
 
-### Python
-
-- Python 3.10 or higher.
+> [!WARNING]
+> macOS is not supported.
 
 ## Installation
 
@@ -73,8 +112,21 @@ sudo pacman -S cmake base-devel python sdl2 sdl2_image sdl2_ttf sdl2_mixer
 
 4. **Install the game as a package:**
 
+    **Linux:**
+
     ```bash
-    pip install .
+    pip install -e .
+    ```
+
+    **Windows:**
+
+    You need to specify the `vcpkg` toolchain file. Adjust the path to where you installed `vcpkg`.
+
+    ```bash
+    # CMD / PowerShell
+    $env:CMAKE_TOOLCHAIN_FILE="C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    $env:VCPKG_TARGET_TRIPLET="x64-windows"
+    pip install -e .
     ```
 
     *Note: This process may take some time as it downloads all dependencies and compiles the C++ backend.*

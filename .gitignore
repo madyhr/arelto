@@ -59,3 +59,17 @@ python/__pycache__/
 
 # checkpoints
 checkpoints/
+
+# Inplace Build Artifacts (scikit-build-core)
+.cmake/
+.ninja_*
+.skbuild-info.json
+*_tests.cmake
+*_include.cmake
+cmake_test_discovery_*.json
+compile_commands.json
+CMakeInit.txt
+build.ninja
+# Executables
+game_app
+arelto_tests

@@ -20,10 +20,17 @@ class Panel : public UIWidget {
 
   WidgetType GetWidgetType() const override;
 
+  void SetBackgroundColor(SDL_Color color);
+  SDL_Color GetBackgroundColor() const;
+  bool HasBackgroundColor() const;
+
  private:
   SDL_Texture* background_texture_ = nullptr;
   SDL_Rect background_src_rect_ = {0, 0, 0, 0};
   bool has_custom_src_rect_ = false;
+
+  SDL_Color background_color_ = {0, 0, 0, 0};
+  bool use_background_color_ = false;
 };
 
 // VBox: stacks children vertically with spacing.

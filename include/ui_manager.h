@@ -43,11 +43,13 @@ class UIManager {
   void UpdateLevelUpMenu();
   void BuildStartScreen();
   void UpdateStartScreen();
+  void BuildGameOverScreen();
 
   UIWidget* GetRootWidget();
   UIWidget* GetSettingsRoot();
   UIWidget* GetLevelUpRoot();
   UIWidget* GetStartScreenRoot();
+  UIWidget* GetGameOverScreenRoot();
 
   template <typename T>
   T* GetWidget(const std::string& id) {

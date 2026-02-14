@@ -45,7 +45,7 @@ class RenderManager {
 
   void Render(const Scene& scene, float alpha, bool debug_mode, float time,
               GameState game_state);
-  void RenderGameOver();
+
   void RenderSettingsMenuState();
   void RenderLevelUp();
   void UpdateSettingsMenuState(float volume, bool is_muted);

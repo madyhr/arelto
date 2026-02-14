@@ -222,7 +222,12 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
 
     RenderUI(scene, time);
     if (game_state == is_gameover) {
-      RenderGameOver();
+      UIWidget* game_over_screen = ui_manager_.GetGameOverScreenRoot();
+      if (game_over_screen) {
+        game_over_screen->SetVisible(true);
+        RenderUITree(game_over_screen);
+        game_over_screen->SetVisible(false);
+      }
     } else if (game_state == in_settings_menu) {
       RenderSettingsMenuState();
     } else if (game_state == in_level_up) {
@@ -750,6 +755,19 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
   switch (widget->GetWidgetType()) {
     case WidgetType::Panel: {
       auto* panel = static_cast<Panel*>(widget);
+      if (panel->HasBackgroundColor()) {
+        SDL_BlendMode original_blend_mode;
+        SDL_GetRenderDrawBlendMode(resources_.renderer, &original_blend_mode);
+        SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
+
+        SDL_Color color = panel->GetBackgroundColor();
+        SDL_SetRenderDrawColor(resources_.renderer, color.r, color.g, color.b,
+                               color.a);
+        SDL_RenderFillRect(resources_.renderer, &bounds);
+
+        SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
+      }
+
       if (panel->GetBackgroundTexture()) {
         SDL_Rect src = panel->GetBackgroundSrcRect();
         SDL_Rect* src_ptr = (src.w > 0 && src.h > 0) ? &src : nullptr;
@@ -861,30 +879,6 @@ void RenderManager::RenderDigitString(const std::string& text, int start_x,
 
     current_x += char_width;
   };
-};
-
-void RenderManager::RenderGameOver() {
-
-  SDL_Rect render_rect;
-  render_rect.x = 0;
-  render_rect.y = kWindowHeight / 3;
-  render_rect.w = kWindowWidth;
-  render_rect.h = kWindowHeight / 3;
-
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
-  SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 128));
-  SDL_RenderFillRect(resources_.renderer, &render_rect);
-
-  SDL_Rect dst_rect;
-  dst_rect.x = (kWindowWidth - kGameOverSpriteWidth) / 2;
-  dst_rect.y = (kWindowHeight - kGameOverSpriteHeight) / 2;
-  dst_rect.w = kGameOverSpriteWidth;
-  dst_rect.h = kGameOverSpriteHeight;
-
-  SDL_RenderCopy(resources_.renderer, resources_.ui_resources.game_over_texture,
-                 nullptr, &dst_rect);
-
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
 };
 
 // Renders the settings menu state with overlay.

@@ -28,7 +28,22 @@ SDL_Rect Panel::GetBackgroundSrcRect() const {
   return {0, 0, computed_bounds_.w, computed_bounds_.h};
 }
 
-WidgetType Panel::GetWidgetType() const { return WidgetType::Panel; }
+void Panel::SetBackgroundColor(SDL_Color color) {
+  background_color_ = color;
+  use_background_color_ = true;
+}
+
+SDL_Color Panel::GetBackgroundColor() const {
+  return background_color_;
+}
+
+bool Panel::HasBackgroundColor() const {
+  return use_background_color_;
+}
+
+WidgetType Panel::GetWidgetType() const {
+  return WidgetType::Panel;
+}
 
 // =============================================================================
 // VBox
@@ -51,7 +66,9 @@ void VBox::ComputeLayout(int parent_x, int parent_y, int parent_w,
   }
 }
 
-WidgetType VBox::GetWidgetType() const { return WidgetType::VBox; }
+WidgetType VBox::GetWidgetType() const {
+  return WidgetType::VBox;
+}
 
 // =============================================================================
 // HBox
@@ -74,6 +91,8 @@ void HBox::ComputeLayout(int parent_x, int parent_y, int parent_w,
   }
 }
 
-WidgetType HBox::GetWidgetType() const { return WidgetType::HBox; }
+WidgetType HBox::GetWidgetType() const {
+  return WidgetType::HBox;
+}
 
 }  // namespace arelto

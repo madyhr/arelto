@@ -172,6 +172,7 @@ void Game::RunGameLoop() {
       }
 
       case is_gameover:
+        RenderGame(0.0f);
         break;
 
       case in_settings_menu: {

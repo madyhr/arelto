@@ -23,6 +23,7 @@ void UIManager::SetupUI(const UIResources& resources) {
   BuildHUD();
   BuildSettingsMenu();
   BuildStartScreen();
+  BuildGameOverScreen();
 
   // Compute initial layout from the screen origin.
   root_widget_->ComputeLayout(0, 0, kWindowWidth, kWindowHeight);
@@ -539,6 +540,39 @@ void UIManager::UpdateStartScreen() {
     }
   };
   update_hover(start_screen);
+}
+
+// =============================================================================
+// BuildGameOverScreen
+// =============================================================================
+
+void UIManager::BuildGameOverScreen() {
+  auto game_over_root = std::make_shared<Panel>();
+  game_over_root->SetId("game_over_screen");
+  game_over_root->SetSize(kWindowWidth, kWindowHeight);
+  game_over_root->SetVisible(false);
+
+  auto black_bar = std::make_shared<Panel>();
+  black_bar->SetId("game_over_bar");
+  black_bar->SetAnchor(AnchorType::Center);
+  black_bar->SetSize(kWindowWidth, kWindowHeight / 3);
+  black_bar->SetBackgroundColor(WithOpacity(kColorBlack, 128));
+
+  auto go_image = std::make_shared<UIImage>();
+  go_image->SetId("game_over_image");
+  go_image->SetAnchor(AnchorType::Center);
+  go_image->SetSize(kGameOverSpriteWidth, kGameOverSpriteHeight);
+  go_image->SetTexture(resources_->game_over_texture);
+  go_image->SetSrcRect({0, 0, kGameOverSpriteWidth, kGameOverSpriteHeight});
+
+  black_bar->AddChild(go_image);
+
+  game_over_root->AddChild(black_bar);
+  root_widget_->AddChild(game_over_root);
+}
+
+UIWidget* UIManager::GetGameOverScreenRoot() {
+  return root_widget_ ? root_widget_->FindWidget("game_over_screen") : nullptr;
 }
 
 }  // namespace arelto

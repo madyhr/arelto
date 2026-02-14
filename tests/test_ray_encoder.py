@@ -259,10 +259,15 @@ def test_overfitting_sanity_check(encoder, base_config):
 # --- System Tests ---
 
 
+import os
+
+
 def test_model_save_load(encoder):
     """Test that the model can be pickled and unpickled (saved/loaded)."""
-    with tempfile.NamedTemporaryFile() as tmp:
-        torch.save(encoder.state_dict(), tmp.name)
+    # Use TemporaryDirectory to avoid file locking issues on Windows
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_path = os.path.join(tmp_dir, "model.pth")
+        torch.save(encoder.state_dict(), tmp_path)
 
         # specific reload
         new_encoder = RayEncoder(
@@ -270,7 +275,7 @@ def test_model_save_load(encoder):
             num_ray_types=encoder.num_ray_types,
             output_dim=encoder.output_dim,
         )
-        new_encoder.load_state_dict(torch.load(tmp.name))
+        new_encoder.load_state_dict(torch.load(tmp_path))
 
         # Verify weights match
         for p1, p2 in zip(encoder.parameters(), new_encoder.parameters()):

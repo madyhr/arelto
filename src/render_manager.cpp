@@ -883,16 +883,6 @@ void RenderManager::RenderDigitString(const std::string& text, int start_x,
 
 // Renders the settings menu state with overlay.
 void RenderManager::RenderSettingsMenuState() {
-  SDL_Rect render_rect;
-  render_rect.x = 0;
-  render_rect.y = 0;
-  render_rect.w = kWindowWidth;
-  render_rect.h = kWindowHeight;
-
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
-  SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 200));
-  SDL_RenderFillRect(resources_.renderer, &render_rect);
-
   // Make settings menu visible for rendering, then hide again after
   UIWidget* settings = ui_manager_.GetSettingsRoot();
   if (settings) {
@@ -900,8 +890,6 @@ void RenderManager::RenderSettingsMenuState() {
     RenderUITree(settings);
     settings->SetVisible(false);
   }
-
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
 }
 
 void RenderManager::UpdateSettingsMenuState(float volume, bool is_muted) {
@@ -994,12 +982,6 @@ void RenderManager::Shutdown() {
 }
 
 void RenderManager::RenderLevelUp() {
-  // Dark overlay
-  SDL_Rect overlay_rect = {0, 0, kWindowWidth, kWindowHeight};
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
-  SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 150));
-  SDL_RenderFillRect(resources_.renderer, &overlay_rect);
-
   // Update hover states and render via widget tree
   ui_manager_.UpdateLevelUpMenu();
 
@@ -1007,8 +989,6 @@ void RenderManager::RenderLevelUp() {
   if (level_up) {
     RenderWidgetRecursive(level_up);
   }
-
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
 }
 
 // Render a string of text at a specified location (x,y) with a given color

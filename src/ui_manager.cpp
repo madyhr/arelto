@@ -173,14 +173,21 @@ void UIManager::BuildHUD() {
 // =============================================================================
 
 void UIManager::BuildSettingsMenu() {
+  // Fullscreen wrapper for the overlay
+  auto overlay = std::make_shared<Panel>();
+  overlay->SetId("settings_menu");  // Keep ID same for root lookup
+  overlay->SetSize(kWindowWidth, kWindowHeight);
+  overlay->SetBackgroundColor(WithOpacity(kColorBlack, 128));
+  overlay->SetVisible(false);
+
+  // The actual menu panel
   auto menu = std::make_shared<Panel>();
-  menu->SetId("settings_menu");
+  menu->SetId("settings_panel");
   menu->SetAnchor(AnchorType::Center);
   menu->SetSize(kSettingsMenuWidth, kSettingsMenuHeight);
   menu->SetBackground(resources_->settings_menu_background_texture);
   menu->SetBackgroundSrcRect({0, 0, kSettingsMenuBackgroundSpriteWidth,
                               kSettingsMenuBackgroundSpriteHeight});
-  menu->SetVisible(false);
 
   auto content = std::make_shared<VBox>();
   content->SetId("settings_content");
@@ -272,7 +279,9 @@ void UIManager::BuildSettingsMenu() {
   button_row->AddChild(main_menu_btn);
 
   menu->AddChild(button_row);
-  root_widget_->AddChild(menu);
+
+  overlay->AddChild(menu);
+  root_widget_->AddChild(overlay);
 }
 
 // =============================================================================
@@ -281,24 +290,28 @@ void UIManager::BuildSettingsMenu() {
 
 void UIManager::BuildLevelUpMenu(
     const std::vector<std::unique_ptr<Upgrade>>& options) {
-  // Remove any stale level-up menu from a previous level-up
   root_widget_->RemoveChild("level_up_menu");
 
-  // Card row: centered on screen
+  auto overlay = std::make_shared<Panel>();
+  overlay->SetId("level_up_menu");
+  overlay->SetSize(kWindowWidth, kWindowHeight);
+  overlay->SetBackgroundColor(WithOpacity(kColorBlack, 128));
+  overlay->SetVisible(true);
+
   auto card_row = std::make_shared<HBox>();
-  card_row->SetId("level_up_menu");
+  card_row->SetId("level_up_cards");
   card_row->SetAnchor(AnchorType::Center);
   int total_width = kNumUpgradeOptions * kLevelUpCardWidth +
                     (kNumUpgradeOptions - 1) * kLevelUpCardGap;
   card_row->SetSize(total_width, kLevelUpCardHeight);
   card_row->SetSpacing(kLevelUpCardGap);
-  card_row->SetVisible(true);
 
   for (size_t i = 0; i < options.size(); ++i) {
     BuildLevelUpCard(card_row.get(), static_cast<int>(i), *options[i]);
   }
 
-  root_widget_->AddChild(card_row);
+  overlay->AddChild(card_row);
+  root_widget_->AddChild(overlay);
   root_widget_->ComputeLayout(0, 0, kWindowWidth, kWindowHeight);
 }
 

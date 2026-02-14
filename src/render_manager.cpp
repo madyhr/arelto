@@ -984,7 +984,9 @@ void RenderManager::RenderLevelUp() {
 
   UIWidget* level_up = ui_manager_.GetLevelUpRoot();
   if (level_up) {
+    level_up->SetVisible(true);
     RenderWidgetRecursive(level_up);
+    level_up->SetVisible(false);
   }
 }
 

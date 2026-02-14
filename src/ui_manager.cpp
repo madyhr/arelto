@@ -296,7 +296,7 @@ void UIManager::BuildLevelUpMenu(
   overlay->SetId("level_up_menu");
   overlay->SetSize(kWindowWidth, kWindowHeight);
   overlay->SetBackgroundColor(WithOpacity(kColorBlack, 128));
-  overlay->SetVisible(true);
+  overlay->SetVisible(false);
 
   auto card_row = std::make_shared<HBox>();
   card_row->SetId("level_up_cards");

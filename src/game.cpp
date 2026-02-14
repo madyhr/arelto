@@ -283,15 +283,18 @@ void Game::ProcessInput() {
         int mouse_x = e.button.x;
         int mouse_y = e.button.y;
 
-        int btn_w = kBeginButtonWidth;
-        int btn_h = kBeginButtonHeight;
-        int btn_x = kBeginButtonX;
-        int btn_y = kBeginButtonY;
-
-        if (mouse_x >= btn_x && mouse_x <= btn_x + btn_w && mouse_y >= btn_y &&
-            mouse_y <= btn_y + btn_h) {
-          SetGameState(is_running);
-          std::cout << "Game Started!" << std::endl;
+        auto& ui = render_manager_.GetUIManager();
+        auto* start_screen = ui.GetStartScreenRoot();
+        if (start_screen) {
+          auto* btn = start_screen->FindWidget("begin_button");
+          if (btn) {
+            SDL_Rect b = btn->GetComputedBounds();
+            if (mouse_x >= b.x && mouse_x <= b.x + b.w && mouse_y >= b.y &&
+                mouse_y <= b.y + b.h) {
+              SetGameState(is_running);
+              std::cout << "Game Started!" << std::endl;
+            }
+          }
         }
       }
     }

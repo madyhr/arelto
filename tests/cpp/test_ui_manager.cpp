@@ -287,5 +287,22 @@ TEST_F(UIManagerTest, Update_ChangesLevelText) {
   EXPECT_EQ(label->GetText(), "5");
 }
 
+TEST_F(UIManagerTest, BuildStartScreen_CreatesStartScreenRoot) {
+  ui_manager_.BuildStartScreen();
+  auto* start_screen = ui_manager_.GetStartScreenRoot();
+  ASSERT_NE(start_screen, nullptr);
+  EXPECT_EQ(start_screen->GetId(), "start_screen");
+  EXPECT_FALSE(start_screen->IsVisible());
+}
+
+TEST_F(UIManagerTest, BuildStartScreen_CreatesBeginButton) {
+  ui_manager_.BuildStartScreen();
+  auto* start_screen = ui_manager_.GetStartScreenRoot();
+  ASSERT_NE(start_screen, nullptr);
+
+  auto* btn = start_screen->FindWidget("begin_button");
+  ASSERT_NE(btn, nullptr);
+}
+
 }  // namespace
 }  // namespace arelto

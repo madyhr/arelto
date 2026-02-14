@@ -192,7 +192,13 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
   SDL_RenderClear(resources_.renderer);
 
   if (game_state == in_start_screen) {
-    RenderStartScreen();
+    ui_manager_.UpdateStartScreen();
+    UIWidget* start_screen = ui_manager_.GetStartScreenRoot();
+    if (start_screen) {
+      start_screen->SetVisible(true);
+      RenderUITree(start_screen);
+      start_screen->SetVisible(false);
+    }
   } else {
 
     UpdateCameraPosition(scene.player);
@@ -855,47 +861,6 @@ void RenderManager::RenderDigitString(const std::string& text, int start_x,
 
     current_x += char_width;
   };
-};
-
-void RenderManager::RenderStartScreen() {
-
-  SDL_Rect dst_rect;
-  dst_rect.x = 0;
-  dst_rect.y = 0;
-  dst_rect.w = kWindowWidth;
-  dst_rect.h = kWindowHeight;
-
-  SDL_RenderCopy(resources_.renderer,
-                 resources_.ui_resources.start_screen_texture, nullptr,
-                 &dst_rect);
-
-  int button_x = kBeginButtonX;
-  int button_y = kBeginButtonY;
-
-  int mouse_x, mouse_y;
-  SDL_GetMouseState(&mouse_x, &mouse_y);
-  bool is_hovered =
-      (mouse_x >= button_x && mouse_x <= button_x + kBeginButtonWidth &&
-       mouse_y >= button_y && mouse_y <= button_y + kBeginButtonHeight);
-
-  // button texture map has both default and hover state so y composant of top
-  // left coord on the source rect depends on the hover state.
-  SDL_Rect btn_src_rect = {0, is_hovered ? kBeginButtonTextureHeight / 2 : 0,
-                           kBeginButtonTextureWidth,
-                           kBeginButtonTextureHeight / 2};
-
-  SDL_Rect btn_dst_rect = {button_x, button_y, kBeginButtonWidth,
-                           kBeginButtonHeight};
-
-  SDL_RenderCopy(resources_.renderer,
-                 resources_.ui_resources.begin_button_texture, &btn_src_rect,
-                 &btn_dst_rect);
-
-  // RenderText("BEGIN", button_x, button_y + (kBeginButtonHeight - 26) / 2,
-  //            kColorWhite, resources_.ui_resources.ui_font_huge,
-  //            kBeginButtonWidth);
-  //
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
 };
 
 void RenderManager::RenderGameOver() {

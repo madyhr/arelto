@@ -41,10 +41,13 @@ class UIManager {
   void UpdateSettingsMenu(float volume, bool is_muted);
   void BuildLevelUpMenu(const std::vector<std::unique_ptr<Upgrade>>& options);
   void UpdateLevelUpMenu();
+  void BuildStartScreen();
+  void UpdateStartScreen();
 
   UIWidget* GetRootWidget();
   UIWidget* GetSettingsRoot();
   UIWidget* GetLevelUpRoot();
+  UIWidget* GetStartScreenRoot();
 
   template <typename T>
   T* GetWidget(const std::string& id) {

@@ -22,6 +22,7 @@ void UIManager::SetupUI(const UIResources& resources) {
 
   BuildHUD();
   BuildSettingsMenu();
+  BuildStartScreen();
 
   // Compute initial layout from the screen origin.
   root_widget_->ComputeLayout(0, 0, kWindowWidth, kWindowHeight);
@@ -480,6 +481,64 @@ void UIManager::UpdateSettingsMenu(float volume, bool is_muted) {
     }
   };
   update_hover(settings);
+}
+
+// =============================================================================
+// BuildStartScreen
+// =============================================================================
+
+void UIManager::BuildStartScreen() {
+  auto start_screen = std::make_shared<Panel>();
+  start_screen->SetId("start_screen");
+  start_screen->SetSize(kWindowWidth, kWindowHeight);
+  start_screen->SetBackground(resources_->start_screen_texture);
+  start_screen->SetBackgroundSrcRect({0, 0, 0, 0});  // full texture
+  start_screen->SetVisible(false);
+
+  auto begin_btn = std::make_shared<UIButton>();
+  begin_btn->SetId("begin_button");
+  begin_btn->SetAnchor(AnchorType::BottomCenter);
+  // Original Y = 5/7 * (H - h).
+  // Distance from bottom = H - (Y + h) = 2/7 * (H - h).
+  // SetPosition uses positive Y for down, so negative Y for up from bottom.
+  int offset_y = -2 * (kWindowHeight - kBeginButtonHeight) / 7;
+  begin_btn->SetPosition(0, offset_y);
+  begin_btn->SetSize(kBeginButtonWidth, kBeginButtonHeight);
+  begin_btn->SetTexture(resources_->begin_button_texture);
+  begin_btn->SetNormalSrcRect(
+      {0, 0, kBeginButtonTextureWidth, kBeginButtonTextureHeight / 2});
+  begin_btn->SetHoverSrcRect({0, kBeginButtonTextureHeight / 2,
+                              kBeginButtonTextureWidth,
+                              kBeginButtonTextureHeight / 2});
+
+  start_screen->AddChild(begin_btn);
+  root_widget_->AddChild(start_screen);
+}
+
+UIWidget* UIManager::GetStartScreenRoot() {
+  return root_widget_ ? root_widget_->FindWidget("start_screen") : nullptr;
+}
+
+void UIManager::UpdateStartScreen() {
+  auto* start_screen = GetStartScreenRoot();
+  if (!start_screen)
+    return;
+
+  int mouse_x, mouse_y;
+  SDL_GetMouseState(&mouse_x, &mouse_y);
+
+  std::function<void(UIWidget*)> update_hover = [&](UIWidget* widget) {
+    if (widget->GetWidgetType() == WidgetType::Button) {
+      SDL_Rect bounds = widget->GetComputedBounds();
+      bool hovered = (mouse_x >= bounds.x && mouse_x <= bounds.x + bounds.w &&
+                      mouse_y >= bounds.y && mouse_y <= bounds.y + bounds.h);
+      widget->SetHovered(hovered);
+    }
+    for (auto& child : widget->GetChildren()) {
+      update_hover(child.get());
+    }
+  };
+  update_hover(start_screen);
 }
 
 }  // namespace arelto

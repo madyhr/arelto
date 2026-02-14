@@ -20,6 +20,8 @@
 #include "entity.h"
 #include "scene.h"
 #include "types.h"
+#include "ui/containers.h"
+#include "ui/widgets.h"
 #include "ui_manager.h"
 
 namespace arelto {
@@ -75,8 +77,6 @@ bool RenderManager::Initialize(bool is_headless) {
   resources_.tile_manager.SetupTileMap();
   resources_.tile_manager.SetupTiles();
   resources_.tile_manager.SetupTileSelector();
-
-  ui_manager_.SetupUI();
 
   resources_.tile_texture = resources_.tile_manager.GetTileTexture(
       "assets/dungeon_floor_tiles_tall.bmp", resources_.renderer);
@@ -160,6 +160,8 @@ bool RenderManager::Initialize(bool is_headless) {
               << std::endl;
     return false;
   }
+
+  ui_manager_.SetupUI(resources_.ui_resources);
 
   resources_.map_layout = {0, 0, kMapWidth, kMapHeight};
 
@@ -718,98 +720,97 @@ void RenderManager::RenderDebugRayCaster(const Enemy& enemy, float alpha) {
   SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
 }
 void RenderManager::RenderUI(const Scene& scene, float time) {
-  ui_manager_.UpdateUI(scene, time);
+  ui_manager_.Update(scene, time);
+  RenderUITree(ui_manager_.GetRootWidget());
+}
 
-  int group_x = static_cast<int>(ui_manager_.health_bar_.screen_position.x);
-  int group_y = static_cast<int>(ui_manager_.health_bar_.screen_position.y);
+void RenderManager::RenderUITree(UIWidget* root) {
+  if (!root || !root->IsVisible()) return;
+  RenderWidgetRecursive(root);
+}
 
-  for (const auto& el : ui_manager_.health_bar_.elements) {
-    SDL_Rect dst_rect;
-    dst_rect.x = group_x + el.relative_offset.x;
-    dst_rect.y = group_y + el.relative_offset.y;
-    dst_rect.w = el.sprite_size.width;
-    dst_rect.h = el.sprite_size.height;
+void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
+  if (!widget || !widget->IsVisible()) return;
 
-    if (el.tag == UIElement::Tag::text) {
-      RenderDigitString(el.text_value,
-                        group_x + static_cast<int>(el.relative_offset.x),
-                        group_y + static_cast<int>(el.relative_offset.y),
-                        el.sprite_size, el.char_size);
-      continue;
+  SDL_Rect bounds = widget->GetComputedBounds();
+
+  switch (widget->GetWidgetType()) {
+    case WidgetType::Panel: {
+      auto* panel = static_cast<Panel*>(widget);
+      if (panel->GetBackgroundTexture()) {
+        SDL_Rect src = panel->GetBackgroundSrcRect();
+        SDL_RenderCopy(resources_.renderer, panel->GetBackgroundTexture(),
+                       &src, &bounds);
+      }
+      break;
     }
 
-    SDL_RenderCopy(resources_.renderer,
-                   resources_.ui_resources.health_bar_texture, &el.src_rect,
-                   &dst_rect);
+    case WidgetType::Image: {
+      auto* img = static_cast<UIImage*>(widget);
+      if (img->GetTexture()) {
+        SDL_Rect src = img->GetSrcRect();
+        SDL_RenderCopy(resources_.renderer, img->GetTexture(), &src, &bounds);
+      }
+      break;
+    }
+
+    case WidgetType::Label: {
+      auto* lbl = static_cast<UILabel*>(widget);
+      if (lbl->GetUseDigitFont()) {
+        Size2D sprite_size = {static_cast<uint32_t>(lbl->GetDigitSpriteWidth()),
+                              static_cast<uint32_t>(lbl->GetDigitSpriteHeight())};
+        Size2D char_size = {static_cast<uint32_t>(lbl->GetCharWidth()),
+                            static_cast<uint32_t>(lbl->GetCharHeight())};
+        RenderDigitString(lbl->GetText(), bounds.x, bounds.y, sprite_size,
+                          char_size);
+      } else if (lbl->GetFont()) {
+        RenderText(lbl->GetText(), bounds.x, bounds.y, lbl->GetColor(),
+                   lbl->GetFont(), lbl->GetCenterWidth());
+      }
+      break;
+    }
+
+    case WidgetType::Button: {
+      auto* btn = static_cast<UIButton*>(widget);
+      if (btn->GetTexture()) {
+        SDL_Rect src = btn->GetCurrentSrcRect();
+        SDL_RenderCopy(resources_.renderer, btn->GetTexture(), &src, &bounds);
+      }
+      if (btn->GetLabelFont() && !btn->GetLabel().empty()) {
+        RenderText(btn->GetLabel(), bounds.x,
+                   bounds.y + (bounds.h - 26) / 2, {255, 255, 255, 255},
+                   btn->GetLabelFont(), bounds.w);
+      }
+      break;
+    }
+
+    case WidgetType::ProgressBar: {
+      auto* bar = static_cast<UIProgressBar*>(widget);
+      // Draw container
+      if (bar->GetContainerTexture()) {
+        SDL_Rect src = bar->GetContainerSrcRect();
+        SDL_RenderCopy(resources_.renderer, bar->GetContainerTexture(),
+                       &src, &bounds);
+      }
+      // Draw fill (clipped)
+      if (bar->GetFillTexture()) {
+        SDL_Rect fill_src = bar->GetClippedFillSrcRect();
+        SDL_Rect fill_dst = bar->GetFillDestRect();
+        SDL_RenderCopy(resources_.renderer, bar->GetFillTexture(),
+                       &fill_src, &fill_dst);
+      }
+      break;
+    }
+
+    default:
+      break;
   }
-  group_x = static_cast<int>(ui_manager_.level_indicator_.screen_position.x);
-  group_y = static_cast<int>(ui_manager_.level_indicator_.screen_position.y);
 
-  for (const auto& el : ui_manager_.level_indicator_.elements) {
-    SDL_Rect dst_rect;
-    dst_rect.x = group_x + el.relative_offset.x;
-    dst_rect.y = group_y + el.relative_offset.y;
-    dst_rect.w = el.sprite_size.width;
-    dst_rect.h = el.sprite_size.height;
-
-    if (el.tag == UIElement::Tag::text) {
-      RenderDigitString(el.text_value,
-                        group_x + static_cast<int>(el.relative_offset.x),
-                        group_y + static_cast<int>(el.relative_offset.y),
-                        el.sprite_size, el.char_size);
-      continue;
-    }
-
-    SDL_RenderCopy(resources_.renderer,
-                   resources_.ui_resources.level_indicator_texture,
-                   &el.src_rect, &dst_rect);
+  // Recurse into children (Painter's Algorithm)
+  for (auto& child : widget->GetChildren()) {
+    RenderWidgetRecursive(child.get());
   }
-
-  group_x = static_cast<int>(ui_manager_.exp_bar_.screen_position.x);
-  group_y = static_cast<int>(ui_manager_.exp_bar_.screen_position.y);
-
-  for (const auto& el : ui_manager_.exp_bar_.elements) {
-    SDL_Rect dst_rect;
-    dst_rect.x = group_x + el.relative_offset.x;
-    dst_rect.y = group_y + el.relative_offset.y;
-    dst_rect.w = el.sprite_size.width;
-    dst_rect.h = el.sprite_size.height;
-
-    if (el.tag == UIElement::Tag::text) {
-      RenderDigitString(el.text_value,
-                        group_x + static_cast<int>(el.relative_offset.x),
-                        group_y + static_cast<int>(el.relative_offset.y),
-                        el.sprite_size, el.char_size);
-      continue;
-    }
-
-    SDL_RenderCopy(resources_.renderer, resources_.ui_resources.exp_bar_texture,
-                   &el.src_rect, &dst_rect);
-  }
-
-  group_x = static_cast<int>(ui_manager_.timer_.screen_position.x);
-  group_y = static_cast<int>(ui_manager_.timer_.screen_position.y);
-
-  for (const auto& el : ui_manager_.timer_.elements) {
-    SDL_Rect dst_rect;
-    dst_rect.x = group_x + el.relative_offset.x;
-    dst_rect.y = group_y + el.relative_offset.y;
-    dst_rect.w = el.sprite_size.width;
-    dst_rect.h = el.sprite_size.height;
-
-    if (el.tag == UIElement::Tag::text) {
-      RenderDigitString(el.text_value,
-                        group_x + static_cast<int>(el.relative_offset.x),
-                        group_y + static_cast<int>(el.relative_offset.y),
-                        el.sprite_size, el.char_size);
-      continue;
-    }
-
-    SDL_RenderCopy(resources_.renderer,
-                   resources_.ui_resources.timer_hourglass_texture,
-                   &el.src_rect, &dst_rect);
-  };
-};
+}
 
 void RenderManager::RenderDigitString(const std::string& text, int start_x,
                                       int start_y, Size2D sprite_size,
@@ -925,116 +926,19 @@ void RenderManager::RenderSettingsMenuState() {
   SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 200));
   SDL_RenderFillRect(resources_.renderer, &render_rect);
 
-  RenderSettingsMenu();
+  // Make settings menu visible for rendering, then hide again after
+  UIWidget* settings = ui_manager_.GetSettingsRoot();
+  if (settings) {
+    settings->SetVisible(true);
+    RenderUITree(settings);
+    settings->SetVisible(false);
+  }
 
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
-};
+}
 
 void RenderManager::UpdateSettingsMenuState(float volume, bool is_muted) {
   ui_manager_.UpdateSettingsMenu(volume, is_muted);
-}
-
-void RenderManager::RenderSettingsMenu() {
-  int module_x = static_cast<int>(ui_manager_.settings_menu_.screen_position.x);
-  int module_y = static_cast<int>(ui_manager_.settings_menu_.screen_position.y);
-
-  for (const auto& el : ui_manager_.settings_menu_.module_elements) {
-    SDL_Rect dst_rect;
-    dst_rect.x = module_x + el.relative_offset.x;
-    dst_rect.y = module_y + el.relative_offset.y;
-    dst_rect.w = el.sprite_size.width;
-    dst_rect.h = el.sprite_size.height;
-
-    if (el.tag == UIElement::Tag::text) {
-      bool has_alpha = false;
-      for (char c : el.text_value) {
-        if (std::isalpha(c)) {
-          has_alpha = true;
-          break;
-        }
-      }
-
-      if (has_alpha) {
-        RenderText(
-            el.text_value, module_x + static_cast<int>(el.relative_offset.x),
-            module_y + static_cast<int>(el.relative_offset.y), kColorWhite,
-            resources_.ui_resources.ui_font_huge, kSettingsMenuWidth);
-      } else {
-        RenderDigitString(el.text_value,
-                          module_x + static_cast<int>(el.relative_offset.x),
-                          module_y + static_cast<int>(el.relative_offset.y),
-                          el.sprite_size, el.char_size);
-      }
-      continue;
-    }
-
-    SDL_RenderCopy(resources_.renderer,
-                   resources_.ui_resources.settings_menu_background_texture,
-                   &el.src_rect, &dst_rect);
-  }
-
-  for (const auto& group : ui_manager_.settings_menu_.element_groups) {
-    for (const auto& el : group.elements) {
-      SDL_Rect dst_rect;
-      dst_rect.x =
-          group.screen_position.x + static_cast<int>(el.relative_offset.x);
-      dst_rect.y =
-          group.screen_position.y + static_cast<int>(el.relative_offset.y);
-      dst_rect.w = el.sprite_size.width;
-      dst_rect.h = el.sprite_size.height;
-
-      if (el.tag == UIElement::Tag::text) {
-        bool has_alpha = false;
-        for (char c : el.text_value) {
-          if (std::isalpha(c)) {
-            has_alpha = true;
-            break;
-          }
-        }
-
-        if (has_alpha) {
-          // Centering relative to the group's X position, assuming the group
-          // is aligned with the menu.
-          RenderText(el.text_value, dst_rect.x, dst_rect.y, kColorWhite,
-                     resources_.ui_resources.ui_font_large, kSettingsMenuWidth);
-        } else {
-          RenderDigitString(el.text_value, dst_rect.x, dst_rect.y,
-                            el.sprite_size, el.char_size);
-        }
-      } else if (el.tag == UIElement::Tag::button) {
-        int mouse_x, mouse_y;
-        SDL_GetMouseState(&mouse_x, &mouse_y);
-        bool is_hovered =
-            (mouse_x >= dst_rect.x && mouse_x <= dst_rect.x + dst_rect.w &&
-             mouse_y >= dst_rect.y && mouse_y <= dst_rect.y + dst_rect.h);
-
-        SDL_Rect btn_src_rect = {
-            0, is_hovered ? kLevelUpButtonTextureHeight / 2 : 0,
-            kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight / 2};
-
-        SDL_RenderCopy(resources_.renderer,
-                       resources_.ui_resources.button_texture, &btn_src_rect,
-                       &dst_rect);
-
-        RenderText(el.text_value, dst_rect.x,
-                   dst_rect.y + (dst_rect.h - 26) / 2, kColorWhite,
-                   resources_.ui_resources.ui_font_medium, dst_rect.w);
-
-      } else if (el.tag == UIElement::Tag::background) {
-        SDL_RenderCopy(resources_.renderer,
-                       resources_.ui_resources.slider_texture, &el.src_rect,
-                       &dst_rect);
-      } else if (el.tag == UIElement::Tag::fill) {
-        SDL_RenderCopy(resources_.renderer,
-                       resources_.ui_resources.slider_texture, &el.src_rect,
-                       &dst_rect);
-      } else if (el.tag == UIElement::Tag::icon) {
-        SDL_RenderCopy(resources_.renderer,
-                       resources_.ui_resources.button_texture, &el.src_rect,
-                       &dst_rect);
-      }
-    }
-  }
 }
 
 void RenderManager::Shutdown() {

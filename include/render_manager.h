@@ -12,6 +12,7 @@
 #include "map.h"
 #include "scene.h"
 #include "types.h"
+#include "ui/widget.h"
 #include "ui_manager.h"
 
 namespace arelto {
@@ -70,8 +71,13 @@ class RenderManager {
   void RenderDebugWorldOccupancyMap(
       const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
   void RenderDebugRayCaster(const Enemy& enemy, float alpha);
+
+  // Widget tree UI rendering
   void RenderUI(const Scene& scene, float time);
-  void RenderSettingsMenu();
+  void RenderUITree(UIWidget* root);
+  void RenderWidgetRecursive(UIWidget* widget);
+
+  // Text primitives
   void RenderDigitString(const std::string& text, int start_x, int start_y,
                          Size2D sprite_size, Size2D char_size);
   void RenderText(const std::string& text, int x, int y, SDL_Color color,

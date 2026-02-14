@@ -51,6 +51,8 @@ class RenderManager {
   void RenderLevelUp(const std::vector<std::unique_ptr<Upgrade>>& options);
   void UpdateSettingsMenuState(float volume, bool is_muted);
 
+  UIManager& GetUIManager() { return ui_manager_; }
+
   Camera camera_;
 
  private:

@@ -372,28 +372,28 @@ void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
   } else if (e.type == SDL_MOUSEBUTTONDOWN) {
     int mouse_x = e.button.x;
     int mouse_y = e.button.y;
-    int btn_w = kSettingsMenuButtonWidth;
-    int btn_h = kSettingsMenuButtonHeight;
 
-    int mute_x = kSettingsMenuX + kSettingsMenuButtonX;
-    int mute_y = kSettingsMenuY + kSettingsMenuMuteY;
-    if (mouse_x >= mute_x && mouse_x <= mute_x + btn_w && mouse_y >= mute_y &&
-        mouse_y <= mute_y + btn_h) {
+    auto& ui = render_manager_.GetUIManager();
+
+    // Helper lambda: check if click is inside a widget's bounds
+    auto hit_test = [&](const char* widget_id) -> bool {
+      auto* w = ui.GetRootWidget()->FindWidget(widget_id);
+      if (!w) return false;
+      SDL_Rect b = w->GetComputedBounds();
+      return mouse_x >= b.x && mouse_x <= b.x + b.w &&
+             mouse_y >= b.y && mouse_y <= b.y + b.h;
+    };
+
+    if (hit_test("mute_button")) {
       audio_manager_.ToggleMusic();
     }
 
-    int main_x = kSettingsMenuX + kSettingsMenuMainMenuX;
-    int main_y = kSettingsMenuY + kSettingsMenuMainMenuY;
-    if (mouse_x >= main_x && mouse_x <= main_x + btn_w && mouse_y >= main_y &&
-        mouse_y <= main_y + btn_h) {
+    if (hit_test("main_menu_button")) {
       ResetGame();
       SetGameState(in_start_screen);
     }
 
-    int resume_x = kSettingsMenuX + kSettingsMenuResumeX;
-    int resume_y = kSettingsMenuY + kSettingsMenuResumeY;
-    if (mouse_x >= resume_x && mouse_x <= resume_x + btn_w &&
-        mouse_y >= resume_y && mouse_y <= resume_y + btn_h) {
+    if (hit_test("resume_button")) {
       SetGameState(is_running);
     }
   }
@@ -404,15 +404,15 @@ void Game::ProcessSettingsMenuInput(uint32_t mouse_state) {
     int mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
 
-    int slider_x = kSettingsMenuX + kSettingsMenuVolumeSliderX;
-    int slider_y = kSettingsMenuY + kSettingsMenuVolumeSliderY;
-    int slider_w = kSettingsMenuVolumeSliderWidth;
-    int slider_h = kSettingsMenuVolumeSliderHeight;
-
-    if (mouse_x >= slider_x && mouse_x <= slider_x + slider_w &&
-        mouse_y >= slider_y - 10 && mouse_y <= slider_y + slider_h + 10) {
-      float percent = static_cast<float>(mouse_x - slider_x) / slider_w;
-      audio_manager_.SetMusicVolume(percent);
+    auto& ui = render_manager_.GetUIManager();
+    auto* slider = ui.GetRootWidget()->FindWidget("volume_slider");
+    if (slider) {
+      SDL_Rect b = slider->GetComputedBounds();
+      if (mouse_x >= b.x && mouse_x <= b.x + b.w &&
+          mouse_y >= b.y - 10 && mouse_y <= b.y + b.h + 10) {
+        float percent = static_cast<float>(mouse_x - b.x) / b.w;
+        audio_manager_.SetMusicVolume(percent);
+      }
     }
   }
 

@@ -66,7 +66,7 @@ conda activate arelto-env
 #### 3. Install Dependencies via Conda
 
 ```bash
-conda install -y cmake ninja numpy pytorch cpuonly -c pytorch -c conda-forge
+conda install -y cmake ninja numpy pytorch -c pytorch -c conda-forge
 ```
 
 #### 4. Install [vcpkg](https://vcpkg.io/en/getting-started.html)

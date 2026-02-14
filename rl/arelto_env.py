@@ -3,7 +3,7 @@
 import numpy as np
 import torch
 
-import rl.arelto_py as arelto
+from . import arelto_py as arelto
 
 
 class AreltoEnv:

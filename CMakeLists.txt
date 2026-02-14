@@ -2,20 +2,20 @@ cmake_minimum_required(VERSION 3.10)
 
 project(arelto VERSION 1.0)
 
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
 set(CMAKE_INSTALL_RPATH "$ORIGIN")
 
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-
 set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
 
 find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED COMPONENTS PNG) 
-find_package(SDL2_ttf REQUIRED) 
+find_package(SDL2_image REQUIRED)
+find_package(SDL2_ttf REQUIRED)
 find_package(SDL2_mixer REQUIRED)
-
 find_package(OpenMP REQUIRED)
 
 add_subdirectory(extern/pybind11)
@@ -26,8 +26,8 @@ list(FILTER ENGINE_SOURCES EXCLUDE REGEX "src/bindings.cpp")
 
 add_library(arelto_core SHARED ${ENGINE_SOURCES})
 
-target_include_directories(arelto_core 
-    PUBLIC 
+target_include_directories(arelto_core
+    PUBLIC
     "${CMAKE_SOURCE_DIR}/include"
 )
 
@@ -43,10 +43,9 @@ target_link_libraries(arelto_core PUBLIC
 install(TARGETS arelto_core DESTINATION rl)
 
 add_executable(game_app src/main.cpp)
-target_link_libraries(game_app PRIVATE arelto_core)
+target_link_libraries(game_app PRIVATE arelto_core SDL2::SDL2main)
 
 pybind11_add_module(arelto_py src/bindings.cpp)
-
 target_link_libraries(arelto_py PRIVATE arelto_core)
 
 file(GLOB_RECURSE ASSETS_TO_COPY "assets/*")
@@ -61,9 +60,15 @@ install(TARGETS arelto_py DESTINATION rl)
 
 find_program(STUBGEN_EXE pybind11-stubgen REQUIRED)
 
+if(WIN32)
+    set(PYTHONPATH_SEP ";")
+else()
+    set(PYTHONPATH_SEP ":")
+endif()
+
 add_custom_command(
     TARGET arelto_py POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=$<TARGET_FILE_DIR:arelto_py>:${CMAKE_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} -E env "PYTHONPATH=$<TARGET_FILE_DIR:arelto_py>${PYTHONPATH_SEP}${CMAKE_SOURCE_DIR}${PYTHONPATH_SEP}$ENV{PYTHONPATH}"
     ${STUBGEN_EXE} -o $<TARGET_FILE_DIR:arelto_py> arelto_py
     COMMENT "Generating Python interface stubs (.pyi)"
     VERBATIM
@@ -74,11 +79,12 @@ install(FILES $<TARGET_FILE_DIR:arelto_py>/arelto_py.pyi DESTINATION rl)
 option(BUILD_TESTS "Build unit tests" ON)
 
 if(BUILD_TESTS)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     add_subdirectory(extern/googletest)
     enable_testing()
     file(GLOB_RECURSE TEST_SOURCES "tests/cpp/*.cpp")
 
-if(TEST_SOURCES)
+    if(TEST_SOURCES)
         add_executable(arelto_tests ${TEST_SOURCES})
         target_include_directories(arelto_tests PRIVATE
             "${CMAKE_SOURCE_DIR}/include"

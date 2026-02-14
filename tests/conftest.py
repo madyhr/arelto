@@ -1,7 +1,7 @@
 # tests/conftest.py
 import pytest
 import torch
-from modules.ray_encoder import RayEncoder
+from rl.modules.ray_encoder import RayEncoder
 
 
 @pytest.fixture

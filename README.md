@@ -1,6 +1,9 @@
 # Arelto
 
 [Arelto Trailer](https://github.com/user-attachments/assets/5101cb45-c6c6-4dc1-a29d-d21d82417f72)
+
+A Reinforcement Learning Rogue-Like (RL2) game where the enemies get smarter over time. Try to survive for as long as you can!
+
 <!--toc:start-->
 - [Arelto](#arelto)
   - [Prerequisites](#prerequisites)
@@ -9,10 +12,10 @@
       - [Debian/Ubuntu](#debianubuntu)
       - [Arch](#arch)
     - [Windows](#windows)
-      - [1. Install [Conda](https://www.anaconda.com/download) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)](#1-install-condahttpswwwanacondacomdownload-or-minicondahttpsdocscondaioenlatestminicondahtml)
+      - [1. Install Conda or Miniconda](#1-install-conda-or-miniconda)
       - [2. Create a Conda Environment](#2-create-a-conda-environment)
       - [3. Install Dependencies via Conda](#3-install-dependencies-via-conda)
-      - [4. Install [vcpkg](https://vcpkg.io/en/getting-started.html)](#4-install-vcpkghttpsvcpkgioengetting-startedhtml)
+      - [4. Install vcpkg](#4-install-vcpkg)
       - [5. Install C++ Dependencies](#5-install-c-dependencies)
   - [Installation](#installation)
   - [Running the Game](#running-the-game)
@@ -25,7 +28,7 @@
   - [Generative AI Disclaimer](#generative-ai-disclaimer)
 <!--toc:end-->
 
-A Reinforcement Learning Rogue-Lite (RL2) game where the enemies get smarter over time. Try to survive for as long as you can!
+
 
 ## Prerequisites
 

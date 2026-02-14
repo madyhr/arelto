@@ -43,7 +43,7 @@ target_link_libraries(arelto_core PUBLIC
 install(TARGETS arelto_core DESTINATION rl)
 
 add_executable(game_app src/main.cpp)
-target_link_libraries(game_app PRIVATE arelto_core)
+target_link_libraries(game_app PRIVATE arelto_core SDL2::SDL2main)
 
 pybind11_add_module(arelto_py src/bindings.cpp)
 target_link_libraries(arelto_py PRIVATE arelto_core)
@@ -79,6 +79,7 @@ install(FILES $<TARGET_FILE_DIR:arelto_py>/arelto_py.pyi DESTINATION rl)
 option(BUILD_TESTS "Build unit tests" ON)
 
 if(BUILD_TESTS)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     add_subdirectory(extern/googletest)
     enable_testing()
     file(GLOB_RECURSE TEST_SOURCES "tests/cpp/*.cpp")

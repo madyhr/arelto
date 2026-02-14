@@ -38,6 +38,7 @@ class UIWidget {
 
   // Hierarchy
   void AddChild(std::shared_ptr<UIWidget> child);
+  void RemoveChild(const std::string& id);
   UIWidget* GetParent() const;
   const std::vector<std::shared_ptr<UIWidget>>& GetChildren() const;
 
@@ -64,7 +65,7 @@ class UIWidget {
 
   // Layout computation — resolves positions based on parent/children
   virtual void ComputeLayout(int parent_x, int parent_y, int parent_w,
-                              int parent_h);
+                             int parent_h);
 
   // Update — called each frame to propagate state changes
   virtual void Update(float dt);

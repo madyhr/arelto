@@ -6,6 +6,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <memory>
 #include <string>
+#include <vector>
 #include "scene.h"
 #include "ui/containers.h"
 #include "ui/widget.h"
@@ -30,6 +31,7 @@ struct UIResources {
   SDL_Texture* begin_button_texture = nullptr;
   SDL_Texture* settings_menu_background_texture = nullptr;
   SDL_Texture* slider_texture = nullptr;
+  std::vector<SDL_Texture*> projectile_textures;
 };
 
 class UIManager {
@@ -37,13 +39,18 @@ class UIManager {
   void SetupUI(const UIResources& resources);
   void Update(const Scene& scene, float time);
   void UpdateSettingsMenu(float volume, bool is_muted);
+  void BuildLevelUpMenu(const std::vector<std::unique_ptr<Upgrade>>& options);
+  void UpdateLevelUpMenu();
 
   UIWidget* GetRootWidget();
   UIWidget* GetSettingsRoot();
+  UIWidget* GetLevelUpRoot();
 
   template <typename T>
   T* GetWidget(const std::string& id) {
-    if (!root_widget_) return nullptr;
+    if (!root_widget_) {
+      return nullptr;
+    }
     return root_widget_->FindWidgetAs<T>(id);
   }
 
@@ -53,6 +60,7 @@ class UIManager {
 
   void BuildHUD();
   void BuildSettingsMenu();
+  void BuildLevelUpCard(UIWidget* parent, int index, const Upgrade& upgrade);
 };
 
 }  // namespace arelto

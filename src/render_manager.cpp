@@ -161,6 +161,9 @@ bool RenderManager::Initialize(bool is_headless) {
     return false;
   }
 
+  // Copy projectile textures into UI resources for level-up card icons
+  resources_.ui_resources.projectile_textures = resources_.projectile_textures;
+
   ui_manager_.SetupUI(resources_.ui_resources);
 
   resources_.map_layout = {0, 0, kMapWidth, kMapHeight};
@@ -217,7 +220,7 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
     } else if (game_state == in_settings_menu) {
       RenderSettingsMenuState();
     } else if (game_state == in_level_up) {
-      RenderLevelUp(scene.level_up_options);
+      RenderLevelUp();
     };
   }
 
@@ -725,12 +728,16 @@ void RenderManager::RenderUI(const Scene& scene, float time) {
 }
 
 void RenderManager::RenderUITree(UIWidget* root) {
-  if (!root || !root->IsVisible()) return;
+  if (!root || !root->IsVisible()) {
+    return;
+  }
   RenderWidgetRecursive(root);
 }
 
 void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
-  if (!widget || !widget->IsVisible()) return;
+  if (!widget || !widget->IsVisible()) {
+    return;
+  }
 
   SDL_Rect bounds = widget->GetComputedBounds();
 
@@ -739,8 +746,9 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       auto* panel = static_cast<Panel*>(widget);
       if (panel->GetBackgroundTexture()) {
         SDL_Rect src = panel->GetBackgroundSrcRect();
+        SDL_Rect* src_ptr = (src.w > 0 && src.h > 0) ? &src : nullptr;
         SDL_RenderCopy(resources_.renderer, panel->GetBackgroundTexture(),
-                       &src, &bounds);
+                       src_ptr, &bounds);
       }
       break;
     }
@@ -757,8 +765,9 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
     case WidgetType::Label: {
       auto* lbl = static_cast<UILabel*>(widget);
       if (lbl->GetUseDigitFont()) {
-        Size2D sprite_size = {static_cast<uint32_t>(lbl->GetDigitSpriteWidth()),
-                              static_cast<uint32_t>(lbl->GetDigitSpriteHeight())};
+        Size2D sprite_size = {
+            static_cast<uint32_t>(lbl->GetDigitSpriteWidth()),
+            static_cast<uint32_t>(lbl->GetDigitSpriteHeight())};
         Size2D char_size = {static_cast<uint32_t>(lbl->GetCharWidth()),
                             static_cast<uint32_t>(lbl->GetCharHeight())};
         RenderDigitString(lbl->GetText(), bounds.x, bounds.y, sprite_size,
@@ -777,9 +786,8 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
         SDL_RenderCopy(resources_.renderer, btn->GetTexture(), &src, &bounds);
       }
       if (btn->GetLabelFont() && !btn->GetLabel().empty()) {
-        RenderText(btn->GetLabel(), bounds.x,
-                   bounds.y + (bounds.h - 26) / 2, {255, 255, 255, 255},
-                   btn->GetLabelFont(), bounds.w);
+        RenderText(btn->GetLabel(), bounds.x, bounds.y + (bounds.h - 26) / 2,
+                   {255, 255, 255, 255}, btn->GetLabelFont(), bounds.w);
       }
       break;
     }
@@ -789,15 +797,15 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       // Draw container
       if (bar->GetContainerTexture()) {
         SDL_Rect src = bar->GetContainerSrcRect();
-        SDL_RenderCopy(resources_.renderer, bar->GetContainerTexture(),
-                       &src, &bounds);
+        SDL_RenderCopy(resources_.renderer, bar->GetContainerTexture(), &src,
+                       &bounds);
       }
       // Draw fill (clipped)
       if (bar->GetFillTexture()) {
         SDL_Rect fill_src = bar->GetClippedFillSrcRect();
         SDL_Rect fill_dst = bar->GetFillDestRect();
-        SDL_RenderCopy(resources_.renderer, bar->GetFillTexture(),
-                       &fill_src, &fill_dst);
+        SDL_RenderCopy(resources_.renderer, bar->GetFillTexture(), &fill_src,
+                       &fill_dst);
       }
       break;
     }
@@ -1026,76 +1034,19 @@ void RenderManager::Shutdown() {
   SDL_Quit();
 }
 
-void RenderManager::RenderLevelUp(
-    const std::vector<std::unique_ptr<Upgrade>>& options) {
+void RenderManager::RenderLevelUp() {
+  // Dark overlay
   SDL_Rect overlay_rect = {0, 0, kWindowWidth, kWindowHeight};
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
   SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 150));
   SDL_RenderFillRect(resources_.renderer, &overlay_rect);
 
-  int total_width = kNumUpgradeOptions * kLevelUpCardWidth +
-                    (kNumUpgradeOptions - 1) * kLevelUpCardGap;
-  int start_x = (kWindowWidth - total_width) / 2;
-  int start_y = (kWindowHeight - kLevelUpCardHeight) / 2;
+  // Update hover states and render via widget tree
+  ui_manager_.UpdateLevelUpMenu();
 
-  for (size_t i = 0; i < options.size(); ++i) {
-    const std::unique_ptr<Upgrade>& upgrade = options[i];
-
-    int x =
-        start_x + static_cast<int>(i * (kLevelUpCardWidth + kLevelUpCardGap));
-
-    SDL_Rect card_rect = {x, start_y, kLevelUpCardWidth, kLevelUpCardHeight};
-
-    SDL_RenderCopy(resources_.renderer,
-                   resources_.ui_resources.level_up_option_card_texture,
-                   nullptr, &card_rect);
-
-    int spell_id = upgrade->GetSpellID();
-    SDL_Texture* icon = resources_.projectile_textures[spell_id];
-    SDL_Rect src_rect = {0, 0, kFireballSpriteWidth, kFireballSpriteHeight};
-    SDL_Rect dest_rect = {x + (kLevelUpCardWidth - kLevelUpIconSize) / 2,
-                          start_y + kLevelUpIconOffsetY, kLevelUpIconSize,
-                          kLevelUpIconSize};
-    SDL_RenderCopy(resources_.renderer, icon, &src_rect, &dest_rect);
-
-    std::string spell_name = upgrade->GetSpellName();
-    RenderText(spell_name, x, start_y + kLevelUpNameOffsetY, kColorWhite,
-               resources_.ui_resources.ui_font_large, kLevelUpCardWidth);
-
-    std::string description = upgrade->GetDescription();
-    RenderText(description, x, start_y + kLevelUpDescOffsetY, kColorGrey,
-               resources_.ui_resources.ui_font_medium, kLevelUpCardWidth);
-
-    // "current_val -> new_val"
-    std::string value_change =
-        upgrade->GetOldValueString() + " -> " + upgrade->GetNewValueString();
-    RenderText(value_change, x, start_y + kLevelUpStatsOffsetY, kColorGreen,
-               resources_.ui_resources.ui_font_medium, kLevelUpCardWidth);
-
-    int button_x = x + (kLevelUpCardWidth - kLevelUpButtonWidth) / 2;
-    int button_y = start_y + kLevelUpButtonOffsetY;
-
-    int mouse_x, mouse_y;
-    SDL_GetMouseState(&mouse_x, &mouse_y);
-    bool is_hovered =
-        (mouse_x >= button_x && mouse_x <= button_x + kLevelUpButtonWidth &&
-         mouse_y >= button_y && mouse_y <= button_y + kLevelUpButtonHeight);
-
-    // button texture map has both default and hover state so y composant of top
-    // left coord on the source rect depends on the hover state.
-    SDL_Rect btn_src_rect = {
-        0, is_hovered ? kLevelUpButtonTextureHeight / 2 : 0,
-        kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight / 2};
-
-    SDL_Rect btn_dst_rect = {button_x, button_y, kLevelUpButtonWidth,
-                             kLevelUpButtonHeight};
-
-    SDL_RenderCopy(resources_.renderer, resources_.ui_resources.button_texture,
-                   &btn_src_rect, &btn_dst_rect);
-
-    RenderText("SELECT", button_x, button_y + (kLevelUpButtonHeight - 26) / 2,
-               kColorWhite, resources_.ui_resources.ui_font_medium,
-               kLevelUpButtonWidth);
+  UIWidget* level_up = ui_manager_.GetLevelUpRoot();
+  if (level_up) {
+    RenderWidgetRecursive(level_up);
   }
 
   SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);

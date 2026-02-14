@@ -9,7 +9,17 @@ void UIWidget::AddChild(std::shared_ptr<UIWidget> child) {
   children_.push_back(std::move(child));
 }
 
-UIWidget* UIWidget::GetParent() const { return parent_; }
+void UIWidget::RemoveChild(const std::string& id) {
+  children_.erase(std::remove_if(children_.begin(), children_.end(),
+                                 [&id](const std::shared_ptr<UIWidget>& child) {
+                                   return child->GetId() == id;
+                                 }),
+                  children_.end());
+}
+
+UIWidget* UIWidget::GetParent() const {
+  return parent_;
+}
 
 const std::vector<std::shared_ptr<UIWidget>>& UIWidget::GetChildren() const {
   return children_;
@@ -25,23 +35,47 @@ void UIWidget::SetSize(float w, float h) {
   height_ = h;
 }
 
-void UIWidget::SetAnchor(AnchorType anchor) { anchor_ = anchor; }
-void UIWidget::SetPadding(float padding) { padding_ = padding; }
-void UIWidget::SetMargin(float margin) { margin_ = margin; }
-void UIWidget::SetSpacing(float spacing) { spacing_ = spacing; }
+void UIWidget::SetAnchor(AnchorType anchor) {
+  anchor_ = anchor;
+}
+void UIWidget::SetPadding(float padding) {
+  padding_ = padding;
+}
+void UIWidget::SetMargin(float margin) {
+  margin_ = margin;
+}
+void UIWidget::SetSpacing(float spacing) {
+  spacing_ = spacing;
+}
 
-void UIWidget::SetId(const std::string& id) { id_ = id; }
-const std::string& UIWidget::GetId() const { return id_; }
+void UIWidget::SetId(const std::string& id) {
+  id_ = id;
+}
+const std::string& UIWidget::GetId() const {
+  return id_;
+}
 
-void UIWidget::SetVisible(bool visible) { visible_ = visible; }
-bool UIWidget::IsVisible() const { return visible_; }
+void UIWidget::SetVisible(bool visible) {
+  visible_ = visible;
+}
+bool UIWidget::IsVisible() const {
+  return visible_;
+}
 
-void UIWidget::SetHovered(bool hovered) { hovered_ = hovered; }
-bool UIWidget::IsHovered() const { return hovered_; }
+void UIWidget::SetHovered(bool hovered) {
+  hovered_ = hovered;
+}
+bool UIWidget::IsHovered() const {
+  return hovered_;
+}
 
-SDL_Rect UIWidget::GetComputedBounds() const { return computed_bounds_; }
+SDL_Rect UIWidget::GetComputedBounds() const {
+  return computed_bounds_;
+}
 
-WidgetType UIWidget::GetWidgetType() const { return WidgetType::Base; }
+WidgetType UIWidget::GetWidgetType() const {
+  return WidgetType::Base;
+}
 
 void UIWidget::ApplyAnchor(int parent_x, int parent_y, int parent_w,
                            int parent_h) {
@@ -84,16 +118,16 @@ void UIWidget::ApplyAnchor(int parent_x, int parent_y, int parent_w,
       break;
   }
 
-  computed_bounds_.x = base_x + static_cast<int>(pos_x_) +
-                       static_cast<int>(margin_);
-  computed_bounds_.y = base_y + static_cast<int>(pos_y_) +
-                       static_cast<int>(margin_);
+  computed_bounds_.x =
+      base_x + static_cast<int>(pos_x_) + static_cast<int>(margin_);
+  computed_bounds_.y =
+      base_y + static_cast<int>(pos_y_) + static_cast<int>(margin_);
   computed_bounds_.w = w;
   computed_bounds_.h = h;
 }
 
 void UIWidget::ComputeLayout(int parent_x, int parent_y, int parent_w,
-                              int parent_h) {
+                             int parent_h) {
   ApplyAnchor(parent_x, parent_y, parent_w, parent_h);
 
   int content_x = computed_bounds_.x + static_cast<int>(padding_);

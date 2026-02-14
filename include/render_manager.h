@@ -48,7 +48,7 @@ class RenderManager {
   void RenderGameOver();
   void RenderStartScreen();
   void RenderSettingsMenuState();
-  void RenderLevelUp(const std::vector<std::unique_ptr<Upgrade>>& options);
+  void RenderLevelUp();
   void UpdateSettingsMenuState(float volume, bool is_muted);
 
   UIManager& GetUIManager() { return ui_manager_; }

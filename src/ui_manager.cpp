@@ -1,7 +1,10 @@
 // src/ui_manager.cpp
 #include "ui_manager.h"
 #include <algorithm>
+#include <functional>
 #include <string>
+#include "constants/progression_manager.h"
+#include "constants/projectile.h"
 #include "constants/ui.h"
 #include "scene.h"
 
@@ -30,6 +33,10 @@ UIWidget* UIManager::GetRootWidget() {
 
 UIWidget* UIManager::GetSettingsRoot() {
   return root_widget_ ? root_widget_->FindWidget("settings_menu") : nullptr;
+}
+
+UIWidget* UIManager::GetLevelUpRoot() {
+  return root_widget_ ? root_widget_->FindWidget("level_up_menu") : nullptr;
 }
 
 // =============================================================================
@@ -119,7 +126,6 @@ void UIManager::BuildHUD() {
   health_bar->SetMaxFillSize(kHealthBarSpriteWidth, kHealthBarSpriteHeight);
   health_bar->SetPercent(1.0f);
 
-  // Health text overlay — child of health_bar so it's positioned relative to bar
   auto health_text = std::make_shared<UILabel>();
   health_text->SetId("health_text");
   health_text->SetPosition(kHealthBarTextRelOffsetX, kHealthBarTextRelOffsetY);
@@ -146,7 +152,6 @@ void UIManager::BuildHUD() {
   exp_bar->SetMaxFillSize(kExpBarSpriteWidth, kExpBarSpriteHeight);
   exp_bar->SetPercent(0.0f);
 
-  // Exp text overlay — child of exp_bar
   auto exp_text = std::make_shared<UILabel>();
   exp_text->SetId("exp_text");
   exp_text->SetPosition(kExpBarTextRelOffsetX, kExpBarTextRelOffsetY);
@@ -166,7 +171,6 @@ void UIManager::BuildHUD() {
 // =============================================================================
 
 void UIManager::BuildSettingsMenu() {
-  // Settings panel — centered on screen
   auto menu = std::make_shared<Panel>();
   menu->SetId("settings_menu");
   menu->SetAnchor(AnchorType::Center);
@@ -176,14 +180,12 @@ void UIManager::BuildSettingsMenu() {
                               kSettingsMenuBackgroundSpriteHeight});
   menu->SetVisible(false);
 
-  // Content laid out as a VBox inside the menu
   auto content = std::make_shared<VBox>();
   content->SetId("settings_content");
   content->SetSize(kSettingsMenuWidth, kSettingsMenuHeight);
   content->SetPadding(kMenuContentPadding);
   content->SetSpacing(kMenuItemSpacing);
 
-  // Title: centered at top
   auto title = std::make_shared<UILabel>();
   title->SetId("settings_title");
   title->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 50);
@@ -192,7 +194,6 @@ void UIManager::BuildSettingsMenu() {
   title->SetCenterWidth(kSettingsMenuWidth - 2 * kMenuContentPadding);
   content->AddChild(title);
 
-  // Volume Label
   auto vol_label = std::make_shared<UILabel>();
   vol_label->SetId("volume_label");
   vol_label->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 30);
@@ -201,7 +202,6 @@ void UIManager::BuildSettingsMenu() {
   vol_label->SetCenterWidth(kSettingsMenuWidth - 2 * kMenuContentPadding);
   content->AddChild(vol_label);
 
-  // Volume Slider: centered horizontally
   auto vol_slider = std::make_shared<UIProgressBar>();
   vol_slider->SetId("volume_slider");
   vol_slider->SetAnchor(AnchorType::TopCenter);
@@ -219,7 +219,6 @@ void UIManager::BuildSettingsMenu() {
   vol_slider->SetPercent(1.0f);
   content->AddChild(vol_slider);
 
-  // Mute Button: centered horizontally
   auto mute_btn = std::make_shared<UIButton>();
   mute_btn->SetId("mute_button");
   mute_btn->SetAnchor(AnchorType::TopCenter);
@@ -236,7 +235,6 @@ void UIManager::BuildSettingsMenu() {
 
   menu->AddChild(content);
 
-  // Bottom button row: Resume + Main Menu, anchored to bottom
   auto button_row = std::make_shared<HBox>();
   button_row->SetId("settings_buttons");
   button_row->SetAnchor(AnchorType::BottomCenter);
@@ -276,11 +274,138 @@ void UIManager::BuildSettingsMenu() {
 }
 
 // =============================================================================
+// BuildLevelUpMenu — dynamically create card widgets from upgrade options
+// =============================================================================
+
+void UIManager::BuildLevelUpMenu(
+    const std::vector<std::unique_ptr<Upgrade>>& options) {
+  // Remove any stale level-up menu from a previous level-up
+  root_widget_->RemoveChild("level_up_menu");
+
+  // Card row: centered on screen
+  auto card_row = std::make_shared<HBox>();
+  card_row->SetId("level_up_menu");
+  card_row->SetAnchor(AnchorType::Center);
+  int total_width = kNumUpgradeOptions * kLevelUpCardWidth +
+                    (kNumUpgradeOptions - 1) * kLevelUpCardGap;
+  card_row->SetSize(total_width, kLevelUpCardHeight);
+  card_row->SetSpacing(kLevelUpCardGap);
+  card_row->SetVisible(true);
+
+  for (size_t i = 0; i < options.size(); ++i) {
+    BuildLevelUpCard(card_row.get(), static_cast<int>(i), *options[i]);
+  }
+
+  root_widget_->AddChild(card_row);
+  root_widget_->ComputeLayout(0, 0, kWindowWidth, kWindowHeight);
+}
+
+void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
+                                 const Upgrade& upgrade) {
+  std::string card_id = "level_up_card_" + std::to_string(index);
+
+  auto card = std::make_shared<Panel>();
+  card->SetId(card_id);
+  card->SetSize(kLevelUpCardWidth, kLevelUpCardHeight);
+  card->SetBackground(resources_->level_up_option_card_texture);
+  card->SetBackgroundSrcRect({0, 0, 0, 0});  // full texture
+
+  // Spell icon — centered horizontally
+  int spell_id = upgrade.GetSpellID();
+  if (spell_id >= 0 &&
+      spell_id < static_cast<int>(resources_->projectile_textures.size())) {
+    auto icon = std::make_shared<UIImage>();
+    icon->SetId(card_id + "_icon");
+    icon->SetAnchor(AnchorType::TopCenter);
+    icon->SetPosition(0, kLevelUpIconOffsetY);
+    icon->SetSize(kLevelUpIconSize, kLevelUpIconSize);
+    icon->SetTexture(resources_->projectile_textures[spell_id]);
+    icon->SetSrcRect({0, 0, kFireballSpriteWidth, kFireballSpriteHeight});
+    card->AddChild(icon);
+  }
+
+  // Spell name
+  auto name_label = std::make_shared<UILabel>();
+  name_label->SetId(card_id + "_name");
+  name_label->SetPosition(kLevelUpNameOffsetX, kLevelUpNameOffsetY);
+  name_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpNameOffsetX, 30);
+  name_label->SetText(upgrade.GetSpellName());
+  name_label->SetFont(resources_->ui_font_large);
+  name_label->SetColor({255, 255, 255, 255});
+  name_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpNameOffsetX);
+  card->AddChild(name_label);
+
+  // Description
+  auto desc_label = std::make_shared<UILabel>();
+  desc_label->SetId(card_id + "_desc");
+  desc_label->SetPosition(kLevelUpDescOffsetX, kLevelUpDescOffsetY);
+  desc_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpDescOffsetX, 25);
+  desc_label->SetText(upgrade.GetDescription());
+  desc_label->SetFont(resources_->ui_font_medium);
+  desc_label->SetColor({180, 180, 180, 255});
+  desc_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpDescOffsetX);
+  card->AddChild(desc_label);
+
+  // Value change (e.g. "1.00 -> 0.90")
+  std::string stats_str =
+      upgrade.GetOldValueString() + " -> " + upgrade.GetNewValueString();
+  auto stats_label = std::make_shared<UILabel>();
+  stats_label->SetId(card_id + "_stats");
+  stats_label->SetPosition(kLevelUpStatsOffsetX, kLevelUpStatsOffsetY);
+  stats_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX, 25);
+  stats_label->SetText(stats_str);
+  stats_label->SetFont(resources_->ui_font_medium);
+  stats_label->SetColor({0, 255, 0, 255});
+  stats_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX);
+  card->AddChild(stats_label);
+
+  // SELECT button
+  std::string btn_id = "select_button_" + std::to_string(index);
+  auto select_btn = std::make_shared<UIButton>();
+  select_btn->SetId(btn_id);
+  select_btn->SetAnchor(AnchorType::TopCenter);
+  select_btn->SetPosition(0, kLevelUpButtonOffsetY);
+  select_btn->SetSize(kLevelUpButtonWidth, kLevelUpButtonHeight);
+  select_btn->SetTexture(resources_->button_texture);
+  select_btn->SetNormalSrcRect(
+      {0, 0, kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight / 2});
+  select_btn->SetHoverSrcRect({0, kLevelUpButtonTextureHeight / 2,
+                               kLevelUpButtonTextureWidth,
+                               kLevelUpButtonTextureHeight / 2});
+  select_btn->SetLabel("SELECT");
+  select_btn->SetLabelFont(resources_->ui_font_medium);
+  card->AddChild(select_btn);
+
+  parent->AddChild(card);
+}
+
+void UIManager::UpdateLevelUpMenu() {
+  auto* level_up = GetLevelUpRoot();
+  if (!level_up)
+    return;
+
+  int mouse_x, mouse_y;
+  SDL_GetMouseState(&mouse_x, &mouse_y);
+
+  std::function<void(UIWidget*)> update_hover = [&](UIWidget* widget) {
+    if (widget->GetWidgetType() == WidgetType::Button) {
+      SDL_Rect bounds = widget->GetComputedBounds();
+      bool hovered = (mouse_x >= bounds.x && mouse_x <= bounds.x + bounds.w &&
+                      mouse_y >= bounds.y && mouse_y <= bounds.y + bounds.h);
+      widget->SetHovered(hovered);
+    }
+    for (auto& child : widget->GetChildren()) {
+      update_hover(child.get());
+    }
+  };
+  update_hover(level_up);
+}
+
+// =============================================================================
 // Update — refresh dynamic widget state from Scene data
 // =============================================================================
 
 void UIManager::Update(const Scene& scene, float time) {
-  // Health bar
   auto* health_bar = GetWidget<UIProgressBar>("health_bar");
   if (health_bar) {
     int current_hp = scene.player.stats_.health;
@@ -295,7 +420,6 @@ void UIManager::Update(const Scene& scene, float time) {
                          std::to_string(scene.player.stats_.max_health));
   }
 
-  // Exp bar
   auto* exp_bar = GetWidget<UIProgressBar>("exp_bar");
   if (exp_bar) {
     int current_exp = scene.player.stats_.exp_points;
@@ -310,13 +434,11 @@ void UIManager::Update(const Scene& scene, float time) {
                       std::to_string(scene.player.stats_.exp_points_required));
   }
 
-  // Level indicator
   auto* level_text = GetWidget<UILabel>("level_text");
   if (level_text) {
     level_text->SetText(std::to_string(scene.player.stats_.level));
   }
 
-  // Timer
   auto* timer_text = GetWidget<UILabel>("timer_text");
   if (timer_text) {
     timer_text->SetText(std::to_string(static_cast<int>(time)));
@@ -339,7 +461,6 @@ void UIManager::UpdateSettingsMenu(float volume, bool is_muted) {
     mute_btn->SetLabel(is_muted ? "UNMUTE" : "MUTE");
   }
 
-  // Update hover state for all buttons in the settings menu
   int mouse_x, mouse_y;
   SDL_GetMouseState(&mouse_x, &mouse_y);
 
@@ -347,7 +468,6 @@ void UIManager::UpdateSettingsMenu(float volume, bool is_muted) {
   if (!settings)
     return;
 
-  // Recursively check buttons (they're now nested in containers)
   std::function<void(UIWidget*)> update_hover = [&](UIWidget* widget) {
     if (widget->GetWidgetType() == WidgetType::Button) {
       SDL_Rect bounds = widget->GetComputedBounds();

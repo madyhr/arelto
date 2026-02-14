@@ -104,8 +104,6 @@ bool RenderManager::Initialize(bool is_headless) {
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/exp_bar.png");
   resources_.ui_resources.start_screen_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/ui/start_screen.png");
-  resources_.ui_resources.paused_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/paused.png");
   resources_.ui_resources.game_over_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/game_over.png");
   resources_.ui_resources.level_up_option_card_texture = IMG_LoadTexture(
@@ -146,7 +144,6 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.ui_resources.timer_hourglass_texture == nullptr ||
       resources_.ui_resources.game_over_texture == nullptr ||
       resources_.ui_resources.start_screen_texture == nullptr ||
-      resources_.ui_resources.paused_texture == nullptr ||
       resources_.ui_resources.level_up_option_card_texture == nullptr ||
       resources_.ui_resources.button_texture == nullptr ||
       resources_.ui_resources.begin_button_texture == nullptr ||

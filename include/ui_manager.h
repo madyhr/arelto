@@ -22,7 +22,6 @@ struct UIResources {
   SDL_Texture* timer_hourglass_texture = nullptr;
   SDL_Texture* game_over_texture = nullptr;
   SDL_Texture* start_screen_texture = nullptr;
-  SDL_Texture* paused_texture = nullptr;
   TTF_Font* ui_font_medium = nullptr;
   TTF_Font* ui_font_large = nullptr;
   TTF_Font* ui_font_huge = nullptr;

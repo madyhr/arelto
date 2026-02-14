@@ -54,9 +54,6 @@ constexpr int kTimerTextCharHeight = 72;
 // Game Over text
 constexpr int kGameOverSpriteWidth = 610;
 constexpr int kGameOverSpriteHeight = 88;
-// Paused text
-constexpr int kPausedSpriteWidth = 610;
-constexpr int kPausedSpriteHeight = 120;
 
 // Experience Bar
 constexpr int kExpBarContainerSpriteOffsetX = 0;

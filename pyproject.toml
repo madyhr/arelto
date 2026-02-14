@@ -16,3 +16,4 @@ dependencies = [
 [tool.scikit-build]
 cmake.version = ">=3.10"
 ninja.version = ">=1.5"
+editable.mode = "inplace"

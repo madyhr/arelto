@@ -78,6 +78,8 @@ constexpr int kLevelIconSpriteWidth = 70;
 constexpr int kLevelIconSpriteHeight = 74;
 constexpr int kLevelTextCharWidth = 50;
 constexpr int kLevelTextCharHeight = 72;
+constexpr int kLevelUpIconMargin = -10;
+constexpr int kLevelUpTextMargin = -10;
 
 // Level Up Option Card
 constexpr int kLevelUpCardWidth = 400;

@@ -13,7 +13,7 @@ namespace arelto {
 void UIManager::SetupUI(const UIResources& resources) {
   resources_ = &resources;
 
-  // The root widget is a full-screen invisible Panel (the "Canvas").
+  // The root widget is a full-screen invisible Panel (the "canvas").
   auto root = std::make_shared<Panel>();
   root->SetId("root");
   root->SetSize(kWindowWidth, kWindowHeight);
@@ -25,7 +25,6 @@ void UIManager::SetupUI(const UIResources& resources) {
   BuildStartScreen();
   BuildGameOverScreen();
 
-  // Compute initial layout from the screen origin.
   root_widget_->ComputeLayout(0, 0, kWindowWidth, kWindowHeight);
 }
 
@@ -54,7 +53,6 @@ void UIManager::BuildHUD() {
   top_left->SetSize(200, 200);
   top_left->SetSpacing(kLevelGroupOffsetY);
 
-  // Timer row (hourglass + text)
   auto timer_row = std::make_shared<HBox>();
   timer_row->SetId("timer_row");
   timer_row->SetSize(200, kTimerHourglassSpriteHeight);
@@ -78,11 +76,9 @@ void UIManager::BuildHUD() {
 
   top_left->AddChild(timer_row);
 
-  // Level row (icon + text)
   auto level_row = std::make_shared<HBox>();
   level_row->SetId("level_row");
   level_row->SetSize(200, kLevelIconSpriteHeight);
-  level_row->SetSpacing(kLevelTextGap);
 
   auto level_icon = std::make_shared<UIImage>();
   level_icon->SetId("level_icon");
@@ -90,6 +86,7 @@ void UIManager::BuildHUD() {
   level_icon->SetTexture(resources_->level_indicator_texture);
   level_icon->SetSrcRect({kLevelIconSpriteOffsetX, kLevelIconSpriteOffsetY,
                           kLevelIconSpriteWidth, kLevelIconSpriteHeight});
+  level_icon->SetMargin(kLevelUpIconMargin);
   level_row->AddChild(level_icon);
 
   auto level_text = std::make_shared<UILabel>();
@@ -99,6 +96,7 @@ void UIManager::BuildHUD() {
   level_text->SetDigitSpriteSize(kDigitSpriteWidth, kDigitSpriteHeight);
   level_text->SetCharSize(kLevelTextCharWidth, kLevelTextCharHeight);
   level_row->AddChild(level_text);
+  level_text->SetMargin(kLevelUpTextMargin);
 
   top_left->AddChild(level_row);
   root_widget_->AddChild(top_left);
@@ -112,7 +110,6 @@ void UIManager::BuildHUD() {
                        kHealthBarContainerSpriteHeight * 2 + kHudBarSpacing);
   bottom_left->SetSpacing(kHudBarSpacing);
 
-  // Health bar (with overlaid text)
   auto health_bar = std::make_shared<UIProgressBar>();
   health_bar->SetId("health_bar");
   health_bar->SetSize(kHealthBarContainerSpriteWidth,
@@ -139,7 +136,6 @@ void UIManager::BuildHUD() {
 
   bottom_left->AddChild(health_bar);
 
-  // Exp bar
   auto exp_bar = std::make_shared<UIProgressBar>();
   exp_bar->SetId("exp_bar");
   exp_bar->SetSize(kExpBarContainerSpriteWidth, kExpBarContainerSpriteHeight);
@@ -173,14 +169,14 @@ void UIManager::BuildHUD() {
 // =============================================================================
 
 void UIManager::BuildSettingsMenu() {
-  // Fullscreen wrapper for the overlay
+  // A tranparent overlay to fade out the game while settings menu is present.
   auto overlay = std::make_shared<Panel>();
-  overlay->SetId("settings_menu");  // Keep ID same for root lookup
+  overlay->SetId("settings_menu");
   overlay->SetSize(kWindowWidth, kWindowHeight);
   overlay->SetBackgroundColor(WithOpacity(kColorBlack, 128));
   overlay->SetVisible(false);
 
-  // The actual menu panel
+  // The menu panel itself
   auto menu = std::make_shared<Panel>();
   menu->SetId("settings_panel");
   menu->SetAnchor(AnchorType::Center);
@@ -231,7 +227,6 @@ void UIManager::BuildSettingsMenu() {
   volume_slider->SetPercent(1.0f);
   content->AddChild(volume_slider);
 
-  // --- Mute Checkbox ---
   auto mute_row = std::make_shared<HBox>();
   mute_row->SetId("mute_row");
   mute_row->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 40);
@@ -261,9 +256,6 @@ void UIManager::BuildSettingsMenu() {
 
   content->AddChild(mute_row);
 
-  // --- Debug Checkboxes ---
-
-  // Occupancy Map Row
   auto occupancy_map_row = std::make_shared<HBox>();
   occupancy_map_row->SetId("occupancy_map_row");
   occupancy_map_row->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 40);
@@ -293,7 +285,6 @@ void UIManager::BuildSettingsMenu() {
 
   content->AddChild(occupancy_map_row);
 
-  // Ray Caster Row
   auto ray_caster_row = std::make_shared<HBox>();
   ray_caster_row->SetId("ray_caster_row");
   ray_caster_row->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 40);
@@ -406,7 +397,6 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   card->SetBackground(resources_->level_up_option_card_texture);
   card->SetBackgroundSrcRect({0, 0, 0, 0});  // full texture
 
-  // Spell icon — centered horizontally
   int spell_id = upgrade.GetSpellID();
   if (spell_id >= 0 &&
       spell_id < static_cast<int>(resources_->projectile_textures.size())) {
@@ -420,7 +410,6 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
     card->AddChild(icon);
   }
 
-  // Spell name
   auto name_label = std::make_shared<UILabel>();
   name_label->SetId(card_id + "_name");
   name_label->SetPosition(kLevelUpNameOffsetX, kLevelUpNameOffsetY);
@@ -431,7 +420,6 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   name_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpNameOffsetX);
   card->AddChild(name_label);
 
-  // Description
   auto desc_label = std::make_shared<UILabel>();
   desc_label->SetId(card_id + "_desc");
   desc_label->SetPosition(kLevelUpDescOffsetX, kLevelUpDescOffsetY);
@@ -442,7 +430,6 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   desc_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpDescOffsetX);
   card->AddChild(desc_label);
 
-  // Value change (e.g. "1.00 -> 0.90")
   std::string stats_str =
       upgrade.GetOldValueString() + " -> " + upgrade.GetNewValueString();
   auto stats_label = std::make_shared<UILabel>();
@@ -455,7 +442,6 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   stats_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX);
   card->AddChild(stats_label);
 
-  // SELECT button
   std::string btn_id = "select_button_" + std::to_string(index);
   auto select_btn = std::make_shared<UIButton>();
   select_btn->SetId(btn_id);

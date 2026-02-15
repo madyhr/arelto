@@ -111,7 +111,7 @@ constexpr int kBeginButtonX = (kWindowWidth - kBeginButtonWidth) / 2;
 constexpr int kBeginButtonY = 5 * (kWindowHeight - kBeginButtonHeight) / 7;
 
 constexpr int kSettingsMenuWidth = 450;
-constexpr int kSettingsMenuHeight = 700;
+constexpr int kSettingsMenuHeight = 750;
 constexpr int kSettingsMenuBackgroundSpriteWidth = 900;
 constexpr int kSettingsMenuBackgroundSpriteHeight = 1000;
 

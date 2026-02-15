@@ -269,4 +269,17 @@ WidgetType UIProgressBar::GetWidgetType() const {
   return WidgetType::ProgressBar;
 }
 
+// =============================================================================
+// Spacer
+// =============================================================================
+
+Spacer::Spacer(int width, int height) {
+  width_ = static_cast<float>(width);
+  height_ = static_cast<float>(height);
+}
+
+WidgetType Spacer::GetWidgetType() const {
+  return WidgetType::Spacer;
+}
+
 }  // namespace arelto

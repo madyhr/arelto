@@ -201,6 +201,13 @@ private:
   int max_fill_height_ = 0;
 };
 
+// Spacer: a widget that does nothing but take up space.
+class Spacer : public UIWidget {
+ public:
+  Spacer(int width, int height);
+  WidgetType GetWidgetType() const override;
+};
+
 } // namespace arelto
 
 #endif

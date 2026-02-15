@@ -191,9 +191,12 @@ void UIManager::BuildSettingsMenu() {
   content->SetPadding(kMenuContentPadding);
   content->SetSpacing(kMenuItemSpacing);
 
+  auto title_spacer = std::make_shared<Spacer>(0, 5);
+  content->AddChild(title_spacer);
+
   auto title = std::make_shared<UILabel>();
   title->SetId("settings_title");
-  title->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 50);
+  title->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 100);
   title->SetText("SETTINGS");
   title->SetFont(resources_->ui_font_huge);
   title->SetCenterWidth(kSettingsMenuWidth - 2 * kMenuContentPadding);
@@ -255,6 +258,14 @@ void UIManager::BuildSettingsMenu() {
   mute_row->AddChild(mute_label);
 
   content->AddChild(mute_row);
+
+  auto debug_label = std::make_shared<UILabel>();
+  debug_label->SetId("debug_label");
+  debug_label->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 40);
+  debug_label->SetText("DEBUG");
+  debug_label->SetFont(resources_->ui_font_large);
+  debug_label->SetCenterWidth(kSettingsMenuWidth - 2 * kMenuContentPadding);
+  content->AddChild(debug_label);
 
   auto occupancy_map_row = std::make_shared<HBox>();
   occupancy_map_row->SetId("occupancy_map_row");

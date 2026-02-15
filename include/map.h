@@ -33,11 +33,12 @@ class FixedMap {
 
  public:
   static constexpr size_t kTotalCells = width * height;
-  std::array<EntityType, kTotalCells> data_;
+  // Data contains `EntityType`s stored as a bitmask.
+  std::array<uint16_t, kTotalCells> data_;
   FixedMap() { Clear(); };
   virtual ~FixedMap() {};
 
-  void Clear() { data_.fill(EntityType::None); };
+  void Clear() { data_.fill(kMaskTypeNone); };
 
   int GetDataIdx(int x, int y) const {
     if (x < 0 || x >= width || y < 0 || y >= height) {
@@ -47,7 +48,7 @@ class FixedMap {
   };
 
   inline EntityType GetUnchecked(int x, int y) const {
-    return data_[x + y * width];
+    return MaskToEntityTypePrioritized(data_[x + y * width]);
   }
 
   EntityType Get(int x, int y) const {
@@ -55,14 +56,45 @@ class FixedMap {
     if (data_idx == -1) {
       return EntityType::None;
     }
-    return data_[data_idx];
+    return MaskToEntityTypePrioritized(data_[data_idx]);
   };
 
+  uint16_t GetMask(int x, int y) const {
+    int data_idx = GetDataIdx(x, y);
+    if (data_idx == -1) {
+      return kMaskTypeNone;
+    }
+    return data_[data_idx];
+  }
+
+  // This functions directly sets the entire type bitmask for a
+  // grid cell to just that of the specified EntityType.
   inline void Set(int x, int y, EntityType type) {
     int data_idx = GetDataIdx(x, y);
 
     if (data_idx != -1) {
-      data_[data_idx] = type;
+      data_[data_idx] = EntityTypeToMask(type);
+    }
+  }
+
+  inline void Add(int x, int y, EntityType type) {
+    int data_idx = GetDataIdx(x, y);
+    if (data_idx != -1) {
+      data_[data_idx] |= EntityTypeToMask(type);
+    }
+  }
+
+  inline void Remove(int x, int y, EntityType type) {
+    int data_idx = GetDataIdx(x, y);
+    if (data_idx != -1) {
+      data_[data_idx] &= ~EntityTypeToMask(type);
+    }
+  }
+
+  inline void ClearCell(int x, int y) {
+    int data_idx = GetDataIdx(x, y);
+    if (data_idx != -1) {
+      data_[data_idx] = kMaskTypeNone;
     }
   }
 
@@ -76,51 +108,19 @@ class FixedMap {
   }
 
   void AddBorder(EntityType type) {
+    uint16_t mask = EntityTypeToMask(type);
     for (size_t x = 0; x < width; ++x) {
-      data_[x] = type;                         // Top (y=0)
-      data_[x + (height - 1) * width] = type;  // Bottom
+      data_[x] |= mask;                         // Top (y=0)
+      data_[x + (height - 1) * width] |= mask;  // Bottom
     }
     for (size_t y = 0; y < height; ++y) {
-      data_[y * width] = type;              // Left (x=0)
-      data_[width - 1 + y * width] = type;  // Right
+      data_[y * width] |= mask;              // Left (x=0)
+      data_[width - 1 + y * width] |= mask;  // Right
     }
   }
 
-  EntityType* Data() { return data_.data(); };
-  const EntityType* Data() const { return data_.data(); };
-
-  template <size_t src_w, size_t src_h>
-  void CopyRowFrom(const FixedMap<src_w, src_h>& source, int dest_row_idx,
-                   int src_row_idx, int src_col_offset) {
-    EntityType* dest_ptr = Data() + dest_row_idx * width;
-
-    if (src_row_idx < 0 || src_row_idx >= static_cast<int>(src_h)) {
-      std::fill(dest_ptr, dest_ptr + width, EntityType::None);
-      return;
-    }
-
-    const EntityType* src_ptr = source.Data() + src_row_idx * src_w;
-
-    int start_copy_local = std::max(0, -src_col_offset);
-    int end_copy_local = std::min(static_cast<int>(width),
-                                  static_cast<int>(src_w) - src_col_offset);
-
-    int copy_len = end_copy_local - start_copy_local;
-
-    if (start_copy_local > 0) {
-      std::fill(dest_ptr, dest_ptr + start_copy_local, EntityType::None);
-    }
-
-    if (copy_len > 0) {
-      std::copy(src_ptr + src_col_offset + start_copy_local,
-                src_ptr + src_col_offset + end_copy_local,
-                dest_ptr + start_copy_local);
-    }
-
-    if (end_copy_local < static_cast<int>(width)) {
-      std::fill(dest_ptr + end_copy_local, dest_ptr + width, EntityType::None);
-    };
-  };
+  uint16_t* Data() { return data_.data(); };
+  const uint16_t* Data() const { return data_.data(); };
 };
 
 }  // namespace arelto

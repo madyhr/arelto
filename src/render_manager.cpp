@@ -648,26 +648,48 @@ void RenderManager::RenderDebugWorldOccupancyMap(
       render_rect.w = kOccupancyMapResolution;
       render_rect.h = kOccupancyMapResolution;
 
-      EntityType type = occupancy_map.Get(i, j);
+      uint16_t mask = occupancy_map.GetMask(i, j);
 
-      if (type != EntityType::None) {
-        // Color coding based on type
-        switch (type) {
-          case EntityType::player:
-            SetRenderColor(resources_.renderer, WithOpacity(kColorBlue, 128));
-            break;
-          case EntityType::enemy:
-            SetRenderColor(resources_.renderer, WithOpacity(kColorRed, 128));
-            break;
-          case EntityType::projectile:
-            SetRenderColor(resources_.renderer, WithOpacity(kColorYellow, 128));
-            break;
-          case EntityType::terrain:
-            SetRenderColor(resources_.renderer, WithOpacity(kColorGreen, 128));
-            break;
-          default:
-            SetRenderColor(resources_.renderer, WithOpacity(kColorGrey, 128));
-            break;
+      if (mask != kMaskTypeNone) {
+        // Color coding based on type - now blending
+        int r = 0, g = 0, b = 0, a = 0;
+        int count = 0;
+
+        if (mask & kMaskTypePlayer) {
+          r += kColorBlue.r;
+          g += kColorBlue.g;
+          b += kColorBlue.b;
+          a += 128;
+          count++;
+        }
+        if (mask & kMaskTypeEnemy) {
+          r += kColorRed.r;
+          g += kColorRed.g;
+          b += kColorRed.b;
+          a += 128;
+          count++;
+        }
+        if (mask & kMaskTypeProjectile) {
+          r += kColorYellow.r;
+          g += kColorYellow.g;
+          b += kColorYellow.b;
+          a += 128;
+          count++;
+        }
+        if (mask & kMaskTypeTerrain) {
+          r += kColorGreen.r;
+          g += kColorGreen.g;
+          b += kColorGreen.b;
+          a += 128;
+          count++;
+        }
+
+        if (count > 0) {
+          SDL_SetRenderDrawColor(resources_.renderer, r / count, g / count,
+                                 b / count, a / count);
+        } else {
+          // Fallback for types not handled explicitly above
+          SetRenderColor(resources_.renderer, WithOpacity(kColorGrey, 128));
         }
         // The rectangles are rendered first so the grid cells are on top.
         SDL_RenderFillRect(resources_.renderer, &render_rect);

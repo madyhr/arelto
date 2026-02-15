@@ -77,7 +77,7 @@ void EntityManager::UpdateWorldOccupancyMap(
 
     for (int x = start_x; x <= end_x; ++x) {
       for (int y = start_y; y <= end_y; ++y) {
-        occupancy_map.Set(x, y, type);
+        occupancy_map.Add(x, y, type);
       }
     }
   };

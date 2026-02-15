@@ -1,23 +1,6 @@
 # Arelto
 
 [Arelto Trailer](https://github.com/user-attachments/assets/5101cb45-c6c6-4dc1-a29d-d21d82417f72)
-<!--toc:start-->
-- [Arelto](#arelto)
-  - [Prerequisites](#prerequisites)
-    - [Linux](#linux)
-      - [Debian/Ubuntu](#debianubuntu)
-      - [Arch](#arch)
-    - [Python](#python)
-  - [Installation](#installation)
-  - [Running the Game](#running-the-game)
-  - [How to play](#how-to-play)
-  - [Development](#development)
-    - [Building](#building)
-    - [Tests](#tests)
-      - [Python tests](#python-tests)
-      - [C++ tests](#c-tests)
-  - [Generative AI Disclaimer](#generative-ai-disclaimer)
-<!--toc:end-->
 
 A Reinforcement Learning Rogue-Like (RL2) game where the enemies get smarter over time. Try to survive for as long as you can!
 
@@ -29,6 +12,11 @@ A Reinforcement Learning Rogue-Like (RL2) game where the enemies get smarter ove
       - [Debian/Ubuntu](#debianubuntu)
       - [Arch](#arch)
     - [Windows](#windows)
+      - [1. Install Conda](#1-install-conda)
+      - [2. Create a Conda Environment](#2-create-a-conda-environment)
+      - [3. Install Dependencies via Conda](#3-install-dependencies-via-conda)
+      - [4. Install vcpkg](#4-install-vcpkg)
+      - [5. Install C++ Dependencies](#5-install-c-dependencies)
   - [Installation](#installation)
   - [Running the Game](#running-the-game)
   - [How to play](#how-to-play)
@@ -67,7 +55,9 @@ sudo pacman -S cmake base-devel python sdl2 sdl2_image sdl2_ttf sdl2_mixer
 
 ### Windows
 
-#### 1. Install [Conda](https://www.anaconda.com/download) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+#### 1. Install Conda
+
+Please follow the installation instructions as described on the official [website](https://www.anaconda.com/download).
 
 #### 2. Create a Conda Environment
 
@@ -82,7 +72,9 @@ conda activate arelto-env
 conda install -y cmake ninja numpy pytorch -c pytorch -c conda-forge
 ```
 
-#### 4. Install [vcpkg](https://vcpkg.io/en/getting-started.html)
+#### 4. Install vcpkg
+
+To install [vcpkg](https://vcpkg.io/en/getting-started.html), you can either follow the link or clone it directly:
 
 ```bash
 git clone https://github.com/microsoft/vcpkg.git

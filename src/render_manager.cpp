@@ -20,6 +20,8 @@
 #include "entity.h"
 #include "scene.h"
 #include "types.h"
+#include "ui/containers.h"
+#include "ui/widgets.h"
 #include "ui_manager.h"
 
 namespace arelto {
@@ -76,8 +78,6 @@ bool RenderManager::Initialize(bool is_headless) {
   resources_.tile_manager.SetupTiles();
   resources_.tile_manager.SetupTileSelector();
 
-  ui_manager_.SetupUI();
-
   resources_.tile_texture = resources_.tile_manager.GetTileTexture(
       "assets/dungeon_floor_tiles_tall.bmp", resources_.renderer);
   resources_.player_texture = IMG_LoadTexture(
@@ -104,8 +104,6 @@ bool RenderManager::Initialize(bool is_headless) {
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/exp_bar.png");
   resources_.ui_resources.start_screen_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/ui/start_screen.png");
-  resources_.ui_resources.paused_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/paused.png");
   resources_.ui_resources.game_over_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/ui/game_over.png");
   resources_.ui_resources.level_up_option_card_texture = IMG_LoadTexture(
@@ -118,6 +116,10 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.renderer, "assets/textures/ui/settings_menu_background.png");
   resources_.ui_resources.slider_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/ui/slider_texture.png");
+  resources_.ui_resources.checkbox_texture =
+      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/checkbox.png");
+  resources_.ui_resources.checkmark_texture =
+      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/checkmark.png");
   resources_.ui_resources.digit_font_texture = IMG_LoadTexture(
       resources_.renderer, "assets/fonts/font_outlined_sprite_sheet.png");
   resources_.ui_resources.timer_hourglass_texture =
@@ -146,12 +148,13 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.ui_resources.timer_hourglass_texture == nullptr ||
       resources_.ui_resources.game_over_texture == nullptr ||
       resources_.ui_resources.start_screen_texture == nullptr ||
-      resources_.ui_resources.paused_texture == nullptr ||
       resources_.ui_resources.level_up_option_card_texture == nullptr ||
       resources_.ui_resources.button_texture == nullptr ||
       resources_.ui_resources.begin_button_texture == nullptr ||
       resources_.ui_resources.settings_menu_background_texture == nullptr ||
       resources_.ui_resources.slider_texture == nullptr ||
+      resources_.ui_resources.checkbox_texture == nullptr ||
+      resources_.ui_resources.checkmark_texture == nullptr ||
       std::any_of(
           resources_.projectile_textures.begin(),
           resources_.projectile_textures.end(),
@@ -160,6 +163,11 @@ bool RenderManager::Initialize(bool is_headless) {
               << std::endl;
     return false;
   }
+
+  // Copy projectile textures into UI resources for level-up card icons
+  resources_.ui_resources.projectile_textures = resources_.projectile_textures;
+
+  ui_manager_.SetupUI(resources_.ui_resources);
 
   resources_.map_layout = {0, 0, kMapWidth, kMapHeight};
 
@@ -180,14 +188,21 @@ void RenderManager::SetRenderColor(SDL_Renderer* renderer,
   SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 
-void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
-                           float time, GameState game_state) {
+void RenderManager::Render(const Scene& scene, float alpha,
+                           const GameStatus& game_status, float time,
+                           GameState game_state) {
 
   SetRenderColor(resources_.renderer, kColorBlack);
   SDL_RenderClear(resources_.renderer);
 
   if (game_state == in_start_screen) {
-    RenderStartScreen();
+    ui_manager_.UpdateStartScreen();
+    UIWidget* start_screen = ui_manager_.GetStartScreenRoot();
+    if (start_screen) {
+      start_screen->SetVisible(true);
+      RenderUITree(start_screen);
+      start_screen->SetVisible(false);
+    }
   } else {
 
     UpdateCameraPosition(scene.player);
@@ -203,19 +218,27 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
     RenderProjectiles(scene.projectiles);
     SetupGemGeometry(scene.exp_gem, alpha);
     RenderGem(scene.exp_gem);
-    if (debug_mode) {
+
+    if (game_status.show_occupancy_map) {
       RenderDebugWorldOccupancyMap(scene.occupancy_map);
-      // RenderDebugEnemyOccupancyMap(scene.enemy, scene.occupancy_map, alpha);
+    }
+
+    if (game_status.show_ray_caster) {
       RenderDebugRayCaster(scene.enemy, alpha);
-    };
+    }
 
     RenderUI(scene, time);
     if (game_state == is_gameover) {
-      RenderGameOver();
+      UIWidget* game_over_screen = ui_manager_.GetGameOverScreenRoot();
+      if (game_over_screen) {
+        game_over_screen->SetVisible(true);
+        RenderUITree(game_over_screen);
+        game_over_screen->SetVisible(false);
+      }
     } else if (game_state == in_settings_menu) {
       RenderSettingsMenuState();
     } else if (game_state == in_level_up) {
-      RenderLevelUp(scene.level_up_options);
+      RenderLevelUp();
     };
   }
 
@@ -718,98 +741,130 @@ void RenderManager::RenderDebugRayCaster(const Enemy& enemy, float alpha) {
   SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
 }
 void RenderManager::RenderUI(const Scene& scene, float time) {
-  ui_manager_.UpdateUI(scene, time);
+  ui_manager_.Update(scene, time);
+  RenderUITree(ui_manager_.GetRootWidget());
+}
 
-  int group_x = static_cast<int>(ui_manager_.health_bar_.screen_position.x);
-  int group_y = static_cast<int>(ui_manager_.health_bar_.screen_position.y);
-
-  for (const auto& el : ui_manager_.health_bar_.elements) {
-    SDL_Rect dst_rect;
-    dst_rect.x = group_x + el.relative_offset.x;
-    dst_rect.y = group_y + el.relative_offset.y;
-    dst_rect.w = el.sprite_size.width;
-    dst_rect.h = el.sprite_size.height;
-
-    if (el.tag == UIElement::Tag::text) {
-      RenderDigitString(el.text_value,
-                        group_x + static_cast<int>(el.relative_offset.x),
-                        group_y + static_cast<int>(el.relative_offset.y),
-                        el.sprite_size, el.char_size);
-      continue;
-    }
-
-    SDL_RenderCopy(resources_.renderer,
-                   resources_.ui_resources.health_bar_texture, &el.src_rect,
-                   &dst_rect);
+void RenderManager::RenderUITree(UIWidget* root) {
+  if (!root || !root->IsVisible()) {
+    return;
   }
-  group_x = static_cast<int>(ui_manager_.level_indicator_.screen_position.x);
-  group_y = static_cast<int>(ui_manager_.level_indicator_.screen_position.y);
+  RenderWidgetRecursive(root);
+}
 
-  for (const auto& el : ui_manager_.level_indicator_.elements) {
-    SDL_Rect dst_rect;
-    dst_rect.x = group_x + el.relative_offset.x;
-    dst_rect.y = group_y + el.relative_offset.y;
-    dst_rect.w = el.sprite_size.width;
-    dst_rect.h = el.sprite_size.height;
-
-    if (el.tag == UIElement::Tag::text) {
-      RenderDigitString(el.text_value,
-                        group_x + static_cast<int>(el.relative_offset.x),
-                        group_y + static_cast<int>(el.relative_offset.y),
-                        el.sprite_size, el.char_size);
-      continue;
-    }
-
-    SDL_RenderCopy(resources_.renderer,
-                   resources_.ui_resources.level_indicator_texture,
-                   &el.src_rect, &dst_rect);
+void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
+  if (!widget || !widget->IsVisible()) {
+    return;
   }
 
-  group_x = static_cast<int>(ui_manager_.exp_bar_.screen_position.x);
-  group_y = static_cast<int>(ui_manager_.exp_bar_.screen_position.y);
+  SDL_Rect bounds = widget->GetComputedBounds();
 
-  for (const auto& el : ui_manager_.exp_bar_.elements) {
-    SDL_Rect dst_rect;
-    dst_rect.x = group_x + el.relative_offset.x;
-    dst_rect.y = group_y + el.relative_offset.y;
-    dst_rect.w = el.sprite_size.width;
-    dst_rect.h = el.sprite_size.height;
+  switch (widget->GetWidgetType()) {
+    case WidgetType::Panel: {
+      auto* panel = static_cast<Panel*>(widget);
+      if (panel->HasBackgroundColor()) {
+        SDL_BlendMode original_blend_mode;
+        SDL_GetRenderDrawBlendMode(resources_.renderer, &original_blend_mode);
+        SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
 
-    if (el.tag == UIElement::Tag::text) {
-      RenderDigitString(el.text_value,
-                        group_x + static_cast<int>(el.relative_offset.x),
-                        group_y + static_cast<int>(el.relative_offset.y),
-                        el.sprite_size, el.char_size);
-      continue;
+        SDL_Color color = panel->GetBackgroundColor();
+        SDL_SetRenderDrawColor(resources_.renderer, color.r, color.g, color.b,
+                               color.a);
+        SDL_RenderFillRect(resources_.renderer, &bounds);
+
+        SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
+      }
+
+      if (panel->GetBackgroundTexture()) {
+        SDL_Rect src = panel->GetBackgroundSrcRect();
+        SDL_Rect* src_ptr = (src.w > 0 && src.h > 0) ? &src : nullptr;
+        SDL_RenderCopy(resources_.renderer, panel->GetBackgroundTexture(),
+                       src_ptr, &bounds);
+      }
+      break;
     }
 
-    SDL_RenderCopy(resources_.renderer, resources_.ui_resources.exp_bar_texture,
-                   &el.src_rect, &dst_rect);
+    case WidgetType::Image: {
+      auto* img = static_cast<UIImage*>(widget);
+      if (img->GetTexture()) {
+        SDL_Rect src = img->GetSrcRect();
+        SDL_RenderCopy(resources_.renderer, img->GetTexture(), &src, &bounds);
+      }
+      break;
+    }
+
+    case WidgetType::Label: {
+      auto* lbl = static_cast<UILabel*>(widget);
+      if (lbl->GetUseDigitFont()) {
+        Size2D sprite_size = {
+            static_cast<uint32_t>(lbl->GetDigitSpriteWidth()),
+            static_cast<uint32_t>(lbl->GetDigitSpriteHeight())};
+        Size2D char_size = {static_cast<uint32_t>(lbl->GetCharWidth()),
+                            static_cast<uint32_t>(lbl->GetCharHeight())};
+        RenderDigitString(lbl->GetText(), bounds.x, bounds.y, sprite_size,
+                          char_size);
+      } else if (lbl->GetFont()) {
+        RenderText(lbl->GetText(), bounds.x, bounds.y, lbl->GetColor(),
+                   lbl->GetFont(), lbl->GetCenterWidth());
+      }
+      break;
+    }
+
+    case WidgetType::Checkbox: {
+      auto* chk = static_cast<UICheckbox*>(widget);
+      if (chk->GetBoxTexture()) {
+        SDL_Rect src = chk->GetCurrentBoxSrcRect();
+        SDL_RenderCopy(resources_.renderer, chk->GetBoxTexture(), &src,
+                       &bounds);
+      }
+      if (chk->IsChecked() && chk->GetMarkTexture()) {
+        SDL_Rect src = chk->GetMarkSrcRect();
+        SDL_RenderCopy(resources_.renderer, chk->GetMarkTexture(), &src,
+                       &bounds);
+      }
+      break;
+    }
+
+    case WidgetType::Button: {
+      auto* btn = static_cast<UIButton*>(widget);
+      if (btn->GetTexture()) {
+        SDL_Rect src = btn->GetCurrentSrcRect();
+        SDL_RenderCopy(resources_.renderer, btn->GetTexture(), &src, &bounds);
+      }
+      if (btn->GetLabelFont() && !btn->GetLabel().empty()) {
+        RenderText(btn->GetLabel(), bounds.x, bounds.y + (bounds.h - 26) / 2,
+                   {255, 255, 255, 255}, btn->GetLabelFont(), bounds.w);
+      }
+      break;
+    }
+
+    case WidgetType::ProgressBar: {
+      auto* bar = static_cast<UIProgressBar*>(widget);
+      // Draw container
+      if (bar->GetContainerTexture()) {
+        SDL_Rect src = bar->GetContainerSrcRect();
+        SDL_RenderCopy(resources_.renderer, bar->GetContainerTexture(), &src,
+                       &bounds);
+      }
+      // Draw fill (clipped)
+      if (bar->GetFillTexture()) {
+        SDL_Rect fill_src = bar->GetClippedFillSrcRect();
+        SDL_Rect fill_dst = bar->GetFillDestRect();
+        SDL_RenderCopy(resources_.renderer, bar->GetFillTexture(), &fill_src,
+                       &fill_dst);
+      }
+      break;
+    }
+
+    default:
+      break;
   }
 
-  group_x = static_cast<int>(ui_manager_.timer_.screen_position.x);
-  group_y = static_cast<int>(ui_manager_.timer_.screen_position.y);
-
-  for (const auto& el : ui_manager_.timer_.elements) {
-    SDL_Rect dst_rect;
-    dst_rect.x = group_x + el.relative_offset.x;
-    dst_rect.y = group_y + el.relative_offset.y;
-    dst_rect.w = el.sprite_size.width;
-    dst_rect.h = el.sprite_size.height;
-
-    if (el.tag == UIElement::Tag::text) {
-      RenderDigitString(el.text_value,
-                        group_x + static_cast<int>(el.relative_offset.x),
-                        group_y + static_cast<int>(el.relative_offset.y),
-                        el.sprite_size, el.char_size);
-      continue;
-    }
-
-    SDL_RenderCopy(resources_.renderer,
-                   resources_.ui_resources.timer_hourglass_texture,
-                   &el.src_rect, &dst_rect);
-  };
-};
+  // Recurse into children (Painter's Algorithm)
+  for (auto& child : widget->GetChildren()) {
+    RenderWidgetRecursive(child.get());
+  }
+}
 
 void RenderManager::RenderDigitString(const std::string& text, int start_x,
                                       int start_y, Size2D sprite_size,
@@ -848,193 +903,20 @@ void RenderManager::RenderDigitString(const std::string& text, int start_x,
   };
 };
 
-void RenderManager::RenderStartScreen() {
-
-  SDL_Rect dst_rect;
-  dst_rect.x = 0;
-  dst_rect.y = 0;
-  dst_rect.w = kWindowWidth;
-  dst_rect.h = kWindowHeight;
-
-  SDL_RenderCopy(resources_.renderer,
-                 resources_.ui_resources.start_screen_texture, nullptr,
-                 &dst_rect);
-
-  int button_x = kBeginButtonX;
-  int button_y = kBeginButtonY;
-
-  int mouse_x, mouse_y;
-  SDL_GetMouseState(&mouse_x, &mouse_y);
-  bool is_hovered =
-      (mouse_x >= button_x && mouse_x <= button_x + kBeginButtonWidth &&
-       mouse_y >= button_y && mouse_y <= button_y + kBeginButtonHeight);
-
-  // button texture map has both default and hover state so y composant of top
-  // left coord on the source rect depends on the hover state.
-  SDL_Rect btn_src_rect = {0, is_hovered ? kBeginButtonTextureHeight / 2 : 0,
-                           kBeginButtonTextureWidth,
-                           kBeginButtonTextureHeight / 2};
-
-  SDL_Rect btn_dst_rect = {button_x, button_y, kBeginButtonWidth,
-                           kBeginButtonHeight};
-
-  SDL_RenderCopy(resources_.renderer,
-                 resources_.ui_resources.begin_button_texture, &btn_src_rect,
-                 &btn_dst_rect);
-
-  // RenderText("BEGIN", button_x, button_y + (kBeginButtonHeight - 26) / 2,
-  //            kColorWhite, resources_.ui_resources.ui_font_huge,
-  //            kBeginButtonWidth);
-  //
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
-};
-
-void RenderManager::RenderGameOver() {
-
-  SDL_Rect render_rect;
-  render_rect.x = 0;
-  render_rect.y = kWindowHeight / 3;
-  render_rect.w = kWindowWidth;
-  render_rect.h = kWindowHeight / 3;
-
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
-  SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 128));
-  SDL_RenderFillRect(resources_.renderer, &render_rect);
-
-  SDL_Rect dst_rect;
-  dst_rect.x = (kWindowWidth - kGameOverSpriteWidth) / 2;
-  dst_rect.y = (kWindowHeight - kGameOverSpriteHeight) / 2;
-  dst_rect.w = kGameOverSpriteWidth;
-  dst_rect.h = kGameOverSpriteHeight;
-
-  SDL_RenderCopy(resources_.renderer, resources_.ui_resources.game_over_texture,
-                 nullptr, &dst_rect);
-
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
-};
-
 // Renders the settings menu state with overlay.
 void RenderManager::RenderSettingsMenuState() {
-  SDL_Rect render_rect;
-  render_rect.x = 0;
-  render_rect.y = 0;
-  render_rect.w = kWindowWidth;
-  render_rect.h = kWindowHeight;
-
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
-  SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 200));
-  SDL_RenderFillRect(resources_.renderer, &render_rect);
-
-  RenderSettingsMenu();
-
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
-};
-
-void RenderManager::UpdateSettingsMenuState(float volume, bool is_muted) {
-  ui_manager_.UpdateSettingsMenu(volume, is_muted);
+  // Make settings menu visible for rendering, then hide again after
+  UIWidget* settings = ui_manager_.GetSettingsRoot();
+  if (settings) {
+    settings->SetVisible(true);
+    RenderUITree(settings);
+    settings->SetVisible(false);
+  }
 }
 
-void RenderManager::RenderSettingsMenu() {
-  int module_x = static_cast<int>(ui_manager_.settings_menu_.screen_position.x);
-  int module_y = static_cast<int>(ui_manager_.settings_menu_.screen_position.y);
-
-  for (const auto& el : ui_manager_.settings_menu_.module_elements) {
-    SDL_Rect dst_rect;
-    dst_rect.x = module_x + el.relative_offset.x;
-    dst_rect.y = module_y + el.relative_offset.y;
-    dst_rect.w = el.sprite_size.width;
-    dst_rect.h = el.sprite_size.height;
-
-    if (el.tag == UIElement::Tag::text) {
-      bool has_alpha = false;
-      for (char c : el.text_value) {
-        if (std::isalpha(c)) {
-          has_alpha = true;
-          break;
-        }
-      }
-
-      if (has_alpha) {
-        RenderText(
-            el.text_value, module_x + static_cast<int>(el.relative_offset.x),
-            module_y + static_cast<int>(el.relative_offset.y), kColorWhite,
-            resources_.ui_resources.ui_font_huge, kSettingsMenuWidth);
-      } else {
-        RenderDigitString(el.text_value,
-                          module_x + static_cast<int>(el.relative_offset.x),
-                          module_y + static_cast<int>(el.relative_offset.y),
-                          el.sprite_size, el.char_size);
-      }
-      continue;
-    }
-
-    SDL_RenderCopy(resources_.renderer,
-                   resources_.ui_resources.settings_menu_background_texture,
-                   &el.src_rect, &dst_rect);
-  }
-
-  for (const auto& group : ui_manager_.settings_menu_.element_groups) {
-    for (const auto& el : group.elements) {
-      SDL_Rect dst_rect;
-      dst_rect.x =
-          group.screen_position.x + static_cast<int>(el.relative_offset.x);
-      dst_rect.y =
-          group.screen_position.y + static_cast<int>(el.relative_offset.y);
-      dst_rect.w = el.sprite_size.width;
-      dst_rect.h = el.sprite_size.height;
-
-      if (el.tag == UIElement::Tag::text) {
-        bool has_alpha = false;
-        for (char c : el.text_value) {
-          if (std::isalpha(c)) {
-            has_alpha = true;
-            break;
-          }
-        }
-
-        if (has_alpha) {
-          // Centering relative to the group's X position, assuming the group
-          // is aligned with the menu.
-          RenderText(el.text_value, dst_rect.x, dst_rect.y, kColorWhite,
-                     resources_.ui_resources.ui_font_large, kSettingsMenuWidth);
-        } else {
-          RenderDigitString(el.text_value, dst_rect.x, dst_rect.y,
-                            el.sprite_size, el.char_size);
-        }
-      } else if (el.tag == UIElement::Tag::button) {
-        int mouse_x, mouse_y;
-        SDL_GetMouseState(&mouse_x, &mouse_y);
-        bool is_hovered =
-            (mouse_x >= dst_rect.x && mouse_x <= dst_rect.x + dst_rect.w &&
-             mouse_y >= dst_rect.y && mouse_y <= dst_rect.y + dst_rect.h);
-
-        SDL_Rect btn_src_rect = {
-            0, is_hovered ? kLevelUpButtonTextureHeight / 2 : 0,
-            kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight / 2};
-
-        SDL_RenderCopy(resources_.renderer,
-                       resources_.ui_resources.button_texture, &btn_src_rect,
-                       &dst_rect);
-
-        RenderText(el.text_value, dst_rect.x,
-                   dst_rect.y + (dst_rect.h - 26) / 2, kColorWhite,
-                   resources_.ui_resources.ui_font_medium, dst_rect.w);
-
-      } else if (el.tag == UIElement::Tag::background) {
-        SDL_RenderCopy(resources_.renderer,
-                       resources_.ui_resources.slider_texture, &el.src_rect,
-                       &dst_rect);
-      } else if (el.tag == UIElement::Tag::fill) {
-        SDL_RenderCopy(resources_.renderer,
-                       resources_.ui_resources.slider_texture, &el.src_rect,
-                       &dst_rect);
-      } else if (el.tag == UIElement::Tag::icon) {
-        SDL_RenderCopy(resources_.renderer,
-                       resources_.ui_resources.button_texture, &el.src_rect,
-                       &dst_rect);
-      }
-    }
-  }
+void RenderManager::UpdateSettingsMenuState(float volume, bool is_muted,
+                                            const GameStatus& game_status) {
+  ui_manager_.UpdateSettingsMenu(volume, is_muted, game_status);
 }
 
 void RenderManager::Shutdown() {
@@ -1122,79 +1004,16 @@ void RenderManager::Shutdown() {
   SDL_Quit();
 }
 
-void RenderManager::RenderLevelUp(
-    const std::vector<std::unique_ptr<Upgrade>>& options) {
-  SDL_Rect overlay_rect = {0, 0, kWindowWidth, kWindowHeight};
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
-  SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 150));
-  SDL_RenderFillRect(resources_.renderer, &overlay_rect);
+void RenderManager::RenderLevelUp() {
+  // Update hover states and render via widget tree
+  ui_manager_.UpdateLevelUpMenu();
 
-  int total_width = kNumUpgradeOptions * kLevelUpCardWidth +
-                    (kNumUpgradeOptions - 1) * kLevelUpCardGap;
-  int start_x = (kWindowWidth - total_width) / 2;
-  int start_y = (kWindowHeight - kLevelUpCardHeight) / 2;
-
-  for (size_t i = 0; i < options.size(); ++i) {
-    const std::unique_ptr<Upgrade>& upgrade = options[i];
-
-    int x =
-        start_x + static_cast<int>(i * (kLevelUpCardWidth + kLevelUpCardGap));
-
-    SDL_Rect card_rect = {x, start_y, kLevelUpCardWidth, kLevelUpCardHeight};
-
-    SDL_RenderCopy(resources_.renderer,
-                   resources_.ui_resources.level_up_option_card_texture,
-                   nullptr, &card_rect);
-
-    int spell_id = upgrade->GetSpellID();
-    SDL_Texture* icon = resources_.projectile_textures[spell_id];
-    SDL_Rect src_rect = {0, 0, kFireballSpriteWidth, kFireballSpriteHeight};
-    SDL_Rect dest_rect = {x + (kLevelUpCardWidth - kLevelUpIconSize) / 2,
-                          start_y + kLevelUpIconOffsetY, kLevelUpIconSize,
-                          kLevelUpIconSize};
-    SDL_RenderCopy(resources_.renderer, icon, &src_rect, &dest_rect);
-
-    std::string spell_name = upgrade->GetSpellName();
-    RenderText(spell_name, x, start_y + kLevelUpNameOffsetY, kColorWhite,
-               resources_.ui_resources.ui_font_large, kLevelUpCardWidth);
-
-    std::string description = upgrade->GetDescription();
-    RenderText(description, x, start_y + kLevelUpDescOffsetY, kColorGrey,
-               resources_.ui_resources.ui_font_medium, kLevelUpCardWidth);
-
-    // "current_val -> new_val"
-    std::string value_change =
-        upgrade->GetOldValueString() + " -> " + upgrade->GetNewValueString();
-    RenderText(value_change, x, start_y + kLevelUpStatsOffsetY, kColorGreen,
-               resources_.ui_resources.ui_font_medium, kLevelUpCardWidth);
-
-    int button_x = x + (kLevelUpCardWidth - kLevelUpButtonWidth) / 2;
-    int button_y = start_y + kLevelUpButtonOffsetY;
-
-    int mouse_x, mouse_y;
-    SDL_GetMouseState(&mouse_x, &mouse_y);
-    bool is_hovered =
-        (mouse_x >= button_x && mouse_x <= button_x + kLevelUpButtonWidth &&
-         mouse_y >= button_y && mouse_y <= button_y + kLevelUpButtonHeight);
-
-    // button texture map has both default and hover state so y composant of top
-    // left coord on the source rect depends on the hover state.
-    SDL_Rect btn_src_rect = {
-        0, is_hovered ? kLevelUpButtonTextureHeight / 2 : 0,
-        kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight / 2};
-
-    SDL_Rect btn_dst_rect = {button_x, button_y, kLevelUpButtonWidth,
-                             kLevelUpButtonHeight};
-
-    SDL_RenderCopy(resources_.renderer, resources_.ui_resources.button_texture,
-                   &btn_src_rect, &btn_dst_rect);
-
-    RenderText("SELECT", button_x, button_y + (kLevelUpButtonHeight - 26) / 2,
-               kColorWhite, resources_.ui_resources.ui_font_medium,
-               kLevelUpButtonWidth);
+  UIWidget* level_up = ui_manager_.GetLevelUpRoot();
+  if (level_up) {
+    level_up->SetVisible(true);
+    RenderWidgetRecursive(level_up);
+    level_up->SetVisible(false);
   }
-
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_NONE);
 }
 
 // Render a string of text at a specified location (x,y) with a given color

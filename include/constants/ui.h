@@ -133,6 +133,12 @@ constexpr int kSliderBarSpriteOffsetY = 48;
 constexpr int kSliderBarSpriteWidth = 806;
 constexpr int kSliderBarSpriteHeight = 29;
 
+// Generic checkbox and checkmark texture
+constexpr int kCheckboxSpriteWidth = 263;
+constexpr int kCheckboxSpriteHeight = 526;
+constexpr int kCheckmarkSpriteWidth = 193;
+constexpr int kCheckmarkSpriteHeight = 164;
+
 }  // namespace arelto
 
 #endif

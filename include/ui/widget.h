@@ -30,6 +30,7 @@ enum class WidgetType {
   Label,
   Button,
   ProgressBar,
+  Checkbox,
 };
 
 class UIWidget {

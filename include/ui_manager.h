@@ -30,6 +30,8 @@ struct UIResources {
   SDL_Texture* begin_button_texture = nullptr;
   SDL_Texture* settings_menu_background_texture = nullptr;
   SDL_Texture* slider_texture = nullptr;
+  SDL_Texture* checkbox_texture = nullptr;
+  SDL_Texture* checkmark_texture = nullptr;
   std::vector<SDL_Texture*> projectile_textures;
 };
 
@@ -37,7 +39,8 @@ class UIManager {
  public:
   void SetupUI(const UIResources& resources);
   void Update(const Scene& scene, float time);
-  void UpdateSettingsMenu(float volume, bool is_muted);
+  void UpdateSettingsMenu(float volume, bool is_muted,
+                          const GameStatus& game_status);
   void BuildLevelUpMenu(const std::vector<std::unique_ptr<Upgrade>>& options);
   void UpdateLevelUpMenu();
   void BuildStartScreen();

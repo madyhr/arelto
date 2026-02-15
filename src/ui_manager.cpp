@@ -242,6 +242,68 @@ void UIManager::BuildSettingsMenu() {
   mute_btn->SetLabelFont(resources_->ui_font_medium);
   content->AddChild(mute_btn);
 
+  // --- Debug Checkboxes ---
+
+  // Occupancy Map Row
+  auto occupancy_map_row = std::make_shared<HBox>();
+  occupancy_map_row->SetId("occupancy_map_row");
+  occupancy_map_row->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 40);
+  occupancy_map_row->SetSpacing(10);
+  occupancy_map_row->SetAnchor(AnchorType::TopCenter);
+
+  auto occupancy_map_checkbox = std::make_shared<UICheckbox>();
+  occupancy_map_checkbox->SetId("occupancy_map_checkbox");
+  occupancy_map_checkbox->SetSize(30, 30);
+  occupancy_map_checkbox->SetBoxTexture(resources_->checkbox_texture);
+  occupancy_map_checkbox->SetBoxSrcRect(
+      {0, 0, kCheckboxSpriteWidth, kCheckboxSpriteHeight / 2});
+  occupancy_map_checkbox->SetBoxHoverSrcRect({0, kCheckboxSpriteHeight / 2,
+                                              kCheckboxSpriteWidth,
+                                              kCheckboxSpriteHeight / 2});
+  occupancy_map_checkbox->SetMarkTexture(resources_->checkmark_texture);
+  occupancy_map_checkbox->SetMarkSrcRect(
+      {0, 0, kCheckmarkSpriteWidth, kCheckmarkSpriteHeight});
+  occupancy_map_row->AddChild(occupancy_map_checkbox);
+
+  auto occupancy_map_label = std::make_shared<UILabel>();
+  occupancy_map_label->SetId("occupancy_map_label");
+  occupancy_map_label->SetSize(300, 30);
+  occupancy_map_label->SetText("Show Occupancy Map");
+  occupancy_map_label->SetFont(resources_->ui_font_medium);
+  occupancy_map_row->AddChild(occupancy_map_label);
+
+  content->AddChild(occupancy_map_row);
+
+  // Ray Caster Row
+  auto ray_caster_row = std::make_shared<HBox>();
+  ray_caster_row->SetId("ray_caster_row");
+  ray_caster_row->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 40);
+  ray_caster_row->SetSpacing(10);
+  ray_caster_row->SetAnchor(AnchorType::TopCenter);
+
+  auto ray_caster_checkbox = std::make_shared<UICheckbox>();
+  ray_caster_checkbox->SetId("ray_caster_checkbox");
+  ray_caster_checkbox->SetSize(30, 30);
+  ray_caster_checkbox->SetBoxTexture(resources_->checkbox_texture);
+  ray_caster_checkbox->SetBoxSrcRect(
+      {0, 0, kCheckboxSpriteWidth, kCheckboxSpriteHeight / 2});
+  ray_caster_checkbox->SetBoxHoverSrcRect({0, kCheckboxSpriteHeight / 2,
+                                           kCheckboxSpriteWidth,
+                                           kCheckboxSpriteHeight / 2});
+  ray_caster_checkbox->SetMarkTexture(resources_->checkmark_texture);
+  ray_caster_checkbox->SetMarkSrcRect(
+      {0, 0, kCheckmarkSpriteWidth, kCheckmarkSpriteHeight});
+  ray_caster_row->AddChild(ray_caster_checkbox);
+
+  auto ray_caster_label = std::make_shared<UILabel>();
+  ray_caster_label->SetId("ray_caster_label");
+  ray_caster_label->SetSize(300, 30);
+  ray_caster_label->SetText("Show Ray Caster");
+  ray_caster_label->SetFont(resources_->ui_font_medium);
+  ray_caster_row->AddChild(ray_caster_label);
+
+  content->AddChild(ray_caster_row);
+
   menu->AddChild(content);
 
   auto button_row = std::make_shared<HBox>();
@@ -461,30 +523,43 @@ void UIManager::Update(const Scene& scene, float time) {
 }
 
 // =============================================================================
-// UpdateSettingsMenu — volume slider + mute button text
+// UpdateSettingsMenu — volume slider + mute button text + debug checkboxes
 // =============================================================================
 
-void UIManager::UpdateSettingsMenu(float volume, bool is_muted) {
-  auto* vol_slider = GetWidget<UIProgressBar>("volume_slider");
-  if (vol_slider) {
-    float vol_percent = std::clamp(volume / 128.0f, 0.0f, 1.0f);
-    vol_slider->SetPercent(vol_percent);
-  }
-
-  auto* mute_btn = GetWidget<UIButton>("mute_button");
-  if (mute_btn) {
-    mute_btn->SetLabel(is_muted ? "UNMUTE" : "MUTE");
-  }
-
+void UIManager::UpdateSettingsMenu(float volume, bool is_muted,
+                                   const GameStatus& game_status) {
   int mouse_x, mouse_y;
   SDL_GetMouseState(&mouse_x, &mouse_y);
 
   auto* settings = GetSettingsRoot();
-  if (!settings)
-    return;
+
+  auto* vol_slider = settings->FindWidgetAs<UIProgressBar>("volume_slider");
+  if (vol_slider) {
+    // Volume is 0-128.
+    float vol_percent = volume / 128.0f;
+    vol_slider->SetPercent(vol_percent);
+  }
+
+  auto* mute_btn = settings->FindWidgetAs<UIButton>("mute_button");
+  if (mute_btn) {
+    mute_btn->SetLabel(is_muted ? "UNMUTE" : "MUTE");
+  }
+
+  auto* occupancy_map_checkbox =
+      settings->FindWidgetAs<UICheckbox>("occupancy_map_checkbox");
+  if (occupancy_map_checkbox) {
+    occupancy_map_checkbox->SetChecked(game_status.show_occupancy_map);
+  }
+
+  auto* ray_caster_checkbox =
+      settings->FindWidgetAs<UICheckbox>("ray_caster_checkbox");
+  if (ray_caster_checkbox) {
+    ray_caster_checkbox->SetChecked(game_status.show_ray_caster);
+  }
 
   std::function<void(UIWidget*)> update_hover = [&](UIWidget* widget) {
-    if (widget->GetWidgetType() == WidgetType::Button) {
+    if (widget->GetWidgetType() == WidgetType::Button ||
+        widget->GetWidgetType() == WidgetType::Checkbox) {
       SDL_Rect bounds = widget->GetComputedBounds();
       bool hovered = (mouse_x >= bounds.x && mouse_x <= bounds.x + bounds.w &&
                       mouse_y >= bounds.y && mouse_y <= bounds.y + bounds.h);

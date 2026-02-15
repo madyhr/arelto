@@ -2,42 +2,42 @@
 #ifndef RL2_UI_WIDGETS_H_
 #define RL2_UI_WIDGETS_H_
 
+#include "ui/widget.h"
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
 #include <functional>
 #include <string>
-#include "ui/widget.h"
 
 namespace arelto {
 
 // UIImage: renders a texture or a region of a texture atlas.
 class UIImage : public UIWidget {
- public:
+public:
   UIImage() = default;
 
-  void SetTexture(SDL_Texture* texture);
+  void SetTexture(SDL_Texture *texture);
   void SetSrcRect(SDL_Rect src_rect);
 
-  SDL_Texture* GetTexture() const;
+  SDL_Texture *GetTexture() const;
   SDL_Rect GetSrcRect() const;
 
   WidgetType GetWidgetType() const override;
 
- private:
-  SDL_Texture* texture_ = nullptr;
+private:
+  SDL_Texture *texture_ = nullptr;
   SDL_Rect src_rect_ = {0, 0, 0, 0};
 };
 
 // UILabel: renders text using either TTF fonts or a digit sprite sheet.
 class UILabel : public UIWidget {
- public:
+public:
   UILabel() = default;
 
-  void SetText(const std::string& text);
-  const std::string& GetText() const;
+  void SetText(const std::string &text);
+  const std::string &GetText() const;
 
-  void SetFont(TTF_Font* font);
-  TTF_Font* GetFont() const;
+  void SetFont(TTF_Font *font);
+  TTF_Font *GetFont() const;
 
   void SetColor(SDL_Color color);
   SDL_Color GetColor() const;
@@ -61,9 +61,9 @@ class UILabel : public UIWidget {
 
   WidgetType GetWidgetType() const override;
 
- private:
+private:
   std::string text_;
-  TTF_Font* font_ = nullptr;
+  TTF_Font *font_ = nullptr;
   SDL_Color color_ = {255, 255, 255, 255};
   bool use_digit_font_ = false;
   int char_width_ = 0;
@@ -76,11 +76,11 @@ class UILabel : public UIWidget {
 // UIButton: a texture with normal/hover states and an optional label + click
 // callback.
 class UIButton : public UIWidget {
- public:
+public:
   UIButton() = default;
 
-  void SetTexture(SDL_Texture* texture);
-  SDL_Texture* GetTexture() const;
+  void SetTexture(SDL_Texture *texture);
+  SDL_Texture *GetTexture() const;
 
   // Source rect for normal state (top half of texture by convention)
   void SetNormalSrcRect(SDL_Rect src_rect);
@@ -93,44 +93,82 @@ class UIButton : public UIWidget {
   // Returns the appropriate src rect based on hover state
   SDL_Rect GetCurrentSrcRect() const;
 
-  void SetLabel(const std::string& label);
-  const std::string& GetLabel() const;
+  void SetLabel(const std::string &label);
+  const std::string &GetLabel() const;
 
-  void SetLabelFont(TTF_Font* font);
-  TTF_Font* GetLabelFont() const;
+  void SetLabelFont(TTF_Font *font);
+  TTF_Font *GetLabelFont() const;
 
   void SetOnClick(std::function<void()> callback);
-  const std::function<void()>& GetOnClick() const;
+  const std::function<void()> &GetOnClick() const;
 
   WidgetType GetWidgetType() const override;
 
- private:
-  SDL_Texture* texture_ = nullptr;
+private:
+  SDL_Texture *texture_ = nullptr;
   SDL_Rect normal_src_rect_ = {0, 0, 0, 0};
   SDL_Rect hover_src_rect_ = {0, 0, 0, 0};
   std::string label_;
-  TTF_Font* label_font_ = nullptr;
+  TTF_Font *label_font_ = nullptr;
   std::function<void()> on_click_;
+};
+
+// UICheckbox: a toggleable button with a box and a checkmark
+class UICheckbox : public UIWidget {
+public:
+  UICheckbox() = default;
+
+  void SetChecked(bool checked);
+  bool IsChecked() const;
+
+  void SetBoxTexture(SDL_Texture *texture);
+  SDL_Texture *GetBoxTexture() const;
+
+  // Source rect for normal state (top half of texture by convention)
+  void SetBoxSrcRect(SDL_Rect src_rect);
+  SDL_Rect GetBoxSrcRect() const;
+
+  // Source rect for hovered state (bottom half of texture by convention)
+  void SetBoxHoverSrcRect(SDL_Rect src_rect);
+  SDL_Rect GetBoxHoverSrcRect() const;
+
+  // Returns the appropriate src rect based on hover state
+  SDL_Rect GetCurrentBoxSrcRect() const;
+
+  void SetMarkTexture(SDL_Texture *texture);
+  SDL_Texture *GetMarkTexture() const;
+  void SetMarkSrcRect(SDL_Rect src_rect);
+  SDL_Rect GetMarkSrcRect() const;
+
+  WidgetType GetWidgetType() const override;
+
+private:
+  bool checked_ = false;
+  SDL_Texture *box_texture_ = nullptr;
+  SDL_Rect box_src_rect_ = {0, 0, 0, 0};
+  SDL_Rect box_hover_src_rect_ = {0, 0, 0, 0};
+  SDL_Texture *mark_texture_ = nullptr;
+  SDL_Rect mark_src_rect_ = {0, 0, 0, 0};
 };
 
 // UIProgressBar: handles container + fill textures with clipping based on a
 // percentage value.
 class UIProgressBar : public UIWidget {
- public:
+public:
   UIProgressBar() = default;
 
   void SetPercent(float percent);
   float GetPercent() const;
 
   // Container (background) texture
-  void SetContainerTexture(SDL_Texture* texture);
-  SDL_Texture* GetContainerTexture() const;
+  void SetContainerTexture(SDL_Texture *texture);
+  SDL_Texture *GetContainerTexture() const;
   void SetContainerSrcRect(SDL_Rect src_rect);
   SDL_Rect GetContainerSrcRect() const;
 
   // Fill texture
-  void SetFillTexture(SDL_Texture* texture);
-  SDL_Texture* GetFillTexture() const;
+  void SetFillTexture(SDL_Texture *texture);
+  SDL_Texture *GetFillTexture() const;
   void SetFillSrcRect(SDL_Rect src_rect);
   SDL_Rect GetFillSrcRect() const;
 
@@ -151,11 +189,11 @@ class UIProgressBar : public UIWidget {
 
   WidgetType GetWidgetType() const override;
 
- private:
+private:
   float percent_ = 1.0f;
-  SDL_Texture* container_texture_ = nullptr;
+  SDL_Texture *container_texture_ = nullptr;
   SDL_Rect container_src_rect_ = {0, 0, 0, 0};
-  SDL_Texture* fill_texture_ = nullptr;
+  SDL_Texture *fill_texture_ = nullptr;
   SDL_Rect fill_src_rect_ = {0, 0, 0, 0};
   int fill_offset_x_ = 0;
   int fill_offset_y_ = 0;
@@ -163,6 +201,6 @@ class UIProgressBar : public UIWidget {
   int max_fill_height_ = 0;
 };
 
-}  // namespace arelto
+} // namespace arelto
 
 #endif

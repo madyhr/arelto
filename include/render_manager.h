@@ -43,12 +43,13 @@ class RenderManager {
   bool Initialize(bool is_headless);
   void Shutdown();
 
-  void Render(const Scene& scene, float alpha, bool debug_mode, float time,
-              GameState game_state);
+  void Render(const Scene& scene, float alpha, const GameStatus& game_status,
+              float time, GameState game_state);
 
   void RenderSettingsMenuState();
   void RenderLevelUp();
-  void UpdateSettingsMenuState(float volume, bool is_muted);
+  void UpdateSettingsMenuState(float volume, bool is_muted,
+                               const GameStatus& game_status);
 
   UIManager& GetUIManager() { return ui_manager_; }
 

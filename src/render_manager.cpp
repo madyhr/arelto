@@ -116,6 +116,10 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.renderer, "assets/textures/ui/settings_menu_background.png");
   resources_.ui_resources.slider_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/ui/slider_texture.png");
+  resources_.ui_resources.checkbox_texture =
+      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/checkbox.png");
+  resources_.ui_resources.checkmark_texture =
+      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/checkmark.png");
   resources_.ui_resources.digit_font_texture = IMG_LoadTexture(
       resources_.renderer, "assets/fonts/font_outlined_sprite_sheet.png");
   resources_.ui_resources.timer_hourglass_texture =
@@ -149,6 +153,8 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.ui_resources.begin_button_texture == nullptr ||
       resources_.ui_resources.settings_menu_background_texture == nullptr ||
       resources_.ui_resources.slider_texture == nullptr ||
+      resources_.ui_resources.checkbox_texture == nullptr ||
+      resources_.ui_resources.checkmark_texture == nullptr ||
       std::any_of(
           resources_.projectile_textures.begin(),
           resources_.projectile_textures.end(),
@@ -182,8 +188,9 @@ void RenderManager::SetRenderColor(SDL_Renderer* renderer,
   SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 
-void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
-                           float time, GameState game_state) {
+void RenderManager::Render(const Scene& scene, float alpha,
+                           const GameStatus& game_status, float time,
+                           GameState game_state) {
 
   SetRenderColor(resources_.renderer, kColorBlack);
   SDL_RenderClear(resources_.renderer);
@@ -211,11 +218,14 @@ void RenderManager::Render(const Scene& scene, float alpha, bool debug_mode,
     RenderProjectiles(scene.projectiles);
     SetupGemGeometry(scene.exp_gem, alpha);
     RenderGem(scene.exp_gem);
-    if (debug_mode) {
+
+    if (game_status.show_occupancy_map) {
       RenderDebugWorldOccupancyMap(scene.occupancy_map);
-      // RenderDebugEnemyOccupancyMap(scene.enemy, scene.occupancy_map, alpha);
+    }
+
+    if (game_status.show_ray_caster) {
       RenderDebugRayCaster(scene.enemy, alpha);
-    };
+    }
 
     RenderUI(scene, time);
     if (game_state == is_gameover) {
@@ -800,6 +810,21 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       break;
     }
 
+    case WidgetType::Checkbox: {
+      auto* chk = static_cast<UICheckbox*>(widget);
+      if (chk->GetBoxTexture()) {
+        SDL_Rect src = chk->GetCurrentBoxSrcRect();
+        SDL_RenderCopy(resources_.renderer, chk->GetBoxTexture(), &src,
+                       &bounds);
+      }
+      if (chk->IsChecked() && chk->GetMarkTexture()) {
+        SDL_Rect src = chk->GetMarkSrcRect();
+        SDL_RenderCopy(resources_.renderer, chk->GetMarkTexture(), &src,
+                       &bounds);
+      }
+      break;
+    }
+
     case WidgetType::Button: {
       auto* btn = static_cast<UIButton*>(widget);
       if (btn->GetTexture()) {
@@ -889,8 +914,9 @@ void RenderManager::RenderSettingsMenuState() {
   }
 }
 
-void RenderManager::UpdateSettingsMenuState(float volume, bool is_muted) {
-  ui_manager_.UpdateSettingsMenu(volume, is_muted);
+void RenderManager::UpdateSettingsMenuState(float volume, bool is_muted,
+                                            const GameStatus& game_status) {
+  ui_manager_.UpdateSettingsMenu(volume, is_muted, game_status);
 }
 
 void RenderManager::Shutdown() {

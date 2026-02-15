@@ -33,7 +33,6 @@ bool Game::Initialize() {
 
   std::signal(SIGINT, SignalHandler);
   std::signal(SIGTERM, SignalHandler);
-  game_status_.is_debug = false;
   game_status_.is_headless = false;
 
   if (!(render_manager_.Initialize(game_status_.is_headless))) {
@@ -112,8 +111,7 @@ void Game::CheckGameStateRules() {
 }
 
 void Game::RenderGame(float alpha) {
-  render_manager_.Render(scene_, alpha, game_status_.is_debug, time_,
-                         game_state_);
+  render_manager_.Render(scene_, alpha, game_status_, time_, game_state_);
 };
 
 void Game::ResetGame() {
@@ -382,7 +380,7 @@ void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
 
     // Helper lambda: check if click is inside a widget's bounds
     auto hit_test = [&](const char* widget_id) -> bool {
-      auto* w = ui.GetRootWidget()->FindWidget(widget_id);
+      auto* w = ui.GetSettingsRoot()->FindWidget(widget_id);
       if (!w) {
         return false;
       }
@@ -403,6 +401,14 @@ void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
     if (hit_test("resume_button")) {
       SetGameState(is_running);
     }
+
+    if (hit_test("occupancy_map_checkbox")) {
+      game_status_.show_occupancy_map = !game_status_.show_occupancy_map;
+    }
+
+    if (hit_test("ray_caster_checkbox")) {
+      game_status_.show_ray_caster = !game_status_.show_ray_caster;
+    }
   }
 }
 
@@ -412,7 +418,7 @@ void Game::ProcessSettingsMenuInput(uint32_t mouse_state) {
     SDL_GetMouseState(&mouse_x, &mouse_y);
 
     auto& ui = render_manager_.GetUIManager();
-    auto* slider = ui.GetRootWidget()->FindWidget("volume_slider");
+    auto* slider = ui.GetSettingsRoot()->FindWidget("volume_slider");
     if (slider) {
       SDL_Rect b = slider->GetComputedBounds();
       if (mouse_x >= b.x && mouse_x <= b.x + b.w && mouse_y >= b.y - 10 &&
@@ -425,7 +431,8 @@ void Game::ProcessSettingsMenuInput(uint32_t mouse_state) {
 
   // The SDL_mixer music volume goes from 0 to 128.
   render_manager_.UpdateSettingsMenuState(
-      audio_manager_.GetMusicVolume() * 128.0f, audio_manager_.IsMusicMuted());
+      audio_manager_.GetMusicVolume() * 128.0f, audio_manager_.IsMusicMuted(),
+      game_status_);
 }
 
 // This function processes inputs during a level up state and applies the

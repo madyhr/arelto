@@ -151,6 +151,17 @@ inline EntityType MaskToEntityTypePrioritized(uint16_t mask) {
   return EntityType::None;
 }
 
+// A bitmask of the EntityType's that block rays casts.
+// This is used in the case a single ray can register multiple hits and
+// continue until it reaches a blocking EntityType.
+constexpr uint16_t kMaskRayHitBlockingTypes =
+    kMaskTypePlayer | kMaskTypeTerrain;
+
+// This function returns the highest priority blocking entity in the mask.
+inline EntityType MaskToBlockingType(uint16_t mask) {
+  return MaskToEntityTypePrioritized(mask & kMaskRayHitBlockingTypes);
+}
+
 struct Size2D {
   uint32_t width;
   uint32_t height;

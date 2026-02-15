@@ -3,12 +3,12 @@
 #define RL2_CONSTANTS_RAY_CASTER_H_
 
 namespace arelto {
-// Observation constants
-
 
 // Raycaster constants
 constexpr int kRayHistoryLength = 4;
+constexpr int kNumRayTypes = 2;  //  2: blocking and non-blocking types
 constexpr int kNumRays = 72;
+constexpr int kNumRaysTotal = kNumRays * kNumRayTypes;  // includes types
 constexpr float kMaxRayDistance = 5000.0f;
 constexpr float kMinRayDistance = 30.0f;  // offset from start in dir of ray
 

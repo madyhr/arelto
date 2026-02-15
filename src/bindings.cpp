@@ -110,7 +110,7 @@ PYBIND11_MODULE(arelto_py, m) {
              return self.reward_manager_.GetRewardSize();
            })
       .def("get_enemy_num_rays",
-           [](arelto::Game& self) { return arelto::kNumRays; })
+           [](arelto::Game& self) { return arelto::kNumRaysTotal; })
       .def("get_enemy_ray_history_length",
            [](arelto::Game& self) { return arelto::kRayHistoryLength; })
       .def("shutdown", &arelto::Game::Shutdown)

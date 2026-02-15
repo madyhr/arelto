@@ -64,7 +64,7 @@ TEST_F(RayCasterTest, CastRay_NoObstacles_ReturnsLargeDistance) {
   // Let's protect our test by setting boundaries.
   // No need to set manual borders here as SetUp does it.
 
-  RayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
 
   // Should hit the right wall (from SetUp borders)
   // Map width is kOccupancyMapWidth * Resolution.
@@ -73,8 +73,8 @@ TEST_F(RayCasterTest, CastRay_NoObstacles_ReturnsLargeDistance) {
   // Start x=100 (Grid 4). Wall at Width-1 (Grid 76).
   // Dist approx (76 - 4) * 25 = 72 * 25 = 1800.
 
-  EXPECT_EQ(hit.entity_type, EntityType::terrain);
-  EXPECT_GT(hit.distance, 1000.0f);
+  EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
+  EXPECT_GT(hit.blocking_hit.distance, 1000.0f);
 }
 
 TEST_F(RayCasterTest, CastRay_OrthogonalX_DetectsWall) {
@@ -90,10 +90,10 @@ TEST_F(RayCasterTest, CastRay_OrthogonalX_DetectsWall) {
 
   Vector2D ray_dir = {1.0f, 0.0f};  // Right
 
-  RayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
 
-  EXPECT_EQ(hit.entity_type, EntityType::terrain);
-  EXPECT_NEAR(hit.distance, 50.0f, 1.0f);
+  EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
+  EXPECT_NEAR(hit.blocking_hit.distance, 50.0f, 1.0f);
 }
 
 TEST_F(RayCasterTest, CastRay_OrthogonalY_DetectsWall) {
@@ -106,10 +106,10 @@ TEST_F(RayCasterTest, CastRay_OrthogonalY_DetectsWall) {
 
   Vector2D ray_dir = {0.0f, 1.0f};  // Down
 
-  RayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
 
-  EXPECT_EQ(hit.entity_type, EntityType::terrain);
-  EXPECT_NEAR(hit.distance, 50.0f, 1.0f);
+  EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
+  EXPECT_NEAR(hit.blocking_hit.distance, 50.0f, 1.0f);
 }
 
 TEST_F(RayCasterTest, CastRay_NegativeDirection_DetectsWall) {
@@ -135,10 +135,10 @@ TEST_F(RayCasterTest, CastRay_NegativeDirection_DetectsWall) {
 
   Vector2D ray_dir = {-1.0f, 0.0f};  // Left
 
-  RayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
 
-  EXPECT_EQ(hit.entity_type, EntityType::terrain);
-  EXPECT_NEAR(hit.distance, 37.5f, 1.0f);
+  EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
+  EXPECT_NEAR(hit.blocking_hit.distance, 37.5f, 1.0f);
 }
 
 TEST_F(RayCasterTest, CastRay_Diagonal_DetectsWall) {
@@ -155,10 +155,10 @@ TEST_F(RayCasterTest, CastRay_Diagonal_DetectsWall) {
   Vector2D ray_dir = {1.0f, 1.0f};
   ray_dir = ray_dir.Normalized();
 
-  RayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
 
-  EXPECT_EQ(hit.entity_type, EntityType::terrain);
-  EXPECT_GT(hit.distance, 0.0f);
+  EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
+  EXPECT_GT(hit.blocking_hit.distance, 0.0f);
 }
 
 TEST_F(RayCasterTest, CastRay_CloseProximity_DetectsImmediateWall) {
@@ -170,11 +170,35 @@ TEST_F(RayCasterTest, CastRay_CloseProximity_DetectsImmediateWall) {
   Vector2D start_pos = {124.0f, 112.5f};
   Vector2D ray_dir = {1.0f, 0.0f};
 
-  RayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
 
-  EXPECT_EQ(hit.entity_type, EntityType::terrain);
+  EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
   // Wall starts at 5*25=125. Start=124. Dist=1.0.
-  EXPECT_NEAR(hit.distance, 1.0f, 0.1f);
+  EXPECT_NEAR(hit.blocking_hit.distance, 1.0f, 0.1f);
+}
+
+TEST_F(RayCasterTest, CastRay_ProjectileAndWall) {
+  // Scenario: Player at (4, 4), Projectile at (5, 4), Wall at (6, 4)
+  Vector2D start_pos = {112.5f, 112.5f};  // Center of (4, 4)
+  Vector2D ray_dir = {1.0f, 0.0f};        // Right
+
+  // Add Projectile at (5, 4)
+  occupancy_map_.Add(5, 4, EntityType::projectile);
+
+  // Add Wall at (6, 4)
+  SetWall(6, 4);
+
+  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+
+  // Blocking hit should be the wall
+  EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
+  // Distance to wall: (6 * 25) - 112.5 = 150 - 112.5 = 37.5
+  EXPECT_NEAR(hit.blocking_hit.distance, 37.5f, 1.0f);
+
+  // Projectile hit should be the projectile
+  EXPECT_EQ(hit.non_blocking_hit.entity_type, EntityType::projectile);
+  // Distance to projectile: (5 * 25) - 112.5 = 125 - 112.5 = 12.5
+  EXPECT_NEAR(hit.non_blocking_hit.distance, 12.5f, 1.0f);
 }
 
 TEST_F(RayCasterTest, IsEntityTypePresent_Found) {

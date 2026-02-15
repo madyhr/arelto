@@ -283,17 +283,10 @@ void Game::ProcessInput() {
         int mouse_y = e.button.y;
 
         auto& ui = render_manager_.GetUIManager();
-        auto* start_screen = ui.GetStartScreenRoot();
-        if (start_screen) {
-          auto* btn = start_screen->FindWidget("begin_button");
-          if (btn) {
-            SDL_Rect b = btn->GetComputedBounds();
-            if (mouse_x >= b.x && mouse_x <= b.x + b.w && mouse_y >= b.y &&
-                mouse_y <= b.y + b.h) {
-              SetGameState(is_running);
-              std::cout << "Game Started!" << std::endl;
-            }
-          }
+        if (IsMouseOverWidget(ui.GetStartScreenRoot(), "begin_button", mouse_x,
+                              mouse_y)) {
+          SetGameState(is_running);
+          std::cout << "Game Started!" << std::endl;
         }
       }
     }
@@ -377,36 +370,29 @@ void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
     int mouse_y = e.button.y;
 
     auto& ui = render_manager_.GetUIManager();
+    UIWidget* settings_root = ui.GetSettingsRoot();
 
-    // Helper lambda: check if click is inside a widget's bounds
-    auto hit_test = [&](const char* widget_id) -> bool {
-      auto* w = ui.GetSettingsRoot()->FindWidget(widget_id);
-      if (!w) {
-        return false;
-      }
-      SDL_Rect b = w->GetComputedBounds();
-      return mouse_x >= b.x && mouse_x <= b.x + b.w && mouse_y >= b.y &&
-             mouse_y <= b.y + b.h;
-    };
-
-    if (hit_test("mute_checkbox")) {
+    if (IsMouseOverWidget(settings_root, "mute_checkbox", mouse_x, mouse_y)) {
       audio_manager_.ToggleMusic();
     }
 
-    if (hit_test("main_menu_button")) {
+    if (IsMouseOverWidget(settings_root, "main_menu_button", mouse_x,
+                          mouse_y)) {
       ResetGame();
       SetGameState(in_start_screen);
     }
 
-    if (hit_test("resume_button")) {
+    if (IsMouseOverWidget(settings_root, "resume_button", mouse_x, mouse_y)) {
       SetGameState(is_running);
     }
 
-    if (hit_test("occupancy_map_checkbox")) {
+    if (IsMouseOverWidget(settings_root, "occupancy_map_checkbox", mouse_x,
+                          mouse_y)) {
       game_status_.show_occupancy_map = !game_status_.show_occupancy_map;
     }
 
-    if (hit_test("ray_caster_checkbox")) {
+    if (IsMouseOverWidget(settings_root, "ray_caster_checkbox", mouse_x,
+                          mouse_y)) {
       game_status_.show_ray_caster = !game_status_.show_ray_caster;
     }
   }
@@ -420,10 +406,14 @@ void Game::ProcessSettingsMenuInput(uint32_t mouse_state) {
     auto& ui = render_manager_.GetUIManager();
     auto* slider = ui.GetSettingsRoot()->FindWidget("volume_slider");
     if (slider) {
-      SDL_Rect b = slider->GetComputedBounds();
-      if (mouse_x >= b.x && mouse_x <= b.x + b.w && mouse_y >= b.y - 10 &&
-          mouse_y <= b.y + b.h + 10) {
-        float percent = static_cast<float>(mouse_x - b.x) / b.w;
+      SDL_Rect slider_bounds = slider->GetComputedBounds();
+      // A little extra padding is added to y to make it more user-friendly.
+      if (mouse_x >= slider_bounds.x &&
+          mouse_x <= slider_bounds.x + slider_bounds.w &&
+          mouse_y >= slider_bounds.y - 10 &&
+          mouse_y <= slider_bounds.y + slider_bounds.h + 10) {
+        float percent =
+            static_cast<float>(mouse_x - slider_bounds.x) / slider_bounds.w;
         audio_manager_.SetMusicVolume(percent);
       }
     }
@@ -446,14 +436,8 @@ void Game::ProcessLevelUpInput(uint32_t mouse_state) {
 
     for (int i = 0; i < kNumUpgradeOptions; ++i) {
       std::string btn_id = "select_button_" + std::to_string(i);
-      auto* btn = ui.GetRootWidget()->FindWidget(btn_id);
-      if (!btn) {
-        continue;
-      }
 
-      SDL_Rect b = btn->GetComputedBounds();
-      if (mouse_x >= b.x && mouse_x <= b.x + b.w && mouse_y >= b.y &&
-          mouse_y <= b.y + b.h) {
+      if (IsMouseOverWidget(ui.GetRootWidget(), btn_id, mouse_x, mouse_y)) {
         progression_manager_.ApplyUpgrade(scene_, i);
         auto* menu = ui.GetLevelUpRoot();
         if (menu)
@@ -486,6 +470,22 @@ void Game::CachePreviousState() {
 void Game::Shutdown() {
   render_manager_.Shutdown();
   audio_manager_.Shutdown();
+}
+
+// Function for checking whether the mouse cursor is currently on top of a
+// UIWidget with a given root and id.
+bool Game::IsMouseOverWidget(UIWidget* root, const std::string& widget_id,
+                             int mouse_x, int mouse_y) {
+  if (!root) {
+    return false;
+  }
+  auto* widget = root->FindWidget(widget_id);
+  if (!widget) {
+    return false;
+  }
+  SDL_Rect bounds = widget->GetComputedBounds();
+  return mouse_x >= bounds.x && mouse_x <= bounds.x + bounds.w &&
+         mouse_y >= bounds.y && mouse_y <= bounds.y + bounds.h;
 }
 
 }  // namespace arelto

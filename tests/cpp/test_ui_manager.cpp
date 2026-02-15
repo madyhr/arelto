@@ -239,10 +239,9 @@ TEST_F(UIManagerTest, BuildSettingsMenu_CreatesSettingsRoot) {
   ASSERT_NE(settings, nullptr);
 }
 
-TEST_F(UIManagerTest, BuildSettingsMenu_CreatesMuteButton) {
-  auto* btn = ui_manager_.GetWidget<UIButton>("mute_button");
-  ASSERT_NE(btn, nullptr);
-  EXPECT_EQ(btn->GetLabel(), "MUTE");
+TEST_F(UIManagerTest, BuildSettingsMenu_CreatesMuteCheckbox) {
+  auto* checkbox = ui_manager_.GetWidget<UICheckbox>("mute_checkbox");
+  ASSERT_NE(checkbox, nullptr);
 }
 
 TEST_F(UIManagerTest, BuildSettingsMenu_CreatesResumeButton) {

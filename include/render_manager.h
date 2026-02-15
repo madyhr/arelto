@@ -12,6 +12,7 @@
 #include "map.h"
 #include "scene.h"
 #include "types.h"
+#include "ui/widget.h"
 #include "ui_manager.h"
 
 namespace arelto {
@@ -42,13 +43,15 @@ class RenderManager {
   bool Initialize(bool is_headless);
   void Shutdown();
 
-  void Render(const Scene& scene, float alpha, bool debug_mode, float time,
-              GameState game_state);
-  void RenderGameOver();
-  void RenderStartScreen();
+  void Render(const Scene& scene, float alpha, const GameStatus& game_status,
+              float time, GameState game_state);
+
   void RenderSettingsMenuState();
-  void RenderLevelUp(const std::vector<std::unique_ptr<Upgrade>>& options);
-  void UpdateSettingsMenuState(float volume, bool is_muted);
+  void RenderLevelUp();
+  void UpdateSettingsMenuState(float volume, bool is_muted,
+                               const GameStatus& game_status);
+
+  UIManager& GetUIManager() { return ui_manager_; }
 
   Camera camera_;
 
@@ -70,8 +73,13 @@ class RenderManager {
   void RenderDebugWorldOccupancyMap(
       const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
   void RenderDebugRayCaster(const Enemy& enemy, float alpha);
+
+  // Widget tree UI rendering
   void RenderUI(const Scene& scene, float time);
-  void RenderSettingsMenu();
+  void RenderUITree(UIWidget* root);
+  void RenderWidgetRecursive(UIWidget* widget);
+
+  // Text primitives
   void RenderDigitString(const std::string& text, int start_x, int start_y,
                          Size2D sprite_size, Size2D char_size);
   void RenderText(const std::string& text, int x, int y, SDL_Color color,

@@ -33,7 +33,6 @@ bool Game::Initialize() {
 
   std::signal(SIGINT, SignalHandler);
   std::signal(SIGTERM, SignalHandler);
-  game_status_.is_debug = false;
   game_status_.is_headless = false;
 
   if (!(render_manager_.Initialize(game_status_.is_headless))) {
@@ -107,12 +106,12 @@ void Game::CheckGameStateRules() {
   if (progression_manager_.CheckLevelUp(scene_.player)) {
     SetGameState(in_level_up);
     progression_manager_.GenerateLevelUpOptions(scene_);
+    render_manager_.GetUIManager().BuildLevelUpMenu(scene_.level_up_options);
   }
 }
 
 void Game::RenderGame(float alpha) {
-  render_manager_.Render(scene_, alpha, game_status_.is_debug, time_,
-                         game_state_);
+  render_manager_.Render(scene_, alpha, game_status_, time_, game_state_);
 };
 
 void Game::ResetGame() {
@@ -171,6 +170,7 @@ void Game::RunGameLoop() {
       }
 
       case is_gameover:
+        RenderGame(0.0f);
         break;
 
       case in_settings_menu: {
@@ -282,15 +282,18 @@ void Game::ProcessInput() {
         int mouse_x = e.button.x;
         int mouse_y = e.button.y;
 
-        int btn_w = kBeginButtonWidth;
-        int btn_h = kBeginButtonHeight;
-        int btn_x = kBeginButtonX;
-        int btn_y = kBeginButtonY;
-
-        if (mouse_x >= btn_x && mouse_x <= btn_x + btn_w && mouse_y >= btn_y &&
-            mouse_y <= btn_y + btn_h) {
-          SetGameState(is_running);
-          std::cout << "Game Started!" << std::endl;
+        auto& ui = render_manager_.GetUIManager();
+        auto* start_screen = ui.GetStartScreenRoot();
+        if (start_screen) {
+          auto* btn = start_screen->FindWidget("begin_button");
+          if (btn) {
+            SDL_Rect b = btn->GetComputedBounds();
+            if (mouse_x >= b.x && mouse_x <= b.x + b.w && mouse_y >= b.y &&
+                mouse_y <= b.y + b.h) {
+              SetGameState(is_running);
+              std::cout << "Game Started!" << std::endl;
+            }
+          }
         }
       }
     }
@@ -372,29 +375,39 @@ void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
   } else if (e.type == SDL_MOUSEBUTTONDOWN) {
     int mouse_x = e.button.x;
     int mouse_y = e.button.y;
-    int btn_w = kSettingsMenuButtonWidth;
-    int btn_h = kSettingsMenuButtonHeight;
 
-    int mute_x = kSettingsMenuX + kSettingsMenuButtonX;
-    int mute_y = kSettingsMenuY + kSettingsMenuMuteY;
-    if (mouse_x >= mute_x && mouse_x <= mute_x + btn_w && mouse_y >= mute_y &&
-        mouse_y <= mute_y + btn_h) {
+    auto& ui = render_manager_.GetUIManager();
+
+    // Helper lambda: check if click is inside a widget's bounds
+    auto hit_test = [&](const char* widget_id) -> bool {
+      auto* w = ui.GetSettingsRoot()->FindWidget(widget_id);
+      if (!w) {
+        return false;
+      }
+      SDL_Rect b = w->GetComputedBounds();
+      return mouse_x >= b.x && mouse_x <= b.x + b.w && mouse_y >= b.y &&
+             mouse_y <= b.y + b.h;
+    };
+
+    if (hit_test("mute_checkbox")) {
       audio_manager_.ToggleMusic();
     }
 
-    int main_x = kSettingsMenuX + kSettingsMenuMainMenuX;
-    int main_y = kSettingsMenuY + kSettingsMenuMainMenuY;
-    if (mouse_x >= main_x && mouse_x <= main_x + btn_w && mouse_y >= main_y &&
-        mouse_y <= main_y + btn_h) {
+    if (hit_test("main_menu_button")) {
       ResetGame();
       SetGameState(in_start_screen);
     }
 
-    int resume_x = kSettingsMenuX + kSettingsMenuResumeX;
-    int resume_y = kSettingsMenuY + kSettingsMenuResumeY;
-    if (mouse_x >= resume_x && mouse_x <= resume_x + btn_w &&
-        mouse_y >= resume_y && mouse_y <= resume_y + btn_h) {
+    if (hit_test("resume_button")) {
       SetGameState(is_running);
+    }
+
+    if (hit_test("occupancy_map_checkbox")) {
+      game_status_.show_occupancy_map = !game_status_.show_occupancy_map;
+    }
+
+    if (hit_test("ray_caster_checkbox")) {
+      game_status_.show_ray_caster = !game_status_.show_ray_caster;
     }
   }
 }
@@ -404,56 +417,50 @@ void Game::ProcessSettingsMenuInput(uint32_t mouse_state) {
     int mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
 
-    int slider_x = kSettingsMenuX + kSettingsMenuVolumeSliderX;
-    int slider_y = kSettingsMenuY + kSettingsMenuVolumeSliderY;
-    int slider_w = kSettingsMenuVolumeSliderWidth;
-    int slider_h = kSettingsMenuVolumeSliderHeight;
-
-    if (mouse_x >= slider_x && mouse_x <= slider_x + slider_w &&
-        mouse_y >= slider_y - 10 && mouse_y <= slider_y + slider_h + 10) {
-      float percent = static_cast<float>(mouse_x - slider_x) / slider_w;
-      audio_manager_.SetMusicVolume(percent);
+    auto& ui = render_manager_.GetUIManager();
+    auto* slider = ui.GetSettingsRoot()->FindWidget("volume_slider");
+    if (slider) {
+      SDL_Rect b = slider->GetComputedBounds();
+      if (mouse_x >= b.x && mouse_x <= b.x + b.w && mouse_y >= b.y - 10 &&
+          mouse_y <= b.y + b.h + 10) {
+        float percent = static_cast<float>(mouse_x - b.x) / b.w;
+        audio_manager_.SetMusicVolume(percent);
+      }
     }
   }
 
   // The SDL_mixer music volume goes from 0 to 128.
   render_manager_.UpdateSettingsMenuState(
-      audio_manager_.GetMusicVolume() * 128.0f, audio_manager_.IsMusicMuted());
+      audio_manager_.GetMusicVolume() * 128.0f, audio_manager_.IsMusicMuted(),
+      game_status_);
 }
 
 // This function processes inputs during a level up state and applies the
 // upgrade option according to which button was clicked.
 void Game::ProcessLevelUpInput(uint32_t mouse_state) {
   if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-    int total_width = kNumUpgradeOptions * kLevelUpCardWidth +
-                      (kNumUpgradeOptions - 1) * kLevelUpCardGap;
-    int start_x = (kWindowWidth - total_width) / 2;
-    int start_y = (kWindowHeight - kLevelUpCardHeight) / 2;
-
     int mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
 
-    int selected_card_idx = -1;
+    auto& ui = render_manager_.GetUIManager();
 
-    int button_top = start_y + kLevelUpButtonOffsetY;
-    int button_bottom = button_top + kLevelUpButtonHeight;
-
-    if (mouse_y >= button_top && mouse_y <= button_bottom) {
-      for (int i = 0; i < kNumUpgradeOptions; ++i) {
-        int card_x = start_x + i * (kLevelUpCardWidth + kLevelUpCardGap);
-        int button_x = card_x + (kLevelUpCardWidth - kLevelUpButtonWidth) / 2;
-        int button_right = button_x + kLevelUpButtonWidth;
-
-        if (mouse_x >= button_x && mouse_x <= button_right) {
-          selected_card_idx = i;
-          break;
-        }
+    for (int i = 0; i < kNumUpgradeOptions; ++i) {
+      std::string btn_id = "select_button_" + std::to_string(i);
+      auto* btn = ui.GetRootWidget()->FindWidget(btn_id);
+      if (!btn) {
+        continue;
       }
-    }
 
-    if (selected_card_idx != -1) {
-      progression_manager_.ApplyUpgrade(scene_, selected_card_idx);
-      SetGameState(is_running);
+      SDL_Rect b = btn->GetComputedBounds();
+      if (mouse_x >= b.x && mouse_x <= b.x + b.w && mouse_y >= b.y &&
+          mouse_y <= b.y + b.h) {
+        progression_manager_.ApplyUpgrade(scene_, i);
+        auto* menu = ui.GetLevelUpRoot();
+        if (menu)
+          menu->SetVisible(false);
+        SetGameState(is_running);
+        return;
+      }
     }
   }
 }

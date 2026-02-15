@@ -198,8 +198,9 @@ inline float Rad2Deg(float rad) {
 
 struct GameStatus {
   FrameStats frame_stats;
-  bool is_debug;
   bool is_headless;
+  bool show_occupancy_map = false;
+  bool show_ray_caster = false;
 };
 
 enum GameState : int {

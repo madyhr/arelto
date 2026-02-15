@@ -389,7 +389,7 @@ void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
              mouse_y <= b.y + b.h;
     };
 
-    if (hit_test("mute_button")) {
+    if (hit_test("mute_checkbox")) {
       audio_manager_.ToggleMusic();
     }
 

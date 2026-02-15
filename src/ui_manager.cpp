@@ -228,19 +228,35 @@ void UIManager::BuildSettingsMenu() {
   vol_slider->SetPercent(1.0f);
   content->AddChild(vol_slider);
 
-  auto mute_btn = std::make_shared<UIButton>();
-  mute_btn->SetId("mute_button");
-  mute_btn->SetAnchor(AnchorType::TopCenter);
-  mute_btn->SetSize(kSettingsMenuButtonWidth, kSettingsMenuButtonHeight);
-  mute_btn->SetTexture(resources_->button_texture);
-  mute_btn->SetNormalSrcRect(
-      {0, 0, kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight / 2});
-  mute_btn->SetHoverSrcRect({0, kLevelUpButtonTextureHeight / 2,
-                             kLevelUpButtonTextureWidth,
-                             kLevelUpButtonTextureHeight / 2});
-  mute_btn->SetLabel("MUTE");
-  mute_btn->SetLabelFont(resources_->ui_font_medium);
-  content->AddChild(mute_btn);
+  // --- Mute Checkbox ---
+  auto mute_row = std::make_shared<HBox>();
+  mute_row->SetId("mute_row");
+  mute_row->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 40);
+  mute_row->SetSpacing(10);
+  mute_row->SetAnchor(AnchorType::TopCenter);
+
+  auto mute_chk = std::make_shared<UICheckbox>();
+  mute_chk->SetId("mute_checkbox");
+  mute_chk->SetSize(30, 30);
+  mute_chk->SetBoxTexture(resources_->checkbox_texture);
+  mute_chk->SetBoxSrcRect(
+      {0, 0, kCheckboxSpriteWidth, kCheckboxSpriteHeight / 2});
+  mute_chk->SetBoxHoverSrcRect({0, kCheckboxSpriteHeight / 2,
+                                kCheckboxSpriteWidth,
+                                kCheckboxSpriteHeight / 2});
+  mute_chk->SetMarkTexture(resources_->checkmark_texture);
+  mute_chk->SetMarkSrcRect(
+      {0, 0, kCheckmarkSpriteWidth, kCheckmarkSpriteHeight});
+  mute_row->AddChild(mute_chk);
+
+  auto mute_lbl = std::make_shared<UILabel>();
+  mute_lbl->SetId("mute_label");
+  mute_lbl->SetSize(300, 30);
+  mute_lbl->SetText("Mute Music");
+  mute_lbl->SetFont(resources_->ui_font_medium);
+  mute_row->AddChild(mute_lbl);
+
+  content->AddChild(mute_row);
 
   // --- Debug Checkboxes ---
 
@@ -540,9 +556,9 @@ void UIManager::UpdateSettingsMenu(float volume, bool is_muted,
     vol_slider->SetPercent(vol_percent);
   }
 
-  auto* mute_btn = settings->FindWidgetAs<UIButton>("mute_button");
-  if (mute_btn) {
-    mute_btn->SetLabel(is_muted ? "UNMUTE" : "MUTE");
+  auto* mute_chk = settings->FindWidgetAs<UICheckbox>("mute_checkbox");
+  if (mute_chk) {
+      mute_chk->SetChecked(is_muted);
   }
 
   auto* occupancy_map_checkbox =

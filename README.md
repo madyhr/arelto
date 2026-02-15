@@ -40,8 +40,6 @@ A Reinforcement Learning Rogue-Like (RL2) game where the enemies get smarter ove
   - [Generative AI Disclaimer](#generative-ai-disclaimer)
 <!--toc:end-->
 
-
-
 ## Prerequisites
 
 Before installing, ensure you have the following system dependencies installed and that you are using an [NVIDIA GPU](https://developer.nvidia.com/cuda/gpus)[^1].

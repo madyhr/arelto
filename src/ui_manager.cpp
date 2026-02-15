@@ -203,30 +203,33 @@ void UIManager::BuildSettingsMenu() {
   title->SetCenterWidth(kSettingsMenuWidth - 2 * kMenuContentPadding);
   content->AddChild(title);
 
-  auto vol_label = std::make_shared<UILabel>();
-  vol_label->SetId("volume_label");
-  vol_label->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 30);
-  vol_label->SetText("MUSIC VOLUME");
-  vol_label->SetFont(resources_->ui_font_large);
-  vol_label->SetCenterWidth(kSettingsMenuWidth - 2 * kMenuContentPadding);
-  content->AddChild(vol_label);
+  auto volume_label = std::make_shared<UILabel>();
+  volume_label->SetId("volume_label");
+  volume_label->SetSize(kSettingsMenuWidth - 2 * kMenuContentPadding, 30);
+  volume_label->SetText("MUSIC VOLUME");
+  volume_label->SetFont(resources_->ui_font_large);
+  volume_label->SetCenterWidth(kSettingsMenuWidth - 2 * kMenuContentPadding);
+  content->AddChild(volume_label);
 
-  auto vol_slider = std::make_shared<UIProgressBar>();
-  vol_slider->SetId("volume_slider");
-  vol_slider->SetAnchor(AnchorType::TopCenter);
-  vol_slider->SetSize(kSettingsMenuVolumeSliderWidth,
-                      kSettingsMenuVolumeSliderHeight);
-  vol_slider->SetContainerTexture(resources_->slider_texture);
-  vol_slider->SetContainerSrcRect(
+  auto volume_slider = std::make_shared<UIProgressBar>();
+  volume_slider->SetId("volume_slider");
+  volume_slider->SetAnchor(AnchorType::TopCenter);
+  volume_slider->SetSize(kSettingsMenuVolumeSliderWidth,
+                         kSettingsMenuVolumeSliderHeight);
+  volume_slider->SetContainerTexture(resources_->slider_texture);
+  volume_slider->SetContainerSrcRect(
       {kSliderContainerSpriteOffsetX, kSliderContainerSpriteOffsetY,
        kSliderContainerSpriteWidth, kSliderContainerSpriteHeight});
-  vol_slider->SetFillTexture(resources_->slider_texture);
-  vol_slider->SetFillSrcRect({kSliderBarSpriteOffsetX, kSliderBarSpriteOffsetY,
-                              kSliderBarSpriteWidth, kSliderBarSpriteHeight});
-  vol_slider->SetFillOffset(kVolumeSliderFillOffsetX, kVolumeSliderFillOffsetY);
-  vol_slider->SetMaxFillSize(kVolumeSliderFillWidth, kVolumeSliderFillHeight);
-  vol_slider->SetPercent(1.0f);
-  content->AddChild(vol_slider);
+  volume_slider->SetFillTexture(resources_->slider_texture);
+  volume_slider->SetFillSrcRect({kSliderBarSpriteOffsetX,
+                                 kSliderBarSpriteOffsetY, kSliderBarSpriteWidth,
+                                 kSliderBarSpriteHeight});
+  volume_slider->SetFillOffset(kVolumeSliderFillOffsetX,
+                               kVolumeSliderFillOffsetY);
+  volume_slider->SetMaxFillSize(kVolumeSliderFillWidth,
+                                kVolumeSliderFillHeight);
+  volume_slider->SetPercent(1.0f);
+  content->AddChild(volume_slider);
 
   // --- Mute Checkbox ---
   auto mute_row = std::make_shared<HBox>();
@@ -235,26 +238,26 @@ void UIManager::BuildSettingsMenu() {
   mute_row->SetSpacing(10);
   mute_row->SetAnchor(AnchorType::TopCenter);
 
-  auto mute_chk = std::make_shared<UICheckbox>();
-  mute_chk->SetId("mute_checkbox");
-  mute_chk->SetSize(30, 30);
-  mute_chk->SetBoxTexture(resources_->checkbox_texture);
-  mute_chk->SetBoxSrcRect(
+  auto mute_checkbox = std::make_shared<UICheckbox>();
+  mute_checkbox->SetId("mute_checkbox");
+  mute_checkbox->SetSize(30, 30);
+  mute_checkbox->SetBoxTexture(resources_->checkbox_texture);
+  mute_checkbox->SetBoxSrcRect(
       {0, 0, kCheckboxSpriteWidth, kCheckboxSpriteHeight / 2});
-  mute_chk->SetBoxHoverSrcRect({0, kCheckboxSpriteHeight / 2,
-                                kCheckboxSpriteWidth,
-                                kCheckboxSpriteHeight / 2});
-  mute_chk->SetMarkTexture(resources_->checkmark_texture);
-  mute_chk->SetMarkSrcRect(
+  mute_checkbox->SetBoxHoverSrcRect({0, kCheckboxSpriteHeight / 2,
+                                     kCheckboxSpriteWidth,
+                                     kCheckboxSpriteHeight / 2});
+  mute_checkbox->SetMarkTexture(resources_->checkmark_texture);
+  mute_checkbox->SetMarkSrcRect(
       {0, 0, kCheckmarkSpriteWidth, kCheckmarkSpriteHeight});
-  mute_row->AddChild(mute_chk);
+  mute_row->AddChild(mute_checkbox);
 
-  auto mute_lbl = std::make_shared<UILabel>();
-  mute_lbl->SetId("mute_label");
-  mute_lbl->SetSize(300, 30);
-  mute_lbl->SetText("Mute Music");
-  mute_lbl->SetFont(resources_->ui_font_medium);
-  mute_row->AddChild(mute_lbl);
+  auto mute_label = std::make_shared<UILabel>();
+  mute_label->SetId("mute_label");
+  mute_label->SetSize(300, 30);
+  mute_label->SetText("Mute Music");
+  mute_label->SetFont(resources_->ui_font_medium);
+  mute_row->AddChild(mute_label);
 
   content->AddChild(mute_row);
 
@@ -549,16 +552,16 @@ void UIManager::UpdateSettingsMenu(float volume, bool is_muted,
 
   auto* settings = GetSettingsRoot();
 
-  auto* vol_slider = settings->FindWidgetAs<UIProgressBar>("volume_slider");
-  if (vol_slider) {
+  auto* volume_slider = settings->FindWidgetAs<UIProgressBar>("volume_slider");
+  if (volume_slider) {
     // Volume is 0-128.
-    float vol_percent = volume / 128.0f;
-    vol_slider->SetPercent(vol_percent);
+    float volume_percent = volume / 128.0f;
+    volume_slider->SetPercent(volume_percent);
   }
 
-  auto* mute_chk = settings->FindWidgetAs<UICheckbox>("mute_checkbox");
-  if (mute_chk) {
-      mute_chk->SetChecked(is_muted);
+  auto* mute_checkbox = settings->FindWidgetAs<UICheckbox>("mute_checkbox");
+  if (mute_checkbox) {
+    mute_checkbox->SetChecked(is_muted);
   }
 
   auto* occupancy_map_checkbox =
@@ -662,14 +665,15 @@ void UIManager::BuildGameOverScreen() {
   black_bar->SetSize(kWindowWidth, kWindowHeight / 3);
   black_bar->SetBackgroundColor(WithOpacity(kColorBlack, 128));
 
-  auto go_image = std::make_shared<UIImage>();
-  go_image->SetId("game_over_image");
-  go_image->SetAnchor(AnchorType::Center);
-  go_image->SetSize(kGameOverSpriteWidth, kGameOverSpriteHeight);
-  go_image->SetTexture(resources_->game_over_texture);
-  go_image->SetSrcRect({0, 0, kGameOverSpriteWidth, kGameOverSpriteHeight});
+  auto game_over_image = std::make_shared<UIImage>();
+  game_over_image->SetId("game_over_image");
+  game_over_image->SetAnchor(AnchorType::Center);
+  game_over_image->SetSize(kGameOverSpriteWidth, kGameOverSpriteHeight);
+  game_over_image->SetTexture(resources_->game_over_texture);
+  game_over_image->SetSrcRect(
+      {0, 0, kGameOverSpriteWidth, kGameOverSpriteHeight});
 
-  black_bar->AddChild(go_image);
+  black_bar->AddChild(game_over_image);
 
   game_over_root->AddChild(black_bar);
   root_widget_->AddChild(game_over_root);

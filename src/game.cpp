@@ -440,8 +440,9 @@ void Game::ProcessLevelUpInput(uint32_t mouse_state) {
       if (IsMouseOverWidget(ui.GetRootWidget(), btn_id, mouse_x, mouse_y)) {
         progression_manager_.ApplyUpgrade(scene_, i);
         auto* menu = ui.GetLevelUpRoot();
-        if (menu)
+        if (menu) {
           menu->SetVisible(false);
+        }
         SetGameState(is_running);
         return;
       }

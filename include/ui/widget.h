@@ -38,13 +38,11 @@ class UIWidget {
  public:
   virtual ~UIWidget() = default;
 
-  // Hierarchy
   void AddChild(std::shared_ptr<UIWidget> child);
   void RemoveChild(const std::string& id);
   UIWidget* GetParent() const;
   const std::vector<std::shared_ptr<UIWidget>>& GetChildren() const;
 
-  // Layout
   void SetPosition(float x, float y);
   void SetSize(float w, float h);
   void SetAnchor(AnchorType anchor);
@@ -52,17 +50,14 @@ class UIWidget {
   void SetMargin(float margin);
   void SetSpacing(float spacing);
 
-  // Identity
   void SetId(const std::string& id);
   const std::string& GetId() const;
 
-  // State
   void SetVisible(bool visible);
   bool IsVisible() const;
   void SetHovered(bool hovered);
   bool IsHovered() const;
 
-  // Bounds
   SDL_Rect GetComputedBounds() const;
 
   // Layout computation — resolves positions based on parent/children
@@ -72,7 +67,6 @@ class UIWidget {
   // Update — called each frame to propagate state changes
   virtual void Update(float dt);
 
-  // Type identification for render dispatch
   virtual WidgetType GetWidgetType() const;
 
   // Widget lookup by ID (recursive)
@@ -89,7 +83,6 @@ class UIWidget {
   std::vector<std::shared_ptr<UIWidget>> children_;
   UIWidget* parent_ = nullptr;
 
-  // Layout properties
   float pos_x_ = 0.0f;
   float pos_y_ = 0.0f;
   float width_ = 0.0f;
@@ -99,11 +92,10 @@ class UIWidget {
   float margin_ = 0.0f;
   float spacing_ = 0.0f;
 
-  // State
   bool visible_ = true;
   bool hovered_ = false;
 
-  // Helper: compute anchored position within parent
+  // Compute anchored position within parent using `anchor_` attribute
   void ApplyAnchor(int parent_x, int parent_y, int parent_w, int parent_h);
 };
 

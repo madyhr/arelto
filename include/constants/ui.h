@@ -6,19 +6,19 @@
 namespace arelto {
 
 // Layout constants — internal padding / spacing for widget tree.
-constexpr int kHudPadding = 50;         // Distance from screen edges
-constexpr int kHudBarSpacing = 8;       // Gap between health and exp bars
-constexpr int kBarTextOffsetX = 50;     // Text offset within bar area
-constexpr int kBarTextOffsetY = 0;      // Text Y offset within bar area
-constexpr int kLevelGroupOffsetY = 55;  // Level group offset below timer
-constexpr int kTimerTextGap = 10;       // Gap between hourglass and digits
-constexpr int kLevelTextGap = -2;       // Gap between level icon and digits
+constexpr int kHudPadding = 50;  // Distance from screen edges
+constexpr int kHudBarSpacing = 8;
+constexpr int kBarTextOffsetX = 50;
+constexpr int kBarTextOffsetY = 0;
+constexpr int kLevelGroupOffsetY = 55;
+constexpr int kTimerTextGap = 10;
+constexpr int kLevelTextGap = -2;  // Set to a negative value due to icon size
 
 // Settings menu internal layout
-constexpr int kMenuContentPadding = 100;  // Top padding inside settings panel
-constexpr int kMenuItemSpacing = 25;      // Vertical spacing between items
-constexpr int kMenuButtonGap = 20;        // Gap between bottom buttons
-constexpr int kMenuBottomPadding = 60;    // Bottom padding for button row
+constexpr int kMenuContentPadding = 100;
+constexpr int kMenuItemSpacing = 25;
+constexpr int kMenuButtonGap = 20;
+constexpr int kMenuBottomPadding = 60;
 
 // Font sizes
 constexpr int kFontSizeMedium = 26;

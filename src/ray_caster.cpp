@@ -62,7 +62,7 @@ DualRayHit CastRay(
 
     // Check for non-blocking (record closest only)
     // TODO: Extend ray caster to allow for any number of non-blocking hits?
-    if (!non_blocking_found && (mask & kMaskTypeProjectile)) {
+    if (!non_blocking_found && (mask & kMaskRayHitNonBlockingTypes)) {
       float dist;
       if (hit_side_x) {
         dist = side_dist_x - delta_dist_x;

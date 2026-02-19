@@ -6,7 +6,7 @@
 *.o
 *.obj
 
-# Build directories and outputs 
+# Build directories and outputs
 build/
 bin/
 Debug/
@@ -73,3 +73,6 @@ build.ninja
 # Executables
 game_app
 arelto_tests
+
+# Agents
+.agent/

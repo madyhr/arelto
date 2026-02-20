@@ -9,14 +9,13 @@ from rl.storage.rollout_storage import RolloutStorage, Transition
 
 
 class PPO:
-
     def __init__(
         self,
         num_envs: int,
         input_dim: int,
-        hidden_size: tuple[int] | list[int] = [256, 256, 256],
+        hidden_size: tuple[int] | list[int] = [512, 256, 128],
         output_dim: list[int] = [3, 3],
-        num_transitions_per_env: int = 150,
+        num_transitions_per_env: int = 50,
         num_mini_batches: int = 8,
         num_epochs: int = 2,
         gamma: float = 0.99,
@@ -27,7 +26,7 @@ class PPO:
         value_loss_coef: float = 0.5,
         max_grad_norm: float = 0.5,
         num_rays: int = 72,
-        num_ray_types: int = 5,
+        num_entity_types: int = 6,
         ray_history_length: int = 1,
         encoder_output_dim: int = 128,
         device: str = "cpu",
@@ -38,15 +37,22 @@ class PPO:
 
         self.encoder = RayEncoder(
             num_rays=num_rays,
-            num_ray_types=num_ray_types,
+            num_entity_types=num_entity_types,
             history_length=ray_history_length,
             output_dim=encoder_output_dim,
         )
+        # The observation space contains 2 * 'total_rays' number of ray distances
+        # then 2 * 'total_rays' number of entity types.
+        expected_input_dim = 4 * num_rays * ray_history_length
+        if self.input_dim != expected_input_dim:
+            raise ValueError(
+                f"Shape mismatch: Environment obs_size ({self.input_dim=}) "
+                f"does not match computed RayEncoder expected dimensions ({expected_input_dim=}). "
+                f"Check C++ bindings and Python RayEncoder definitions."
+            )
 
-        # The observation space contains 'total_rays' number of ray distances
-        # then 'total_rays' number of ray types. We only want to normalize
-        # the distances as the types are categorical.
-        self.norm_dim = self.encoder.total_rays
+        #  We only want to normalize the distances as the types are categorical.
+        self.norm_dim = 2 * self.encoder.total_rays
         self.obs_normalizer = EmpiricalNormalization(self.norm_dim).to(self.device)
 
         self.policy = ActorCritic(
@@ -84,7 +90,6 @@ class PPO:
         self.num_transitions_per_env = num_transitions_per_env
         self.num_mini_batches = num_mini_batches
         self.num_epochs = num_epochs
-        self.batch_size = self.num_envs * self.num_transitions_per_env
 
         print(" --- PPO Params --- ")
         print(f"Hidden shape: {hidden_size}")
@@ -156,7 +161,6 @@ class PPO:
             return_batch,
             old_action_log_prob_batch,
         ) in generator:
-
             advantage_batch = (advantage_batch - advantage_batch.mean()) / (
                 advantage_batch.std() + 1e-8
             )

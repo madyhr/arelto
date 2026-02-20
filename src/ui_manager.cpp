@@ -1,6 +1,5 @@
 // src/ui_manager.cpp
 #include "ui_manager.h"
-#include <algorithm>
 #include <functional>
 #include <string>
 #include "constants/progression_manager.h"
@@ -24,6 +23,7 @@ void UIManager::SetupUI(const UIResources& resources) {
   BuildSettingsMenu();
   BuildStartScreen();
   BuildGameOverScreen();
+  BuildQuitConfirmMenu();
 
   root_widget_->ComputeLayout(0, 0, kWindowWidth, kWindowHeight);
 }
@@ -340,10 +340,10 @@ void UIManager::BuildSettingsMenu() {
   resume_btn->SetSize(kSettingsMenuButtonWidth, kSettingsMenuButtonHeight);
   resume_btn->SetTexture(resources_->button_texture);
   resume_btn->SetNormalSrcRect(
-      {0, 0, kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight / 2});
-  resume_btn->SetHoverSrcRect({0, kLevelUpButtonTextureHeight / 2,
-                               kLevelUpButtonTextureWidth,
-                               kLevelUpButtonTextureHeight / 2});
+      {0, 0, kGenericButtonTextureWidth, kGenericButtonTextureHeight / 2});
+  resume_btn->SetHoverSrcRect({0, kGenericButtonTextureHeight / 2,
+                               kGenericButtonTextureWidth,
+                               kGenericButtonTextureHeight / 2});
   resume_btn->SetLabel("RESUME");
   resume_btn->SetLabelFont(resources_->ui_font_medium);
   button_row->AddChild(resume_btn);
@@ -353,10 +353,10 @@ void UIManager::BuildSettingsMenu() {
   main_menu_btn->SetSize(kSettingsMenuButtonWidth, kSettingsMenuButtonHeight);
   main_menu_btn->SetTexture(resources_->button_texture);
   main_menu_btn->SetNormalSrcRect(
-      {0, 0, kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight / 2});
-  main_menu_btn->SetHoverSrcRect({0, kLevelUpButtonTextureHeight / 2,
-                                  kLevelUpButtonTextureWidth,
-                                  kLevelUpButtonTextureHeight / 2});
+      {0, 0, kGenericButtonTextureWidth, kGenericButtonTextureHeight / 2});
+  main_menu_btn->SetHoverSrcRect({0, kGenericButtonTextureHeight / 2,
+                                  kGenericButtonTextureWidth,
+                                  kGenericButtonTextureHeight / 2});
   main_menu_btn->SetLabel("MAIN MENU");
   main_menu_btn->SetLabelFont(resources_->ui_font_medium);
   button_row->AddChild(main_menu_btn);
@@ -461,10 +461,10 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   select_btn->SetSize(kLevelUpButtonWidth, kLevelUpButtonHeight);
   select_btn->SetTexture(resources_->button_texture);
   select_btn->SetNormalSrcRect(
-      {0, 0, kLevelUpButtonTextureWidth, kLevelUpButtonTextureHeight / 2});
-  select_btn->SetHoverSrcRect({0, kLevelUpButtonTextureHeight / 2,
-                               kLevelUpButtonTextureWidth,
-                               kLevelUpButtonTextureHeight / 2});
+      {0, 0, kGenericButtonTextureWidth, kGenericButtonTextureHeight / 2});
+  select_btn->SetHoverSrcRect({0, kGenericButtonTextureHeight / 2,
+                               kGenericButtonTextureWidth,
+                               kGenericButtonTextureHeight / 2});
   select_btn->SetLabel("SELECT");
   select_btn->SetLabelFont(resources_->ui_font_medium);
   card->AddChild(select_btn);
@@ -678,6 +678,110 @@ void UIManager::BuildGameOverScreen() {
 
 UIWidget* UIManager::GetGameOverScreenRoot() {
   return root_widget_ ? root_widget_->FindWidget("game_over_screen") : nullptr;
+}
+
+// =============================================================================
+// BuildQuitConfirmMenu
+// =============================================================================
+
+void UIManager::BuildQuitConfirmMenu() {
+  auto overlay = std::make_shared<Panel>();
+  overlay->SetId("quit_confirm_menu");
+  overlay->SetSize(kWindowWidth, kWindowHeight);
+  overlay->SetBackgroundColor(WithOpacity(kColorBlack, 128));
+  overlay->SetVisible(false);
+
+  auto menu = std::make_shared<Panel>();
+  menu->SetId("quit_confirm_panel");
+  menu->SetAnchor(AnchorType::Center);
+  menu->SetSize(kQuitMenuWidth, kQuitMenuHeight);
+  menu->SetBackground(resources_->settings_menu_background_texture);
+  menu->SetBackgroundSrcRect({0, 0, kSettingsMenuBackgroundSpriteWidth,
+                              kSettingsMenuBackgroundSpriteHeight});
+
+  auto content = std::make_shared<VBox>();
+  content->SetId("quit_confirm_content");
+  content->SetSize(kQuitMenuWidth, kQuitMenuHeight);
+  content->SetPadding(kMenuContentPadding);
+  content->SetSpacing(kMenuItemSpacing);
+
+  // auto title_spacer = std::make_shared<Spacer>(0, 10);
+  // content->AddChild(title_spacer);
+
+  auto title = std::make_shared<UILabel>();
+  title->SetId("quit_confirm_title");
+  title->SetSize(kQuitMenuWidth - 2 * kMenuContentPadding, 100);
+  title->SetText("QUIT GAME?");
+  title->SetFont(resources_->ui_font_huge);
+  title->SetCenterWidth(kQuitMenuWidth - 2 * kMenuContentPadding);
+  content->AddChild(title);
+
+  menu->AddChild(content);
+
+  auto button_row = std::make_shared<HBox>();
+  button_row->SetId("quit_confirm_buttons");
+  button_row->SetAnchor(AnchorType::BottomCenter);
+  button_row->SetPosition(0, -kMenuBottomPadding);
+  button_row->SetSize(kSettingsMenuButtonWidth * 2 + kMenuButtonGap,
+                      kSettingsMenuButtonHeight);
+  button_row->SetSpacing(kMenuButtonGap);
+
+  auto yes_btn = std::make_shared<UIButton>();
+  yes_btn->SetId("quit_yes_button");
+  yes_btn->SetSize(kSettingsMenuButtonWidth, kSettingsMenuButtonHeight);
+  yes_btn->SetTexture(resources_->button_texture);
+  yes_btn->SetNormalSrcRect(
+      {0, 0, kGenericButtonTextureWidth, kGenericButtonTextureHeight / 2});
+  yes_btn->SetHoverSrcRect({0, kGenericButtonTextureHeight / 2,
+                            kGenericButtonTextureWidth,
+                            kGenericButtonTextureHeight / 2});
+  yes_btn->SetLabel("YES");
+  yes_btn->SetLabelFont(resources_->ui_font_medium);
+  button_row->AddChild(yes_btn);
+
+  auto no_btn = std::make_shared<UIButton>();
+  no_btn->SetId("quit_no_button");
+  no_btn->SetSize(kSettingsMenuButtonWidth, kSettingsMenuButtonHeight);
+  no_btn->SetTexture(resources_->button_texture);
+  no_btn->SetNormalSrcRect(
+      {0, 0, kGenericButtonTextureWidth, kGenericButtonTextureHeight / 2});
+  no_btn->SetHoverSrcRect({0, kGenericButtonTextureHeight / 2,
+                           kGenericButtonTextureWidth,
+                           kGenericButtonTextureHeight / 2});
+  no_btn->SetLabel("NO");
+  no_btn->SetLabelFont(resources_->ui_font_medium);
+  button_row->AddChild(no_btn);
+
+  menu->AddChild(button_row);
+
+  overlay->AddChild(menu);
+  root_widget_->AddChild(overlay);
+}
+
+UIWidget* UIManager::GetQuitConfirmRoot() {
+  return root_widget_ ? root_widget_->FindWidget("quit_confirm_menu") : nullptr;
+}
+
+void UIManager::UpdateQuitConfirmMenu() {
+  auto* quit_confirm = GetQuitConfirmRoot();
+  if (!quit_confirm)
+    return;
+
+  int mouse_x, mouse_y;
+  SDL_GetMouseState(&mouse_x, &mouse_y);
+
+  std::function<void(UIWidget*)> update_hover = [&](UIWidget* widget) {
+    if (widget->GetWidgetType() == WidgetType::Button) {
+      SDL_Rect bounds = widget->GetComputedBounds();
+      bool hovered = (mouse_x >= bounds.x && mouse_x <= bounds.x + bounds.w &&
+                      mouse_y >= bounds.y && mouse_y <= bounds.y + bounds.h);
+      widget->SetHovered(hovered);
+    }
+    for (auto& child : widget->GetChildren()) {
+      update_hover(child.get());
+    }
+  };
+  update_hover(quit_confirm);
 }
 
 }  // namespace arelto

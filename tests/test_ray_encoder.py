@@ -10,7 +10,7 @@ from modules.ray_encoder import RayEncoder
 def base_config():
     return {
         "num_rays": 64,
-        "num_ray_types": 5,
+        "num_entity_types": 5,
         "output_dim": 32,
     }
 
@@ -25,7 +25,7 @@ def test_initialization_assertions():
     with pytest.raises(AssertionError):
         RayEncoder(
             num_rays=10,
-            num_ray_types=2,
+            num_entity_types=2,
             output_dim=10,
             out_channels_list=[16, 32],
             kernel_sizes=[3],  # Mismatch length
@@ -36,17 +36,17 @@ def test_initialization_assertions():
 def test_convolutional_ray_encoder(encoder):
     batch_size = 4
 
-    # num_rays (distances) + num_rays (types)
-    obs_dim = encoder.num_rays + encoder.num_rays
+    # 2 distance blocks + 2 type blocks
+    obs_dim = encoder.num_rays * 4
 
     # Create dummy observation
     # Distances: random
-    # Types: random integers [0, num_ray_types)
+    # Types: random integers [0, num_entity_types)
     obs = torch.randn(batch_size, obs_dim)
 
     # Force types to be valid integers
-    obs[:, encoder.num_rays :] = torch.randint(
-        0, encoder.num_ray_types, (batch_size, encoder.num_rays)
+    obs[:, encoder.num_rays * 2 :] = torch.randint(
+        0, encoder.num_entity_types, (batch_size, encoder.num_rays * 2)
     ).float()
 
     # Forward pass
@@ -66,7 +66,7 @@ def test_convolutional_ray_encoder(encoder):
 
 def test_custom_architecture():
     num_rays = 32
-    num_ray_types = 3
+    num_entity_types = 3
     output_dim = 64
     out_channels_list = [8, 16, 32]
     kernel_sizes = [3, 3, 3]
@@ -74,18 +74,20 @@ def test_custom_architecture():
 
     encoder = RayEncoder(
         num_rays=num_rays,
-        num_ray_types=num_ray_types,
+        num_entity_types=num_entity_types,
         output_dim=output_dim,
         out_channels_list=out_channels_list,
         kernel_sizes=kernel_sizes,
         strides=strides,
     )
 
-    obs_dim = num_rays + num_rays
+    obs_dim = num_rays * 4
     obs = torch.randn(2, obs_dim)
 
     # Force types to be valid integers
-    obs[:, num_rays:] = torch.randint(0, num_ray_types, (2, num_rays)).float()
+    obs[:, num_rays * 2 :] = torch.randint(
+        0, num_entity_types, (2, num_rays * 2)
+    ).float()
 
     output = encoder(obs)
     assert output.shape == (2, output_dim)
@@ -93,9 +95,9 @@ def test_custom_architecture():
 
 def test_input_dimension_mismatch(encoder, base_config):
     """Test behavior when input observation size does not match expected size."""
-    # Expected obs_dim = num_rays (dist) + num_rays (types) = 128
+    # Expected obs_dim = num_rays * 4 = 256
     # Pass a tensor that is too small
-    wrong_obs = torch.randn(4, base_config["num_rays"])  # Missing types part
+    wrong_obs = torch.randn(4, base_config["num_rays"])  # Missing parts
 
     # Depending on implementation, this usually crashes at the slicing or embedding step.
     # We just want to ensure it fails and doesn't silently produce garbage.
@@ -104,12 +106,12 @@ def test_input_dimension_mismatch(encoder, base_config):
 
 
 def test_out_of_bounds_ray_types(encoder, base_config):
-    """Test that passing ray types >= num_ray_types triggers an index error."""
+    """Test that passing ray types >= num_entity_types triggers an index error."""
     num_rays = base_config["num_rays"]
-    obs = torch.randn(2, num_rays * 2)
+    obs = torch.randn(2, num_rays * 4)
 
     # Set a type index that is out of bounds (e.g., 5 if num_types is 5, since 0-4 are valid)
-    obs[:, num_rays:] = base_config["num_ray_types"]
+    obs[:, num_rays * 2 :] = base_config["num_entity_types"]
 
     with pytest.raises(IndexError):
         encoder(obs)
@@ -120,12 +122,12 @@ def test_batch_independence(encoder, base_config):
     Crucial for CNNs/Padding: Ensure modifying batch element 1 does not change output of batch element 0.
     """
     num_rays = base_config["num_rays"]
-    obs_dim = num_rays * 2
+    obs_dim = num_rays * 4
 
     # Create two identical inputs
     input_a = torch.randn(1, obs_dim)
     # Ensure types are valid
-    input_a[:, num_rays:] = torch.zeros(1, num_rays)
+    input_a[:, num_rays * 2 :] = torch.zeros(1, num_rays * 2)
 
     input_b = input_a.clone()
 
@@ -144,14 +146,14 @@ def test_batch_independence(encoder, base_config):
         out_modified = encoder(batch_input)
 
     # The output for index 0 should be EXACTLY the same in both passes
-    assert torch.allclose(
-        out_initial[0], out_modified[0], atol=1e-6
-    ), "Batch element 0 output changed when element 1 was modified! Check padding/batchnorm logic."
+    assert torch.allclose(out_initial[0], out_modified[0], atol=1e-6), (
+        "Batch element 0 output changed when element 1 was modified! Check padding/batchnorm logic."
+    )
 
     # The output for index 1 should be different
-    assert not torch.allclose(
-        out_initial[1], out_modified[1]
-    ), "Batch element 1 output did not change despite input changing."
+    assert not torch.allclose(out_initial[1], out_modified[1]), (
+        "Batch element 1 output did not change despite input changing."
+    )
 
 
 # --- Edge Case Tests ---
@@ -163,15 +165,15 @@ def test_small_ray_counts(num_rays):
     # This often breaks if kernel sizes > num_rays without proper padding
     encoder = RayEncoder(
         num_rays=num_rays,
-        num_ray_types=2,
+        num_entity_types=2,
         output_dim=16,
         kernel_sizes=[3, 3],  # Kernel larger than input width if rays=1,2
         out_channels_list=[4, 4],
         strides=[1, 1],
     )
 
-    obs = torch.randn(1, num_rays * 2)
-    obs[:, num_rays:] = 0  # valid types
+    obs = torch.randn(1, num_rays * 4)
+    obs[:, num_rays * 2 :] = 0  # valid types
 
     try:
         out = encoder(obs)
@@ -197,7 +199,7 @@ def test_circular_padding_continuity(base_config):
     def get_conv_features(d, t):
         emb = encoder.type_embed(t)
         d_uns = d.unsqueeze(-1)
-        combined = torch.cat([d_uns, emb], dim=-1).permute(0, 2, 1)
+        combined = torch.cat([d_uns, d_uns, emb, emb], dim=-1).permute(0, 2, 1)
         return encoder.conv_net(combined)
 
     # Original features
@@ -213,9 +215,9 @@ def test_circular_padding_continuity(base_config):
     # Note: This assumes strides are all 1.
     feat_expected_roll = torch.roll(feat_orig, shifts=1, dims=2)
 
-    assert torch.allclose(
-        feat_rolled, feat_expected_roll, atol=1e-5
-    ), "Circular padding did not result in translation equivariance."
+    assert torch.allclose(feat_rolled, feat_expected_roll, atol=1e-5), (
+        "Circular padding did not result in translation equivariance."
+    )
 
 
 # --- Training Integration Test ---
@@ -231,9 +233,9 @@ def test_overfitting_sanity_check(encoder, base_config):
     criterion = nn.MSELoss()
 
     num_rays = base_config["num_rays"]
-    obs = torch.randn(2, num_rays * 2)
-    obs[:, num_rays:] = torch.randint(
-        0, base_config["num_ray_types"], (2, num_rays)
+    obs = torch.randn(2, num_rays * 4)
+    obs[:, num_rays * 2 :] = torch.randint(
+        0, base_config["num_entity_types"], (2, num_rays * 2)
     ).float()
 
     target = torch.randn(2, base_config["output_dim"])
@@ -251,9 +253,9 @@ def test_overfitting_sanity_check(encoder, base_config):
     final_loss = criterion(encoder(obs), target).item()
 
     # Loss should decrease significantly
-    assert (
-        final_loss < initial_loss * 0.1
-    ), f"Model failed to overfit: {initial_loss} -> {final_loss}"
+    assert final_loss < initial_loss * 0.1, (
+        f"Model failed to overfit: {initial_loss} -> {final_loss}"
+    )
 
 
 # --- System Tests ---
@@ -272,7 +274,7 @@ def test_model_save_load(encoder):
         # specific reload
         new_encoder = RayEncoder(
             num_rays=encoder.num_rays,
-            num_ray_types=encoder.num_ray_types,
+            num_entity_types=encoder.num_entity_types,
             output_dim=encoder.output_dim,
         )
         new_encoder.load_state_dict(torch.load(tmp_path))

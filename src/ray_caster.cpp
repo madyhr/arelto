@@ -1,5 +1,6 @@
 // src/ray_caster.cpp
 #include "ray_caster.h"
+#include <cstdint>
 #include "constants/map.h"
 #include "types.h"
 
@@ -7,14 +8,16 @@ namespace arelto {
 
 // This function assumes that the occupancy map is surrounded by grid cells
 // that have an EntityType other than None.
-RayHit CastRay(
+DualRayHit CastRay(
     const Vector2D& start_pos, const Vector2D& ray_dir,
     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
 
   int step_x, step_y;
   float side_dist_x, side_dist_y;
   bool hit_side_x;
-  RayHit ray_hit = {0.0f, EntityType::None};
+
+  RayHit blocking_hit = {0.0f, EntityType::None};
+  RayHit non_blocking_hit = {0.0f, EntityType::None};
 
   Vector2D grid_pos = WorldToGrid(start_pos);
   int map_grid_x = static_cast<int>(grid_pos.x);
@@ -39,8 +42,10 @@ RayHit CastRay(
     side_dist_y = (map_grid_y + 1 - grid_pos.y) * delta_dist_y;
   }
 
-  EntityType hit_type = EntityType::None;
-  while (true) {
+  bool blocking_found = false;
+  bool non_blocking_found = false;
+
+  while (!blocking_found) {
 
     if (side_dist_x < side_dist_y) {
       map_grid_x += step_x;
@@ -52,27 +57,37 @@ RayHit CastRay(
       hit_side_x = false;
     }
 
-    // We use the unchecked get to avoid checking bounds for performance reasons
-    hit_type = occupancy_map.GetUnchecked(map_grid_x, map_grid_y);
+    // Use GetMask for efficient multi-type checking
+    uint16_t mask = occupancy_map.GetMask(map_grid_x, map_grid_y);
 
-    if (hit_type != EntityType::None && hit_type != EntityType::enemy &&
-        hit_type != EntityType::projectile) {
-      break;
+    // Check for non-blocking (record closest only)
+    // TODO: Extend ray caster to allow for any number of non-blocking hits?
+    if (!non_blocking_found && (mask & kMaskRayHitNonBlockingTypes)) {
+      float dist;
+      if (hit_side_x) {
+        dist = side_dist_x - delta_dist_x;
+      } else {
+        dist = side_dist_y - delta_dist_y;
+      }
+      non_blocking_hit = {GridToWorld(dist), EntityType::projectile};
+      non_blocking_found = true;
+    }
+
+    // Check for blockers
+    if (mask & kMaskRayHitBlockingTypes) {
+      EntityType type = MaskToEntityTypePrioritized(mask);
+      float dist;
+      if (hit_side_x) {
+        dist = side_dist_x - delta_dist_x;
+      } else {
+        dist = side_dist_y - delta_dist_y;
+      }
+      blocking_hit = {GridToWorld(dist), type};
+      blocking_found = true;
     }
   }
 
-  if (hit_side_x) {
-    ray_hit.distance = side_dist_x - delta_dist_x;
-  } else {
-    ray_hit.distance = side_dist_y - delta_dist_y;
-  }
-
-  ray_hit.entity_type = hit_type;
-
-  // Convert back to world coordinates
-  ray_hit.distance = GridToWorld(ray_hit.distance);
-
-  return ray_hit;
+  return {blocking_hit, non_blocking_hit};
 };
 
 void SetupEnemyRayCasterPattern(EnemyRayCaster& ray_caster) {

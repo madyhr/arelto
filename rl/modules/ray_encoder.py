@@ -6,7 +6,7 @@ class RayEncoder(nn.Module):
     def __init__(
         self,
         num_rays: int,
-        num_ray_types: int,
+        num_entity_types: int,
         output_dim: int,
         history_length: int = 1,
         embedding_dim: int = 8,
@@ -27,15 +27,15 @@ class RayEncoder(nn.Module):
         assert len(out_channels_list) == len(kernel_sizes) == len(strides)
 
         self.num_rays = num_rays
-        self.num_ray_types = num_ray_types
+        self.num_entity_types = num_entity_types
         self.output_dim = output_dim
         self.history_length = history_length
 
-        self.type_embed = nn.Embedding(num_ray_types, embedding_dim)
+        self.type_embed = nn.Embedding(num_entity_types, embedding_dim)
 
-        # 1 for distance and the rest depends on embedding dim
+        # 2 for distances and the rest depends on embedding dim
         # We multiply by history_length because we stack frames channel-wise
-        self.num_ray_channels = 1 + embedding_dim
+        self.num_ray_channels = 2 + 2 * embedding_dim
         in_channels = history_length * self.num_ray_channels
         self.total_rays = num_rays * history_length
 
@@ -74,29 +74,51 @@ class RayEncoder(nn.Module):
         # T = history length
         # N = number of rays
         # E = embedding dim
+        # The blocking/non-blocking naming convention stems from the C++ source code.
+        # See `ray_caster.cpp`.
 
         batch_size = obs.shape[0]
 
         # (B, T, N)
-        ray_distances = obs[:, : self.total_rays].view(
+        blocking_distances = obs[:, : self.total_rays].view(
             batch_size, self.history_length, self.num_rays
         )
-        ray_types = (
-            obs[:, self.total_rays :]
+        non_blocking_distances = obs[:, self.total_rays : 2 * self.total_rays].view(
+            batch_size, self.history_length, self.num_rays
+        )
+        blocking_types = (
+            obs[:, 2 * self.total_rays : 3 * self.total_rays]
+            .view(batch_size, self.history_length, self.num_rays)
+            .long()
+        )
+        non_blocking_types = (
+            obs[:, 3 * self.total_rays :]
             .view(batch_size, self.history_length, self.num_rays)
             .long()
         )
 
         # (B, T, N) -> (B, T, 1, N)
-        ray_distances = ray_distances.unsqueeze(2)
+        blocking_distances = blocking_distances.unsqueeze(2)
+        non_blocking_distances = non_blocking_distances.unsqueeze(2)
 
         # (B, T, N) -> (B, T, N, E) -> (B, T, E, N)
-        embedded_types = self.type_embed(ray_types).permute(0, 1, 3, 2)
+        embedded_blocking_types = self.type_embed(blocking_types).permute(0, 1, 3, 2)
+        embedded_non_blocking_types = self.type_embed(non_blocking_types).permute(
+            0, 1, 3, 2
+        )
 
-        # (B, T, 1+E, N)
-        combined = torch.cat([ray_distances, embedded_types], dim=2)
+        # (B, T, 2+2*E, N)
+        combined = torch.cat(
+            [
+                blocking_distances,
+                non_blocking_distances,
+                embedded_blocking_types,
+                embedded_non_blocking_types,
+            ],
+            dim=2,
+        )
 
-        # (B, T * (1+E), N)
+        # (B, T * (2+2*E), N)
         combined = combined.flatten(1, 2)
 
         conv_out = self.conv_net(combined)

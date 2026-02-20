@@ -109,6 +109,63 @@ enum class EntityType : int {
   exp_gem
 };
 
+// Bitmask constants for EntityType
+constexpr uint16_t kMaskTypeNone = 0;
+constexpr uint16_t kMaskTypeTerrain = 1 << 0;
+constexpr uint16_t kMaskTypePlayer = 1 << 1;
+constexpr uint16_t kMaskTypeEnemy = 1 << 2;
+constexpr uint16_t kMaskTypeProjectile = 1 << 3;
+constexpr uint16_t kMaskTypeExpGem = 1 << 4;
+
+inline uint16_t EntityTypeToMask(EntityType type) {
+  switch (type) {
+    case EntityType::terrain:
+      return kMaskTypeTerrain;
+    case EntityType::player:
+      return kMaskTypePlayer;
+    case EntityType::enemy:
+      return kMaskTypeEnemy;
+    case EntityType::projectile:
+      return kMaskTypeProjectile;
+    case EntityType::exp_gem:
+      return kMaskTypeExpGem;
+    default:
+      return kMaskTypeNone;
+  }
+}
+
+// This function returns the *highest priority* EntityType in the
+// mask and only that EntityType.
+// Note: Order is paramount here, so use this with care.
+inline EntityType MaskToEntityTypePrioritized(uint16_t mask) {
+  if (mask & kMaskTypePlayer)
+    return EntityType::player;
+  if (mask & kMaskTypeTerrain)
+    return EntityType::terrain;
+  if (mask & kMaskTypeEnemy)
+    return EntityType::enemy;
+  if (mask & kMaskTypeProjectile)
+    return EntityType::projectile;
+  if (mask & kMaskTypeExpGem)
+    return EntityType::exp_gem;
+  return EntityType::None;
+}
+
+// A bitmask of the EntityType's that block ray casts.
+// This is used in the case a single ray can register multiple hits and
+// continue until it reaches a blocking EntityType.
+constexpr uint16_t kMaskRayHitBlockingTypes =
+    kMaskTypePlayer | kMaskTypeTerrain;
+
+// A bitmask of the EntityType's that do not block ray casts.
+// Note: Currently only the first non-blocking hit is registered.
+constexpr uint16_t kMaskRayHitNonBlockingTypes = kMaskTypeProjectile;
+
+// This function returns the highest priority blocking entity in the mask.
+inline EntityType MaskToBlockingType(uint16_t mask) {
+  return MaskToEntityTypePrioritized(mask & kMaskRayHitBlockingTypes);
+}
+
 struct Size2D {
   uint32_t width;
   uint32_t height;

@@ -77,7 +77,7 @@ void EntityManager::UpdateWorldOccupancyMap(
 
     for (int x = start_x; x <= end_x; ++x) {
       for (int y = start_y; y <= end_y; ++y) {
-        occupancy_map.Set(x, y, type);
+        occupancy_map.Add(x, y, type);
       }
     }
   };
@@ -106,7 +106,7 @@ void EntityManager::UpdateEnemyRayCaster(
     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
   int history_idx = enemy.ray_caster.history_idx;
 
-  #pragma omp parallel for
+#pragma omp parallel for
   for (int ray_idx = 0; ray_idx < kNumRays; ++ray_idx) {
     Vector2D dir = enemy.ray_caster.pattern.ray_dir[ray_idx];
 
@@ -135,17 +135,26 @@ void EntityManager::UpdateEnemyRayCaster(
       bool out_of_bounds = grid_pos.x >= kOccupancyMapWidth - 1 ||
                            grid_pos.y >= kOccupancyMapHeight - 1 ||
                            grid_pos.x <= 1 || grid_pos.y <= 1;
-      RayHit ray_hit;
+
+      DualRayHit dual_hit;
       if (out_of_bounds) {
-        ray_hit = {0.0f, EntityType::terrain};
+        dual_hit.blocking_hit = {0.0f, EntityType::terrain};
+        dual_hit.non_blocking_hit = {0.0f, EntityType::None};
       } else {
-        ray_hit = CastRay(start_pos, dir, occupancy_map);
+        dual_hit = CastRay(start_pos, dir, occupancy_map);
       }
 
       enemy.ray_caster.ray_hit_distances[history_idx][ray_idx][enemy_idx] =
-          ray_hit.distance;
+          dual_hit.blocking_hit.distance;
       enemy.ray_caster.ray_hit_types[history_idx][ray_idx][enemy_idx] =
-          ray_hit.entity_type;
+          dual_hit.blocking_hit.entity_type;
+
+      enemy.ray_caster
+          .non_blocking_ray_hit_distances[history_idx][ray_idx][enemy_idx] =
+          dual_hit.non_blocking_hit.distance;
+      enemy.ray_caster
+          .non_blocking_ray_hit_types[history_idx][ray_idx][enemy_idx] =
+          dual_hit.non_blocking_hit.entity_type;
     }
   }
 

@@ -217,5 +217,41 @@ TEST_F(EntityManagerTest, Update_UpdatesRayCaster) {
       << "Ray caster did not detect the nearby player after update";
 }
 
+TEST_F(EntityManagerTest, Update_UpdatesRayCaster_DetectsProjectiles) {
+  // Place an enemy and projectile nearby
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+
+  // Create a projectile to the right of the enemy
+  // Note: Must be placed outside the ray start offset radius
+  ProjectileData proj = testing::CreateProjectileAt(200.0f, 100.0f, 1.0f, 0.0f);
+  scene_.projectiles.AddProjectile(proj);
+
+  // Clear any existing ray data
+  int history_idx = scene_.enemy.ray_caster.history_idx;
+  for (int r = 0; r < kNumRays; ++r) {
+    scene_.enemy.ray_caster.non_blocking_ray_hit_distances[history_idx][r][0] =
+        0.0f;
+  }
+
+  entity_manager_.Update(scene_, 0.016f);
+
+  // Check if ray caster data was updated for projectiles
+  bool found_hit = false;
+  int new_history_idx = scene_.enemy.ray_caster.history_idx;
+  int checked_idx =
+      (new_history_idx - 1 + kRayHistoryLength) % kRayHistoryLength;
+
+  for (int r = 0; r < kNumRays; ++r) {
+    if (scene_.enemy.ray_caster
+            .non_blocking_ray_hit_distances[checked_idx][r][0] > 0.0f) {
+      found_hit = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found_hit)
+      << "Ray caster did not detect the nearby projectile after update";
+}
+
 }  // namespace
 }  // namespace arelto

@@ -48,6 +48,7 @@ class RenderManager {
 
   void RenderSettingsMenuState();
   void RenderLevelUp();
+  void RenderQuitConfirmMenu();
   void UpdateSettingsMenuState(float volume, bool is_muted,
                                const GameStatus& game_status);
 

@@ -199,12 +199,7 @@ def check_system_dependencies(console):
     if missing:
         tools_str = ", ".join(missing)
         console.print(f"[bold red]✗ Build tools are missing:[/bold red] {tools_str}")
-        if system == "Windows":
-            console.print("Please install them via Conda or download manually.")
-        else:
-            console.print("Please install them using your system package manager.")
-
-        # Fail fast instead of allowing the build to attempt and crash
+        console.print("Please install them using your system package manager.")
         sys.exit(1)
     else:
         console.print("[bold green]✓[/bold green] Build tools (cmake, ninja) found.")
@@ -214,8 +209,7 @@ def clean_old_artifacts(console):
     rl_dir = "rl"
     cleaned = False
 
-    # Added .pyd and .dll to clean up Windows artifacts properly
-    extensions_to_clean = (".so", ".pyd", ".dll", ".pyi")
+    extensions_to_clean = (".so", ".pyi")
 
     if os.path.exists(rl_dir):
         for item in os.listdir(rl_dir):
@@ -231,17 +225,8 @@ def clean_old_artifacts(console):
 
 
 def install_package(console):
-    system = platform.system()
-
     with console.status("[bold cyan]Configuring CMake...", spinner="bouncingBar"):
-        # Passed as a list to prevent shell injection and path escape issues
         cmake_cmd = ["cmake", "-B", "build", "-G", "Ninja", "-DCMAKE_INSTALL_PREFIX=."]
-
-        if system == "Windows":
-            vcpkg_path = os.environ.get("CMAKE_TOOLCHAIN_FILE")
-            if vcpkg_path:
-                cmake_cmd.append(f"-DCMAKE_TOOLCHAIN_FILE={vcpkg_path}")
-
         ret = run_command(cmake_cmd, console=console)
         if ret != 0:
             console.print("[bold red]✗ ERROR: CMake configuration failed.[/bold red]")

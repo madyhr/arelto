@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.15)
 
 project(arelto VERSION 1.0)
 
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
@@ -62,13 +61,8 @@ option(BUILD_STUBS "Generate Python interface stubs (.pyi)" OFF)
 if(BUILD_STUBS)
     find_program(STUBGEN_EXE pybind11-stubgen)
     if(STUBGEN_EXE)
-        if(WIN32)
-            set(PYTHONPATH_SEP ";")
-            set(LIB_PATH_VAR "PATH")
-        else()
-            set(PYTHONPATH_SEP ":")
-            set(LIB_PATH_VAR "LD_LIBRARY_PATH")
-        endif()
+        set(PYTHONPATH_SEP ":")
+        set(LIB_PATH_VAR "LD_LIBRARY_PATH")
 
         add_custom_command(
             TARGET arelto_py POST_BUILD

@@ -11,12 +11,7 @@ A Reinforcement Learning Rogue-Like (RL2) game where the enemies get smarter ove
     - [Linux](#linux)
       - [Debian/Ubuntu](#debianubuntu)
       - [Arch](#arch)
-    - [Windows](#windows)
-      - [1. Install Conda](#1-install-conda)
-      - [2. Create a Conda Environment](#2-create-a-conda-environment)
-      - [3. Install Dependencies via Conda](#3-install-dependencies-via-conda)
-      - [4. Install vcpkg](#4-install-vcpkg)
-      - [5. Install C++ Dependencies](#5-install-c-dependencies)
+    - [Windows (WSL2)](#windows-wsl2)
   - [Installation](#installation)
   - [Running the Game](#running-the-game)
   - [How to play](#how-to-play)
@@ -53,45 +48,11 @@ sudo apt install libomp-dev
 sudo pacman -S cmake base-devel python sdl2 sdl2_image sdl2_ttf sdl2_mixer
 ```
 
-### Windows
+### Windows (WSL2)
 
-#### 1. Install Conda
+This project is meant to be run on a Linux distribution. On Windows, please use [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) with an Ubuntu distribution. GUI applications are supported natively via [WSLg](https://github.com/microsoft/wslg).
 
-Please follow the installation instructions as described on the official [website](https://www.anaconda.com/download).
-
-#### 2. Create a Conda Environment
-
-```bash
-conda create -n arelto-env python=3.10
-conda activate arelto-env
-```
-
-#### 3. Install Dependencies via Conda
-
-```bash
-conda install -y cmake ninja numpy pytorch -c pytorch -c conda-forge
-```
-
-#### 4. Install vcpkg
-
-To install [vcpkg](https://vcpkg.io/en/getting-started.html), you can either follow the link or clone it directly:
-
-```bash
-git clone https://github.com/microsoft/vcpkg.git
-.\vcpkg\bootstrap-vcpkg.bat
-```
-
-#### 5. Install C++ Dependencies
-
-```bash
-.\vcpkg\vcpkg install sdl2 sdl2-image sdl2-ttf sdl2-mixer --triplet x64-windows
-```
-
-> [!NOTE]
-> Ensure that `vcpkg` is accessible in your path or note down its installation location for the build step.
-
-> [!WARNING]
-> macOS is not supported.
+Once inside WSL2, follow the [Debian/Ubuntu](#debianubuntu) instructions above, then proceed to [Installation](#installation).
 
 ## Installation
 
@@ -104,7 +65,7 @@ To install Arelto and all its dependencies you can use the provided installation
     cd arelto
     ```
 
-2. **Run the setup script:**
+2. **Run the installation script:**
 
     ```bash
     python scripts/install_arelto.py
@@ -120,7 +81,7 @@ To start the game with the asynchronous agent (default experience):
 python scripts/start_game_async.py
 ```
 
-Alternatively, there is also a synchronous agent variant. However, the game pauses during policy updates, so it is also not as smooth an experience.
+Alternatively, there is also a synchronous agent variant. However, the game pauses during policy updates, so it is not as smooth an experience.
 
 ```bash
 python scripts/start_game.py
@@ -134,7 +95,7 @@ For information on how to play the game please check out the [wiki](https://gith
 
 ### Building
 
-For development, it is recommended that you use `cmake` instead of `pip`:
+For development, it is recommended that you use `cmake` instead of `pip` or the installation script:
 
 ```bash
 cmake -B build -G Ninja -DCMAKE_INSTALL_PREFIX=.

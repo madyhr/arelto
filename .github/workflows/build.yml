@@ -36,14 +36,17 @@ jobs:
           python-version: "3.10"
           cache: "pip"
 
-      - name: Install Python dependencies & build
+      - name: Create virtual environment
+        run: python -m venv .venv
+
+      - name: Install Arelto
         run: |
-          python -m pip install --upgrade pip
-          pip install -e .
+          source .venv/bin/activate
+          python scripts/install_arelto.py
 
       - name: Run tests
         run: |
-          pip install pytest
+          source .venv/bin/activate
           python -m pytest tests
 
   build-windows:
@@ -67,27 +70,16 @@ jobs:
           activate-environment: arelto-env
           cache-environment: true
 
-      - name: Install Python dependencies (conda)
+      - name: Install system dependencies (conda + vcpkg)
         run: |
-          conda install -y \
-            cmake \
-            ninja \
-            numpy \
-            pytorch \
-            cpuonly
-
-      - name: Install C++ dependencies (vcpkg)
-        run: |
+          conda install -y cmake ninja numpy pytorch cpuonly
           vcpkg install sdl2 sdl2-image sdl2-ttf sdl2-mixer --triplet x64-windows
 
-      - name: Build and install game
+      - name: Install Arelto
         env:
           CMAKE_TOOLCHAIN_FILE: "C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
           VCPKG_TARGET_TRIPLET: x64-windows
-        run: |
-          pip install -e .
+        run: python scripts/install_arelto.py
 
       - name: Run tests
-        run: |
-          pip install pytest
-          python -m pytest tests
+        run: python -m pytest tests

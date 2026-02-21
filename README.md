@@ -43,7 +43,7 @@ Before installing, ensure you have the following system dependencies installed a
 ```bash
 sudo apt update
 sudo apt install cmake build-essential python3-dev
-sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer
+sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev
 sudo apt install libomp-dev
 ```
 
@@ -95,6 +95,8 @@ git clone https://github.com/microsoft/vcpkg.git
 
 ## Installation
 
+To install Arelto and all its dependencies you can use the provided installation script:
+
 1. **Clone the repository:**
 
     ```bash
@@ -102,39 +104,13 @@ git clone https://github.com/microsoft/vcpkg.git
     cd arelto
     ```
 
-2. **Fetch external dependencies:**
+2. **Run the setup script:**
 
     ```bash
-    git submodule update --init --recursive
+    python scripts/install_arelto.py
     ```
 
-3. **Create a virtual environment (Recommended):**
-
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-
-4. **Install the game as a package:**
-
-    **Linux:**
-
-    ```bash
-    pip install -e .
-    ```
-
-    **Windows:**
-
-    You need to specify the `vcpkg` toolchain file. Adjust the path to where you installed `vcpkg`.
-
-    ```bash
-    # CMD / PowerShell
-    $env:CMAKE_TOOLCHAIN_FILE="C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake"
-    $env:VCPKG_TARGET_TRIPLET="x64-windows"
-    pip install -e .
-    ```
-
-    *Note: This process may take some time as it downloads all dependencies and compiles the C++ backend.*
+This script will check your environment, initialize all submodules, and install the game as an editable package.
 
 ## Running the Game
 

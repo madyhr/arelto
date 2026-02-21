@@ -47,6 +47,7 @@ jobs:
       - name: Run tests
         run: |
           source .venv/bin/activate
+          pip install -e ".[test]"
           python -m pytest tests
 
   build-windows:
@@ -82,4 +83,6 @@ jobs:
         run: python scripts/install_arelto.py
 
       - name: Run tests
-        run: python -m pytest tests
+        run: |
+          pip install -e ".[test]"
+          python -m pytest tests

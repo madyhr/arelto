@@ -145,6 +145,22 @@ def check_python_version(console):
     )
 
 
+def _get_submodule_paths():
+    """Parse .gitmodules and return a list of submodule paths."""
+    paths = []
+    gitmodules = os.path.join(".gitmodules")
+    if not os.path.exists(gitmodules):
+        return paths
+    with open(gitmodules, "r") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("path"):
+                # e.g.  path = extern/pybind11
+                _, _, value = line.partition("=")
+                paths.append(value.strip())
+    return paths
+
+
 def check_git_submodules(console):
     if not os.path.exists(".git"):
         console.print(
@@ -153,14 +169,23 @@ def check_git_submodules(console):
         )
         return
 
-    submodules_populated = True
-    if os.path.exists("extern"):
-        if not os.listdir("extern"):
-            submodules_populated = False
-    else:
-        submodules_populated = False
+    submodule_paths = _get_submodule_paths()
+    # Check that every submodule directory exists AND is non-empty
+    submodules_populated = (
+        all(os.path.isdir(p) and os.listdir(p) for p in submodule_paths)
+        if submodule_paths
+        else False
+    )
 
     if not submodules_populated:
+        empty = [
+            p for p in submodule_paths if not os.path.isdir(p) or not os.listdir(p)
+        ]
+        if empty:
+            console.print(
+                f"[bold yellow]⚠[/bold yellow] Empty submodule(s): "
+                f"[cyan]{', '.join(empty)}[/cyan]"
+            )
         with console.status(
             "[bold cyan]Initializing git submodules...", spinner="dots"
         ):

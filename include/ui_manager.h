@@ -46,12 +46,14 @@ class UIManager {
   void BuildStartScreen();
   void UpdateStartScreen();
   void BuildGameOverScreen();
+  void UpdateQuitConfirmMenu();
 
   UIWidget* GetRootWidget();
   UIWidget* GetSettingsRoot();
   UIWidget* GetLevelUpRoot();
   UIWidget* GetStartScreenRoot();
   UIWidget* GetGameOverScreenRoot();
+  UIWidget* GetQuitConfirmRoot();
 
   template <typename T>
   T* GetWidget(const std::string& id) {
@@ -67,6 +69,7 @@ class UIManager {
 
   void BuildHUD();
   void BuildSettingsMenu();
+  void BuildQuitConfirmMenu();
   void BuildLevelUpCard(UIWidget* parent, int index, const Upgrade& upgrade);
 };
 

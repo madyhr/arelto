@@ -94,13 +94,13 @@ constexpr int kLevelUpDescOffsetY = 300;
 constexpr int kLevelUpDescOffsetX = 70;
 constexpr int kLevelUpStatsOffsetY = 350;
 constexpr int kLevelUpStatsOffsetX = 70;
-
-// Level Up Button
-constexpr int kLevelUpButtonTextureWidth = 300;
-constexpr int kLevelUpButtonTextureHeight = 160;
+constexpr int kLevelUpButtonOffsetY = 440;  // from card top
 constexpr int kLevelUpButtonWidth = 200;
 constexpr int kLevelUpButtonHeight = 50;
-constexpr int kLevelUpButtonOffsetY = 440;  // from card top
+
+// Generic button texture
+constexpr int kGenericButtonTextureWidth = 300;
+constexpr int kGenericButtonTextureHeight = 160;
 
 // Start screen
 constexpr int kBeginButtonTextureWidth = 638;
@@ -110,6 +110,7 @@ constexpr int kBeginButtonHeight = 175;
 constexpr int kBeginButtonX = (kWindowWidth - kBeginButtonWidth) / 2;
 constexpr int kBeginButtonY = 5 * (kWindowHeight - kBeginButtonHeight) / 7;
 
+// Settings menu
 constexpr int kSettingsMenuWidth = 450;
 constexpr int kSettingsMenuHeight = 750;
 constexpr int kSettingsMenuBackgroundSpriteWidth = 900;
@@ -124,6 +125,10 @@ constexpr int kVolumeSliderFillOffsetX = 15;
 constexpr int kVolumeSliderFillOffsetY = 5;
 constexpr int kVolumeSliderFillWidth = 275;
 constexpr int kVolumeSliderFillHeight = 20;
+
+// Quit menu
+constexpr int kQuitMenuWidth = 550;
+constexpr int kQuitMenuHeight = 300;
 
 // Generic slider and fill texture
 constexpr int kSliderContainerSpriteOffsetX = 0;

@@ -12,7 +12,6 @@
 #include "constants/game.h"
 #include "constants/map.h"
 #include "constants/player.h"
-#include "constants/progression_manager.h"
 #include "constants/projectile.h"
 #include "constants/ray_caster.h"
 #include "constants/render.h"
@@ -239,6 +238,8 @@ void RenderManager::Render(const Scene& scene, float alpha,
       RenderSettingsMenuState();
     } else if (game_state == in_level_up) {
       RenderLevelUp();
+    } else if (game_state == in_quit_confirm) {
+      RenderQuitConfirmMenu();
     };
   }
 
@@ -925,10 +926,9 @@ void RenderManager::RenderDigitString(const std::string& text, int start_x,
   };
 };
 
-// Renders the settings menu state with overlay.
 void RenderManager::RenderSettingsMenuState() {
-  // Make settings menu visible for rendering, then hide again after
   UIWidget* settings = ui_manager_.GetSettingsRoot();
+
   if (settings) {
     settings->SetVisible(true);
     RenderUITree(settings);
@@ -1027,7 +1027,6 @@ void RenderManager::Shutdown() {
 }
 
 void RenderManager::RenderLevelUp() {
-  // Update hover states and render via widget tree
   ui_manager_.UpdateLevelUpMenu();
 
   UIWidget* level_up = ui_manager_.GetLevelUpRoot();
@@ -1035,6 +1034,17 @@ void RenderManager::RenderLevelUp() {
     level_up->SetVisible(true);
     RenderWidgetRecursive(level_up);
     level_up->SetVisible(false);
+  }
+}
+
+void RenderManager::RenderQuitConfirmMenu() {
+  ui_manager_.UpdateQuitConfirmMenu();
+
+  UIWidget* quit_confirm = ui_manager_.GetQuitConfirmRoot();
+  if (quit_confirm) {
+    quit_confirm->SetVisible(true);
+    RenderUITree(quit_confirm);
+    quit_confirm->SetVisible(false);
   }
 }
 

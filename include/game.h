@@ -52,6 +52,7 @@ class Game {
   Vector2D cursor_position_;
   float time_ = 0.0f;
   float accumulator_step_;
+  GameState previous_game_state_ = in_start_screen;
 
   static volatile std::sig_atomic_t stop_request_;
   bool InitializeCamera();
@@ -62,6 +63,7 @@ class Game {
   void ProcessLevelUpInput(uint32_t mouse_state);
   void ProcessSettingsMenuInput(uint32_t mouse_state);
   void ProcessSettingsMenuEvent(const SDL_Event& e);
+  void ProcessQuitConfirmEvent(const SDL_Event& e);
   void CachePreviousState();
   bool IsMouseOverWidget(UIWidget* root, const std::string& widget_id,
                          int mouse_x, int mouse_y);

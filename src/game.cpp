@@ -12,7 +12,6 @@
 #include "audio_manager.h"
 #include "constants/game.h"
 #include "constants/progression_manager.h"
-#include "constants/ui.h"
 #include "entity.h"
 #include "physics_manager.h"
 #include "render_manager.h"
@@ -85,6 +84,7 @@ void Game::SetGameState(int game_state) {
   } else {
     audio_manager_.PlayMusic();
   }
+  previous_game_state_ = game_state_;
   game_state_ = new_state;
 }
 
@@ -192,6 +192,17 @@ void Game::RunGameLoop() {
         break;
       }
 
+      case in_quit_confirm: {
+        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
+        current_time = new_time;
+
+        if (game_status_.is_headless) {
+          break;
+        }
+        RenderGame(0.0f);
+        break;
+      }
+
       default:
         break;
     }
@@ -219,7 +230,7 @@ void Game::ProcessInput() {
   // To be able to quit while in headless mode we need to capture ctrl+C signals
   if (stop_request_) {
     SetGameState(in_shutdown);
-    std::cout << "Signal received. Exiting..." << std::endl;
+    std::cout << "Signal received. Exiting..." << '\n';
     return;
   };
 
@@ -235,6 +246,11 @@ void Game::ProcessInput() {
       return;
     }
 
+    if (game_state_ == in_quit_confirm) {
+      ProcessQuitConfirmEvent(e);
+      continue;
+    }
+
     if (game_state_ == in_settings_menu) {
       ProcessSettingsMenuEvent(e);
       continue;
@@ -243,8 +259,12 @@ void Game::ProcessInput() {
     if (e.type == SDL_KEYDOWN) {
       switch (e.key.keysym.sym) {
         case SDLK_q:
-          SetGameState(in_shutdown);
-          std::cout << "Key 'q' pressed! Exiting..." << std::endl;
+          if (game_state_ == is_running || game_state_ == in_level_up) {
+            SetGameState(in_quit_confirm);
+          } else {
+            SetGameState(in_shutdown);
+            std::cout << "Key 'q' pressed! Exiting..." << '\n';
+          }
           break;
 
         case SDLK_r:
@@ -275,6 +295,9 @@ void Game::ProcessInput() {
         case SDLK_PERIOD:
           audio_manager_.IncreaseMusicVolume();
           break;
+
+        default:
+          break;
       }
 
     } else if (e.type == SDL_MOUSEBUTTONDOWN) {
@@ -286,7 +309,7 @@ void Game::ProcessInput() {
         if (IsMouseOverWidget(ui.GetStartScreenRoot(), "begin_button", mouse_x,
                               mouse_y)) {
           SetGameState(is_running);
-          std::cout << "Game Started!" << std::endl;
+          std::cout << "Game Started!" << '\n';
         }
       }
     }
@@ -349,8 +372,8 @@ void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
   if (e.type == SDL_KEYDOWN) {
     switch (e.key.keysym.sym) {
       case SDLK_q:
-        SetGameState(in_shutdown);
-        std::cout << "Key 'q' pressed! Exiting..." << std::endl;
+        SetGameState(in_quit_confirm);
+        std::cout << "Quit confirmation requested..." << '\n';
         break;
       case SDLK_ESCAPE:
         SetGameState(is_running);
@@ -394,6 +417,38 @@ void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
     if (IsMouseOverWidget(settings_root, "ray_caster_checkbox", mouse_x,
                           mouse_y)) {
       game_status_.show_ray_caster = !game_status_.show_ray_caster;
+    }
+  }
+}
+
+void Game::ProcessQuitConfirmEvent(const SDL_Event& e) {
+  if (e.type == SDL_KEYDOWN) {
+    switch (e.key.keysym.sym) {
+      case SDLK_y:
+        SetGameState(in_shutdown);
+        std::cout << "Quit confirmed. Exiting..." << '\n';
+        break;
+      case SDLK_ESCAPE:
+      case SDLK_n:
+        SetGameState(previous_game_state_);
+        break;
+      default:
+        break;
+    }
+  } else if (e.type == SDL_MOUSEBUTTONDOWN) {
+    int mouse_x = e.button.x;
+    int mouse_y = e.button.y;
+
+    auto& ui = render_manager_.GetUIManager();
+    UIWidget* quit_root = ui.GetQuitConfirmRoot();
+
+    if (IsMouseOverWidget(quit_root, "quit_yes_button", mouse_x, mouse_y)) {
+      SetGameState(in_shutdown);
+      std::cout << "Quit confirmed. Exiting..." << '\n';
+    }
+
+    if (IsMouseOverWidget(quit_root, "quit_no_button", mouse_x, mouse_y)) {
+      SetGameState(previous_game_state_);
     }
   }
 }

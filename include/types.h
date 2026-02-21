@@ -268,6 +268,7 @@ enum GameState : int {
   in_shutdown,
   in_settings_menu,
   in_level_up,
+  in_quit_confirm,
 };
 
 enum Rarity : int { common, rare, epic, legendary, Count };

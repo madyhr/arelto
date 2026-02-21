@@ -62,6 +62,7 @@ def start_game(args):
             env.game.get_game_state() == game_state_dict["is_running"]
             or env.game.get_game_state() == game_state_dict["in_settings_menu"]
             or env.game.get_game_state() == game_state_dict["in_level_up"]
+            or env.game.get_game_state() == game_state_dict["in_quit_confirm"]
         ):
             # We keep track of the number of steps to handle pauses correctly.
             step = 0
@@ -78,6 +79,7 @@ def start_game(args):
                 if (
                     state == game_state_dict["in_settings_menu"]
                     or state == game_state_dict["in_level_up"]
+                    or state == game_state_dict["in_quit_confirm"]
                 ):
                     env.game.render(1.0)
                     continue

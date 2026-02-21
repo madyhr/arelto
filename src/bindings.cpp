@@ -18,6 +18,7 @@ PYBIND11_MODULE(arelto_py, m) {
       .value("is_running", arelto::GameState::is_running)
       .value("is_gameover", arelto::GameState::is_gameover)
       .value("in_shutdown", arelto::GameState::in_shutdown)
+      .value("in_quit_confirm", arelto::GameState::in_quit_confirm)
       .value("in_settings_menu", arelto::GameState::in_settings_menu)
       .value("in_level_up", arelto::GameState::in_level_up)
       .export_values();

@@ -129,7 +129,7 @@ export PYTHONPATH=$PWD
     ```
 
 > [!NOTE]
-> The C++ tests require you build using `cmake` as described in the Development section.
+> The C++ tests require you build using `cmake` as described in the [Building](#building) section.
 
 ## Generative AI Disclaimer
 

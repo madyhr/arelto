@@ -255,10 +255,12 @@ void Game::ProcessInput() {
     // Track mouse button releases so that stale active flags are
     // always cleared.
     if (e.type == SDL_MOUSEBUTTONUP) {
-      if (e.button.button == SDL_BUTTON_LEFT)
+      if (e.button.button == SDL_BUTTON_LEFT) {
         is_mouse_left_active_ = false;
-      if (e.button.button == SDL_BUTTON_RIGHT)
+      }
+      if (e.button.button == SDL_BUTTON_RIGHT) {
         is_mouse_right_active_ = false;
+      }
     }
 
     if (game_state_ == in_quit_confirm) {
@@ -332,10 +334,12 @@ void Game::ProcessInput() {
           std::cout << "Game Started!" << '\n';
         }
       } else if (game_state_ == is_running) {
-        if (e.button.button == SDL_BUTTON_LEFT)
+        if (e.button.button == SDL_BUTTON_LEFT) {
           is_mouse_left_active_ = true;
-        if (e.button.button == SDL_BUTTON_RIGHT)
+        }
+        if (e.button.button == SDL_BUTTON_RIGHT) {
           is_mouse_right_active_ = true;
+        }
       }
     }
   }
@@ -352,7 +356,9 @@ void Game::ProcessInput() {
       (float)(cursor_pos_x + render_manager_.camera_.position_.x),
       (float)(cursor_pos_y + render_manager_.camera_.position_.y)};
 
-  ProcessPlayerInput();
+  if (game_state_ == is_running) {
+    ProcessPlayerInput();
+  }
 }
 
 void Game::ProcessPlayerInput() {

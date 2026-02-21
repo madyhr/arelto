@@ -279,7 +279,7 @@ void Game::ProcessInput() {
     if (e.type == SDL_KEYDOWN) {
       switch (e.key.keysym.sym) {
         case SDLK_q:
-          if (game_state_ == is_running || game_state_ == in_level_up) {
+          if (game_state_ == is_running) {
             SetGameState(in_quit_confirm);
           } else {
             SetGameState(in_shutdown);

@@ -172,7 +172,6 @@ void Game::RunGameLoop() {
       }
 
       case in_start_screen: {
-        ProcessInput();
         RenderGame(0.0f);
         break;
       }

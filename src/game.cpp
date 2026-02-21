@@ -16,6 +16,7 @@
 #include "physics_manager.h"
 #include "render_manager.h"
 #include "types.h"
+#include "ui_manager.h"
 
 namespace arelto {
 
@@ -84,6 +85,11 @@ void Game::SetGameState(int game_state) {
   } else {
     audio_manager_.PlayMusic();
   }
+
+  // This is done in order to prevent input bleeding between states.
+  is_mouse_left_active_ = false;
+  is_mouse_right_active_ = false;
+
   previous_game_state_ = game_state_;
   game_state_ = new_state;
 }
@@ -118,6 +124,8 @@ void Game::ResetGame() {
   scene_.Reset();
   time_ = 0.0f;
   accumulator_step_ = 0.0f;
+  is_mouse_left_active_ = false;
+  is_mouse_right_active_ = false;
   SetGameState(is_running);
 };
 
@@ -187,7 +195,6 @@ void Game::RunGameLoop() {
       case in_level_up: {
         float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         current_time = new_time;
-        ProcessLevelUpInput(SDL_GetMouseState(NULL, NULL));
         RenderGame(0.0f);
         break;
       }
@@ -246,6 +253,15 @@ void Game::ProcessInput() {
       return;
     }
 
+    // Track mouse button releases so that stale active flags are
+    // always cleared.
+    if (e.type == SDL_MOUSEBUTTONUP) {
+      if (e.button.button == SDL_BUTTON_LEFT)
+        is_mouse_left_active_ = false;
+      if (e.button.button == SDL_BUTTON_RIGHT)
+        is_mouse_right_active_ = false;
+    }
+
     if (game_state_ == in_quit_confirm) {
       ProcessQuitConfirmEvent(e);
       continue;
@@ -253,6 +269,11 @@ void Game::ProcessInput() {
 
     if (game_state_ == in_settings_menu) {
       ProcessSettingsMenuEvent(e);
+      continue;
+    }
+
+    if (game_state_ == in_level_up) {
+      ProcessLevelUpInput(e);
       continue;
     }
 
@@ -305,23 +326,23 @@ void Game::ProcessInput() {
         int mouse_x = e.button.x;
         int mouse_y = e.button.y;
 
-        auto& ui = render_manager_.GetUIManager();
+        UIManager& ui = render_manager_.GetUIManager();
         if (IsMouseOverWidget(ui.GetStartScreenRoot(), "begin_button", mouse_x,
                               mouse_y)) {
           SetGameState(is_running);
           std::cout << "Game Started!" << '\n';
         }
+      } else if (game_state_ == is_running) {
+        if (e.button.button == SDL_BUTTON_LEFT)
+          is_mouse_left_active_ = true;
+        if (e.button.button == SDL_BUTTON_RIGHT)
+          is_mouse_right_active_ = true;
       }
     }
   }
 
   int cursor_pos_x, cursor_pos_y;
   uint32_t mouse_state = SDL_GetMouseState(&cursor_pos_x, &cursor_pos_y);
-
-  if (game_state_ == in_level_up) {
-    ProcessLevelUpInput(SDL_GetMouseState(NULL, NULL));
-    return;
-  }
 
   if (game_state_ == in_settings_menu) {
     ProcessSettingsMenuInput(mouse_state);
@@ -332,10 +353,10 @@ void Game::ProcessInput() {
       (float)(cursor_pos_x + render_manager_.camera_.position_.x),
       (float)(cursor_pos_y + render_manager_.camera_.position_.y)};
 
-  ProcessPlayerInput(mouse_state);
+  ProcessPlayerInput();
 }
 
-void Game::ProcessPlayerInput(uint32_t mouse_state) {
+void Game::ProcessPlayerInput() {
   scene_.player.velocity_ = {0.0f, 0.0f};
   const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
   if (currentKeyStates[SDL_SCANCODE_W]) {
@@ -350,7 +371,7 @@ void Game::ProcessPlayerInput(uint32_t mouse_state) {
   if (currentKeyStates[SDL_SCANCODE_D]) {
     scene_.player.velocity_.x += 1.0f;
   }
-  if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+  if (is_mouse_left_active_) {
     std::optional<ProjectileData> fireball = scene_.player.CastProjectileSpell(
         scene_.player.fireball_, time_, cursor_position_);
 
@@ -358,7 +379,7 @@ void Game::ProcessPlayerInput(uint32_t mouse_state) {
       scene_.projectiles.AddProjectile(*fireball);
     }
   }
-  if (mouse_state & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
+  if (is_mouse_right_active_) {
     std::optional<ProjectileData> frostbolt = scene_.player.CastProjectileSpell(
         scene_.player.frostbolt_, time_, cursor_position_);
 
@@ -387,12 +408,14 @@ void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
       case SDLK_PERIOD:
         audio_manager_.IncreaseMusicVolume();
         break;
+      default:
+        break;
     }
   } else if (e.type == SDL_MOUSEBUTTONDOWN) {
     int mouse_x = e.button.x;
     int mouse_y = e.button.y;
 
-    auto& ui = render_manager_.GetUIManager();
+    UIManager& ui = render_manager_.GetUIManager();
     UIWidget* settings_root = ui.GetSettingsRoot();
 
     if (IsMouseOverWidget(settings_root, "mute_checkbox", mouse_x, mouse_y)) {
@@ -439,7 +462,7 @@ void Game::ProcessQuitConfirmEvent(const SDL_Event& e) {
     int mouse_x = e.button.x;
     int mouse_y = e.button.y;
 
-    auto& ui = render_manager_.GetUIManager();
+    UIManager& ui = render_manager_.GetUIManager();
     UIWidget* quit_root = ui.GetQuitConfirmRoot();
 
     if (IsMouseOverWidget(quit_root, "quit_yes_button", mouse_x, mouse_y)) {
@@ -458,8 +481,8 @@ void Game::ProcessSettingsMenuInput(uint32_t mouse_state) {
     int mouse_x, mouse_y;
     SDL_GetMouseState(&mouse_x, &mouse_y);
 
-    auto& ui = render_manager_.GetUIManager();
-    auto* slider = ui.GetSettingsRoot()->FindWidget("volume_slider");
+    UIManager& ui = render_manager_.GetUIManager();
+    UIWidget* slider = ui.GetSettingsRoot()->FindWidget("volume_slider");
     if (slider) {
       SDL_Rect slider_bounds = slider->GetComputedBounds();
       // A little extra padding is added to y to make it more user-friendly.
@@ -482,19 +505,28 @@ void Game::ProcessSettingsMenuInput(uint32_t mouse_state) {
 
 // This function processes inputs during a level up state and applies the
 // upgrade option according to which button was clicked.
-void Game::ProcessLevelUpInput(uint32_t mouse_state) {
-  if (mouse_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-    int mouse_x, mouse_y;
-    SDL_GetMouseState(&mouse_x, &mouse_y);
+void Game::ProcessLevelUpInput(const SDL_Event& e) {
+  if (e.type == SDL_KEYDOWN) {
+    switch (e.key.keysym.sym) {
+      case SDLK_q:
+        SetGameState(in_quit_confirm);
+        break;
+      default:
+        break;
+    }
+  } else if (e.type == SDL_MOUSEBUTTONDOWN &&
+             e.button.button == SDL_BUTTON_LEFT) {
+    int mouse_x = e.button.x;
+    int mouse_y = e.button.y;
 
-    auto& ui = render_manager_.GetUIManager();
+    UIManager& ui = render_manager_.GetUIManager();
 
     for (int i = 0; i < kNumUpgradeOptions; ++i) {
       std::string btn_id = "select_button_" + std::to_string(i);
 
       if (IsMouseOverWidget(ui.GetRootWidget(), btn_id, mouse_x, mouse_y)) {
         progression_manager_.ApplyUpgrade(scene_, i);
-        auto* menu = ui.GetLevelUpRoot();
+        UIWidget* menu = ui.GetLevelUpRoot();
         if (menu) {
           menu->SetVisible(false);
         }
@@ -535,7 +567,7 @@ bool Game::IsMouseOverWidget(UIWidget* root, const std::string& widget_id,
   if (!root) {
     return false;
   }
-  auto* widget = root->FindWidget(widget_id);
+  UIWidget* widget = root->FindWidget(widget_id);
   if (!widget) {
     return false;
   }

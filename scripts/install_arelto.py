@@ -100,7 +100,7 @@ def bootstrap_rich():
 
         return Console(), Panel, Confirm
     except ImportError:
-        print("\u2192 Installing 'rich' for a nicer experience...")
+        print("--> Installing 'rich' for a nicer experience...")
         try:
             process = subprocess.run(
                 [sys.executable, "-m", "pip", "install", "-q", "rich"],

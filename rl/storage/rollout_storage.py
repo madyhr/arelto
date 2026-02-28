@@ -65,14 +65,17 @@ class RolloutStorage:
         assert transition.done is not None
         assert transition.value is not None
         assert transition.action_log_prob is not None
-        assert self.step < self.num_transitions_per_env
 
-        self.observations[self.step].copy_(transition.observation)
-        self.actions[self.step].copy_(transition.action)
-        self.rewards[self.step].copy_(transition.reward.view(-1, 1))
-        self.dones[self.step].copy_(transition.done.view(-1, 1))
-        self.values[self.step].copy_(transition.value)
-        self.action_log_probs[self.step].copy_(transition.action_log_prob.view(-1, 1))
+        # Define the idx for the current transition using mod to create a circular buffer
+        # that allows continuous collection of data.
+        idx = self.step % self.num_transitions_per_env
+
+        self.observations[idx].copy_(transition.observation)
+        self.actions[idx].copy_(transition.action)
+        self.rewards[idx].copy_(transition.reward.view(-1, 1))
+        self.dones[idx].copy_(transition.done.view(-1, 1))
+        self.values[idx].copy_(transition.value)
+        self.action_log_probs[idx].copy_(transition.action_log_prob.view(-1, 1))
 
         self.step += 1
 

@@ -1,11 +1,15 @@
 import argparse
 import datetime
 import os
+import time
 
 import torch
 
 from rl.algorithms.ppo import PPO
 from rl.arelto_env import AreltoEnv
+
+TARGET_FPS = 60
+TARGET_FRAME_TIME = 1 / TARGET_FPS
 
 
 def start_game(args):
@@ -67,6 +71,7 @@ def start_game(args):
             # We keep track of the number of steps to handle pauses correctly.
             step = 0
             while step < ppo.num_transitions_per_env:
+                frame_start = time.perf_counter()
                 env.game.process_input()
                 state = env.game.get_game_state()
                 if state == game_state_dict["in_shutdown"]:
@@ -98,14 +103,18 @@ def start_game(args):
 
                 step += 1
 
+                elapsed_time = time.perf_counter() - frame_start
+                sleep_time = TARGET_FRAME_TIME - elapsed_time
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+
             if (
                 env.game.get_game_state() == game_state_dict["is_running"]
                 and step >= ppo.num_transitions_per_env
             ):
                 with torch.inference_mode():
                     ppo.compute_returns(obs.to(device))
-                train_metrics = ppo.update()
-                print(train_metrics)
+                metrics = ppo.update()
 
     save_dir = "checkpoints"
     os.makedirs(save_dir, exist_ok=True)

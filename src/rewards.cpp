@@ -34,6 +34,16 @@ void RewardManager::RegisterRewardTerms() {
         return value_array;
       });
 
+  AddTerm("was_terminated", -1000.0f,
+          [](const Scene& scene) -> std::array<float, kNumEnemies> {
+            std::array<float, kNumEnemies> value_array;
+            for (int i = 0; i < kNumEnemies; ++i) {
+              value_array[i] =
+                  static_cast<float>(scene.enemy.is_terminated_latched[i]);
+            }
+            return value_array;
+          });
+
   AddTerm("damage_dealt", 100.0f,
           [](const Scene& scene) -> std::array<float, kNumEnemies> {
             std::array<float, kNumEnemies> value_array;

@@ -118,25 +118,42 @@ class PPO:
 
         self.transition.clear()
 
-    def compute_returns(self, obs: torch.Tensor) -> None:
+    def compute_returns(
+        self, obs: torch.Tensor, total_steps_collected: int | None = None
+    ) -> None:
+        """Computes the returns using Generalized Advantage Estimation (GAE).
+
+        Args:
+            obs (torch.Tensor): The last observation collected during rollout.
+            total_steps_collected (int, optional): The total number of steps collected
+                including the transitions overwritten while filling the circular buffer storage.
+        """
         obs = self._normalize_obs(obs)
         last_value = self.policy.get_value(obs).detach()
         advantage = 0
-        for step in reversed(range(self.num_transitions_per_env)):
-            next_value = (
-                last_value
-                if step == self.storage.num_transitions_per_env - 1
-                else self.storage.values[step + 1]
-            )
-            next_is_nonterminal = 1.0 - self.storage.dones[step].float()
+
+        if total_steps_collected is None:
+            total_steps_collected = self.num_transitions_per_env
+
+        for i in range(self.num_transitions_per_env):
+            reverse_chrono_step = total_steps_collected - 1 - i
+
+            # As the storage is a circular buffer, we need to find the head to index
+            # the storage in a reverse chronological order properly.
+            step_idx = reverse_chrono_step % self.num_transitions_per_env
+            next_step_idx = (reverse_chrono_step + 1) % self.num_transitions_per_env
+
+            next_value = last_value if i == 0 else self.storage.values[next_step_idx]
+
+            next_is_nonterminal = 1.0 - self.storage.dones[step_idx].float()
             delta = (
-                self.storage.rewards[step]
+                self.storage.rewards[step_idx]
                 + next_is_nonterminal * self.gamma * next_value
-                - self.storage.values[step]
+                - self.storage.values[step_idx]
             )
             advantage = delta + next_is_nonterminal * self.gamma * self.lam * advantage
 
-            self.storage.returns[step] = advantage + self.storage.values[step]
+            self.storage.returns[step_idx] = advantage + self.storage.values[step_idx]
 
         self.storage.advantages = self.storage.returns - self.storage.values
 

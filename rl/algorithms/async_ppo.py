@@ -71,12 +71,15 @@ class AsyncPPO:
         self.inference_storage.add_transition(self.transition)
         self.transition.clear()
 
-    def async_update(self, obs: torch.Tensor) -> None:
+    def async_update(self, obs: torch.Tensor) -> bool:
+        """Begins an asynchronous PPO update.
+        Returns early if training is already in progress."""
 
         with self.training_lock:
-            assert (
-                not self.training_in_progress
-            ), "Training was still in progress when a new update started."
+            if self.training_in_progress:
+                return False
+
+            total_steps_collected = self.inference_storage.step
 
             full_storage = self.inference_storage
             empty_storage = self.training_storage
@@ -88,17 +91,30 @@ class AsyncPPO:
 
             self.training_in_progress = True
 
+            # We create a synchronization event to mark the completion of any buffer writes
+            # (e.g., storage.add_transition()) that occurred on the inference CUDA stream
+            # to account for the potential read/write race condition.
+            sync_event = torch.cuda.Event()
+            sync_event.record()
+
             self.training_thread = threading.Thread(
-                target=self._training_worker, args=(obs.clone(),)
+                target=self._training_worker,
+                args=(obs.clone(), sync_event, total_steps_collected),
             )
             self.training_thread.start()
 
-            return None
+            return True
 
-    def _training_worker(self, obs: torch.Tensor) -> None:
+    def _training_worker(
+        self,
+        obs: torch.Tensor,
+        sync_event: torch.cuda.Event,
+        total_steps_collected: int,
+    ) -> None:
         try:
             with torch.cuda.stream(self.training_stream):
-                self._run_training(obs)
+                self.training_stream.wait_event(sync_event)  # pyright: ignore[reportArgumentType]
+                self._run_training(obs, total_steps_collected)
 
         except Exception as e:
             print(f"Exception in training thread: {e}")
@@ -110,16 +126,14 @@ class AsyncPPO:
             with self.training_lock:
                 self.training_in_progress = False
 
-    def _run_training(self, obs: torch.Tensor) -> None:
+    def _run_training(self, obs: torch.Tensor, total_steps_collected: int) -> None:
         self.learner.storage = self.training_storage
 
         with torch.inference_mode():
-            self.learner.compute_returns(obs)
+            self.learner.compute_returns(obs, total_steps_collected)
 
         metrics = self.learner.update()
 
         self.training_stream.synchronize()
 
         self.inference_policy.load_state_dict(self.learner.policy.state_dict())
-
-        print(f"Async Training Step Done. Loss: {metrics.get('loss/total', 0):.4f}")

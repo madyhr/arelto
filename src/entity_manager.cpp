@@ -14,6 +14,7 @@ void EntityManager::Update(Scene& scene, float dt) {
   UpdateEnemyStatus(scene, dt);
   UpdateProjectilesStatus(scene);
   UpdateGemStatus(scene);
+  UpdateChestStatus(scene);
 
   UpdateObservations(scene, dt);
 }
@@ -40,6 +41,10 @@ void EntityManager::UpdateProjectilesStatus(Scene& scene) {
 
 void EntityManager::UpdateGemStatus(Scene& scene) {
   scene.exp_gem.DestroyExpGems();
+}
+
+void EntityManager::UpdateChestStatus(Scene& scene) {
+  scene.chest.DestroyChests();
 }
 
 void EntityManager::UpdateObservations(Scene& scene, float dt) {

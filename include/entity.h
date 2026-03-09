@@ -9,7 +9,6 @@
 #include "constants/enemy.h"
 #include "constants/player.h"
 #include "constants/projectile.h"
-#include "map.h"
 #include "ray_caster.h"
 #include "types.h"
 
@@ -101,6 +100,21 @@ class ExpGem {
   void DestroyExpGem(int idx);
   void DestroyExpGems();
   void ResetAllExpGems();
+};
+
+class Chest {
+ public:
+  std::vector<Vector2D> position_;
+  std::vector<Vector2D> prev_position_;
+  std::vector<Collider> collider_;
+  std::vector<Size2D> sprite_size_;
+  std::unordered_set<int> to_be_destroyed_;
+  EntityType entity_type_ = EntityType::chest;
+  size_t GetNumChests() const { return position_.size(); };
+  void AddChest(ChestData chest_data);
+  void DestroyChest(int idx);
+  void DestroyChests();
+  void ResetAllChests();
 };
 
 Vector2D GetCentroid(const Vector2D& position, const Size2D& size);

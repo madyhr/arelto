@@ -21,6 +21,7 @@ PYBIND11_MODULE(arelto_py, m) {
       .value("in_quit_confirm", arelto::GameState::in_quit_confirm)
       .value("in_settings_menu", arelto::GameState::in_settings_menu)
       .value("in_level_up", arelto::GameState::in_level_up)
+      .value("in_chest_opening", arelto::GameState::in_chest_opening)
       .export_values();
 
   py::class_<arelto::Game>(m, "Game")

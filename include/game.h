@@ -66,6 +66,7 @@ class Game {
   void ProcessSettingsMenuInput(uint32_t mouse_state);
   void ProcessSettingsMenuEvent(const SDL_Event& e);
   void ProcessQuitConfirmEvent(const SDL_Event& e);
+  void ProcessChestOpeningInput(const SDL_Event& e);
   void CachePreviousState();
   bool IsMouseOverWidget(UIWidget* root, const std::string& widget_id,
                          int mouse_x, int mouse_y);

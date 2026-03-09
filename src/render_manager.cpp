@@ -95,6 +95,8 @@ bool RenderManager::Initialize(bool is_headless) {
       IMG_LoadTexture(resources_.renderer, "assets/textures/exp_gem_epic.png"));
   resources_.gem_textures.push_back(IMG_LoadTexture(
       resources_.renderer, "assets/textures/exp_gem_legendary.png"));
+  resources_.chest_texture = IMG_LoadTexture(
+      resources_.renderer, "assets/textures/chest_sprite_sheet.png");
   resources_.ui_resources.level_indicator_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/ui/level_indicator.png");
   resources_.ui_resources.health_bar_texture =
@@ -165,6 +167,7 @@ bool RenderManager::Initialize(bool is_headless) {
 
   // Copy projectile textures into UI resources for level-up card icons
   resources_.ui_resources.projectile_textures = resources_.projectile_textures;
+  resources_.ui_resources.chest_texture = resources_.chest_texture;
 
   ui_manager_.SetupUI(resources_.ui_resources);
 
@@ -217,6 +220,8 @@ void RenderManager::Render(const Scene& scene, float alpha,
     RenderProjectiles(scene.projectiles);
     SetupGemGeometry(scene.exp_gem, alpha);
     RenderGem(scene.exp_gem);
+    SetupChestGeometry(scene.chest, alpha);
+    RenderChests();
 
     if (game_status.show_occupancy_map) {
       RenderDebugWorldOccupancyMap(scene.occupancy_map);
@@ -240,6 +245,13 @@ void RenderManager::Render(const Scene& scene, float alpha,
       RenderLevelUp();
     } else if (game_state == in_quit_confirm) {
       RenderQuitConfirmMenu();
+    } else if (game_state == in_chest_opening) {
+      UIWidget* chest_screen = ui_manager_.GetChestOpeningRoot();
+      if (chest_screen) {
+        chest_screen->SetVisible(true);
+        RenderUITree(chest_screen);
+        chest_screen->SetVisible(false);
+      };
     };
   }
 
@@ -613,6 +625,65 @@ void RenderManager::RenderGem(const ExpGem& exp_gem) {
   };
 };
 
+void RenderManager::SetupChestGeometry(const Chest& chest, float alpha) {
+  resources_.chest_vertices_.clear();
+  size_t num_chests = chest.GetNumChests();
+  if (num_chests == 0) {
+    return;
+  }
+  int texture_w, texture_h;
+  SDL_QueryTexture(resources_.chest_texture, nullptr, nullptr, &texture_w,
+                   &texture_h);
+  float cell_uv_width = 1.0f / static_cast<float>(kChestSpriteSheetCols);
+  float cell_uv_height = 1.0f / static_cast<float>(kChestSpriteSheetRows);
+  // Frame 0 = top-left cell (closed chest)
+  float u_left = 0.0f;
+  float u_right = cell_uv_width;
+  float v_top = 0.0f;
+  float v_bottom = cell_uv_height;
+  float cull_left = camera_.render_position_.x - kRenderCullPadding;
+  float cull_right =
+      camera_.render_position_.x + kWindowWidth + kRenderCullPadding;
+  float cull_top = camera_.render_position_.y - kRenderCullPadding;
+  float cull_bottom =
+      camera_.render_position_.y + kWindowHeight + kRenderCullPadding;
+  for (size_t i = 0; i < num_chests; ++i) {
+    float w = static_cast<float>(chest.sprite_size_[i].width);
+    float h = static_cast<float>(chest.sprite_size_[i].height);
+    if (chest.position_[i].x + w < cull_left ||
+        chest.position_[i].x > cull_right ||
+        chest.position_[i].y + h < cull_top ||
+        chest.position_[i].y > cull_bottom) {
+      continue;
+    }
+    Vector2D chest_render_pos =
+        LerpVector2D(chest.prev_position_[i], chest.position_[i], alpha);
+    float x = chest_render_pos.x - camera_.render_position_.x;
+    float y = chest_render_pos.y - camera_.render_position_.y;
+    SDL_Color c = {255, 255, 255, 255};
+    SDL_Vertex vertices[kChestVertices] = {
+        {{x, y}, c, {u_left, v_top}},
+        {{x, y + h}, c, {u_left, v_bottom}},
+        {{x + w, y + h}, c, {u_right, v_bottom}},
+        {{x, y}, c, {u_left, v_top}},
+        {{x + w, y + h}, c, {u_right, v_bottom}},
+        {{x + w, y}, c, {u_right, v_top}}};
+    for (int j = 0; j < kChestVertices; ++j) {
+      resources_.chest_vertices_.push_back(vertices[j]);
+    }
+  }
+}
+
+void RenderManager::RenderChests() {
+  if (resources_.chest_vertices_.empty()) {
+    return;
+  }
+  SDL_RenderGeometry(resources_.renderer, resources_.chest_texture,
+                     resources_.chest_vertices_.data(),
+                     static_cast<int>(resources_.chest_vertices_.size()),
+                     nullptr, 0);
+}
+
 void RenderManager::RenderDebugWorldOccupancyMap(
     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
   // Get the original blend mode to be able to later restore it. The debug
@@ -812,6 +883,15 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       if (img->GetTexture()) {
         SDL_Rect src = img->GetSrcRect();
         SDL_RenderCopy(resources_.renderer, img->GetTexture(), &src, &bounds);
+      }
+      break;
+    }
+    case WidgetType::Animation: {
+      auto* anim_img = static_cast<UIAnimation*>(widget);
+      if (anim_img->GetTexture()) {
+        SDL_Rect src = anim_img->GetCurrentSrcRect();
+        SDL_RenderCopy(resources_.renderer, anim_img->GetTexture(), &src,
+                       &bounds);
       }
       break;
     }

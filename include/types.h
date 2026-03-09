@@ -106,7 +106,8 @@ enum class EntityType : int {
   player,
   enemy,
   projectile,
-  exp_gem
+  exp_gem,
+  chest
 };
 
 // Bitmask constants for EntityType
@@ -116,6 +117,7 @@ constexpr uint16_t kMaskTypePlayer = 1 << 1;
 constexpr uint16_t kMaskTypeEnemy = 1 << 2;
 constexpr uint16_t kMaskTypeProjectile = 1 << 3;
 constexpr uint16_t kMaskTypeExpGem = 1 << 4;
+constexpr uint16_t kMaskTypeChest = 1 << 5;
 
 inline uint16_t EntityTypeToMask(EntityType type) {
   switch (type) {
@@ -129,6 +131,8 @@ inline uint16_t EntityTypeToMask(EntityType type) {
       return kMaskTypeProjectile;
     case EntityType::exp_gem:
       return kMaskTypeExpGem;
+    case EntityType::chest:
+      return kMaskTypeChest;
     default:
       return kMaskTypeNone;
   }
@@ -148,6 +152,8 @@ inline EntityType MaskToEntityTypePrioritized(uint16_t mask) {
     return EntityType::projectile;
   if (mask & kMaskTypeExpGem)
     return EntityType::exp_gem;
+  if (mask & kMaskTypeChest)
+    return EntityType::chest;
   return EntityType::None;
 }
 
@@ -223,6 +229,7 @@ enum class CollisionType : int {
   player_projectile,
   enemy_projectile,
   player_gem,
+  player_chest,
 };
 
 struct EntityPosition {
@@ -269,12 +276,20 @@ enum GameState : int {
   in_settings_menu,
   in_level_up,
   in_quit_confirm,
+  in_chest_opening,
 };
 
 enum Rarity : int { common, rare, epic, legendary, Count };
 
 struct ExpGemData {
   Rarity rarity;
+  Vector2D position;
+  Vector2D prev_position;
+  Collider collider;
+  Size2D sprite_size;
+};
+
+struct ChestData {
   Vector2D position;
   Vector2D prev_position;
   Collider collider;

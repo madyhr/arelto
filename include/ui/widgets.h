@@ -7,6 +7,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <functional>
 #include <string>
+#include <vector>
 
 namespace arelto {
 
@@ -26,6 +27,49 @@ public:
 private:
   SDL_Texture *texture_ = nullptr;
   SDL_Rect src_rect_ = {0, 0, 0, 0};
+};
+
+// UIAnimation: renders an animation made up of individual frames from a
+// sequence of source rectangles on a texture.
+class UIAnimation : public UIWidget {
+public:
+  UIAnimation() = default;
+
+  void SetTexture(SDL_Texture *texture);
+  SDL_Texture *GetTexture() const;
+
+  void AddFrame(SDL_Rect src_rect);
+  void SetFrames(const std::vector<SDL_Rect> &frames);
+  const std::vector<SDL_Rect> &GetFrames() const;
+
+  void SetFrameDuration(float duration);
+  float GetFrameDuration() const;
+
+  void SetIsLoop(bool is_loop);
+  bool GetIsLoop() const;
+
+  void Play();
+  void Pause();
+  void Stop();
+  void Reset();
+
+  bool IsFinished() const;
+
+  void Update(float dt) override;
+
+  SDL_Rect GetCurrentSrcRect() const;
+
+  WidgetType GetWidgetType() const override;
+
+private:
+  SDL_Texture *texture_ = nullptr;
+  std::vector<SDL_Rect> frames_;
+  float frame_duration_ = 0.1f;
+  float elapsed_time_ = 0.0f;
+  int current_frame_idx_ = 0;
+  bool is_playing_ = false;
+  bool is_loop_ = false;
+  bool is_finished_ = false;
 };
 
 // UILabel: renders text using either TTF fonts or a digit sprite sheet.
@@ -203,7 +247,7 @@ private:
 
 // Spacer: a widget that does nothing but take up space.
 class Spacer : public UIWidget {
- public:
+public:
   Spacer(int width, int height);
   WidgetType GetWidgetType() const override;
 };

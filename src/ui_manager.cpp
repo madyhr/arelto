@@ -2,6 +2,7 @@
 #include "ui_manager.h"
 #include <functional>
 #include <string>
+#include "constants/chest.h"
 #include "constants/progression_manager.h"
 #include "constants/projectile.h"
 #include "constants/ui.h"
@@ -24,6 +25,7 @@ void UIManager::SetupUI(const UIResources& resources) {
   BuildStartScreen();
   BuildGameOverScreen();
   BuildQuitConfirmMenu();
+  BuildChestOpeningScreen();
 
   root_widget_->ComputeLayout(0, 0, kWindowWidth, kWindowHeight);
 }
@@ -782,6 +784,47 @@ void UIManager::UpdateQuitConfirmMenu() {
     }
   };
   update_hover(quit_confirm);
+}
+
+// =============================================================================
+// BuildChestOpeningScreen
+// =============================================================================
+void UIManager::BuildChestOpeningScreen() {
+  auto overlay = std::make_shared<Panel>();
+  overlay->SetId("chest_opening_menu");
+  overlay->SetSize(kWindowWidth, kWindowHeight);
+  overlay->SetBackgroundColor(WithOpacity(kColorBlack, 150));
+  overlay->SetVisible(false);
+  auto chest_animation = std::make_shared<UIAnimation>();
+  chest_animation->SetId("chest_animated_image");
+  chest_animation->SetAnchor(AnchorType::Center);
+  chest_animation->SetSize(kChestAnimationWidth, kChestAnimationHeight);
+  chest_animation->SetTexture(resources_->chest_texture);
+  chest_animation->SetFrameDuration(kChestAnimationFrameDuration / 1000.0f);
+  chest_animation->SetIsLoop(false);
+  for (int frame_index = 0; frame_index < kChestTotalAnimFrames;
+       ++frame_index) {
+    int sprite_col, sprite_row;
+    if (frame_index < kChestSpriteSheetCols) {
+      sprite_col = frame_index;
+      sprite_row = 0;
+    } else {
+      int looped_frame =
+          (frame_index - kChestSpriteSheetCols) % (kChestSpriteSheetCols * 2);
+      sprite_col = looped_frame % kChestSpriteSheetCols;
+      sprite_row = 1 + (looped_frame / kChestSpriteSheetCols);
+    }
+    SDL_Rect src_rect = {sprite_col * kChestSpriteCellWidth,
+                         sprite_row * kChestSpriteCellHeight,
+                         kChestSpriteCellWidth, kChestSpriteCellHeight};
+    chest_animation->AddFrame(src_rect);
+  }
+  overlay->AddChild(chest_animation);
+  root_widget_->AddChild(overlay);
+}
+UIWidget* UIManager::GetChestOpeningRoot() {
+  return root_widget_ ? root_widget_->FindWidget("chest_opening_menu")
+                      : nullptr;
 }
 
 }  // namespace arelto

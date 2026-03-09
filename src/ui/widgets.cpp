@@ -25,6 +25,86 @@ WidgetType UIImage::GetWidgetType() const {
 }
 
 // =============================================================================
+// UIAnimation
+// =============================================================================
+void UIAnimation::SetTexture(SDL_Texture* texture) {
+  texture_ = texture;
+}
+SDL_Texture* UIAnimation::GetTexture() const {
+  return texture_;
+}
+void UIAnimation::AddFrame(SDL_Rect src_rect) {
+  frames_.push_back(src_rect);
+}
+void UIAnimation::SetFrames(const std::vector<SDL_Rect>& frames) {
+  frames_ = frames;
+}
+const std::vector<SDL_Rect>& UIAnimation::GetFrames() const {
+  return frames_;
+}
+void UIAnimation::SetFrameDuration(float duration) {
+  frame_duration_ = duration;
+}
+float UIAnimation::GetFrameDuration() const {
+  return frame_duration_;
+}
+void UIAnimation::SetIsLoop(bool loop) {
+  is_loop_ = loop;
+}
+bool UIAnimation::GetIsLoop() const {
+  return is_loop_;
+}
+void UIAnimation::Play() {
+  is_playing_ = true;
+  is_finished_ = false;
+}
+void UIAnimation::Pause() {
+  is_playing_ = false;
+}
+void UIAnimation::Stop() {
+  is_playing_ = false;
+  Reset();
+}
+void UIAnimation::Reset() {
+  current_frame_idx_ = 0;
+  elapsed_time_ = 0.0f;
+  is_finished_ = false;
+}
+bool UIAnimation::IsFinished() const {
+  return is_finished_;
+}
+void UIAnimation::Update(float dt) {
+  UIWidget::Update(dt);
+  if (!is_playing_ || frames_.empty() || is_finished_) {
+    return;
+  }
+  elapsed_time_ += dt;
+  while (elapsed_time_ >= frame_duration_) {
+    elapsed_time_ -= frame_duration_;
+    current_frame_idx_++;
+    if (current_frame_idx_ >= static_cast<int>(frames_.size())) {
+      if (is_loop_) {
+        current_frame_idx_ = 0;
+      } else {
+        current_frame_idx_ = static_cast<int>(frames_.size()) - 1;
+        is_playing_ = false;
+        is_finished_ = true;
+        break;
+      }
+    }
+  }
+}
+SDL_Rect UIAnimation::GetCurrentSrcRect() const {
+  if (frames_.empty()) {
+    return {0, 0, 0, 0};
+  }
+  return frames_[current_frame_idx_];
+}
+WidgetType UIAnimation::GetWidgetType() const {
+  return WidgetType::Animation;
+}
+
+// =============================================================================
 // UILabel
 // =============================================================================
 

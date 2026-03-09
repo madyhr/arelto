@@ -234,4 +234,46 @@ void ExpGem::ResetAllExpGems() {
   to_be_destroyed_.clear();
 };
 
+void Chest::AddChest(ChestData chest) {
+  position_.push_back(chest.position);
+  prev_position_.push_back(chest.position);
+  collider_.push_back(chest.collider);
+  sprite_size_.push_back(chest.sprite_size);
+};
+
+void Chest::DestroyChest(int idx) {
+  size_t last_idx = position_.size() - 1;
+  if (idx != last_idx) {
+    position_[idx] = std::move(position_[last_idx]);
+    prev_position_[idx] = std::move(prev_position_[last_idx]);
+    collider_[idx] = std::move(collider_[last_idx]);
+    sprite_size_[idx] = std::move(sprite_size_[last_idx]);
+  }
+  position_.pop_back();
+  prev_position_.pop_back();
+  collider_.pop_back();
+  sprite_size_.pop_back();
+};
+
+void Chest::DestroyChests() {
+  if (to_be_destroyed_.empty()) {
+    return;
+  };
+  std::vector<int> sorted_indices(to_be_destroyed_.begin(),
+                                  to_be_destroyed_.end());
+  std::sort(sorted_indices.begin(), sorted_indices.end(), std::greater<int>());
+  for (int idx : sorted_indices) {
+    DestroyChest(idx);
+  };
+  to_be_destroyed_.clear();
+};
+
+void Chest::ResetAllChests() {
+  position_.clear();
+  prev_position_.clear();
+  collider_.clear();
+  sprite_size_.clear();
+  to_be_destroyed_.clear();
+};
+
 }  // namespace arelto

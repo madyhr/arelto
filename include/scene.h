@@ -3,6 +3,7 @@
 #define RL2_SCENE_H_
 
 #include <memory>
+#include "constants/chest.h"
 #include "constants/enemy.h"
 #include "constants/exp_gem.h"
 #include "constants/player.h"
@@ -20,12 +21,14 @@ struct Scene {
   Enemy enemy;
   Projectiles projectiles;
   ExpGem exp_gem;
+  Chest chest;
+  bool chest_opened = false;
   FixedMap<kOccupancyMapWidth, kOccupancyMapHeight> occupancy_map;
   std::vector<std::unique_ptr<Upgrade>> level_up_options;
 
   void Reset() {
 
-    // -- Player
+    // Player
     player.collider_ =
         Collider{{kPlayerColliderOffsetX, kPlayerColliderOffsetY},
                  {kPlayerColliderWidth, kPlayerColliderHeight}};
@@ -42,7 +45,7 @@ struct Scene {
     player.last_horizontal_velocity_ = 0.0f;
     player.UpdateAllSpellStats();
 
-    // -- Enemies
+    // Enemies
     std::fill(enemy.is_alive.begin(), enemy.is_alive.end(), false);
     std::fill(enemy.is_done.begin(), enemy.is_done.end(), false);
     std::fill(enemy.movement_speed.begin(), enemy.movement_speed.end(),
@@ -72,11 +75,14 @@ struct Scene {
       enemy.collider[i].size.height += random_height;
     };
 
-    // -- Projectiles
+    // Projectiles
     projectiles.ResetAllProjectiles();
 
-    // -- Exp Gems
+    // Exp Gems
     exp_gem.ResetAllExpGems();
+
+    // Chests
+    chest.ResetAllChests();
   };
 
   void SpawnExpGem() {
@@ -90,6 +96,21 @@ struct Scene {
                                kExpGemCollider[random_rarity],
                                kExpGemSpriteSize[random_rarity]};
         exp_gem.AddExpGem(gem_data);
+      }
+    }
+  };
+
+  void SpawnChest() {
+    for (int i = 0; i < kNumEnemies; ++i) {
+      if (enemy.is_done[i]) {
+        float roll = static_cast<float>(GenerateRandomInt(0, 99)) / 100.0f;
+        if (roll < kChestSpawnChance) {
+          Vector2D enemy_centroid =
+              GetCentroid(enemy.position[i], enemy.collider[i].size);
+          ChestData chest_data = {enemy_centroid, enemy_centroid,
+                                  kChestCollider, kChestSpriteSize};
+          chest.AddChest(chest_data);
+        }
       }
     }
   };

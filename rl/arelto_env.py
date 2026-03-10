@@ -1,22 +1,40 @@
 # python/rl2_env.py
 
+from enum import IntEnum
+from typing import FrozenSet
+
 import numpy as np
 import torch
 
 from . import arelto_py as arelto
 
+# Names are uppercased so they follow Python convention.
+GameState: type[IntEnum] = IntEnum(  # pyright: ignore[reportAssignmentType]
+    "GameState",
+    {name.upper(): int(value) for name, value in arelto.GameState.__members__.items()},
+    start=0,
+)
+
+
+# All states where the game is paused / showing an overlay.
+# These states are essentially when we do not want to execute the RL loop,
+# but we still want to render and step the game.
+PAUSE_STATES: FrozenSet[GameState] = frozenset(
+    {
+        GameState.IN_SETTINGS_MENU,
+        GameState.IN_LEVEL_UP,
+        GameState.IN_QUIT_CONFIRM,
+        GameState.IN_CHEST_OPENING,
+    }
+)
+
 
 class AreltoEnv:
-
     def __init__(self, step_dt: float = 0.02) -> None:
         self.game = arelto.Game()
 
         self.step_dt: float = step_dt
         self.num_envs: int = self.game.num_enemies
-
-        self.game_state_dict: dict = {
-            name: int(value) for name, value in arelto.GameState.__members__.items()
-        }
 
         self._obs_size: int = self.game.get_observation_size()
         self._act_size: int = self.game.get_action_size()

@@ -67,6 +67,7 @@ def start_game(args):
             or env.game.get_game_state() == game_state_dict["in_settings_menu"]
             or env.game.get_game_state() == game_state_dict["in_level_up"]
             or env.game.get_game_state() == game_state_dict["in_quit_confirm"]
+            or env.game.get_game_state() == game_state_dict["in_chest_opening"]
         ):
             # We keep track of the number of steps to handle pauses correctly.
             step = 0
@@ -85,8 +86,15 @@ def start_game(args):
                     state == game_state_dict["in_settings_menu"]
                     or state == game_state_dict["in_level_up"]
                     or state == game_state_dict["in_quit_confirm"]
+                    or state == game_state_dict["in_chest_opening"]
                 ):
+                    env.game.step(TARGET_FRAME_TIME)
                     env.game.render(1.0)
+
+                    elapsed_time = time.perf_counter() - frame_start
+                    sleep_time = TARGET_FRAME_TIME - elapsed_time
+                    if sleep_time > 0:
+                        time.sleep(sleep_time)
                     continue
                 with torch.inference_mode():
                     env.game.process_input()

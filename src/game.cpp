@@ -249,20 +249,35 @@ void Game::RunGameLoop() {
 };
 
 void Game::StepGame(float dt) {
-  accumulator_step_ += dt;
+  if (game_state_ == is_running) {
+    accumulator_step_ += dt;
 
-  while (accumulator_step_ >= physics_manager_.GetPhysicsDt()) {
-    StepGamePhysics();
-    accumulator_step_ -= physics_manager_.GetPhysicsDt();
+    while (accumulator_step_ >= physics_manager_.GetPhysicsDt()) {
+      StepGamePhysics();
+      accumulator_step_ -= physics_manager_.GetPhysicsDt();
+    }
+
+    // The RespawnEnemy function is called outside of the accumulator loop to
+    // make sure that an enemy stays dead between calls of StepGame(). This
+    // could otherwise corrupt the termination signals if the enemy died,
+    // respawned and died again in the same accumulator loop.
+    scene_.SpawnExpGem();
+    scene_.SpawnChest();
+    RespawnEnemy(scene_.enemy, scene_.player);
+  } else if (game_state_ == in_chest_opening) {
+    auto* chest_root = render_manager_.GetUIManager().GetChestOpeningRoot();
+    if (chest_root) {
+      chest_root->Update(dt);
+      auto* anim =
+          chest_root->FindWidgetAs<UIAnimation>("chest_animated_image");
+      if (anim && anim->IsFinished()) {
+        SetGameState(in_level_up);
+        progression_manager_.GenerateLevelUpOptions(scene_);
+        render_manager_.GetUIManager().BuildLevelUpMenu(
+            scene_.level_up_options);
+      }
+    }
   }
-
-  // The RespawnEnemy function is called outside of the accumulator loop to
-  // make sure that an enemy stays dead between calls of StepGame(). This
-  // could otherwise corrupt the termination signals if the enemy died,
-  // respawned and died again in the same accumulator loop.
-  scene_.SpawnExpGem();
-  scene_.SpawnChest();
-  RespawnEnemy(scene_.enemy, scene_.player);
 };
 
 void Game::ProcessInput() {

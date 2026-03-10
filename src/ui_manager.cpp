@@ -822,6 +822,7 @@ void UIManager::BuildChestOpeningScreen() {
   overlay->AddChild(chest_animation);
   root_widget_->AddChild(overlay);
 }
+
 UIWidget* UIManager::GetChestOpeningRoot() {
   return root_widget_ ? root_widget_->FindWidget("chest_opening_menu")
                       : nullptr;

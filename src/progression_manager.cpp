@@ -11,12 +11,9 @@ ProgressionManager::ProgressionManager() {}
 ProgressionManager::~ProgressionManager() {}
 
 bool ProgressionManager::CheckLevelUp(const Player& player) {
-  return player.stats_.exp_points >= player.stats_.exp_points_required;
+  return player.stats_.exp_points >=
+         player.stats_.exp_points_required.GetValueCeil();
 }
-
-int ProgressionManager::ApplyExpScalingLaw(const int& current_exp_req) {
-  return static_cast<int>(current_exp_req * kPlayerExpRequiredScale);
-};
 
 void ProgressionManager::GenerateLevelUpOptions(Scene& scene) {
   scene.level_up_options.clear();
@@ -77,9 +74,11 @@ void ProgressionManager::ApplyLevelUpUpgrade(Scene& scene, int option_index) {
   }
 
   scene.player.stats_.level++;
-  scene.player.stats_.exp_points -= scene.player.stats_.exp_points_required;
-  scene.player.stats_.exp_points_required = static_cast<int>(
-      scene.player.stats_.exp_points_required * kPlayerExpRequiredScale);
+  scene.player.stats_.exp_points -=
+      scene.player.stats_.exp_points_required.GetValue();
+  scene.player.stats_.exp_points_required.SetBaseValue(
+      scene.player.stats_.exp_points_required.GetValue() *
+      kPlayerExpRequiredScale);
 }
 
 bool ProgressionManager::ApplyUpgrade(Player& player,

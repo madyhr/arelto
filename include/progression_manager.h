@@ -16,7 +16,6 @@ class ProgressionManager {
   bool CheckLevelUp(const Player& player);
   void GenerateLevelUpOptions(Scene& scene);
   void ApplyLevelUpUpgrade(Scene& scene, int option_index);
-  int ApplyExpScalingLaw(const int& current_exp_req);
 
  private:
   std::unique_ptr<Upgrade> GenerateRandomOption(const Player& player);

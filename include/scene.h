@@ -38,7 +38,8 @@ struct Scene {
     player.stats_.movement_speed = kPlayerSpeed;
     player.stats_.level = 0;
     player.stats_.exp_points = 0;
-    player.stats_.exp_points_required = kPlayerInitialExpRequirement;
+    player.stats_.exp_points_required.SetBaseValue(
+        kPlayerInitialExpRequirement);
     player.position_ = Vector2D{kPlayerInitX, kPlayerInitY};
     player.prev_position_ = player.position_;
     player.last_horizontal_velocity_ = 0.0f;

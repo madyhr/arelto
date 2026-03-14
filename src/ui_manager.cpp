@@ -518,15 +518,16 @@ void UIManager::Update(const Scene& scene, float time) {
   auto* exp_bar = GetWidget<UIProgressBar>("exp_bar");
   if (exp_bar) {
     int current_exp = scene.player.stats_.exp_points;
-    int max_exp = scene.player.stats_.exp_points_required;
+    int max_exp = scene.player.stats_.exp_points_required.GetValueCeil();
     float percent = static_cast<float>(current_exp) / max_exp;
     exp_bar->SetPercent(percent);
   }
 
   auto* exp_text = GetWidget<UILabel>("exp_text");
   if (exp_text) {
-    exp_text->SetText(std::to_string(scene.player.stats_.exp_points) + "/" +
-                      std::to_string(scene.player.stats_.exp_points_required));
+    exp_text->SetText(
+        std::to_string(scene.player.stats_.exp_points) + "/" +
+        std::to_string(scene.player.stats_.exp_points_required.GetValueCeil()));
   }
 
   auto* level_text = GetWidget<UILabel>("level_text");

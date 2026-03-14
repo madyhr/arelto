@@ -69,21 +69,33 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomOption(
                                             current_value, new_value);
 }
 
-void ProgressionManager::ApplyUpgrade(Scene& scene, int option_index) {
-  if (option_index < 0 ||
-      static_cast<size_t>(option_index) >= scene.level_up_options.size()) {
+void ProgressionManager::ApplyLevelUpUpgrade(Scene& scene, int option_index) {
+  bool upgrade =
+      ApplyUpgrade(scene.player, scene.level_up_options, option_index);
+  if (!upgrade) {
     return;
-  }
-
-  const auto& upgrade = scene.level_up_options[option_index];
-  if (upgrade) {
-    upgrade->Apply(scene.player);
   }
 
   scene.player.stats_.level++;
   scene.player.stats_.exp_points -= scene.player.stats_.exp_points_required;
   scene.player.stats_.exp_points_required = static_cast<int>(
       scene.player.stats_.exp_points_required * kPlayerExpRequiredScale);
+}
+
+bool ProgressionManager::ApplyUpgrade(Player& player,
+                                      UpgradeOptions& upgrade_options,
+                                      int option_index) {
+  if (option_index < 0 ||
+      static_cast<size_t>(option_index) >= upgrade_options.size()) {
+    return false;
+  }
+
+  const auto& upgrade = upgrade_options[option_index];
+  if (upgrade) {
+    upgrade->Apply(player);
+  }
+
+  return true;
 }
 
 }  // namespace arelto

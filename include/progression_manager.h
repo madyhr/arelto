@@ -15,11 +15,13 @@ class ProgressionManager {
 
   bool CheckLevelUp(const Player& player);
   void GenerateLevelUpOptions(Scene& scene);
-  void ApplyUpgrade(Scene& scene, int option_index);
+  void ApplyLevelUpUpgrade(Scene& scene, int option_index);
   int ApplyExpScalingLaw(const int& current_exp_req);
 
  private:
   std::unique_ptr<Upgrade> GenerateRandomOption(const Player& player);
+  bool ApplyUpgrade(Player& player, UpgradeOptions& upgrade_options,
+                    int option_index);
 };
 
 }  // namespace arelto

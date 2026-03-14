@@ -2,7 +2,6 @@
 #ifndef RL2_SCENE_H_
 #define RL2_SCENE_H_
 
-#include <memory>
 #include "constants/chest.h"
 #include "constants/enemy.h"
 #include "constants/exp_gem.h"
@@ -24,7 +23,8 @@ struct Scene {
   Chest chest;
   bool chest_opened = false;
   FixedMap<kOccupancyMapWidth, kOccupancyMapHeight> occupancy_map;
-  std::vector<std::unique_ptr<Upgrade>> level_up_options;
+  UpgradeOptions level_up_options;
+  UpgradeOptions upgrade_options;
 
   void Reset() {
 

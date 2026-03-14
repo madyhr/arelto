@@ -2,6 +2,7 @@
 #define RL2_UPGRADES_H_
 
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include <string>
 #include "abilities.h"
@@ -22,6 +23,8 @@ class Upgrade {
   virtual std::string GetOldValueString() const = 0;
   virtual std::string GetNewValueString() const = 0;
 };
+
+using UpgradeOptions = std::vector<std::unique_ptr<Upgrade>>;
 
 class SpellStatUpgrade : public Upgrade {
  public:

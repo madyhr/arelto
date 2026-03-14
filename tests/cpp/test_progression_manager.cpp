@@ -94,7 +94,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_IncreasesLevel) {
   scene_.player.stats_.exp_points_required = 100;
 
   progression_manager_.GenerateLevelUpOptions(scene_);
-  progression_manager_.ApplyUpgrade(scene_, 0);
+  progression_manager_.ApplyLevelUpUpgrade(scene_, 0);
 
   EXPECT_EQ(scene_.player.stats_.level, 1);
 }
@@ -104,7 +104,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_DeductsExp) {
   scene_.player.stats_.exp_points_required = 100;
 
   progression_manager_.GenerateLevelUpOptions(scene_);
-  progression_manager_.ApplyUpgrade(scene_, 0);
+  progression_manager_.ApplyLevelUpUpgrade(scene_, 0);
 
   // Exp should be reduced by the required amount
   EXPECT_EQ(scene_.player.stats_.exp_points, 50);
@@ -117,7 +117,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ScalesExpRequired) {
   int initial_exp_required = scene_.player.stats_.exp_points_required;
 
   progression_manager_.GenerateLevelUpOptions(scene_);
-  progression_manager_.ApplyUpgrade(scene_, 0);
+  progression_manager_.ApplyLevelUpUpgrade(scene_, 0);
 
   int new_exp_required =
       progression_manager_.ApplyExpScalingLaw(initial_exp_required);
@@ -129,7 +129,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_InvalidIndex_Negative_NoOp) {
   scene_.player.stats_.level = 0;
 
   progression_manager_.GenerateLevelUpOptions(scene_);
-  progression_manager_.ApplyUpgrade(scene_, -1);
+  progression_manager_.ApplyLevelUpUpgrade(scene_, -1);
 
   // Level should not have changed
   EXPECT_EQ(scene_.player.stats_.level, 0);
@@ -143,7 +143,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_WorksForAllValidIndices) {
     scene_.player.stats_.exp_points_required = 100;
 
     progression_manager_.GenerateLevelUpOptions(scene_);
-    progression_manager_.ApplyUpgrade(scene_, i);
+    progression_manager_.ApplyLevelUpUpgrade(scene_, i);
 
     EXPECT_EQ(scene_.player.stats_.level, 1)
         << "ApplyUpgrade failed for index " << i;
@@ -178,7 +178,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
   scene_.level_up_options.push_back(std::move(upgrade));
 
   // Apply the upgrade (index 0)
-  progression_manager_.ApplyUpgrade(scene_, 0);
+  progression_manager_.ApplyLevelUpUpgrade(scene_, 0);
 
   // Verify
   float actual_damage =

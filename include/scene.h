@@ -24,7 +24,6 @@ struct Scene {
   bool chest_opened = false;
   FixedMap<kOccupancyMapWidth, kOccupancyMapHeight> occupancy_map;
   UpgradeOptions level_up_options;
-  UpgradeOptions upgrade_options;
 
   void Reset() {
 

@@ -504,7 +504,7 @@ void UIManager::Update(const Scene& scene, float time) {
   auto* health_bar = GetWidget<UIProgressBar>("health_bar");
   if (health_bar) {
     int current_hp = scene.player.stats_.health;
-    int max_hp = scene.player.stats_.max_health;
+    int max_hp = static_cast<int>(scene.player.stats_.max_health.GetValue());
     float percent = static_cast<float>(current_hp) / max_hp;
     health_bar->SetPercent(percent);
   }
@@ -512,7 +512,8 @@ void UIManager::Update(const Scene& scene, float time) {
   auto* health_text = GetWidget<UILabel>("health_text");
   if (health_text) {
     health_text->SetText(std::to_string(scene.player.stats_.health) + "/" +
-                         std::to_string(scene.player.stats_.max_health));
+                         std::to_string(static_cast<int>(
+                             scene.player.stats_.max_health.GetValue())));
   }
 
   auto* exp_bar = GetWidget<UIProgressBar>("exp_bar");

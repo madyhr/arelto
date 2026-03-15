@@ -255,10 +255,10 @@ struct Stats {
   int exp_points;
   Stat exp_points_required;
   int health;
-  int max_health;
-  float movement_speed;
+  Stat max_health;
+  Stat movement_speed;
   Size2D sprite_size;
-  float inv_mass;
+  Stat inv_mass;
 };
 
 struct ProjectileData {

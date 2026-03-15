@@ -263,7 +263,7 @@ TEST_F(UIManagerTest, SettingsMenu_StartsHidden) {
 
 TEST_F(UIManagerTest, Update_ChangesHealthBarPercent) {
   scene_.player.stats_.health = 50;
-  scene_.player.stats_.max_health = 100;
+  scene_.player.stats_.max_health.SetBaseValue(100.0f);
   ui_manager_.Update(scene_, 0.0f);
 
   auto* bar = ui_manager_.GetWidget<UIProgressBar>("health_bar");

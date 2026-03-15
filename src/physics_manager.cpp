@@ -31,7 +31,7 @@ void PhysicsManager::StepPhysics(Scene& scene) {
 
 void PhysicsManager::UpdatePlayerState(Player& player) {
   Vector2D delta_pos = player.velocity_.Normalized() *
-                       (player.stats_.movement_speed * physics_dt_);
+                       (player.stats_.movement_speed.GetValue() * physics_dt_);
   player.position_ += delta_pos;
 
   if (player.velocity_.x != 0) {

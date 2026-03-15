@@ -217,7 +217,7 @@ void CollisionManager::ResolvePlayerEnemyCollision(const CollisionPair& cp,
 
   std::array<Vector2D, 2> displacement_vectors = GetDisplacementVectors(
       {player_aabb, enemy_aabb}, {player_centroid, enemy_centroid},
-      {player.stats_.inv_mass, enemy.inv_mass[enemy_idx]});
+      {player.stats_.inv_mass.GetValue(), enemy.inv_mass[enemy_idx]});
 
   player.position_ += displacement_vectors[0];
   enemy.position[enemy_idx] += displacement_vectors[1];

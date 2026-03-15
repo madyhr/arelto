@@ -32,10 +32,11 @@ struct Scene {
         Collider{{kPlayerColliderOffsetX, kPlayerColliderOffsetY},
                  {kPlayerColliderWidth, kPlayerColliderHeight}};
     player.stats_.sprite_size = Size2D{kPlayerSpriteWidth, kPlayerSpriteHeight};
-    player.stats_.max_health = kPlayerInitMaxHealth;
-    player.stats_.health = player.stats_.max_health;
-    player.stats_.inv_mass = kPlayerInvMass;
-    player.stats_.movement_speed = kPlayerSpeed;
+    player.stats_.max_health.SetBaseValue(kPlayerInitMaxHealth);
+    player.stats_.health =
+        static_cast<int>(player.stats_.max_health.GetValue());
+    player.stats_.inv_mass.SetBaseValue(kPlayerInvMass);
+    player.stats_.movement_speed.SetBaseValue(kPlayerSpeed);
     player.stats_.level = 0;
     player.stats_.exp_points = 0;
     player.stats_.exp_points_required.SetBaseValue(

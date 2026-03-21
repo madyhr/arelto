@@ -7,6 +7,7 @@
 #include "constants/exp_gem.h"
 #include "constants/player.h"
 #include "entity.h"
+#include "items.h"
 #include "random.h"
 #include "ray_caster.h"
 #include "types.h"
@@ -24,6 +25,8 @@ struct Scene {
   bool chest_opened = false;
   FixedMap<kOccupancyMapWidth, kOccupancyMapHeight> occupancy_map;
   UpgradeOptions level_up_options;
+  UpgradeOptions item_options;
+  ItemArchive* item_archive;
 
   void Reset() {
 

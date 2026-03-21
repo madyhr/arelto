@@ -25,6 +25,7 @@ PAUSE_STATES: FrozenSet[Any] = frozenset(
         GameState.IN_LEVEL_UP,
         GameState.IN_QUIT_CONFIRM,
         GameState.IN_CHEST_OPENING,
+        GameState.IN_ITEM_SELECTION,
     }
 )
 

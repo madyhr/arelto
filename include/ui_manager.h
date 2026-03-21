@@ -33,6 +33,7 @@ struct UIResources {
   SDL_Texture* checkmark_texture = nullptr;
   SDL_Texture* chest_texture = nullptr;
   std::vector<SDL_Texture*> projectile_textures;
+  std::vector<SDL_Texture*> item_textures;
 };
 
 class UIManager {
@@ -48,10 +49,13 @@ class UIManager {
   void BuildGameOverScreen();
   void UpdateQuitConfirmMenu();
   void BuildChestOpeningScreen();
+  void BuildItemMenu(const UpgradeOptions& options);
+  void UpdateItemMenu();
 
   UIWidget* GetRootWidget();
   UIWidget* GetSettingsRoot();
   UIWidget* GetLevelUpRoot();
+  UIWidget* GetItemMenuRoot();
   UIWidget* GetStartScreenRoot();
   UIWidget* GetGameOverScreenRoot();
   UIWidget* GetQuitConfirmRoot();
@@ -74,6 +78,8 @@ class UIManager {
   void BuildQuitConfirmMenu();
   void BuildLevelUpCard(UIWidget* parent, int index,
                         const SpellStatUpgrade& upgrade);
+  void BuildItemCard(UIWidget* parent, int index,
+                     const ItemStatUpgrade& upgrade);
 };
 
 }  // namespace arelto

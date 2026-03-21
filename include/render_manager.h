@@ -31,6 +31,7 @@ struct RenderResources {
   std::map<int, std::vector<SDL_Vertex>> gem_vertices_grouped_;
   SDL_Texture* chest_texture = nullptr;
   std::vector<SDL_Vertex> chest_vertices_;
+  std::vector<SDL_Texture*> item_textures;
   SDL_Rect map_layout = {0, 0, kWindowWidth, kWindowHeight};
   TileManager tile_manager;
   UIResources ui_resources;
@@ -50,6 +51,7 @@ class RenderManager {
 
   void RenderSettingsMenuState();
   void RenderLevelUp();
+  void RenderItemSelection();
   void RenderQuitConfirmMenu();
   void UpdateSettingsMenuState(float volume, bool is_muted,
                                const GameStatus& game_status);

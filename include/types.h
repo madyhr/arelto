@@ -259,6 +259,7 @@ struct Stats {
   Stat movement_speed;
   Size2D sprite_size;
   Stat inv_mass;
+  Stat armor;
 };
 
 struct ProjectileData {
@@ -343,6 +344,7 @@ enum GameState : int {
   in_level_up,
   in_quit_confirm,
   in_chest_opening,
+  in_item_selection,
 };
 
 enum Rarity : int { common, rare, epic, legendary, Count };

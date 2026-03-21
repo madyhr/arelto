@@ -7,6 +7,9 @@
 #include "constants/projectile.h"
 #include "constants/ui.h"
 #include "scene.h"
+#include "ui/containers.h"
+#include "ui/widget.h"
+#include "ui/widgets.h"
 
 namespace arelto {
 
@@ -40,6 +43,10 @@ UIWidget* UIManager::GetSettingsRoot() {
 
 UIWidget* UIManager::GetLevelUpRoot() {
   return root_widget_ ? root_widget_->FindWidget("level_up_menu") : nullptr;
+}
+
+UIWidget* UIManager::GetItemMenuRoot() {
+  return root_widget_ ? root_widget_->FindWidget("item_menu") : nullptr;
 }
 
 // =============================================================================
@@ -829,6 +836,134 @@ void UIManager::BuildChestOpeningScreen() {
 UIWidget* UIManager::GetChestOpeningRoot() {
   return root_widget_ ? root_widget_->FindWidget("chest_opening_menu")
                       : nullptr;
+}
+
+// =============================================================================
+// BuildItemMenu — dynamically create card widgets from item options
+// =============================================================================
+
+void UIManager::BuildItemMenu(const UpgradeOptions& options) {
+  root_widget_->RemoveChild("item_menu");
+
+  auto overlay = std::make_shared<Panel>();
+  overlay->SetId("item_menu");
+  overlay->SetSize(kWindowWidth, kWindowHeight);
+  overlay->SetBackgroundColor(WithOpacity(kColorBlack, 128));
+  overlay->SetVisible(false);
+
+  auto card_row = std::make_shared<HBox>();
+  card_row->SetId("item_cards");
+  card_row->SetAnchor(AnchorType::Center);
+  int total_width =
+      kNumItemOptions * kItemCardWidth + (kNumItemOptions - 1) * kItemCardGap;
+  card_row->SetSize(total_width, kItemCardHeight);
+  card_row->SetSpacing(kItemCardGap);
+
+  for (size_t i = 0; i < options.size(); ++i) {
+    BuildItemCard(card_row.get(), static_cast<int>(i),
+                  static_cast<ItemStatUpgrade&>(*options[i]));
+  }
+
+  overlay->AddChild(card_row);
+  root_widget_->AddChild(overlay);
+  root_widget_->ComputeLayout(0, 0, kWindowWidth, kWindowHeight);
+}
+
+void UIManager::BuildItemCard(UIWidget* parent, int index,
+                              const ItemStatUpgrade& upgrade) {
+  std::string card_id = "item_card_" + std::to_string(index);
+
+  auto card = std::make_shared<Panel>();
+  card->SetId(card_id);
+  card->SetSize(kItemCardWidth, kItemCardHeight);
+  card->SetBackground(resources_->level_up_option_card_texture);
+  card->SetBackgroundSrcRect({0, 0, 0, 0});  // full texture
+
+  int item_id = upgrade.GetItemID();
+  if (item_id >= 0 &&
+      item_id < static_cast<int>(resources_->item_textures.size())) {
+    auto icon = std::make_shared<UIImage>();
+    icon->SetId(card_id + "_icon");
+    icon->SetAnchor(AnchorType::TopCenter);
+    icon->SetPosition(0, kItemCardIconOffsetY);
+    icon->SetSize(kItemIconSize, kItemIconSize);
+    icon->SetTexture(resources_->item_textures[item_id]);
+    icon->SetSrcRect({0, 0, 0, 0});
+    card->AddChild(icon);
+  }
+
+  auto name_label = std::make_shared<UILabel>();
+  name_label->SetId(card_id + "_name");
+  name_label->SetPosition(kItemCardNameOffsetX, kItemCardNameOffsetY);
+  name_label->SetSize(kItemCardWidth - 2 * kItemCardNameOffsetX, 96);
+  name_label->SetText(upgrade.GetName());
+  name_label->SetFont(resources_->ui_font_large);
+  name_label->SetColor({255, 255, 255, 255});
+  name_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardNameOffsetX);
+  name_label->SetWrapWidth(kItemCardWidth - 2 * kItemCardNameOffsetX);
+  card->AddChild(name_label);
+
+  auto desc_label = std::make_shared<UILabel>();
+  desc_label->SetId(card_id + "_desc");
+  desc_label->SetPosition(kItemCardDescOffsetX, kItemCardDescOffsetY);
+  desc_label->SetSize(kItemCardWidth - 2 * kItemCardDescOffsetX, 25);
+  desc_label->SetText(upgrade.GetDescription());
+  desc_label->SetFont(resources_->ui_font_medium);
+  desc_label->SetColor({180, 180, 180, 255});
+  desc_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardDescOffsetX);
+  card->AddChild(desc_label);
+
+  std::string stats_str =
+      upgrade.GetOldValueString() + " -> " + upgrade.GetNewValueString();
+  auto stats_label = std::make_shared<UILabel>();
+  stats_label->SetId(card_id + "_stats");
+  stats_label->SetPosition(kItemCardStatsOffsetX, kItemCardStatsOffsetY);
+  stats_label->SetSize(kItemCardWidth - 2 * kItemCardStatsOffsetX, 25);
+  stats_label->SetText(stats_str);
+  stats_label->SetFont(resources_->ui_font_medium);
+  stats_label->SetColor({0, 255, 0, 255});
+  stats_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardStatsOffsetX);
+  card->AddChild(stats_label);
+
+  std::string btn_id = "select_button_" + std::to_string(index);
+  auto select_btn = std::make_shared<UIButton>();
+  select_btn->SetId(btn_id);
+  select_btn->SetAnchor(AnchorType::TopCenter);
+  select_btn->SetPosition(0, kItemCardButtonOffsetY);
+  select_btn->SetSize(kItemCardButtonWidth, kItemCardButtonHeight);
+  select_btn->SetTexture(resources_->button_texture);
+  select_btn->SetNormalSrcRect(
+      {0, 0, kGenericButtonTextureWidth, kGenericButtonTextureHeight / 2});
+  select_btn->SetHoverSrcRect({0, kGenericButtonTextureHeight / 2,
+                               kGenericButtonTextureWidth,
+                               kGenericButtonTextureHeight / 2});
+  select_btn->SetLabel("CLAIM");
+  select_btn->SetLabelFont(resources_->ui_font_medium);
+  card->AddChild(select_btn);
+
+  parent->AddChild(card);
+}
+
+void UIManager::UpdateItemMenu() {
+  auto* item_menu = GetItemMenuRoot();
+  if (!item_menu)
+    return;
+
+  int mouse_x, mouse_y;
+  SDL_GetMouseState(&mouse_x, &mouse_y);
+
+  std::function<void(UIWidget*)> update_hover = [&](UIWidget* widget) {
+    if (widget->GetWidgetType() == WidgetType::Button) {
+      SDL_Rect bounds = widget->GetComputedBounds();
+      bool hovered = (mouse_x >= bounds.x && mouse_x <= bounds.x + bounds.w &&
+                      mouse_y >= bounds.y && mouse_y <= bounds.y + bounds.h);
+      widget->SetHovered(hovered);
+    }
+    for (auto& child : widget->GetChildren()) {
+      update_hover(child.get());
+    }
+  };
+  update_hover(item_menu);
 }
 
 }  // namespace arelto

@@ -131,6 +131,8 @@ bool RenderManager::Initialize(bool is_headless) {
       TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeLarge);
   resources_.ui_resources.ui_font_huge =
       TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeHuge);
+  resources_.item_textures.push_back(IMG_LoadTexture(
+      resources_.renderer, "assets/textures/elia_skewersafe_armorplate.png"));
 
   if (resources_.ui_resources.ui_font_medium == nullptr ||
       resources_.ui_resources.ui_font_large == nullptr ||
@@ -159,6 +161,9 @@ bool RenderManager::Initialize(bool is_headless) {
       std::any_of(
           resources_.projectile_textures.begin(),
           resources_.projectile_textures.end(),
+          [](SDL_Texture* sdl_texture) { return sdl_texture == nullptr; }) ||
+      std::any_of(
+          resources_.item_textures.begin(), resources_.item_textures.end(),
           [](SDL_Texture* sdl_texture) { return sdl_texture == nullptr; })) {
     std::cerr << "One or more textures could not be loaded: " << SDL_GetError()
               << std::endl;
@@ -167,6 +172,7 @@ bool RenderManager::Initialize(bool is_headless) {
 
   // Copy projectile textures into UI resources for level-up card icons
   resources_.ui_resources.projectile_textures = resources_.projectile_textures;
+  resources_.ui_resources.item_textures = resources_.item_textures;
   resources_.ui_resources.chest_texture = resources_.chest_texture;
 
   ui_manager_.SetupUI(resources_.ui_resources);
@@ -243,6 +249,8 @@ void RenderManager::Render(const Scene& scene, float alpha,
       RenderSettingsMenuState();
     } else if (game_state == in_level_up) {
       RenderLevelUp();
+    } else if (game_state == in_item_selection) {
+      RenderItemSelection();
     } else if (game_state == in_quit_confirm) {
       RenderQuitConfirmMenu();
     } else if (game_state == in_chest_opening) {
@@ -882,7 +890,9 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       auto* img = static_cast<UIImage*>(widget);
       if (img->GetTexture()) {
         SDL_Rect src = img->GetSrcRect();
-        SDL_RenderCopy(resources_.renderer, img->GetTexture(), &src, &bounds);
+        SDL_Rect* src_ptr = (src.w > 0 && src.h > 0) ? &src : nullptr;
+        SDL_RenderCopy(resources_.renderer, img->GetTexture(), src_ptr,
+                       &bounds);
       }
       break;
     }
@@ -1114,6 +1124,17 @@ void RenderManager::RenderLevelUp() {
     level_up->SetVisible(true);
     RenderWidgetRecursive(level_up);
     level_up->SetVisible(false);
+  }
+}
+
+void RenderManager::RenderItemSelection() {
+  ui_manager_.UpdateItemMenu();
+
+  UIWidget* item_menu = ui_manager_.GetItemMenuRoot();
+  if (item_menu) {
+    item_menu->SetVisible(true);
+    RenderWidgetRecursive(item_menu);
+    item_menu->SetVisible(false);
   }
 }
 

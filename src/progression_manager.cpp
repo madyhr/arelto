@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "abilities.h"
 #include "constants/progression_manager.h"
+#include "items.h"
 #include "types.h"
 
 namespace arelto {
@@ -22,7 +23,13 @@ void ProgressionManager::GenerateLevelUpOptions(Scene& scene) {
   }
 }
 
-std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomOption(
+void ProgressionManager::GenerateItemOptions(Scene& scene) {
+  scene.item_options.clear();
+  for (int i = 0; i < kNumItemOptions; ++i) {
+    scene.item_options.push_back(GenerateRandomItem(scene));
+  }
+}
+
 std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
     const Player& player) {
   SpellId spell_id = static_cast<SpellId>(std::rand() % kNumPlayerSpells);
@@ -67,6 +74,27 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
                                             current_value, new_value);
 }
 
+std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(
+    const Scene& scene) {
+  ItemId item_id = static_cast<ItemId>(std::rand() % ItemId::count);
+  Item item = scene.item_archive->GetItem(item_id);
+
+  float current_value = 0.0f;
+  switch (item.upgrade_type) {
+    case ItemUpgradeType::armor:
+      current_value = scene.player.stats_.armor.GetValue();
+      break;
+    default:
+      break;
+  }
+
+  float new_value = current_value + item.value;
+
+  return std::make_unique<ItemStatUpgrade>(
+      item_id, item.name, item.upgrade_type, item.modifier_type, current_value,
+      new_value);
+}
+
 void ProgressionManager::ApplyLevelUpUpgrade(Scene& scene, int option_index) {
   bool upgrade =
       ApplyUpgrade(scene.player, scene.level_up_options, option_index);
@@ -96,6 +124,13 @@ bool ProgressionManager::ApplyUpgrade(Player& player,
   }
 
   return true;
+}
+
+void ProgressionManager::ApplyItemUpgrade(Scene& scene, int option_index) {
+  bool upgrade = ApplyUpgrade(scene.player, scene.item_options, option_index);
+  if (!upgrade) {
+    return;
+  }
 }
 
 }  // namespace arelto

@@ -186,7 +186,7 @@ struct Collider {
   Size2D size;
 };
 
-enum class ModifierType { flat, percent_add, percent_mult };
+enum class ModifierType { flat = 0, percent_add, percent_mult };
 
 struct Modifier {
   float value;
@@ -362,7 +362,7 @@ struct ChestData {
   Size2D sprite_size;
 };
 
-enum class UpgradeType : int { damage = 0, speed, cooldown, size, count };
+enum class SpellUpgradeType : int { damage = 0, speed, cooldown, size, count };
 
 }  // namespace arelto
 #endif

@@ -908,7 +908,7 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
                           char_size);
       } else if (lbl->GetFont()) {
         RenderText(lbl->GetText(), bounds.x, bounds.y, lbl->GetColor(),
-                   lbl->GetFont(), lbl->GetCenterWidth());
+                   lbl->GetFont(), lbl->GetCenterWidth(), lbl->GetWrapWidth());
       }
       break;
     }
@@ -1134,8 +1134,17 @@ void RenderManager::RenderQuitConfirmMenu() {
 // the text along that center_width.
 void RenderManager::RenderText(const std::string& text, int x, int y,
                                SDL_Color color, TTF_Font* font,
-                               int center_width) {
-  SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), color);
+                               int center_width, int wrap_width) {
+  if (wrap_width > 0) {
+    TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_CENTER);
+  }
+  SDL_Surface* surface =
+      wrap_width > 0 ? TTF_RenderText_Blended_Wrapped(font, text.c_str(), color,
+                                                      wrap_width)
+                     : TTF_RenderText_Blended(font, text.c_str(), color);
+  if (wrap_width > 0) {
+    TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_LEFT);
+  }
   SDL_Texture* texture =
       SDL_CreateTextureFromSurface(resources_.renderer, surface);
 

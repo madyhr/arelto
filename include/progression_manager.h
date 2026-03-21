@@ -18,7 +18,7 @@ class ProgressionManager {
   void ApplyLevelUpUpgrade(Scene& scene, int option_index);
 
  private:
-  std::unique_ptr<Upgrade> GenerateRandomOption(const Player& player);
+  std::unique_ptr<Upgrade> GenerateRandomSpellUpgrade(const Player& player);
   bool ApplyUpgrade(Player& player, UpgradeOptions& upgrade_options,
                     int option_index);
 };

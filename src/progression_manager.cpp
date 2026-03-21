@@ -17,16 +17,17 @@ bool ProgressionManager::CheckLevelUp(const Player& player) {
 
 void ProgressionManager::GenerateLevelUpOptions(Scene& scene) {
   scene.level_up_options.clear();
-  for (int i = 0; i < kNumUpgradeOptions; ++i) {
-    scene.level_up_options.push_back(GenerateRandomOption(scene.player));
+  for (int i = 0; i < kNumSpellUpgradeOptions; ++i) {
+    scene.level_up_options.push_back(GenerateRandomSpellUpgrade(scene.player));
   }
 }
 
 std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomOption(
+std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
     const Player& player) {
   SpellId spell_id = static_cast<SpellId>(std::rand() % kNumPlayerSpells);
-  UpgradeType type = static_cast<UpgradeType>(
-      std::rand() % static_cast<int>(UpgradeType::count));
+  SpellUpgradeType type = static_cast<SpellUpgradeType>(
+      std::rand() % static_cast<int>(SpellUpgradeType::count));
 
   float current_value = 0.0f;
   float new_value = 0.0f;
@@ -40,25 +41,25 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomOption(
   const SpellStats<kNumPlayerSpells>& stats = player.spell_stats_;
 
   switch (type) {
-    case UpgradeType::damage:
+    case SpellUpgradeType::damage:
       current_value = static_cast<float>(stats.damage[spell_id]);
       new_value = current_value + kDamageUpgradeValue;
       break;
-    case UpgradeType::speed:
+    case SpellUpgradeType::speed:
       current_value = stats.speed[spell_id];
       new_value = current_value + kSpeedUpgradeValue;
       break;
-    case UpgradeType::cooldown:
+    case SpellUpgradeType::cooldown:
       current_value = stats.cooldown[spell_id];
       // We use the max of (0.1, new_value) to ensure that ability cooldowns
       // are always positive.
       new_value = std::max(0.1f, current_value - kCooldownUpgradeValue);
       break;
-    case UpgradeType::size:
+    case SpellUpgradeType::size:
       current_value = static_cast<float>(stats.sprite_size[spell_id].width);
       new_value = current_value * kSizeUpgradeFactor;
       break;
-    case UpgradeType::count:
+    case SpellUpgradeType::count:
       break;
   }
 
@@ -75,7 +76,7 @@ void ProgressionManager::ApplyLevelUpUpgrade(Scene& scene, int option_index) {
 
   scene.player.stats_.level++;
   scene.player.stats_.exp_points -=
-      scene.player.stats_.exp_points_required.GetValue();
+      scene.player.stats_.exp_points_required.GetValueCeil();
   scene.player.stats_.exp_points_required.SetBaseValue(
       scene.player.stats_.exp_points_required.GetValue() *
       kPlayerExpRequiredScale);

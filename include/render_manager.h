@@ -88,7 +88,7 @@ class RenderManager {
   void RenderDigitString(const std::string& text, int start_x, int start_y,
                          Size2D sprite_size, Size2D char_size);
   void RenderText(const std::string& text, int x, int y, SDL_Color color,
-                  TTF_Font* font, int center_width = 0);
+                  TTF_Font* font, int center_width = 0, int wrap_width = 0);
 };
 
 }  // namespace arelto

@@ -373,8 +373,7 @@ void UIManager::BuildSettingsMenu() {
 // BuildLevelUpMenu — dynamically create card widgets from upgrade options
 // =============================================================================
 
-void UIManager::BuildLevelUpMenu(
-    const std::vector<std::unique_ptr<Upgrade>>& options) {
+void UIManager::BuildLevelUpMenu(const UpgradeOptions& options) {
   root_widget_->RemoveChild("level_up_menu");
 
   auto overlay = std::make_shared<Panel>();
@@ -386,13 +385,14 @@ void UIManager::BuildLevelUpMenu(
   auto card_row = std::make_shared<HBox>();
   card_row->SetId("level_up_cards");
   card_row->SetAnchor(AnchorType::Center);
-  int total_width = kNumUpgradeOptions * kLevelUpCardWidth +
-                    (kNumUpgradeOptions - 1) * kLevelUpCardGap;
+  int total_width = kNumSpellUpgradeOptions * kLevelUpCardWidth +
+                    (kNumSpellUpgradeOptions - 1) * kLevelUpCardGap;
   card_row->SetSize(total_width, kLevelUpCardHeight);
   card_row->SetSpacing(kLevelUpCardGap);
 
   for (size_t i = 0; i < options.size(); ++i) {
-    BuildLevelUpCard(card_row.get(), static_cast<int>(i), *options[i]);
+    BuildLevelUpCard(card_row.get(), static_cast<int>(i),
+                     static_cast<SpellStatUpgrade&>(*options[i]));
   }
 
   overlay->AddChild(card_row);
@@ -401,7 +401,7 @@ void UIManager::BuildLevelUpMenu(
 }
 
 void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
-                                 const Upgrade& upgrade) {
+                                 const SpellStatUpgrade& upgrade) {
   std::string card_id = "level_up_card_" + std::to_string(index);
 
   auto card = std::make_shared<Panel>();
@@ -426,11 +426,12 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   auto name_label = std::make_shared<UILabel>();
   name_label->SetId(card_id + "_name");
   name_label->SetPosition(kLevelUpNameOffsetX, kLevelUpNameOffsetY);
-  name_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpNameOffsetX, 30);
-  name_label->SetText(upgrade.GetSpellName());
+  name_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpNameOffsetX, 96);
+  name_label->SetText(upgrade.GetName());
   name_label->SetFont(resources_->ui_font_large);
   name_label->SetColor({255, 255, 255, 255});
   name_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpNameOffsetX);
+  name_label->SetWrapWidth(kLevelUpCardWidth - 2 * kLevelUpNameOffsetX);
   card->AddChild(name_label);
 
   auto desc_label = std::make_shared<UILabel>();

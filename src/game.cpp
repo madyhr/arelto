@@ -579,10 +579,10 @@ void Game::ProcessLevelUpInput(const SDL_Event& e) {
 
     UIManager& ui = render_manager_.GetUIManager();
 
-    for (int i = 0; i < kNumUpgradeOptions; ++i) {
+    for (int i = 0; i < kNumSpellUpgradeOptions; ++i) {
       std::string btn_id = "select_button_" + std::to_string(i);
 
-      if (IsMouseOverWidget(ui.GetRootWidget(), btn_id, mouse_x, mouse_y)) {
+      if (IsMouseOverWidget(ui.GetLevelUpRoot(), btn_id, mouse_x, mouse_y)) {
         progression_manager_.ApplyLevelUpUpgrade(scene_, i);
         UIWidget* menu = ui.GetLevelUpRoot();
         if (menu) {

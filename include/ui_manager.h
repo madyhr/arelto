@@ -8,9 +8,8 @@
 #include <string>
 #include <vector>
 #include "scene.h"
-#include "ui/containers.h"
 #include "ui/widget.h"
-#include "ui/widgets.h"
+#include "upgrades.h"
 
 namespace arelto {
 
@@ -42,7 +41,7 @@ class UIManager {
   void Update(const Scene& scene, float time);
   void UpdateSettingsMenu(float volume, bool is_muted,
                           const GameStatus& game_status);
-  void BuildLevelUpMenu(const std::vector<std::unique_ptr<Upgrade>>& options);
+  void BuildLevelUpMenu(const UpgradeOptions& options);
   void UpdateLevelUpMenu();
   void BuildStartScreen();
   void UpdateStartScreen();
@@ -73,7 +72,8 @@ class UIManager {
   void BuildHUD();
   void BuildSettingsMenu();
   void BuildQuitConfirmMenu();
-  void BuildLevelUpCard(UIWidget* parent, int index, const Upgrade& upgrade);
+  void BuildLevelUpCard(UIWidget* parent, int index,
+                        const SpellStatUpgrade& upgrade);
 };
 
 }  // namespace arelto

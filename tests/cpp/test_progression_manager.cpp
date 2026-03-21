@@ -55,7 +55,7 @@ TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_CreatesCorrectCount) {
   progression_manager_.GenerateLevelUpOptions(scene_);
 
   EXPECT_EQ(scene_.level_up_options.size(),
-            static_cast<size_t>(kNumUpgradeOptions));
+            static_cast<size_t>(kNumSpellUpgradeOptions));
 }
 
 TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_ClearsExistingOptions) {
@@ -68,7 +68,7 @@ TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_ClearsExistingOptions) {
 
   // Should have exactly kNumUpgradeOptions, not more
   EXPECT_EQ(scene_.level_up_options.size(),
-            static_cast<size_t>(kNumUpgradeOptions));
+            static_cast<size_t>(kNumSpellUpgradeOptions));
 }
 
 TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_CreatesValidOptions) {
@@ -77,10 +77,13 @@ TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_CreatesValidOptions) {
   for (const auto& option : scene_.level_up_options) {
     ASSERT_NE(option, nullptr);
     EXPECT_FALSE(option->GetDescription().empty());
-    EXPECT_FALSE(option->GetSpellName().empty());
+    EXPECT_FALSE(option->GetName().empty());
 
-    UpgradeType type = option->GetType();
-    EXPECT_LT(static_cast<int>(type), static_cast<int>(UpgradeType::count));
+    auto* spell_upgrade = dynamic_cast<SpellStatUpgrade*>(option.get());
+    ASSERT_NE(spell_upgrade, nullptr);
+    SpellUpgradeType type = spell_upgrade->GetType();
+    EXPECT_LT(static_cast<int>(type),
+              static_cast<int>(SpellUpgradeType::count));
   }
 }
 
@@ -121,7 +124,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_InvalidIndex_Negative_NoOp) {
 }
 
 TEST_F(ProgressionManagerTest, ApplyUpgrade_WorksForAllValidIndices) {
-  for (int i = 0; i < kNumUpgradeOptions; ++i) {
+  for (int i = 0; i < kNumSpellUpgradeOptions; ++i) {
     scene_ = testing::CreateTestScene();
     scene_.player.stats_.level = 0;
     scene_.player.stats_.exp_points = 1000;
@@ -156,7 +159,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
   float new_damage = initial_damage + 10.0f;
 
   auto upgrade = std::make_unique<SpellStatUpgrade>(target_spell, spell_name,
-                                                    UpgradeType::damage,
+                                                    SpellUpgradeType::damage,
                                                     initial_damage, new_damage);
 
   scene_.level_up_options.clear();

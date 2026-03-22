@@ -11,12 +11,7 @@ A Reinforcement Learning Rogue-Like (RL2) game where the enemies get smarter ove
     - [Linux](#linux)
       - [Debian/Ubuntu](#debianubuntu)
       - [Arch](#arch)
-    - [Windows](#windows)
-      - [1. Install Conda](#1-install-conda)
-      - [2. Create a Conda Environment](#2-create-a-conda-environment)
-      - [3. Install Dependencies via Conda](#3-install-dependencies-via-conda)
-      - [4. Install vcpkg](#4-install-vcpkg)
-      - [5. Install C++ Dependencies](#5-install-c-dependencies)
+    - [Windows (WSL2)](#windows-wsl2)
   - [Installation](#installation)
   - [Running the Game](#running-the-game)
   - [How to play](#how-to-play)
@@ -43,7 +38,7 @@ Before installing, ensure you have the following system dependencies installed a
 ```bash
 sudo apt update
 sudo apt install cmake build-essential python3-dev
-sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer
+sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev
 sudo apt install libomp-dev
 ```
 
@@ -53,47 +48,15 @@ sudo apt install libomp-dev
 sudo pacman -S cmake base-devel python sdl2 sdl2_image sdl2_ttf sdl2_mixer
 ```
 
-### Windows
+### Windows (WSL2)
 
-#### 1. Install Conda
+This project is meant to be run on a Linux distribution. On Windows, please use [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) with an Ubuntu distribution. GUI applications are supported natively via [WSLg](https://github.com/microsoft/wslg).
 
-Please follow the installation instructions as described on the official [website](https://www.anaconda.com/download).
-
-#### 2. Create a Conda Environment
-
-```bash
-conda create -n arelto-env python=3.10
-conda activate arelto-env
-```
-
-#### 3. Install Dependencies via Conda
-
-```bash
-conda install -y cmake ninja numpy pytorch -c pytorch -c conda-forge
-```
-
-#### 4. Install vcpkg
-
-To install [vcpkg](https://vcpkg.io/en/getting-started.html), you can either follow the link or clone it directly:
-
-```bash
-git clone https://github.com/microsoft/vcpkg.git
-.\vcpkg\bootstrap-vcpkg.bat
-```
-
-#### 5. Install C++ Dependencies
-
-```bash
-.\vcpkg\vcpkg install sdl2 sdl2-image sdl2-ttf sdl2-mixer --triplet x64-windows
-```
-
-> [!NOTE]
-> Ensure that `vcpkg` is accessible in your path or note down its installation location for the build step.
-
-> [!WARNING]
-> macOS is not supported.
+Once inside WSL2, follow the [Debian/Ubuntu](#debianubuntu) instructions above, then proceed to [Installation](#installation).
 
 ## Installation
+
+To install Arelto and all its dependencies you can use the provided installation script:
 
 1. **Clone the repository:**
 
@@ -102,39 +65,13 @@ git clone https://github.com/microsoft/vcpkg.git
     cd arelto
     ```
 
-2. **Fetch external dependencies:**
+2. **Run the installation script:**
 
     ```bash
-    git submodule update --init --recursive
+    python scripts/install_arelto.py
     ```
 
-3. **Create a virtual environment (Recommended):**
-
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-
-4. **Install the game as a package:**
-
-    **Linux:**
-
-    ```bash
-    pip install -e .
-    ```
-
-    **Windows:**
-
-    You need to specify the `vcpkg` toolchain file. Adjust the path to where you installed `vcpkg`.
-
-    ```bash
-    # CMD / PowerShell
-    $env:CMAKE_TOOLCHAIN_FILE="C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake"
-    $env:VCPKG_TARGET_TRIPLET="x64-windows"
-    pip install -e .
-    ```
-
-    *Note: This process may take some time as it downloads all dependencies and compiles the C++ backend.*
+This script will check your environment, initialize all submodules, and install the game as an editable package.
 
 ## Running the Game
 
@@ -144,7 +81,7 @@ To start the game with the asynchronous agent (default experience):
 python scripts/start_game_async.py
 ```
 
-Alternatively, there is also a synchronous agent variant. However, the game pauses during policy updates, so it is also not as smooth an experience.
+Alternatively, there is also a synchronous agent variant. However, the game pauses during policy updates, so it is not as smooth an experience.
 
 ```bash
 python scripts/start_game.py
@@ -158,7 +95,7 @@ For information on how to play the game please check out the [wiki](https://gith
 
 ### Building
 
-For development, it is recommended that you use `cmake` instead of `pip`:
+For development, it is recommended that you use `cmake` instead of `pip` or the installation script:
 
 ```bash
 cmake -B build -G Ninja -DCMAKE_INSTALL_PREFIX=.
@@ -192,7 +129,7 @@ export PYTHONPATH=$PWD
     ```
 
 > [!NOTE]
-> The C++ tests require you build using `cmake` as described in the Development section.
+> The C++ tests require you build using `cmake` as described in the [Building](#building) section.
 
 ## Generative AI Disclaimer
 

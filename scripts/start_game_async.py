@@ -72,7 +72,7 @@ def start_game(args):
         ):
             # We keep track of the number of steps to handle pauses correctly.
             step = 0
-            while step < ppo.num_transitions_per_env:
+            while True:
                 frame_start = time.perf_counter()
                 env.game.process_input()
                 state = env.game.get_game_state()
@@ -107,13 +107,15 @@ def start_game(args):
 
                 step += 1
 
+                # We only want to update the policy once we have collected enough data.
+                if step >= ppo.num_transitions_per_env:
+                    if ppo.async_update(obs.to(device)):
+                        step = 0
+
                 elapsed_time = time.perf_counter() - frame_start
                 sleep_time = TARGET_FRAME_TIME - elapsed_time
                 if sleep_time > 0:
                     time.sleep(sleep_time)
-
-            if step >= ppo.num_transitions_per_env:
-                ppo.async_update(obs.to(device))
 
     save_dir = "checkpoints"
     os.makedirs(save_dir, exist_ok=True)

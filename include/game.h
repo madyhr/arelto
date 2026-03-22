@@ -53,14 +53,16 @@ class Game {
   float time_ = 0.0f;
   float accumulator_step_;
   GameState previous_game_state_ = in_start_screen;
+  bool is_mouse_left_active_ = false;
+  bool is_mouse_right_active_ = false;
 
   static volatile std::sig_atomic_t stop_request_;
   bool InitializeCamera();
   void CheckGameStateRules();
   void StepGamePhysics();
   Vector2D GetCursorPositionWorld();
-  void ProcessPlayerInput(uint32_t mouse_state);
-  void ProcessLevelUpInput(uint32_t mouse_state);
+  void ProcessPlayerInput();
+  void ProcessLevelUpInput(const SDL_Event& e);
   void ProcessSettingsMenuInput(uint32_t mouse_state);
   void ProcessSettingsMenuEvent(const SDL_Event& e);
   void ProcessQuitConfirmEvent(const SDL_Event& e);

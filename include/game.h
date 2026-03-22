@@ -11,6 +11,7 @@
 #include "action_manager.h"
 #include "audio_manager.h"
 #include "entity_manager.h"
+#include "items.h"
 #include "observation_manager.h"
 #include "physics_manager.h"
 #include "progression_manager.h"
@@ -55,6 +56,7 @@ class Game {
   GameState previous_game_state_ = in_start_screen;
   bool is_mouse_left_active_ = false;
   bool is_mouse_right_active_ = false;
+  ItemArchive item_archive_;
 
   static volatile std::sig_atomic_t stop_request_;
   bool InitializeCamera();
@@ -63,6 +65,7 @@ class Game {
   Vector2D GetCursorPositionWorld();
   void ProcessPlayerInput();
   void ProcessLevelUpInput(const SDL_Event& e);
+  void ProcessItemSelectionInput(const SDL_Event& e);
   void ProcessSettingsMenuInput(uint32_t mouse_state);
   void ProcessSettingsMenuEvent(const SDL_Event& e);
   void ProcessQuitConfirmEvent(const SDL_Event& e);

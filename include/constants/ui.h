@@ -146,6 +146,23 @@ constexpr int kCheckboxSpriteHeight = 526;
 constexpr int kCheckmarkSpriteWidth = 193;
 constexpr int kCheckmarkSpriteHeight = 164;
 
+// Item selection menu card
+constexpr int kItemIconSize = 300;
+constexpr int kItemCardWidth = 600;
+constexpr int kItemCardHeight = 900;
+constexpr int kItemCardGap = 150;
+constexpr int kItemCardIconOffsetY = 160;
+constexpr int kItemCardIconSize = 80;
+constexpr int kItemCardNameOffsetY = 475;
+constexpr int kItemCardNameOffsetX = 100;
+constexpr int kItemCardDescOffsetY = 600;
+constexpr int kItemCardDescOffsetX = 70;
+constexpr int kItemCardStatsOffsetY = 648;
+constexpr int kItemCardStatsOffsetX = 70;
+constexpr int kItemCardButtonOffsetY = 720;  // from card top
+constexpr int kItemCardButtonWidth = 200;
+constexpr int kItemCardButtonHeight = 50;
+
 }  // namespace arelto
 
 #endif

@@ -1,8 +1,10 @@
 // include/types.h
 #ifndef RL2_TYPES_H_
 #define RL2_TYPES_H_
+#include <pybind11/attr.h>
 #include <cstdint>
 #include <numbers>
+#include <vector>
 #include "constants/map.h"
 #include "utils.h"
 
@@ -184,15 +186,80 @@ struct Collider {
   Size2D size;
 };
 
+enum class ModifierType { flat = 0, percent_add, percent_mult };
+
+struct Modifier {
+  float value;
+  ModifierType type;
+  void* source;
+};
+
+class Stat {
+
+ public:
+  float GetValue() const {
+
+    if (!is_dirty_) {
+      return cached_value_;
+    }
+
+    float flat_sum = 0;
+    float percent_add_sum = 0;
+    float percent_mult_prod = 1.0f;
+
+    for (const Modifier& mod : modifiers_) {
+      switch (mod.type) {
+        case ModifierType::flat:
+          flat_sum += mod.value;
+          break;
+        case ModifierType::percent_add:
+          percent_add_sum += mod.value;
+          break;
+        case ModifierType::percent_mult:
+          percent_mult_prod *= (1.0f + mod.value);
+          break;
+      }
+    };
+
+    cached_value_ = ((base_value_ + flat_sum) * (1.0f + percent_add_sum) *
+                     percent_mult_prod);
+    is_dirty_ = false;
+
+    return cached_value_;
+  };
+
+  int GetValueCeil() const { return static_cast<int>(std::ceil(GetValue())); }
+  int GetValueFloor() const { return static_cast<int>(std::floor(GetValue())); }
+
+  void SetBaseValue(float value) {
+    base_value_ = value;
+    is_dirty_ = true;
+  }
+
+  float GetBaseValue() { return base_value_; }
+
+  void AddModifier(const Modifier& mod) {
+    modifiers_.push_back(mod);
+    is_dirty_ = true;
+  }
+
+ private:
+  mutable float base_value_;
+  std::vector<Modifier> modifiers_;
+  mutable float cached_value_;
+  mutable bool is_dirty_;
+};
+
 struct Stats {
   int level;
   int exp_points;
-  int exp_points_required;
+  Stat exp_points_required;
   int health;
-  int max_health;
-  float movement_speed;
+  Stat max_health;
+  Stat movement_speed;
   Size2D sprite_size;
-  float inv_mass;
+  Stat inv_mass;
+  Stat armor;
 };
 
 struct ProjectileData {
@@ -277,6 +344,7 @@ enum GameState : int {
   in_level_up,
   in_quit_confirm,
   in_chest_opening,
+  in_item_selection,
 };
 
 enum Rarity : int { common, rare, epic, legendary, Count };
@@ -296,7 +364,7 @@ struct ChestData {
   Size2D sprite_size;
 };
 
-enum class UpgradeType : int { damage = 0, speed, cooldown, size, count };
+enum class SpellUpgradeType : int { damage = 0, speed, cooldown, size, count };
 
 }  // namespace arelto
 #endif

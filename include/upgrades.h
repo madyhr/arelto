@@ -2,6 +2,7 @@
 #define RL2_UPGRADES_H_
 
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include <string>
 #include "abilities.h"
@@ -16,17 +17,17 @@ class Upgrade {
 
   virtual void Apply(Player& player) = 0;
   virtual std::string GetDescription() const = 0;
-  virtual UpgradeType GetType() const = 0;
-  virtual SpellId GetSpellID() const = 0;
-  virtual std::string GetSpellName() const = 0;
+  virtual std::string GetName() const = 0;
   virtual std::string GetOldValueString() const = 0;
   virtual std::string GetNewValueString() const = 0;
 };
 
+using UpgradeOptions = std::vector<std::unique_ptr<Upgrade>>;
+
 class SpellStatUpgrade : public Upgrade {
  public:
-  SpellStatUpgrade(SpellId spell_id, std::string spell_name, UpgradeType type,
-                   float current_value, float new_value)
+  SpellStatUpgrade(SpellId spell_id, std::string spell_name,
+                   SpellUpgradeType type, float current_value, float new_value)
       : spell_id_(spell_id),
         spell_name_(spell_name),
         type_(type),
@@ -46,23 +47,23 @@ class SpellStatUpgrade : public Upgrade {
 
   std::string GetDescription() const override {
     switch (type_) {
-      case UpgradeType::damage:
+      case SpellUpgradeType::damage:
         return "Increase Damage";
-      case UpgradeType::speed:
+      case SpellUpgradeType::speed:
         return "Increase Speed";
-      case UpgradeType::cooldown:
+      case SpellUpgradeType::cooldown:
         return "Decrease Cooldown";
-      case UpgradeType::size:
+      case SpellUpgradeType::size:
         return "Increase Size";
       default:
         return "Unknown Upgrade";
     }
   }
 
-  UpgradeType GetType() const override { return type_; }
-  SpellId GetSpellID() const override { return spell_id_; }
+  SpellUpgradeType GetType() const { return type_; }
+  SpellId GetSpellID() const { return spell_id_; }
 
-  std::string GetSpellName() const override { return spell_name_; }
+  std::string GetName() const override { return spell_name_; }
 
   std::string GetOldValueString() const override {
     std::stringstream ss;
@@ -79,7 +80,7 @@ class SpellStatUpgrade : public Upgrade {
  private:
   SpellId spell_id_;
   std::string spell_name_;
-  UpgradeType type_;
+  SpellUpgradeType type_;
   float current_value_;
   float new_value_;
 };

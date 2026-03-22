@@ -217,13 +217,15 @@ void CollisionManager::ResolvePlayerEnemyCollision(const CollisionPair& cp,
 
   std::array<Vector2D, 2> displacement_vectors = GetDisplacementVectors(
       {player_aabb, enemy_aabb}, {player_centroid, enemy_centroid},
-      {player.stats_.inv_mass, enemy.inv_mass[enemy_idx]});
+      {player.stats_.inv_mass.GetValue(), enemy.inv_mass[enemy_idx]});
 
   player.position_ += displacement_vectors[0];
   enemy.position[enemy_idx] += displacement_vectors[1];
 
   if (enemy.attack_cooldown[enemy_idx] < 0.0f) {
-    player.stats_.health -= enemy.attack_damage[enemy_idx];
+    player.stats_.health -=
+        std::max(0, enemy.attack_damage[enemy_idx] -
+                        static_cast<int>(player.stats_.armor.GetValue()));
     enemy.damage_dealt_sim_step[enemy_idx] += enemy.attack_damage[enemy_idx];
     enemy.attack_cooldown[enemy_idx] = kEnemyAttackCooldown;
   }

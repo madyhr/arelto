@@ -4,13 +4,16 @@
 
 namespace arelto {
 
-constexpr int kNumUpgradeOptions = 3;
+constexpr int kNumSpellUpgradeOptions = 3;
 constexpr float kDamageUpgradeValue = 5.0f;
 constexpr float kSizeUpgradeValue = 5.0f;
 constexpr float kCooldownUpgradeValue = 0.1;
 constexpr float kSpeedUpgradeValue = 100.0f;
 constexpr float kSizeUpgradeFactor = 1.2f;
 
+constexpr int kNumItemOptions = 1;
+
+constexpr int kArmorUpgradeValue = 1;
 }  // namespace arelto
 
 #endif

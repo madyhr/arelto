@@ -16,6 +16,7 @@
 #include "physics_manager.h"
 #include "render_manager.h"
 #include "types.h"
+#include "ui/widgets.h"
 #include "ui_manager.h"
 
 namespace arelto {
@@ -52,6 +53,7 @@ bool Game::Initialize() {
   }
 
   scene_.Reset();
+  scene_.item_archive = &item_archive_;
 
   if (!(Game::InitializeCamera())) {
     return false;
@@ -113,6 +115,17 @@ void Game::CheckGameStateRules() {
     SetGameState(in_level_up);
     progression_manager_.GenerateLevelUpOptions(scene_);
     render_manager_.GetUIManager().BuildLevelUpMenu(scene_.level_up_options);
+  } else if (scene_.chest_opened) {
+    scene_.chest_opened = false;
+    SetGameState(in_chest_opening);
+    auto* root = render_manager_.GetUIManager().GetChestOpeningRoot();
+    if (root) {
+      auto* anim = root->FindWidgetAs<UIAnimation>("chest_animated_image");
+      if (anim) {
+        anim->Reset();
+        anim->Play();
+      }
+    }
   }
 
   if (scene_.chest_opened) {
@@ -233,13 +246,18 @@ void Game::RunGameLoop() {
           auto* anim =
               chest_root->FindWidgetAs<UIAnimation>("chest_animated_image");
           if (anim && anim->IsFinished()) {
-            SetGameState(in_level_up);
-            progression_manager_.GenerateLevelUpOptions(scene_);
-            render_manager_.GetUIManager().BuildLevelUpMenu(
-                scene_.level_up_options);
+            SetGameState(in_item_selection);
+            progression_manager_.GenerateItemOptions(scene_);
+            render_manager_.GetUIManager().BuildItemMenu(scene_.item_options);
           }
         }
         render_manager_.Render(scene_, 0.0f, game_status_, time_, game_state_);
+        break;
+      }
+      case in_item_selection: {
+        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
+        current_time = new_time;
+        RenderGame(0.0f);
         break;
       }
       default:
@@ -271,10 +289,9 @@ void Game::StepGame(float dt) {
       auto* anim =
           chest_root->FindWidgetAs<UIAnimation>("chest_animated_image");
       if (anim && anim->IsFinished()) {
-        SetGameState(in_level_up);
-        progression_manager_.GenerateLevelUpOptions(scene_);
-        render_manager_.GetUIManager().BuildLevelUpMenu(
-            scene_.level_up_options);
+        SetGameState(in_item_selection);
+        progression_manager_.GenerateItemOptions(scene_);
+        render_manager_.GetUIManager().BuildItemMenu(scene_.item_options);
       }
     }
   }
@@ -328,6 +345,10 @@ void Game::ProcessInput() {
     }
     if (game_state_ == in_chest_opening) {
       ProcessChestOpeningInput(e);
+      continue;
+    }
+    if (game_state_ == in_item_selection) {
+      ProcessItemSelectionInput(e);
       continue;
     }
 
@@ -579,11 +600,11 @@ void Game::ProcessLevelUpInput(const SDL_Event& e) {
 
     UIManager& ui = render_manager_.GetUIManager();
 
-    for (int i = 0; i < kNumUpgradeOptions; ++i) {
+    for (int i = 0; i < kNumSpellUpgradeOptions; ++i) {
       std::string btn_id = "select_button_" + std::to_string(i);
 
-      if (IsMouseOverWidget(ui.GetRootWidget(), btn_id, mouse_x, mouse_y)) {
-        progression_manager_.ApplyUpgrade(scene_, i);
+      if (IsMouseOverWidget(ui.GetLevelUpRoot(), btn_id, mouse_x, mouse_y)) {
+        progression_manager_.ApplyLevelUpUpgrade(scene_, i);
         UIWidget* menu = ui.GetLevelUpRoot();
         if (menu) {
           menu->SetVisible(false);
@@ -602,6 +623,38 @@ void Game::ProcessChestOpeningInput(const SDL_Event& e) {
     return;
   }
   return;
+}
+
+void Game::ProcessItemSelectionInput(const SDL_Event& e) {
+  if (e.type == SDL_KEYDOWN) {
+    switch (e.key.keysym.sym) {
+      case SDLK_q:
+        SetGameState(in_quit_confirm);
+        break;
+      default:
+        break;
+    }
+  } else if (e.type == SDL_MOUSEBUTTONDOWN &&
+             e.button.button == SDL_BUTTON_LEFT) {
+    int mouse_x = e.button.x;
+    int mouse_y = e.button.y;
+
+    UIManager& ui = render_manager_.GetUIManager();
+
+    for (int i = 0; i < kNumItemOptions; ++i) {
+      std::string btn_id = "select_button_" + std::to_string(i);
+
+      if (IsMouseOverWidget(ui.GetItemMenuRoot(), btn_id, mouse_x, mouse_y)) {
+        progression_manager_.ApplyItemUpgrade(scene_, i);
+        UIWidget* menu = ui.GetItemMenuRoot();
+        if (menu) {
+          menu->SetVisible(false);
+        }
+        SetGameState(is_running);
+        return;
+      }
+    }
+  }
 }
 
 void Game::CachePreviousState() {

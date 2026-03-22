@@ -50,18 +50,18 @@ class BaseProjectileSpell : public BaseSpell {
   virtual void SetSpriteSize(Size2D size) { sprite_size_ = size; };
   std::string GetName() const { return name_; };
 
-  virtual void ModifyStat(UpgradeType type, float value) {
+  virtual void ModifyStat(SpellUpgradeType type, float value) {
     switch (type) {
-      case UpgradeType::damage:
+      case SpellUpgradeType::damage:
         SetDamage(static_cast<uint32_t>(value));
         break;
-      case UpgradeType::speed:
+      case SpellUpgradeType::speed:
         SetSpeed(value);
         break;
-      case UpgradeType::cooldown:
+      case SpellUpgradeType::cooldown:
         SetCooldown(value);
         break;
-      case UpgradeType::size: {
+      case SpellUpgradeType::size: {
         float current_w = static_cast<float>(GetSpriteSize().width);
         float current_h = static_cast<float>(GetSpriteSize().height);
         if (current_w > 0) {

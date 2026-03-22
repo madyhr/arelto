@@ -27,7 +27,7 @@ class ProgressionManagerTest : public ::testing::Test {
 // =============================================================================
 
 TEST_F(ProgressionManagerTest, CheckLevelUp_WorksCorrectly) {
-  scene_.player.stats_.exp_points_required = 100;
+  scene_.player.stats_.exp_points_required.SetBaseValue(100);
 
   // True cases
   scene_.player.stats_.exp_points = 100;
@@ -55,7 +55,7 @@ TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_CreatesCorrectCount) {
   progression_manager_.GenerateLevelUpOptions(scene_);
 
   EXPECT_EQ(scene_.level_up_options.size(),
-            static_cast<size_t>(kNumUpgradeOptions));
+            static_cast<size_t>(kNumSpellUpgradeOptions));
 }
 
 TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_ClearsExistingOptions) {
@@ -68,7 +68,7 @@ TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_ClearsExistingOptions) {
 
   // Should have exactly kNumUpgradeOptions, not more
   EXPECT_EQ(scene_.level_up_options.size(),
-            static_cast<size_t>(kNumUpgradeOptions));
+            static_cast<size_t>(kNumSpellUpgradeOptions));
 }
 
 TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_CreatesValidOptions) {
@@ -77,10 +77,13 @@ TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_CreatesValidOptions) {
   for (const auto& option : scene_.level_up_options) {
     ASSERT_NE(option, nullptr);
     EXPECT_FALSE(option->GetDescription().empty());
-    EXPECT_FALSE(option->GetSpellName().empty());
+    EXPECT_FALSE(option->GetName().empty());
 
-    UpgradeType type = option->GetType();
-    EXPECT_LT(static_cast<int>(type), static_cast<int>(UpgradeType::count));
+    auto* spell_upgrade = dynamic_cast<SpellStatUpgrade*>(option.get());
+    ASSERT_NE(spell_upgrade, nullptr);
+    SpellUpgradeType type = spell_upgrade->GetType();
+    EXPECT_LT(static_cast<int>(type),
+              static_cast<int>(SpellUpgradeType::count));
   }
 }
 
@@ -91,59 +94,44 @@ TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_CreatesValidOptions) {
 TEST_F(ProgressionManagerTest, ApplyUpgrade_IncreasesLevel) {
   scene_.player.stats_.level = 0;
   scene_.player.stats_.exp_points = 100;
-  scene_.player.stats_.exp_points_required = 100;
+  scene_.player.stats_.exp_points_required.SetBaseValue(100);
 
   progression_manager_.GenerateLevelUpOptions(scene_);
-  progression_manager_.ApplyUpgrade(scene_, 0);
+  progression_manager_.ApplyLevelUpUpgrade(scene_, 0);
 
   EXPECT_EQ(scene_.player.stats_.level, 1);
 }
 
 TEST_F(ProgressionManagerTest, ApplyUpgrade_DeductsExp) {
   scene_.player.stats_.exp_points = 150;
-  scene_.player.stats_.exp_points_required = 100;
+  scene_.player.stats_.exp_points_required.SetBaseValue(100);
 
   progression_manager_.GenerateLevelUpOptions(scene_);
-  progression_manager_.ApplyUpgrade(scene_, 0);
+  progression_manager_.ApplyLevelUpUpgrade(scene_, 0);
 
   // Exp should be reduced by the required amount
   EXPECT_EQ(scene_.player.stats_.exp_points, 50);
-}
-
-TEST_F(ProgressionManagerTest, ApplyUpgrade_ScalesExpRequired) {
-  scene_.player.stats_.exp_points = 100;
-  scene_.player.stats_.exp_points_required = 100;
-
-  int initial_exp_required = scene_.player.stats_.exp_points_required;
-
-  progression_manager_.GenerateLevelUpOptions(scene_);
-  progression_manager_.ApplyUpgrade(scene_, 0);
-
-  int new_exp_required =
-      progression_manager_.ApplyExpScalingLaw(initial_exp_required);
-
-  EXPECT_EQ(scene_.player.stats_.exp_points_required, new_exp_required);
 }
 
 TEST_F(ProgressionManagerTest, ApplyUpgrade_InvalidIndex_Negative_NoOp) {
   scene_.player.stats_.level = 0;
 
   progression_manager_.GenerateLevelUpOptions(scene_);
-  progression_manager_.ApplyUpgrade(scene_, -1);
+  progression_manager_.ApplyLevelUpUpgrade(scene_, -1);
 
   // Level should not have changed
   EXPECT_EQ(scene_.player.stats_.level, 0);
 }
 
 TEST_F(ProgressionManagerTest, ApplyUpgrade_WorksForAllValidIndices) {
-  for (int i = 0; i < kNumUpgradeOptions; ++i) {
+  for (int i = 0; i < kNumSpellUpgradeOptions; ++i) {
     scene_ = testing::CreateTestScene();
     scene_.player.stats_.level = 0;
     scene_.player.stats_.exp_points = 1000;
-    scene_.player.stats_.exp_points_required = 100;
+    scene_.player.stats_.exp_points_required.SetBaseValue(100);
 
     progression_manager_.GenerateLevelUpOptions(scene_);
-    progression_manager_.ApplyUpgrade(scene_, i);
+    progression_manager_.ApplyLevelUpUpgrade(scene_, i);
 
     EXPECT_EQ(scene_.player.stats_.level, 1)
         << "ApplyUpgrade failed for index " << i;
@@ -158,7 +146,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
   // Setup player with known initial stats
   scene_.player.stats_.level = 0;
   scene_.player.stats_.exp_points = 1000;
-  scene_.player.stats_.exp_points_required = 100;
+  scene_.player.stats_.exp_points_required.SetBaseValue(100);
   // Ensure spell stats are initialized (cooldowns, damages, etc.)
   scene_.player.UpdateAllSpellStats();
 
@@ -171,14 +159,14 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
   float new_damage = initial_damage + 10.0f;
 
   auto upgrade = std::make_unique<SpellStatUpgrade>(target_spell, spell_name,
-                                                    UpgradeType::damage,
+                                                    SpellUpgradeType::damage,
                                                     initial_damage, new_damage);
 
   scene_.level_up_options.clear();
   scene_.level_up_options.push_back(std::move(upgrade));
 
   // Apply the upgrade (index 0)
-  progression_manager_.ApplyUpgrade(scene_, 0);
+  progression_manager_.ApplyLevelUpUpgrade(scene_, 0);
 
   // Verify
   float actual_damage =

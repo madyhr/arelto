@@ -2,12 +2,12 @@
 #ifndef RL2_SCENE_H_
 #define RL2_SCENE_H_
 
-#include <memory>
 #include "constants/chest.h"
 #include "constants/enemy.h"
 #include "constants/exp_gem.h"
 #include "constants/player.h"
 #include "entity.h"
+#include "items.h"
 #include "random.h"
 #include "ray_caster.h"
 #include "types.h"
@@ -24,7 +24,9 @@ struct Scene {
   Chest chest;
   bool chest_opened = false;
   FixedMap<kOccupancyMapWidth, kOccupancyMapHeight> occupancy_map;
-  std::vector<std::unique_ptr<Upgrade>> level_up_options;
+  UpgradeOptions level_up_options;
+  UpgradeOptions item_options;
+  ItemArchive* item_archive;
 
   void Reset() {
 
@@ -33,13 +35,15 @@ struct Scene {
         Collider{{kPlayerColliderOffsetX, kPlayerColliderOffsetY},
                  {kPlayerColliderWidth, kPlayerColliderHeight}};
     player.stats_.sprite_size = Size2D{kPlayerSpriteWidth, kPlayerSpriteHeight};
-    player.stats_.max_health = kPlayerInitMaxHealth;
-    player.stats_.health = player.stats_.max_health;
-    player.stats_.inv_mass = kPlayerInvMass;
-    player.stats_.movement_speed = kPlayerSpeed;
+    player.stats_.max_health.SetBaseValue(kPlayerInitMaxHealth);
+    player.stats_.health =
+        static_cast<int>(player.stats_.max_health.GetValue());
+    player.stats_.inv_mass.SetBaseValue(kPlayerInvMass);
+    player.stats_.movement_speed.SetBaseValue(kPlayerSpeed);
     player.stats_.level = 0;
     player.stats_.exp_points = 0;
-    player.stats_.exp_points_required = kPlayerInitialExpRequirement;
+    player.stats_.exp_points_required.SetBaseValue(
+        kPlayerInitialExpRequirement);
     player.position_ = Vector2D{kPlayerInitX, kPlayerInitY};
     player.prev_position_ = player.position_;
     player.last_horizontal_velocity_ = 0.0f;

@@ -162,6 +162,13 @@ int UILabel::GetCenterWidth() const {
   return center_width_;
 }
 
+void UILabel::SetWrapWidth(int width) {
+  wrap_width_ = width;
+}
+int UILabel::GetWrapWidth() const {
+  return wrap_width_;
+}
+
 WidgetType UILabel::GetWidgetType() const {
   return WidgetType::Label;
 }

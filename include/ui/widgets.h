@@ -103,6 +103,10 @@ public:
   void SetCenterWidth(int width);
   int GetCenterWidth() const;
 
+  // If > 0, text wraps at this pixel width (multi-line).
+  void SetWrapWidth(int width);
+  int GetWrapWidth() const;
+
   WidgetType GetWidgetType() const override;
 
 private:
@@ -115,6 +119,7 @@ private:
   int digit_sprite_width_ = 0;
   int digit_sprite_height_ = 0;
   int center_width_ = 0;
+  int wrap_width_ = 0;
 };
 
 // UIButton: a texture with normal/hover states and an optional label + click

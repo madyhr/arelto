@@ -131,6 +131,8 @@ bool RenderManager::Initialize(bool is_headless) {
       TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeLarge);
   resources_.ui_resources.ui_font_huge =
       TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeHuge);
+  resources_.item_textures.push_back(IMG_LoadTexture(
+      resources_.renderer, "assets/textures/elia_skewersafe_armorplate.png"));
 
   if (resources_.ui_resources.ui_font_medium == nullptr ||
       resources_.ui_resources.ui_font_large == nullptr ||
@@ -159,6 +161,9 @@ bool RenderManager::Initialize(bool is_headless) {
       std::any_of(
           resources_.projectile_textures.begin(),
           resources_.projectile_textures.end(),
+          [](SDL_Texture* sdl_texture) { return sdl_texture == nullptr; }) ||
+      std::any_of(
+          resources_.item_textures.begin(), resources_.item_textures.end(),
           [](SDL_Texture* sdl_texture) { return sdl_texture == nullptr; })) {
     std::cerr << "One or more textures could not be loaded: " << SDL_GetError()
               << std::endl;
@@ -167,6 +172,7 @@ bool RenderManager::Initialize(bool is_headless) {
 
   // Copy projectile textures into UI resources for level-up card icons
   resources_.ui_resources.projectile_textures = resources_.projectile_textures;
+  resources_.ui_resources.item_textures = resources_.item_textures;
   resources_.ui_resources.chest_texture = resources_.chest_texture;
 
   ui_manager_.SetupUI(resources_.ui_resources);
@@ -243,6 +249,8 @@ void RenderManager::Render(const Scene& scene, float alpha,
       RenderSettingsMenuState();
     } else if (game_state == in_level_up) {
       RenderLevelUp();
+    } else if (game_state == in_item_selection) {
+      RenderItemSelection();
     } else if (game_state == in_quit_confirm) {
       RenderQuitConfirmMenu();
     } else if (game_state == in_chest_opening) {
@@ -882,7 +890,18 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       auto* img = static_cast<UIImage*>(widget);
       if (img->GetTexture()) {
         SDL_Rect src = img->GetSrcRect();
-        SDL_RenderCopy(resources_.renderer, img->GetTexture(), &src, &bounds);
+        SDL_Rect* src_ptr = (src.w > 0 && src.h > 0) ? &src : nullptr;
+        SDL_RenderCopy(resources_.renderer, img->GetTexture(), src_ptr,
+                       &bounds);
+      }
+      break;
+    }
+    case WidgetType::Animation: {
+      auto* anim_img = static_cast<UIAnimation*>(widget);
+      if (anim_img->GetTexture()) {
+        SDL_Rect src = anim_img->GetCurrentSrcRect();
+        SDL_RenderCopy(resources_.renderer, anim_img->GetTexture(), &src,
+                       &bounds);
       }
       break;
     }
@@ -908,7 +927,7 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
                           char_size);
       } else if (lbl->GetFont()) {
         RenderText(lbl->GetText(), bounds.x, bounds.y, lbl->GetColor(),
-                   lbl->GetFont(), lbl->GetCenterWidth());
+                   lbl->GetFont(), lbl->GetCenterWidth(), lbl->GetWrapWidth());
       }
       break;
     }
@@ -1117,6 +1136,17 @@ void RenderManager::RenderLevelUp() {
   }
 }
 
+void RenderManager::RenderItemSelection() {
+  ui_manager_.UpdateItemMenu();
+
+  UIWidget* item_menu = ui_manager_.GetItemMenuRoot();
+  if (item_menu) {
+    item_menu->SetVisible(true);
+    RenderWidgetRecursive(item_menu);
+    item_menu->SetVisible(false);
+  }
+}
+
 void RenderManager::RenderQuitConfirmMenu() {
   ui_manager_.UpdateQuitConfirmMenu();
 
@@ -1134,8 +1164,17 @@ void RenderManager::RenderQuitConfirmMenu() {
 // the text along that center_width.
 void RenderManager::RenderText(const std::string& text, int x, int y,
                                SDL_Color color, TTF_Font* font,
-                               int center_width) {
-  SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), color);
+                               int center_width, int wrap_width) {
+  if (wrap_width > 0) {
+    TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_CENTER);
+  }
+  SDL_Surface* surface =
+      wrap_width > 0 ? TTF_RenderText_Blended_Wrapped(font, text.c_str(), color,
+                                                      wrap_width)
+                     : TTF_RenderText_Blended(font, text.c_str(), color);
+  if (wrap_width > 0) {
+    TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_LEFT);
+  }
   SDL_Texture* texture =
       SDL_CreateTextureFromSurface(resources_.renderer, surface);
 

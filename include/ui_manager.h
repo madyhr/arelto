@@ -8,9 +8,8 @@
 #include <string>
 #include <vector>
 #include "scene.h"
-#include "ui/containers.h"
 #include "ui/widget.h"
-#include "ui/widgets.h"
+#include "upgrades.h"
 
 namespace arelto {
 
@@ -34,6 +33,7 @@ struct UIResources {
   SDL_Texture* checkmark_texture = nullptr;
   SDL_Texture* chest_texture = nullptr;
   std::vector<SDL_Texture*> projectile_textures;
+  std::vector<SDL_Texture*> item_textures;
 };
 
 class UIManager {
@@ -42,17 +42,20 @@ class UIManager {
   void Update(const Scene& scene, float time);
   void UpdateSettingsMenu(float volume, bool is_muted,
                           const GameStatus& game_status);
-  void BuildLevelUpMenu(const std::vector<std::unique_ptr<Upgrade>>& options);
+  void BuildLevelUpMenu(const UpgradeOptions& options);
   void UpdateLevelUpMenu();
   void BuildStartScreen();
   void UpdateStartScreen();
   void BuildGameOverScreen();
   void UpdateQuitConfirmMenu();
   void BuildChestOpeningScreen();
+  void BuildItemMenu(const UpgradeOptions& options);
+  void UpdateItemMenu();
 
   UIWidget* GetRootWidget();
   UIWidget* GetSettingsRoot();
   UIWidget* GetLevelUpRoot();
+  UIWidget* GetItemMenuRoot();
   UIWidget* GetStartScreenRoot();
   UIWidget* GetGameOverScreenRoot();
   UIWidget* GetQuitConfirmRoot();
@@ -73,7 +76,10 @@ class UIManager {
   void BuildHUD();
   void BuildSettingsMenu();
   void BuildQuitConfirmMenu();
-  void BuildLevelUpCard(UIWidget* parent, int index, const Upgrade& upgrade);
+  void BuildLevelUpCard(UIWidget* parent, int index,
+                        const SpellStatUpgrade& upgrade);
+  void BuildItemCard(UIWidget* parent, int index,
+                     const ItemStatUpgrade& upgrade);
 };
 
 }  // namespace arelto

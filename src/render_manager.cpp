@@ -905,6 +905,15 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       }
       break;
     }
+    case WidgetType::Animation: {
+      auto* anim_img = static_cast<UIAnimation*>(widget);
+      if (anim_img->GetTexture()) {
+        SDL_Rect src = anim_img->GetCurrentSrcRect();
+        SDL_RenderCopy(resources_.renderer, anim_img->GetTexture(), &src,
+                       &bounds);
+      }
+      break;
+    }
 
     case WidgetType::Label: {
       auto* lbl = static_cast<UILabel*>(widget);

@@ -127,6 +127,19 @@ void Game::CheckGameStateRules() {
       }
     }
   }
+
+  if (scene_.chest_opened) {
+    scene_.chest_opened = false;
+    SetGameState(in_chest_opening);
+    auto* root = render_manager_.GetUIManager().GetChestOpeningRoot();
+    if (root) {
+      auto* anim = root->FindWidgetAs<UIAnimation>("chest_animated_image");
+      if (anim) {
+        anim->Reset();
+        anim->Play();
+      }
+    }
+  }
 }
 
 void Game::RenderGame(float alpha) {

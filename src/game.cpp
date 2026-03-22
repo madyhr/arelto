@@ -114,6 +114,19 @@ void Game::CheckGameStateRules() {
     progression_manager_.GenerateLevelUpOptions(scene_);
     render_manager_.GetUIManager().BuildLevelUpMenu(scene_.level_up_options);
   }
+
+  if (scene_.chest_opened) {
+    scene_.chest_opened = false;
+    SetGameState(in_chest_opening);
+    auto* root = render_manager_.GetUIManager().GetChestOpeningRoot();
+    if (root) {
+      auto* anim = root->FindWidgetAs<UIAnimation>("chest_animated_image");
+      if (anim) {
+        anim->Reset();
+        anim->Play();
+      }
+    }
+  }
 }
 
 void Game::RenderGame(float alpha) {
@@ -165,6 +178,7 @@ void Game::RunGameLoop() {
         }
 
         scene_.SpawnExpGem();
+        scene_.SpawnChest();
         RespawnEnemy(scene_.enemy, scene_.player);
         RenderGame(alpha);
         game_status_.frame_stats.print_fps_running_average(frame_time);
@@ -208,18 +222,26 @@ void Game::RunGameLoop() {
         RenderGame(0.0f);
         break;
       }
-
-      case in_quit_confirm: {
+      case in_chest_opening: {
         float new_time = (float)(SDL_GetTicks64() / 1000.0f);
+        float dt = new_time - current_time;
         current_time = new_time;
 
-        if (game_status_.is_headless) {
-          break;
+        auto* chest_root = render_manager_.GetUIManager().GetChestOpeningRoot();
+        if (chest_root) {
+          chest_root->Update(dt);
+          auto* anim =
+              chest_root->FindWidgetAs<UIAnimation>("chest_animated_image");
+          if (anim && anim->IsFinished()) {
+            SetGameState(in_level_up);
+            progression_manager_.GenerateLevelUpOptions(scene_);
+            render_manager_.GetUIManager().BuildLevelUpMenu(
+                scene_.level_up_options);
+          }
         }
-        RenderGame(0.0f);
+        render_manager_.Render(scene_, 0.0f, game_status_, time_, game_state_);
         break;
       }
-
       default:
         break;
     }
@@ -227,19 +249,35 @@ void Game::RunGameLoop() {
 };
 
 void Game::StepGame(float dt) {
-  accumulator_step_ += dt;
+  if (game_state_ == is_running) {
+    accumulator_step_ += dt;
 
-  while (accumulator_step_ >= physics_manager_.GetPhysicsDt()) {
-    StepGamePhysics();
-    accumulator_step_ -= physics_manager_.GetPhysicsDt();
+    while (accumulator_step_ >= physics_manager_.GetPhysicsDt()) {
+      StepGamePhysics();
+      accumulator_step_ -= physics_manager_.GetPhysicsDt();
+    }
+
+    // The RespawnEnemy function is called outside of the accumulator loop to
+    // make sure that an enemy stays dead between calls of StepGame(). This
+    // could otherwise corrupt the termination signals if the enemy died,
+    // respawned and died again in the same accumulator loop.
+    scene_.SpawnExpGem();
+    scene_.SpawnChest();
+    RespawnEnemy(scene_.enemy, scene_.player);
+  } else if (game_state_ == in_chest_opening) {
+    auto* chest_root = render_manager_.GetUIManager().GetChestOpeningRoot();
+    if (chest_root) {
+      chest_root->Update(dt);
+      auto* anim =
+          chest_root->FindWidgetAs<UIAnimation>("chest_animated_image");
+      if (anim && anim->IsFinished()) {
+        SetGameState(in_level_up);
+        progression_manager_.GenerateLevelUpOptions(scene_);
+        render_manager_.GetUIManager().BuildLevelUpMenu(
+            scene_.level_up_options);
+      }
+    }
   }
-
-  // The RespawnEnemy function is called outside of the accumulator loop to
-  // make sure that an enemy stays dead between calls of StepGame(). This
-  // could otherwise corrupt the termination signals if the enemy died,
-  // respawned and died again in the same accumulator loop.
-  scene_.SpawnExpGem();
-  RespawnEnemy(scene_.enemy, scene_.player);
 };
 
 void Game::ProcessInput() {
@@ -286,6 +324,10 @@ void Game::ProcessInput() {
 
     if (game_state_ == in_level_up) {
       ProcessLevelUpInput(e);
+      continue;
+    }
+    if (game_state_ == in_chest_opening) {
+      ProcessChestOpeningInput(e);
       continue;
     }
 
@@ -553,6 +595,15 @@ void Game::ProcessLevelUpInput(const SDL_Event& e) {
   }
 }
 
+void Game::ProcessChestOpeningInput(const SDL_Event& e) {
+  // During the animation phase, only allow quitting
+  if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_q) {
+    SetGameState(in_quit_confirm);
+    return;
+  }
+  return;
+}
+
 void Game::CachePreviousState() {
   scene_.player.prev_position_ = scene_.player.position_;
 
@@ -566,6 +617,11 @@ void Game::CachePreviousState() {
   size_t num_proj = scene_.projectiles.GetNumProjectiles();
   for (size_t i = 0; i < num_proj; ++i) {
     scene_.projectiles.prev_position_[i] = scene_.projectiles.position_[i];
+  }
+
+  size_t num_chests = scene_.chest.GetNumChests();
+  for (size_t i = 0; i < num_chests; ++i) {
+    scene_.chest.prev_position_[i] = scene_.chest.position_[i];
   }
 
   render_manager_.camera_.prev_position_ = render_manager_.camera_.position_;

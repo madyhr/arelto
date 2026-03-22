@@ -27,6 +27,7 @@ enum class WidgetType {
   VBox,
   HBox,
   Image,
+  Animation,
   Label,
   Button,
   ProgressBar,
@@ -60,11 +61,11 @@ class UIWidget {
 
   SDL_Rect GetComputedBounds() const;
 
-  // Layout computation — resolves positions based on parent/children
+  // Layout computation that resolves positions based on parent/children.
   virtual void ComputeLayout(int parent_x, int parent_y, int parent_w,
                              int parent_h);
 
-  // Update — called each frame to propagate state changes
+  // Update the Widget. It is called each frame to propagate state changes.
   virtual void Update(float dt);
 
   virtual WidgetType GetWidgetType() const;

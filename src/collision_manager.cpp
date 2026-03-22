@@ -15,7 +15,8 @@ namespace arelto {
 void CollisionManager::HandleCollisionsSAP(Scene& scene) {
   int num_proj = scene.projectiles.GetNumProjectiles();
   int num_gem = scene.exp_gem.GetNumExpGems();
-  size_t total_entities = 1 + kNumEnemies + num_proj + num_gem;
+  int num_chest = scene.chest.GetNumChests();
+  size_t total_entities = 1 + kNumEnemies + num_proj + num_gem + num_chest;
 
   if (entity_aabb_.capacity() < total_entities) {
     entity_aabb_.reserve(total_entities * 2);
@@ -47,6 +48,12 @@ void CollisionManager::HandleCollisionsSAP(Scene& scene) {
     entity_aabb_.push_back(GetCollisionAABB(
         scene.exp_gem.position_[i] + scene.exp_gem.collider_[i].offset,
         scene.exp_gem.collider_[i].size, scene.exp_gem.entity_type_, i));
+  }
+
+  for (int i = 0; i < num_chest; ++i) {
+    entity_aabb_.push_back(GetCollisionAABB(
+        scene.chest.position_[i] + scene.chest.collider_[i].offset,
+        scene.chest.collider_[i].size, scene.chest.entity_type_, i));
   }
 
   std::sort(entity_aabb_.begin(), entity_aabb_.end(),
@@ -110,6 +117,9 @@ void CollisionManager::ResolveCollisionPairsSAP(Scene& scene) {
       case CollisionType::player_gem:
         ResolvePlayerGemCollision(cp, scene.player, scene.exp_gem);
         continue;
+      case CollisionType::player_chest:
+        ResolvePlayerChestCollision(cp, scene.chest, scene);
+        continue;
     }
   }
 };
@@ -127,6 +137,8 @@ CollisionType CollisionManager::GetCollisionType(const CollisionPair& cp) {
     return CollisionType::player_enemy;
   } else if (type_a == EntityType::player && type_b == EntityType::exp_gem) {
     return CollisionType::player_gem;
+  } else if (type_a == EntityType::player && type_b == EntityType::chest) {
+    return CollisionType::player_chest;
   } else if (type_a == EntityType::enemy && type_b == EntityType::enemy) {
     return CollisionType::enemy_enemy;
   } else if (type_a == EntityType::enemy && type_b == EntityType::projectile) {
@@ -240,6 +252,14 @@ void CollisionManager::ResolvePlayerGemCollision(const CollisionPair& cp,
 
   exp_gem.to_be_destroyed_.insert(gem_idx);
   player.stats_.exp_points += kExpGemValues[exp_gem.rarity_[gem_idx]];
+};
+
+void CollisionManager::ResolvePlayerChestCollision(const CollisionPair& cp,
+                                                   Chest& chest, Scene& scene) {
+  bool a_is_chest = cp.type_a == EntityType::chest;
+  int chest_idx = a_is_chest ? cp.index_a : cp.index_b;
+  chest.to_be_destroyed_.insert(chest_idx);
+  scene.chest_opened = true;
 };
 
 }  // namespace arelto

@@ -249,6 +249,29 @@ def clean_old_artifacts(console):
         console.print("[bold green]✓[/bold green] Workspace clean.")
 
 
+def generate_stubs(console):
+    """Generate a .pyi stub for arelto_py using pybind11-stubgen.
+    The .so must already be installed into rl/ before calling this."""
+    with console.status("[bold cyan]Generating type stubs...", spinner="bouncingBar"):
+        ret = run_command(
+            [
+                sys.executable,
+                "-m",
+                "pybind11_stubgen",
+                "rl.arelto_py",
+                "--output-dir",
+                ".",
+            ],
+            console=console,
+        )
+        if ret != 0:
+            console.print("[bold yellow]⚠ WARNING: Stub generation failed. ")
+        else:
+            console.print(
+                "[bold green]✓[/bold green] Type stubs generated ([cyan]rl/arelto_py.pyi[/cyan])."
+            )
+
+
 def install_package(console):
     with console.status("[bold cyan]Configuring CMake...", spinner="bouncingBar"):
         cmake_cmd = ["cmake", "-B", "build", "-G", "Ninja", "-DCMAKE_INSTALL_PREFIX=."]
@@ -267,6 +290,8 @@ def install_package(console):
             console.print("[bold red]✗ ERROR: Ninja build/install failed.[/bold red]")
             sys.exit(1)
         console.print("[bold green]✓[/bold green] Build completed.")
+
+    generate_stubs(console)
 
     with console.status(
         "[bold cyan]Installing Python package (editable)...", spinner="bouncingBar"

@@ -29,6 +29,8 @@ struct RenderResources {
   std::map<int, std::vector<SDL_Vertex>> projectile_vertices_grouped_;
   std::vector<SDL_Texture*> gem_textures;
   std::map<int, std::vector<SDL_Vertex>> gem_vertices_grouped_;
+  SDL_Texture* chest_texture = nullptr;
+  std::vector<SDL_Vertex> chest_vertices_;
   SDL_Rect map_layout = {0, 0, kWindowWidth, kWindowHeight};
   TileManager tile_manager;
   UIResources ui_resources;
@@ -71,6 +73,8 @@ class RenderManager {
   void RenderProjectiles(const Projectiles& projectiles);
   void SetupGemGeometry(const ExpGem& exp_gem, float alpha);
   void RenderGem(const ExpGem& exp_gem);
+  void SetupChestGeometry(const Chest& chest, float alpha);
+  void RenderChests();
   void RenderDebugWorldOccupancyMap(
       const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
   void RenderDebugRayCaster(const Enemy& enemy, float alpha);

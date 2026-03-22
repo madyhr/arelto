@@ -32,6 +32,7 @@ struct UIResources {
   SDL_Texture* slider_texture = nullptr;
   SDL_Texture* checkbox_texture = nullptr;
   SDL_Texture* checkmark_texture = nullptr;
+  SDL_Texture* chest_texture = nullptr;
   std::vector<SDL_Texture*> projectile_textures;
 };
 
@@ -47,6 +48,7 @@ class UIManager {
   void UpdateStartScreen();
   void BuildGameOverScreen();
   void UpdateQuitConfirmMenu();
+  void BuildChestOpeningScreen();
 
   UIWidget* GetRootWidget();
   UIWidget* GetSettingsRoot();
@@ -54,6 +56,7 @@ class UIManager {
   UIWidget* GetStartScreenRoot();
   UIWidget* GetGameOverScreenRoot();
   UIWidget* GetQuitConfirmRoot();
+  UIWidget* GetChestOpeningRoot();
 
   template <typename T>
   T* GetWidget(const std::string& id) {

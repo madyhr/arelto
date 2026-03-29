@@ -97,8 +97,15 @@ void Game::SetGameState(int game_state) {
 }
 
 void Game::StepGamePhysics() {
-  physics_manager_.StepPhysics(scene_);
-  entity_manager_.Update(scene_, physics_manager_.GetPhysicsDt());
+  event_manager_.Flush();
+
+  physics_manager_.StepPhysics(scene_, event_manager_);
+  entity_manager_.Update(scene_, physics_manager_.GetPhysicsDt(),
+                         event_manager_);
+
+  EventContext event_context{scene_.player};
+  event_manager_.Dispatch(event_context);
+
   time_ += physics_manager_.GetPhysicsDt();
   CheckGameStateRules();
   reward_manager_.UpdateRewardTerms(scene_);
@@ -115,29 +122,20 @@ void Game::CheckGameStateRules() {
     SetGameState(in_level_up);
     progression_manager_.GenerateLevelUpOptions(scene_);
     render_manager_.GetUIManager().BuildLevelUpMenu(scene_.level_up_options);
-  } else if (scene_.chest_opened) {
-    scene_.chest_opened = false;
-    SetGameState(in_chest_opening);
-    auto* root = render_manager_.GetUIManager().GetChestOpeningRoot();
-    if (root) {
-      auto* anim = root->FindWidgetAs<UIAnimation>("chest_animated_image");
-      if (anim) {
-        anim->Reset();
-        anim->Play();
+  } else {
+    for (const auto& e : event_manager_.GetEvents()) {
+      if (!std::holds_alternative<ChestOpenedEvent>(e))
+        continue;
+      SetGameState(in_chest_opening);
+      auto* root = render_manager_.GetUIManager().GetChestOpeningRoot();
+      if (root) {
+        auto* anim = root->FindWidgetAs<UIAnimation>("chest_animated_image");
+        if (anim) {
+          anim->Reset();
+          anim->Play();
+        }
       }
-    }
-  }
-
-  if (scene_.chest_opened) {
-    scene_.chest_opened = false;
-    SetGameState(in_chest_opening);
-    auto* root = render_manager_.GetUIManager().GetChestOpeningRoot();
-    if (root) {
-      auto* anim = root->FindWidgetAs<UIAnimation>("chest_animated_image");
-      if (anim) {
-        anim->Reset();
-        anim->Play();
-      }
+      break;
     }
   }
 }

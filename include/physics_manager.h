@@ -5,6 +5,7 @@
 #include "collision_manager.h"
 #include "constants/map.h"
 #include "entity.h"
+#include "event_manager.h"
 #include "map.h"
 #include "scene.h"
 
@@ -17,7 +18,7 @@ class PhysicsManager {
   ~PhysicsManager();
 
   bool Initialize();
-  void StepPhysics(Scene& scene);
+  void StepPhysics(Scene& scene, EventManager& em);
   float GetPhysicsDt() { return physics_dt_; };
   void SetPhysicsDt(float dt) { physics_dt_ = dt; };
 
@@ -28,7 +29,7 @@ class PhysicsManager {
   void UpdatePlayerState(Player& player);
   void UpdateEnemyState(Enemy& enemy, const Player& player);
   void UpdateProjectileState(Projectiles& projectiles);
-  void HandleCollisions(Scene& scene);
+  void HandleCollisions(Scene& scene, EventManager& em);
   void HandleOutOfBounds(Player& player, Enemy& enemy,
                          Projectiles& projectiles);
   void HandlePlayerOOB(Player& player);

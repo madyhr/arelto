@@ -11,6 +11,7 @@
 #include "action_manager.h"
 #include "audio_manager.h"
 #include "entity_manager.h"
+#include "event_manager.h"
 #include "items.h"
 #include "observation_manager.h"
 #include "physics_manager.h"
@@ -57,6 +58,7 @@ class Game {
   bool is_mouse_left_active_ = false;
   bool is_mouse_right_active_ = false;
   ItemArchive item_archive_;
+  EventManager event_manager_;
 
   static volatile std::sig_atomic_t stop_request_;
   bool InitializeCamera();

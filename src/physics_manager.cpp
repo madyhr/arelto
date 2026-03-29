@@ -17,13 +17,13 @@ bool PhysicsManager::Initialize() {
   return true;
 };
 
-void PhysicsManager::StepPhysics(Scene& scene) {
+void PhysicsManager::StepPhysics(Scene& scene, EventManager& event_manager) {
 
   UpdatePlayerState(scene.player);
   UpdateEnemyState(scene.enemy, scene.player);
   UpdateProjectileState(scene.projectiles);
 
-  HandleCollisions(scene);
+  HandleCollisions(scene, event_manager);
   HandleOutOfBounds(scene.player, scene.enemy, scene.projectiles);
 
   tick_count_ += 1;
@@ -73,8 +73,9 @@ void PhysicsManager::UpdateProjectileState(Projectiles& projectiles) {
   };
 };
 
-void PhysicsManager::HandleCollisions(Scene& scene) {
-  collision_manager_.HandleCollisionsSAP(scene);
+void PhysicsManager::HandleCollisions(Scene& scene,
+                                      EventManager& event_manager) {
+  collision_manager_.HandleCollisionsSAP(scene, event_manager);
 };
 
 void PhysicsManager::HandleOutOfBounds(Player& player, Enemy& enemy,

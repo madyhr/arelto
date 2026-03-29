@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "constants/enemy.h"
 #include "constants/ray_caster.h"
+#include "event_manager.h"
 #include "types.h"
 
 namespace arelto {
@@ -10,9 +11,10 @@ namespace arelto {
 EntityManager::EntityManager() {}
 EntityManager::~EntityManager() {}
 
-void EntityManager::Update(Scene& scene, float dt) {
+void EntityManager::Update(Scene& scene, float dt,
+                           EventManager& event_manager) {
   UpdateEnemyStatus(scene, dt);
-  UpdateProjectilesStatus(scene);
+  UpdateProjectilesStatus(scene, event_manager);
   UpdateGemStatus(scene);
   UpdateChestStatus(scene);
 
@@ -35,7 +37,11 @@ void EntityManager::UpdateEnemyStatus(Scene& scene, float dt) {
   };
 }
 
-void EntityManager::UpdateProjectilesStatus(Scene& scene) {
+void EntityManager::UpdateProjectilesStatus(Scene& scene,
+                                            EventManager& event_manager) {
+  for (int idx : scene.projectiles.to_be_destroyed_) {
+    event_manager.Emit(ProjectileDestroyedEvent{idx});
+  }
   scene.projectiles.DestroyProjectiles();
 }
 

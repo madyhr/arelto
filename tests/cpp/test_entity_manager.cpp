@@ -6,6 +6,7 @@
 #include "constants/enemy.h"
 #include "constants/ray_caster.h"
 #include "entity_manager.h"
+#include "event_manager.h"
 #include "scene.h"
 #include "test_helpers.h"
 
@@ -18,6 +19,7 @@ class EntityManagerTest : public ::testing::Test {
 
   Scene scene_;
   EntityManager entity_manager_;
+  EventManager event_manager_;
 };
 
 // =============================================================================
@@ -50,13 +52,13 @@ TEST_F(EntityManagerTest, Update_EnemyStatus_TransitionsCorrectly) {
   scene_.enemy.is_alive[0] = true;
   scene_.enemy.is_done[0] = false;
 
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
   EXPECT_TRUE(scene_.enemy.is_alive[0]);
   EXPECT_FALSE(scene_.enemy.is_done[0]);
 
   // Test Alive -> Dead (Zero Health)
   scene_.enemy.health_points[0] = 0;
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
   EXPECT_FALSE(scene_.enemy.is_alive[0]);
   EXPECT_TRUE(scene_.enemy.is_done[0]);
 
@@ -65,7 +67,7 @@ TEST_F(EntityManagerTest, Update_EnemyStatus_TransitionsCorrectly) {
   scene_.enemy.is_alive[1] = true;
   scene_.enemy.is_done[1] = false;
 
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
   EXPECT_FALSE(scene_.enemy.is_alive[1]);
   EXPECT_TRUE(scene_.enemy.is_done[1]);
 }
@@ -73,7 +75,7 @@ TEST_F(EntityManagerTest, Update_EnemyStatus_TransitionsCorrectly) {
 TEST_F(EntityManagerTest, Update_EnemyTimeoutTimerIncreases) {
   float initial_timer = scene_.enemy.timeout_timer[0];
 
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
 
   EXPECT_GT(scene_.enemy.timeout_timer[0], initial_timer);
 }
@@ -83,7 +85,7 @@ TEST_F(EntityManagerTest, Update_DeadEnemy_SetsTerminatedLatched) {
   scene_.enemy.is_alive[0] = true;
   scene_.enemy.is_terminated_latched[0] = false;
 
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
 
   EXPECT_TRUE(scene_.enemy.is_terminated_latched[0]);
 }
@@ -101,7 +103,7 @@ TEST_F(EntityManagerTest, Update_ProjectileMarkedForDestruction_IsDestroyed) {
   // Mark it for destruction
   scene_.projectiles.to_be_destroyed_.insert(0);
 
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
 
   // Projectile should be removed
   EXPECT_EQ(scene_.projectiles.GetNumProjectiles(), 0);
@@ -116,7 +118,7 @@ TEST_F(EntityManagerTest, Update_NoMarkedProjectiles_CountUnchanged) {
   }
   ASSERT_EQ(scene_.projectiles.GetNumProjectiles(), 3);
 
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
 
   // All projectiles should still exist
   EXPECT_EQ(scene_.projectiles.GetNumProjectiles(), 3);
@@ -139,7 +141,7 @@ TEST_F(EntityManagerTest, Update_GemMarkedForDestruction_IsDestroyed) {
   // Mark it for destruction
   scene_.exp_gem.to_be_destroyed_.insert(0);
 
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
 
   // Gem should be removed
   EXPECT_EQ(scene_.exp_gem.GetNumExpGems(), 0);
@@ -160,7 +162,7 @@ TEST_F(EntityManagerTest, Update_MultipleDeadEnemies_AllMarkedCorrectly) {
     scene_.enemy.is_done[i] = false;
   }
 
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
 
   // Check dead enemies
   EXPECT_FALSE(scene_.enemy.is_alive[0]);
@@ -198,7 +200,7 @@ TEST_F(EntityManagerTest, Update_UpdatesRayCaster) {
     scene_.enemy.ray_caster.ray_hit_distances[history_idx][r][0] = 0.0f;
   }
 
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
 
   // Check if ray caster data was updated
   // We expect some non-zero distances since player is nearby
@@ -234,7 +236,7 @@ TEST_F(EntityManagerTest, Update_UpdatesRayCaster_DetectsProjectiles) {
         0.0f;
   }
 
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
 
   // Check if ray caster data was updated for projectiles
   bool found_hit = false;
@@ -251,6 +253,30 @@ TEST_F(EntityManagerTest, Update_UpdatesRayCaster_DetectsProjectiles) {
   }
   EXPECT_TRUE(found_hit)
       << "Ray caster did not detect the nearby projectile after update";
+}
+
+// =============================================================================
+// Event Emission Tests
+// =============================================================================
+
+TEST_F(EntityManagerTest, UpdateProjectilesStatus_EmitsProjectileDestroyedEvent) {
+  ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);
+  scene_.projectiles.AddProjectile(proj);
+  scene_.projectiles.AddProjectile(proj);
+
+  // Mark both for destruction
+  scene_.projectiles.to_be_destroyed_.insert(0);
+  scene_.projectiles.to_be_destroyed_.insert(1);
+
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
+
+  int destroyed_count = 0;
+  for (const auto& e : event_manager_.GetEvents()) {
+    if (std::holds_alternative<ProjectileDestroyedEvent>(e)) {
+      ++destroyed_count;
+    }
+  }
+  EXPECT_EQ(destroyed_count, 2);
 }
 
 }  // namespace

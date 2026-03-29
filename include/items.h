@@ -5,10 +5,39 @@
 #include <sstream>
 #include <string>
 #include "entity.h"
+#include "event_manager.h"
 #include "types.h"
 #include "upgrades.h"
 
 namespace arelto {
+
+// -----------------------------------------------------------------------------
+// ItemTriggerEffect — base class for items that react to in-game events
+// -----------------------------------------------------------------------------
+
+class ItemTriggerEffect {
+ public:
+  virtual ~ItemTriggerEffect() = default;
+  // Called once when the item is picked up; register event handlers here.
+  virtual void RegisterHandlers(EventManager& em) = 0;
+};
+
+// Example: heal the player for heal_amount HP each time an enemy is killed.
+class HealOnKillEffect : public ItemTriggerEffect {
+ public:
+  explicit HealOnKillEffect(int heal_amount) : heal_amount_(heal_amount) {}
+  void RegisterHandlers(EventManager& em) override {
+    em.Subscribe<EnemyKilledEvent>(
+        [this](const EnemyKilledEvent&, EventContext& event_context) {
+          event_context.player.stats_.health += heal_amount_;
+        });
+  }
+
+ private:
+  int heal_amount_;
+};
+
+// -----------------------------------------------------------------------------
 
 enum ItemId : int { elia_armor_plate = 0, count };
 enum class ItemUpgradeType : int { armor = 0, count };

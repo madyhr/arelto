@@ -18,7 +18,7 @@ namespace arelto {
 class ItemTriggerEffect {
  public:
   virtual ~ItemTriggerEffect() = default;
-  // Called once when the item is picked up; register event handlers here.
+  // Called once when the item is picked up.
   virtual void RegisterHandlers(EventManager& event_manager) = 0;
   void UnregisterHandlers(EventManager& event_manager) {
     for (auto& unsubscribe : unsubscribers_) {
@@ -39,7 +39,7 @@ class ItemTriggerEffect {
   std::vector<std::function<void(EventManager&)>> unsubscribers_;
 };
 
-// Example: heal the player for heal_amount HP each time an enemy is killed.
+// Heal the player for heal_amount HP each time an enemy is killed.
 class HealOnKillEffect : public ItemTriggerEffect {
  public:
   explicit HealOnKillEffect(int heal_amount) : heal_amount_(heal_amount) {}

@@ -3,6 +3,7 @@
 
 #include "constants/map.h"
 #include "entity.h"
+#include "event_manager.h"
 #include "map.h"
 #include "scene.h"
 
@@ -13,14 +14,13 @@ class EntityManager {
   EntityManager();
   ~EntityManager();
 
-  void Update(Scene& scene, float dt);
-  bool IsPlayerDead(const Player& player);
+  void Update(Scene& scene, float dt, EventManager& event_manager);
 
  private:
   int physics_tick_count_ = 0;
 
   void UpdateEnemyStatus(Scene& scene, float dt);
-  void UpdateProjectilesStatus(Scene& scene);
+  void UpdateProjectilesStatus(Scene& scene, EventManager& event_manager);
   void UpdateGemStatus(Scene& scene);
   void UpdateChestStatus(Scene& scene);
   void UpdateObservations(Scene& scene, float dt);

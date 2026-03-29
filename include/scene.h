@@ -22,7 +22,6 @@ struct Scene {
   Projectiles projectiles;
   ExpGem exp_gem;
   Chest chest;
-  bool chest_opened = false;
   FixedMap<kOccupancyMapWidth, kOccupancyMapHeight> occupancy_map;
   UpgradeOptions level_up_options;
   UpgradeOptions item_options;

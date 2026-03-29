@@ -6,6 +6,7 @@
 #include <SDL_mouse.h>
 #include <SDL_render.h>
 #include <SDL_surface.h>
+#include <algorithm>
 #include <csignal>
 #include <cstdio>
 #include <iostream>
@@ -55,6 +56,8 @@ bool Game::Initialize() {
   scene_.Reset();
   scene_.item_archive = &item_archive_;
 
+  RegisterGameStateHandlers();
+
   if (!(Game::InitializeCamera())) {
     return false;
   }
@@ -97,49 +100,107 @@ void Game::SetGameState(int game_state) {
 }
 
 void Game::StepGamePhysics() {
-  physics_manager_.StepPhysics(scene_);
-  entity_manager_.Update(scene_, physics_manager_.GetPhysicsDt());
+  event_manager_.Flush();
+
+  physics_manager_.StepPhysics(scene_, event_manager_);
+  entity_manager_.Update(scene_, physics_manager_.GetPhysicsDt(),
+                         event_manager_);
+
+  EventContext event_context{scene_.player};
+  event_manager_.Dispatch(event_context);
+  ProcessGameStateTransitionQueue();
+
   time_ += physics_manager_.GetPhysicsDt();
-  CheckGameStateRules();
   reward_manager_.UpdateRewardTerms(scene_);
   CachePreviousState();
 };
 
-void Game::CheckGameStateRules() {
-  if (entity_manager_.IsPlayerDead(scene_.player)) {
-    SetGameState(is_gameover);
+void Game::RequestGameStateTransition(GameState target) {
+  for (const auto& pending : pending_transitions_) {
+    if (pending == target) {
+      return;
+    }
+  }
+  pending_transitions_.push_back(target);
+}
+
+int GetGameStateTransitionPriority(GameState state) {
+  switch (state) {
+    case is_gameover:
+      return 0;
+    case in_level_up:
+      return 1;
+    case in_chest_opening:
+      return 2;
+    default:
+      return 99;
+  }
+}
+
+// Processes events in the game state transition queue based on the game state transition priority.
+void Game::ProcessGameStateTransitionQueue() {
+  if (game_state_ != is_running || pending_transitions_.empty())
     return;
-  }
 
-  if (progression_manager_.CheckLevelUp(scene_.player)) {
-    SetGameState(in_level_up);
-    progression_manager_.GenerateLevelUpOptions(scene_);
-    render_manager_.GetUIManager().BuildLevelUpMenu(scene_.level_up_options);
-  } else if (scene_.chest_opened) {
-    scene_.chest_opened = false;
-    SetGameState(in_chest_opening);
-    auto* root = render_manager_.GetUIManager().GetChestOpeningRoot();
-    if (root) {
-      auto* anim = root->FindWidgetAs<UIAnimation>("chest_animated_image");
-      if (anim) {
-        anim->Reset();
-        anim->Play();
-      }
-    }
-  }
+  auto highest_prio_transition =
+      std::min_element(pending_transitions_.begin(), pending_transitions_.end(),
+                       [](GameState a, GameState b) {
+                         return GetGameStateTransitionPriority(a) <
+                                GetGameStateTransitionPriority(b);
+                       });
 
-  if (scene_.chest_opened) {
-    scene_.chest_opened = false;
-    SetGameState(in_chest_opening);
-    auto* root = render_manager_.GetUIManager().GetChestOpeningRoot();
-    if (root) {
-      auto* anim = root->FindWidgetAs<UIAnimation>("chest_animated_image");
-      if (anim) {
-        anim->Reset();
-        anim->Play();
+  GameState next_game_state = *highest_prio_transition;
+  pending_transitions_.erase(highest_prio_transition);
+
+  switch (next_game_state) {
+    case is_gameover:
+      SetGameState(is_gameover);
+      break;
+    case in_level_up:
+      SetGameState(in_level_up);
+      progression_manager_.GenerateLevelUpOptions(scene_);
+      render_manager_.GetUIManager().BuildLevelUpMenu(scene_.level_up_options);
+      break;
+    case in_chest_opening: {
+      SetGameState(in_chest_opening);
+      auto* root = render_manager_.GetUIManager().GetChestOpeningRoot();
+      if (root) {
+        auto* anim = root->FindWidgetAs<UIAnimation>("chest_animated_image");
+        if (anim) {
+          anim->Reset();
+          anim->Play();
+        }
       }
+      break;
     }
+    default:
+      break;
   }
+}
+
+void Game::ResolveCurrentGameStateTransition() {
+  SetGameState(is_running);
+  ProcessGameStateTransitionQueue();
+}
+
+// Sets up all handlers for events that cause a game state transition.
+void Game::RegisterGameStateHandlers() {
+  event_manager_.Subscribe<PlayerDeadEvent>(
+      [this](const PlayerDeadEvent&, EventContext&) {
+        RequestGameStateTransition(is_gameover);
+      });
+
+  event_manager_.Subscribe<GemCollectedEvent>(
+      [this](const GemCollectedEvent&, EventContext&) {
+        if (!progression_manager_.CheckLevelUp(scene_.player))
+          return;
+        RequestGameStateTransition(in_level_up);
+      });
+
+  event_manager_.Subscribe<ChestOpenedEvent>(
+      [this](const ChestOpenedEvent&, EventContext&) {
+        RequestGameStateTransition(in_chest_opening);
+      });
 }
 
 void Game::RenderGame(float alpha) {
@@ -152,6 +213,7 @@ void Game::ResetGame() {
   accumulator_step_ = 0.0f;
   is_mouse_left_active_ = false;
   is_mouse_right_active_ = false;
+  pending_transitions_.clear();
   SetGameState(is_running);
 };
 
@@ -609,7 +671,7 @@ void Game::ProcessLevelUpInput(const SDL_Event& e) {
         if (menu) {
           menu->SetVisible(false);
         }
-        SetGameState(is_running);
+        ResolveCurrentGameStateTransition();
         return;
       }
     }
@@ -650,7 +712,7 @@ void Game::ProcessItemSelectionInput(const SDL_Event& e) {
         if (menu) {
           menu->SetVisible(false);
         }
-        SetGameState(is_running);
+        ResolveCurrentGameStateTransition();
         return;
       }
     }

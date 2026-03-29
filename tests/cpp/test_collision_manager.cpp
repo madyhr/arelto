@@ -8,6 +8,7 @@
 #include "collision_manager.h"
 #include "constants/enemy.h"
 #include "entity.h"
+#include "event_manager.h"
 #include "scene.h"
 #include "test_helpers.h"
 #include "types.h"
@@ -24,6 +25,7 @@ class CollisionManagerTest : public ::testing::Test {
 
   Scene scene_;
   CollisionManager collision_manager_;
+  EventManager event_manager_;
 };
 
 // Note: GetCollisionType and GetDisplacementVectors are private methods.
@@ -40,7 +42,7 @@ TEST_F(CollisionManagerTest, HandleCollisionsSAP_NoCollisions_NoChanges) {
     initial_enemy_pos[i] = scene_.enemy.position[i];
   }
 
-  collision_manager_.HandleCollisionsSAP(scene_);
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // No positions should have changed
   testing::ExpectVector2DEq(scene_.player.position_, initial_player_pos);
@@ -56,7 +58,7 @@ TEST_F(CollisionManagerTest,
   scene_.enemy.position[0] = {100.0f, 100.0f};  // Exact same position
   scene_.enemy.is_alive[0] = true;
 
-  collision_manager_.HandleCollisionsSAP(scene_);
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // Player and enemy should be separated (positions should differ)
   float distance = (scene_.player.position_ - scene_.enemy.position[0]).Norm();
@@ -74,7 +76,7 @@ TEST_F(CollisionManagerTest,
 
   scene_.player.position_ = {10000.0f, 10000.0f};
 
-  collision_manager_.HandleCollisionsSAP(scene_);
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // Enemies should be separated
   float distance = (scene_.enemy.position[0] - scene_.enemy.position[1]).Norm();
@@ -89,7 +91,7 @@ TEST_F(CollisionManagerTest, HandleCollisionsSAP_DeadEnemyIgnored) {
 
   Vector2D initial_player_pos = scene_.player.position_;
 
-  collision_manager_.HandleCollisionsSAP(scene_);
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // Player should not have moved (dead enemies are ignored)
   testing::ExpectVector2DEq(scene_.player.position_, initial_player_pos);
@@ -105,7 +107,7 @@ TEST_F(CollisionManagerTest,
   scene_.enemy.attack_cooldown[0] = -1.0f;  // Ready to attack
   scene_.enemy.attack_damage[0] = 10;
 
-  collision_manager_.HandleCollisionsSAP(scene_);
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // Player should have taken damage
   EXPECT_EQ(scene_.player.stats_.health, 90);
@@ -121,7 +123,7 @@ TEST_F(CollisionManagerTest,
   scene_.enemy.attack_cooldown[0] = 1.0f;  // On cooldown
   scene_.enemy.attack_damage[0] = 10;
 
-  collision_manager_.HandleCollisionsSAP(scene_);
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // Player should NOT have taken damage (enemy on cooldown)
   EXPECT_EQ(scene_.player.stats_.health, 100);
@@ -141,7 +143,7 @@ TEST_F(CollisionManagerTest,
                       {16, 16}};
   scene_.exp_gem.AddExpGem(gem_data);
 
-  collision_manager_.HandleCollisionsSAP(scene_);
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // Gem should be marked for destruction
   EXPECT_TRUE(scene_.exp_gem.to_be_destroyed_.count(0) > 0);
@@ -166,12 +168,172 @@ TEST_F(CollisionManagerTest,
   // Move player away
   scene_.player.position_ = {10000.0f, 10000.0f};
 
-  collision_manager_.HandleCollisionsSAP(scene_);
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // Projectile should be marked for destruction
   EXPECT_TRUE(scene_.projectiles.to_be_destroyed_.count(0) > 0);
   // Enemy should have taken damage
   EXPECT_EQ(scene_.enemy.health_points[0], 75);
+}
+
+// =============================================================================
+// Event Emission Tests
+// =============================================================================
+
+TEST_F(CollisionManagerTest,
+       PlayerEnemyCollision_EmitsPlayerDamagedEvent) {
+  scene_.player.position_ = {100.0f, 100.0f};
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+  scene_.enemy.attack_damage[0] = 20;
+  scene_.enemy.attack_cooldown[0] = -1.0f;
+
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
+
+  auto& events = event_manager_.GetEvents();
+  bool found = false;
+  for (const auto& e : events) {
+    if (std::holds_alternative<PlayerDamagedEvent>(e)) {
+      const auto& ev = std::get<PlayerDamagedEvent>(e);
+      EXPECT_EQ(ev.enemy_idx, 0);
+      EXPECT_GE(ev.damage_dealt, 0);
+      found = true;
+    }
+  }
+  EXPECT_TRUE(found);
+}
+
+TEST_F(CollisionManagerTest,
+       PlayerEnemyCollision_EmitsPlayerDeadEvent_WhenHealthReachesZero) {
+  scene_.player.position_ = {100.0f, 100.0f};
+  scene_.player.stats_.health = 5;
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+  scene_.enemy.attack_cooldown[0] = -1.0f;
+  scene_.enemy.attack_damage[0] = 10;
+
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
+
+  bool found = false;
+  for (const auto& e : event_manager_.GetEvents()) {
+    if (std::holds_alternative<PlayerDeadEvent>(e)) {
+      found = true;
+    }
+  }
+  EXPECT_TRUE(found);
+}
+
+TEST_F(CollisionManagerTest,
+       PlayerEnemyCollision_NoPlayerDeadEvent_WhenHealthRemains) {
+  scene_.player.position_ = {100.0f, 100.0f};
+  scene_.player.stats_.health = 100;
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+  scene_.enemy.attack_cooldown[0] = -1.0f;
+  scene_.enemy.attack_damage[0] = 10;
+
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
+
+  for (const auto& e : event_manager_.GetEvents()) {
+    EXPECT_FALSE(std::holds_alternative<PlayerDeadEvent>(e));
+  }
+}
+
+TEST_F(CollisionManagerTest,
+       PlayerEnemyCollision_NoDamageEvent_WhenOnCooldown) {
+  scene_.player.position_ = {100.0f, 100.0f};
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+  scene_.enemy.attack_cooldown[0] = 1.0f;  // not ready
+
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
+
+  for (const auto& e : event_manager_.GetEvents()) {
+    EXPECT_FALSE(std::holds_alternative<PlayerDamagedEvent>(e));
+  }
+}
+
+TEST_F(CollisionManagerTest,
+       EnemyProjectileCollision_EmitsEnemyKilledEvent_WhenHealthDropsToZero) {
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+  scene_.enemy.health_points[0] = 10;
+  scene_.player.spell_stats_.damage[0] = 25;  // overkill
+
+  ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);
+  scene_.projectiles.AddProjectile(proj);
+  scene_.player.position_ = {10000.0f, 10000.0f};
+
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
+
+  bool found = false;
+  for (const auto& e : event_manager_.GetEvents()) {
+    if (std::holds_alternative<EnemyKilledEvent>(e)) {
+      EXPECT_EQ(std::get<EnemyKilledEvent>(e).enemy_idx, 0);
+      found = true;
+    }
+  }
+  EXPECT_TRUE(found);
+}
+
+TEST_F(CollisionManagerTest,
+       EnemyProjectileCollision_NoKillEvent_WhenHealthRemains) {
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+  scene_.enemy.health_points[0] = 100;
+  scene_.player.spell_stats_.damage[0] = 10;  // not enough to kill
+
+  ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);
+  scene_.projectiles.AddProjectile(proj);
+  scene_.player.position_ = {10000.0f, 10000.0f};
+
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
+
+  for (const auto& e : event_manager_.GetEvents()) {
+    EXPECT_FALSE(std::holds_alternative<EnemyKilledEvent>(e));
+  }
+}
+
+TEST_F(CollisionManagerTest,
+       PlayerGemCollision_EmitsGemCollectedEvent) {
+  scene_.player.position_ = {100.0f, 100.0f};
+  ExpGemData gem{Rarity::common,
+                 {100.0f, 100.0f},
+                 {100.0f, 100.0f},
+                 {{8.0f, 8.0f}, {16, 16}},
+                 {16, 16}};
+  scene_.exp_gem.AddExpGem(gem);
+
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
+
+  bool found = false;
+  for (const auto& e : event_manager_.GetEvents()) {
+    if (std::holds_alternative<GemCollectedEvent>(e)) {
+      const auto& ev = std::get<GemCollectedEvent>(e);
+      EXPECT_EQ(ev.gem_idx, 0);
+      EXPECT_GT(ev.exp_value, 0);
+      found = true;
+    }
+  }
+  EXPECT_TRUE(found);
+}
+
+TEST_F(CollisionManagerTest,
+       PlayerChestCollision_EmitsChestOpenedEvent) {
+  scene_.player.position_ = {100.0f, 100.0f};
+  ChestData chest{{100.0f, 100.0f}, {100.0f, 100.0f}, {{8.0f, 8.0f}, {32, 32}}, {32, 32}};
+  scene_.chest.AddChest(chest);
+
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
+
+  bool found = false;
+  for (const auto& e : event_manager_.GetEvents()) {
+    if (std::holds_alternative<ChestOpenedEvent>(e)) {
+      EXPECT_EQ(std::get<ChestOpenedEvent>(e).chest_idx, 0);
+      found = true;
+    }
+  }
+  EXPECT_TRUE(found);
 }
 
 }  // namespace

@@ -7,12 +7,14 @@
 #include "abilities.h"
 #include "constants/enemy.h"
 #include "entity.h"
+#include "event_manager.h"
 #include "scene.h"
 #include "types.h"
 
 namespace arelto {
 
-void CollisionManager::HandleCollisionsSAP(Scene& scene) {
+void CollisionManager::HandleCollisionsSAP(Scene& scene,
+                                           EventManager& event_manager) {
   int num_proj = scene.projectiles.GetNumProjectiles();
   int num_gem = scene.exp_gem.GetNumExpGems();
   int num_chest = scene.chest.GetNumChests();
@@ -60,7 +62,7 @@ void CollisionManager::HandleCollisionsSAP(Scene& scene) {
             [](const AABB& a, const AABB& b) { return a.min_x < b.min_x; });
 
   FindCollisionPairsSAP(entity_aabb_);
-  ResolveCollisionPairsSAP(scene);
+  ResolveCollisionPairsSAP(scene, event_manager);
 };
 
 void CollisionManager::FindCollisionPairsSAP(std::vector<AABB>& sorted_aabb) {
@@ -89,36 +91,35 @@ void CollisionManager::FindCollisionPairsSAP(std::vector<AABB>& sorted_aabb) {
   }
 };
 
-void CollisionManager::ResolveCollisionPairsSAP(Scene& scene) {
+void CollisionManager::ResolveCollisionPairsSAP(Scene& scene,
+                                                EventManager& event_manager) {
   for (const CollisionPair& cp : collision_pairs_) {
     CollisionType collision_type = GetCollisionType(cp);
 
     switch (collision_type) {
       case CollisionType::None:
-        continue;
       case CollisionType::player_terrain:
-        continue;
       case CollisionType::enemy_terrain:
-        continue;
       case CollisionType::projectile_terrain:
+      case CollisionType::player_projectile:
         continue;
       case CollisionType::player_enemy:
-        ResolvePlayerEnemyCollision(cp, scene.player, scene.enemy);
+        ResolvePlayerEnemyCollision(cp, scene.player, scene.enemy,
+                                    event_manager);
         continue;
       case CollisionType::enemy_enemy:
         ResolveEnemyEnemyCollision(cp, scene.enemy);
         continue;
-      case CollisionType::player_projectile:
-        continue;
       case CollisionType::enemy_projectile:
         ResolveEnemyProjectileCollision(cp, scene.enemy, scene.projectiles,
-                                        scene.player);
+                                        scene.player, event_manager);
         continue;
       case CollisionType::player_gem:
-        ResolvePlayerGemCollision(cp, scene.player, scene.exp_gem);
+        ResolvePlayerGemCollision(cp, scene.player, scene.exp_gem,
+                                  event_manager);
         continue;
       case CollisionType::player_chest:
-        ResolvePlayerChestCollision(cp, scene.chest, scene);
+        ResolvePlayerChestCollision(cp, scene.chest, event_manager);
         continue;
     }
   }
@@ -199,12 +200,11 @@ void CollisionManager::ResolveEnemyEnemyCollision(const CollisionPair& cp,
   enemy.position[cp.index_b] += displacement_vectors[1];
 };
 
-void CollisionManager::ResolvePlayerEnemyCollision(const CollisionPair& cp,
-                                                   Player& player,
-                                                   Enemy& enemy) {
+void CollisionManager::ResolvePlayerEnemyCollision(
+    const CollisionPair& cp, Player& player, Enemy& enemy,
+    EventManager& event_manager) {
 
   bool a_is_player = cp.type_a == EntityType::player;
-  int player_idx = a_is_player ? cp.index_a : cp.index_b;
   int enemy_idx = a_is_player ? cp.index_b : cp.index_a;
 
   Vector2D player_centroid = player.position_ + player.collider_.offset;
@@ -223,18 +223,22 @@ void CollisionManager::ResolvePlayerEnemyCollision(const CollisionPair& cp,
   enemy.position[enemy_idx] += displacement_vectors[1];
 
   if (enemy.attack_cooldown[enemy_idx] < 0.0f) {
-    player.stats_.health -=
+    int damage_dealt =
         std::max(0, enemy.attack_damage[enemy_idx] -
                         static_cast<int>(player.stats_.armor.GetValue()));
+    player.stats_.health -= damage_dealt;
     enemy.damage_dealt_sim_step[enemy_idx] += enemy.attack_damage[enemy_idx];
     enemy.attack_cooldown[enemy_idx] = kEnemyAttackCooldown;
+    event_manager.Emit(PlayerDamagedEvent{enemy_idx, damage_dealt});
+    if (player.stats_.health <= 0) {
+      event_manager.Emit(PlayerDeadEvent{});
+    }
   }
 };
 
-void CollisionManager::ResolveEnemyProjectileCollision(const CollisionPair& cp,
-                                                       Enemy& enemy,
-                                                       Projectiles& projectiles,
-                                                       Player& player) {
+void CollisionManager::ResolveEnemyProjectileCollision(
+    const CollisionPair& cp, Enemy& enemy, Projectiles& projectiles,
+    Player& player, EventManager& event_manager) {
   bool a_is_proj = cp.type_a == EntityType::projectile;
   int proj_idx = a_is_proj ? cp.index_a : cp.index_b;
   int enemy_idx = a_is_proj ? cp.index_b : cp.index_a;
@@ -242,26 +246,31 @@ void CollisionManager::ResolveEnemyProjectileCollision(const CollisionPair& cp,
   int proj_id = projectiles.proj_type_[proj_idx];
   int spell_damage = player.spell_stats_.damage[proj_id];
   enemy.health_points[enemy_idx] -= spell_damage;
+  if (enemy.health_points[enemy_idx] <= 0) {
+    event_manager.Emit(EnemyKilledEvent{enemy_idx, proj_idx, spell_damage});
+  }
 };
 
 void CollisionManager::ResolvePlayerGemCollision(const CollisionPair& cp,
                                                  Player& player,
-                                                 ExpGem& exp_gem) {
+                                                 ExpGem& exp_gem,
+                                                 EventManager& event_manager) {
 
   bool a_is_gem = cp.type_a == EntityType::exp_gem;
-
   int gem_idx = a_is_gem ? cp.index_a : cp.index_b;
+  int exp_value = kExpGemValues[exp_gem.rarity_[gem_idx]];
 
   exp_gem.to_be_destroyed_.insert(gem_idx);
-  player.stats_.exp_points += kExpGemValues[exp_gem.rarity_[gem_idx]];
+  player.stats_.exp_points += exp_value;
+  event_manager.Emit(GemCollectedEvent{gem_idx, exp_value});
 };
 
-void CollisionManager::ResolvePlayerChestCollision(const CollisionPair& cp,
-                                                   Chest& chest, Scene& scene) {
+void CollisionManager::ResolvePlayerChestCollision(
+    const CollisionPair& cp, Chest& chest, EventManager& event_manager) {
   bool a_is_chest = cp.type_a == EntityType::chest;
   int chest_idx = a_is_chest ? cp.index_a : cp.index_b;
   chest.to_be_destroyed_.insert(chest_idx);
-  scene.chest_opened = true;
+  event_manager.Emit(ChestOpenedEvent{chest_idx});
 };
 
 }  // namespace arelto

@@ -5,10 +5,62 @@
 #include <sstream>
 #include <string>
 #include "entity.h"
+#include "event_manager.h"
 #include "types.h"
 #include "upgrades.h"
 
 namespace arelto {
+
+// -----------------------------------------------------------------------------
+// ItemTriggerEffect — base class for items that react to in-game events
+// -----------------------------------------------------------------------------
+
+class ItemTriggerEffect {
+ public:
+  virtual ~ItemTriggerEffect() {
+    for (auto& unsubscribe : unsubscribers_) {
+      unsubscribe();
+    }
+  }
+  ItemTriggerEffect() = default;
+  ItemTriggerEffect(const ItemTriggerEffect&) = delete;
+  ItemTriggerEffect& operator=(const ItemTriggerEffect&) = delete;
+  ItemTriggerEffect(ItemTriggerEffect&&) = default;
+  ItemTriggerEffect& operator=(ItemTriggerEffect&&) = default;
+
+  // Called once when the item is picked up.
+  virtual void RegisterHandlers(EventManager& event_manager) = 0;
+
+ protected:
+  // Subscribes handler and captures the unsubscription so the destructor can clean up automatically.
+  template <typename T>
+  void Track(EventManager& event_manager,
+             std::function<void(const T&, EventContext&)> handler) {
+    SubscriptionId id = event_manager.Subscribe<T>(std::move(handler));
+    unsubscribers_.push_back(
+        [&event_manager, id]() { event_manager.Unsubscribe<T>(id); });
+  }
+
+ private:
+  std::vector<std::function<void()>> unsubscribers_;
+};
+
+// Heal the player for heal_amount HP each time an enemy is killed.
+class HealOnKillEffect : public ItemTriggerEffect {
+ public:
+  explicit HealOnKillEffect(int heal_amount) : heal_amount_(heal_amount) {}
+  void RegisterHandlers(EventManager& event_manager) override {
+    Track<EnemyKilledEvent>(event_manager, [this](const EnemyKilledEvent&,
+                                                  EventContext& event_context) {
+      event_context.player.stats_.health += heal_amount_;
+    });
+  }
+
+ private:
+  int heal_amount_;
+};
+
+// -----------------------------------------------------------------------------
 
 enum ItemId : int { elia_armor_plate = 0, count };
 enum class ItemUpgradeType : int { armor = 0, count };

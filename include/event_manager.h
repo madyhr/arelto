@@ -2,6 +2,7 @@
 #ifndef RL2_EVENT_MANAGER_H_
 #define RL2_EVENT_MANAGER_H_
 
+#include <algorithm>
 #include <functional>
 #include <tuple>
 #include <variant>
@@ -10,6 +11,8 @@
 namespace arelto {
 
 class Player;  // forward declaration for EventContext
+
+using SubscriptionId = int;
 
 // -----------------------------------------------------------------------------
 // Typed event structs
@@ -40,10 +43,7 @@ using GameEvent =
     std::variant<EnemyKilledEvent, PlayerDamagedEvent, GemCollectedEvent,
                  ProjectileDestroyedEvent, ChestOpenedEvent, PlayerDeadEvent>;
 
-// -----------------------------------------------------------------------------
-// EventContext that is passed to every handler during EventManager.Dispatch
-// -----------------------------------------------------------------------------
-
+// The context that is passed to every handler during a Dispatch call.
 struct EventContext {
   Player& player;
 };
@@ -56,11 +56,27 @@ class EventManager {
  public:
   void Emit(GameEvent event);
 
+  // Adds an event handler to a specific event base type and returns a SubscriptionId
+  // that can be passed to Unsubscribe<T> to remove the handler.
   template <typename T>
-  void Subscribe(std::function<void(const T&, EventContext&)> handler) {
-    std::get<std::vector<std::function<void(const T&, EventContext&)>>>(
-        handlers_)
-        .push_back(std::move(handler));
+  SubscriptionId Subscribe(
+      std::function<void(const T&, EventContext&)> handler) {
+    SubscriptionId id = next_subscription_id_++;
+    std::get<HandlerList<T>>(handlers_).emplace_back(id, std::move(handler));
+    return id;
+  }
+
+  // Removes the handler registered under the given id for event type T.
+  // NOTE: Calling Unsubscribe from within a handler during Dispatch is not supported.
+  template <typename T>
+  void Unsubscribe(SubscriptionId id) {
+    auto& handler_list = std::get<HandlerList<T>>(handlers_);
+    auto handler_to_unsubscribe_from = std::find_if(
+        handler_list.begin(), handler_list.end(),
+        [id](const HandlerEntry<T>& entry) { return entry.first == id; });
+    if (handler_to_unsubscribe_from != handler_list.end()) {
+      handler_list.erase(handler_to_unsubscribe_from);
+    }
   }
 
   void Dispatch(EventContext& event_context);
@@ -69,17 +85,22 @@ class EventManager {
   const std::vector<GameEvent>& GetEvents() const;
 
  private:
-  std::vector<GameEvent> events_;
+  template <typename T>
+  using Handler = std::function<void(const T&, EventContext&)>;
 
-  std::tuple<
-      std::vector<std::function<void(const EnemyKilledEvent&, EventContext&)>>,
-      std::vector<
-          std::function<void(const PlayerDamagedEvent&, EventContext&)>>,
-      std::vector<std::function<void(const GemCollectedEvent&, EventContext&)>>,
-      std::vector<
-          std::function<void(const ProjectileDestroyedEvent&, EventContext&)>>,
-      std::vector<std::function<void(const ChestOpenedEvent&, EventContext&)>>,
-      std::vector<std::function<void(const PlayerDeadEvent&, EventContext&)>>>
+  template <typename T>
+  using HandlerEntry = std::pair<SubscriptionId, Handler<T>>;
+
+  template <typename T>
+  using HandlerList = std::vector<HandlerEntry<T>>;
+
+  std::vector<GameEvent> events_;
+  int next_subscription_id_ = 0;
+
+  std::tuple<HandlerList<EnemyKilledEvent>, HandlerList<PlayerDamagedEvent>,
+             HandlerList<GemCollectedEvent>,
+             HandlerList<ProjectileDestroyedEvent>,
+             HandlerList<ChestOpenedEvent>, HandlerList<PlayerDeadEvent>>
       handlers_;
 };
 

@@ -18,9 +18,7 @@ void EventManager::Dispatch(EventContext& event_context) {
           // Each event base type has its own list of listener functions to call when that event is heard.
           // Therefore, we need to first get the list specific to this event base type and then loop over
           // and call all listener functions with this event base type and the event context.
-          for (auto& handler : std::get<
-                   std::vector<std::function<void(const T&, EventContext&)>>>(
-                   handlers_)) {
+          for (auto& [subscription_id, handler] : std::get<HandlerList<T>>(handlers_)) {
             handler(typed_event, event_context);
           }
         },

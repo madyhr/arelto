@@ -19,18 +19,35 @@ class ItemTriggerEffect {
  public:
   virtual ~ItemTriggerEffect() = default;
   // Called once when the item is picked up; register event handlers here.
-  virtual void RegisterHandlers(EventManager& em) = 0;
+  virtual void RegisterHandlers(EventManager& event_manager) = 0;
+  void UnregisterHandlers(EventManager& event_manager) {
+    for (auto& unsubscribe : unsubscribers_) {
+      unsubscribe(event_manager);
+    }
+    unsubscribers_.clear();
+  }
+
+ protected:
+  template <typename T>
+  void Track(EventManager& event_manager,
+             std::function<void(const T&, EventContext&)> handler) {
+    SubscriptionId id = event_manager.Subscribe<T>(std::move(handler));
+    unsubscribers_.push_back([id](EventManager& em) { em.Unsubscribe<T>(id); });
+  }
+
+ private:
+  std::vector<std::function<void(EventManager&)>> unsubscribers_;
 };
 
 // Example: heal the player for heal_amount HP each time an enemy is killed.
 class HealOnKillEffect : public ItemTriggerEffect {
  public:
   explicit HealOnKillEffect(int heal_amount) : heal_amount_(heal_amount) {}
-  void RegisterHandlers(EventManager& em) override {
-    em.Subscribe<EnemyKilledEvent>(
-        [this](const EnemyKilledEvent&, EventContext& event_context) {
-          event_context.player.stats_.health += heal_amount_;
-        });
+  void RegisterHandlers(EventManager& event_manager) override {
+    Track<EnemyKilledEvent>(event_manager, [this](const EnemyKilledEvent&,
+                                                  EventContext& event_context) {
+      event_context.player.stats_.health += heal_amount_;
+    });
   }
 
  private:

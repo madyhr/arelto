@@ -223,6 +223,57 @@ TEST_F(EventManagerTest, Dispatch_EmptyQueue_HandlerNotCalled) {
 }
 
 // =============================================================================
+// Unsubscribe Tests
+// =============================================================================
+
+TEST_F(EventManagerTest, Unsubscribe_AfterSubscribe_HandlerNotCalled) {
+  bool called = false;
+  auto id = event_manager_.Subscribe<EnemyKilledEvent>(
+      [&](const EnemyKilledEvent&, EventContext&) { called = true; });
+
+  event_manager_.Unsubscribe<EnemyKilledEvent>(id);
+
+  event_manager_.Emit(EnemyKilledEvent{0, 0, 10});
+  auto event_context = MakeEventContext();
+  event_manager_.Dispatch(event_context);
+
+  EXPECT_FALSE(called);
+}
+
+TEST_F(EventManagerTest, Unsubscribe_InvalidId_IsNoOp) {
+  bool called = false;
+  event_manager_.Subscribe<EnemyKilledEvent>(
+      [&](const EnemyKilledEvent&, EventContext&) { called = true; });
+
+  event_manager_.Unsubscribe<EnemyKilledEvent>(9999);
+
+  event_manager_.Emit(EnemyKilledEvent{0, 0, 10});
+  auto event_context = MakeEventContext();
+  event_manager_.Dispatch(event_context);
+
+  EXPECT_TRUE(called);
+}
+
+TEST_F(EventManagerTest,
+       Unsubscribe_OneOfMultipleHandlers_OnlyRemovedHandlerSkipped) {
+  bool called_a = false;
+  bool called_b = false;
+  auto id_a = event_manager_.Subscribe<EnemyKilledEvent>(
+      [&](const EnemyKilledEvent&, EventContext&) { called_a = true; });
+  event_manager_.Subscribe<EnemyKilledEvent>(
+      [&](const EnemyKilledEvent&, EventContext&) { called_b = true; });
+
+  event_manager_.Unsubscribe<EnemyKilledEvent>(id_a);
+
+  event_manager_.Emit(EnemyKilledEvent{0, 0, 10});
+  auto event_context = MakeEventContext();
+  event_manager_.Dispatch(event_context);
+
+  EXPECT_FALSE(called_a);
+  EXPECT_TRUE(called_b);
+}
+
+// =============================================================================
 // Item Trigger System Tests
 // =============================================================================
 

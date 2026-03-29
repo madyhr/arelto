@@ -21,10 +21,6 @@ void EntityManager::Update(Scene& scene, float dt,
   UpdateObservations(scene, dt);
 }
 
-bool EntityManager::IsPlayerDead(const Player& player) {
-  return player.stats_.health <= 0;
-}
-
 void EntityManager::UpdateEnemyStatus(Scene& scene, float dt) {
   for (int i = 0; i < kNumEnemies; ++i) {
     scene.enemy.timeout_timer[i] += dt;

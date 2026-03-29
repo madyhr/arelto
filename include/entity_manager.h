@@ -15,7 +15,6 @@ class EntityManager {
   ~EntityManager();
 
   void Update(Scene& scene, float dt, EventManager& event_manager);
-  bool IsPlayerDead(const Player& player);
 
  private:
   int physics_tick_count_ = 0;

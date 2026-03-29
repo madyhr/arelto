@@ -204,6 +204,42 @@ TEST_F(CollisionManagerTest,
 }
 
 TEST_F(CollisionManagerTest,
+       PlayerEnemyCollision_EmitsPlayerDeadEvent_WhenHealthReachesZero) {
+  scene_.player.position_ = {100.0f, 100.0f};
+  scene_.player.stats_.health = 5;
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+  scene_.enemy.attack_cooldown[0] = -1.0f;
+  scene_.enemy.attack_damage[0] = 10;
+
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
+
+  bool found = false;
+  for (const auto& e : event_manager_.GetEvents()) {
+    if (std::holds_alternative<PlayerDeadEvent>(e)) {
+      found = true;
+    }
+  }
+  EXPECT_TRUE(found);
+}
+
+TEST_F(CollisionManagerTest,
+       PlayerEnemyCollision_NoPlayerDeadEvent_WhenHealthRemains) {
+  scene_.player.position_ = {100.0f, 100.0f};
+  scene_.player.stats_.health = 100;
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+  scene_.enemy.attack_cooldown[0] = -1.0f;
+  scene_.enemy.attack_damage[0] = 10;
+
+  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
+
+  for (const auto& e : event_manager_.GetEvents()) {
+    EXPECT_FALSE(std::holds_alternative<PlayerDeadEvent>(e));
+  }
+}
+
+TEST_F(CollisionManagerTest,
        PlayerEnemyCollision_NoDamageEvent_WhenOnCooldown) {
   scene_.player.position_ = {100.0f, 100.0f};
   scene_.enemy.position[0] = {100.0f, 100.0f};

@@ -34,10 +34,11 @@ struct ProjectileDestroyedEvent {
 struct ChestOpenedEvent {
   int chest_idx;
 };
+struct PlayerDeadEvent {};
 
 using GameEvent =
     std::variant<EnemyKilledEvent, PlayerDamagedEvent, GemCollectedEvent,
-                 ProjectileDestroyedEvent, ChestOpenedEvent>;
+                 ProjectileDestroyedEvent, ChestOpenedEvent, PlayerDeadEvent>;
 
 // -----------------------------------------------------------------------------
 // EventContext that is passed to every handler during EventManager.Dispatch
@@ -77,7 +78,8 @@ class EventManager {
       std::vector<std::function<void(const GemCollectedEvent&, EventContext&)>>,
       std::vector<
           std::function<void(const ProjectileDestroyedEvent&, EventContext&)>>,
-      std::vector<std::function<void(const ChestOpenedEvent&, EventContext&)>>>
+      std::vector<std::function<void(const ChestOpenedEvent&, EventContext&)>>,
+      std::vector<std::function<void(const PlayerDeadEvent&, EventContext&)>>>
       handlers_;
 };
 

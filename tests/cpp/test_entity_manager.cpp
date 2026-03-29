@@ -23,26 +23,6 @@ class EntityManagerTest : public ::testing::Test {
 };
 
 // =============================================================================
-// IsPlayerDead Tests
-// =============================================================================
-
-TEST_F(EntityManagerTest, IsPlayerDead_WorksCorrectly) {
-  // Dead cases
-  scene_.player.stats_.health = 0;
-  EXPECT_TRUE(entity_manager_.IsPlayerDead(scene_.player));
-
-  scene_.player.stats_.health = -10;
-  EXPECT_TRUE(entity_manager_.IsPlayerDead(scene_.player));
-
-  // Alive cases
-  scene_.player.stats_.health = 100;
-  EXPECT_FALSE(entity_manager_.IsPlayerDead(scene_.player));
-
-  scene_.player.stats_.health = 1;
-  EXPECT_FALSE(entity_manager_.IsPlayerDead(scene_.player));
-}
-
-// =============================================================================
 // Update - Enemy Status Tests
 // =============================================================================
 

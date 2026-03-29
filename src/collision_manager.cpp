@@ -232,6 +232,9 @@ void CollisionManager::ResolvePlayerEnemyCollision(
     enemy.damage_dealt_sim_step[enemy_idx] += enemy.attack_damage[enemy_idx];
     enemy.attack_cooldown[enemy_idx] = kEnemyAttackCooldown;
     event_manager.Emit(PlayerDamagedEvent{enemy_idx, damage_dealt});
+    if (player.stats_.health <= 0) {
+      event_manager.Emit(PlayerDeadEvent{});
+    }
   }
 };
 

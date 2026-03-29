@@ -205,9 +205,7 @@ void CollisionManager::ResolvePlayerEnemyCollision(
     EventManager& event_manager) {
 
   bool a_is_player = cp.type_a == EntityType::player;
-  int player_idx = a_is_player ? cp.index_a : cp.index_b;
   int enemy_idx = a_is_player ? cp.index_b : cp.index_a;
-  (void)player_idx;
 
   Vector2D player_centroid = player.position_ + player.collider_.offset;
   Vector2D enemy_centroid =

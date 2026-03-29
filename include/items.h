@@ -17,26 +17,32 @@ namespace arelto {
 
 class ItemTriggerEffect {
  public:
-  virtual ~ItemTriggerEffect() = default;
+  virtual ~ItemTriggerEffect() {
+    for (auto& unsubscribe : unsubscribers_) {
+      unsubscribe();
+    }
+  }
+  ItemTriggerEffect() = default;
+  ItemTriggerEffect(const ItemTriggerEffect&) = delete;
+  ItemTriggerEffect& operator=(const ItemTriggerEffect&) = delete;
+  ItemTriggerEffect(ItemTriggerEffect&&) = default;
+  ItemTriggerEffect& operator=(ItemTriggerEffect&&) = default;
+
   // Called once when the item is picked up.
   virtual void RegisterHandlers(EventManager& event_manager) = 0;
-  void UnregisterHandlers(EventManager& event_manager) {
-    for (auto& unsubscribe : unsubscribers_) {
-      unsubscribe(event_manager);
-    }
-    unsubscribers_.clear();
-  }
 
  protected:
+  // Subscribes handler and captures the unsubscription so the destructor can clean up automatically.
   template <typename T>
   void Track(EventManager& event_manager,
              std::function<void(const T&, EventContext&)> handler) {
     SubscriptionId id = event_manager.Subscribe<T>(std::move(handler));
-    unsubscribers_.push_back([id](EventManager& em) { em.Unsubscribe<T>(id); });
+    unsubscribers_.push_back(
+        [&event_manager, id]() { event_manager.Unsubscribe<T>(id); });
   }
 
  private:
-  std::vector<std::function<void(EventManager&)>> unsubscribers_;
+  std::vector<std::function<void()>> unsubscribers_;
 };
 
 // Heal the player for heal_amount HP each time an enemy is killed.

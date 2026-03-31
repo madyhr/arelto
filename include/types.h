@@ -320,11 +320,11 @@ inline auto GridToWorld(auto pos) {
 }
 
 inline float Deg2Rad(float deg) {
-  return deg * (std::numbers::pi / 180);
+  return deg * static_cast<float>((std::numbers::pi / 180));
 }
 
 inline float Rad2Deg(float rad) {
-  return rad * (180 / std::numbers::pi);
+  return rad * static_cast<float>((180 / std::numbers::pi));
 }
 
 struct GameStatus {

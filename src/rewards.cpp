@@ -27,8 +27,11 @@ void RewardManager::RegisterRewardTerms() {
 
           bool is_player_detected =
               IsEntityTypePresent(scene.enemy.ray_caster.ray_hit_types,
-                                  current_history_idx, i, EntityType::player);
-          value_array[i] = velocity_towards_player * is_player_detected;
+                                  {static_cast<size_t>(current_history_idx),
+                                   static_cast<size_t>(i)},
+                                  EntityType::player);
+          value_array[i] =
+              velocity_towards_player * static_cast<float>(is_player_detected);
         }
 
         return value_array;

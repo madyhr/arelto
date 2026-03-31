@@ -23,7 +23,7 @@ class EntityManager {
   void UpdateProjectilesStatus(Scene& scene, EventManager& event_manager);
   void UpdateGemStatus(Scene& scene);
   void UpdateChestStatus(Scene& scene);
-  void UpdateObservations(Scene& scene, float dt);
+  void UpdateObservations(Scene& scene);
   void UpdateWorldOccupancyMap(
       FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
       Player& player, Enemy& enemy, Projectiles& projectiles);

@@ -15,9 +15,9 @@ namespace arelto {
 
 void CollisionManager::HandleCollisionsSAP(Scene& scene,
                                            EventManager& event_manager) {
-  int num_proj = scene.projectiles.GetNumProjectiles();
-  int num_gem = scene.exp_gem.GetNumExpGems();
-  int num_chest = scene.chest.GetNumChests();
+  size_t num_proj = scene.projectiles.GetNumProjectiles();
+  size_t num_gem = scene.exp_gem.GetNumExpGems();
+  size_t num_chest = scene.chest.GetNumChests();
   size_t total_entities = 1 + kNumEnemies + num_proj + num_gem + num_chest;
 
   if (entity_aabb_.capacity() < total_entities) {
@@ -39,23 +39,25 @@ void CollisionManager::HandleCollisionsSAP(Scene& scene,
         scene.enemy.collider[i].size, scene.enemy.entity_type, i));
   }
 
-  for (int i = 0; i < num_proj; ++i) {
+  for (size_t i = 0; i < num_proj; ++i) {
     entity_aabb_.push_back(GetCollisionAABB(
         scene.projectiles.position_[i] + scene.projectiles.collider_[i].offset,
         scene.projectiles.collider_[i].size, scene.projectiles.entity_type_,
-        i));
+        static_cast<int>(i)));
   }
 
-  for (int i = 0; i < num_gem; ++i) {
+  for (size_t i = 0; i < num_gem; ++i) {
     entity_aabb_.push_back(GetCollisionAABB(
         scene.exp_gem.position_[i] + scene.exp_gem.collider_[i].offset,
-        scene.exp_gem.collider_[i].size, scene.exp_gem.entity_type_, i));
+        scene.exp_gem.collider_[i].size, scene.exp_gem.entity_type_,
+        static_cast<int>(i)));
   }
 
-  for (int i = 0; i < num_chest; ++i) {
+  for (size_t i = 0; i < num_chest; ++i) {
     entity_aabb_.push_back(GetCollisionAABB(
         scene.chest.position_[i] + scene.chest.collider_[i].offset,
-        scene.chest.collider_[i].size, scene.chest.entity_type_, i));
+        scene.chest.collider_[i].size, scene.chest.entity_type_,
+        static_cast<int>(i)));
   }
 
   std::sort(entity_aabb_.begin(), entity_aabb_.end(),

@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "constants/enemy.h"
-#include "constants/ray_caster.h"
 #include "observation_manager.h"
 #include "scene.h"
 #include "test_helpers.h"
@@ -29,7 +28,7 @@ class ObservationManagerTest : public ::testing::Test {
 
 TEST_F(ObservationManagerTest,
        FillObservationBuffer_ThrowsOnSizeMismatch_TooSmall) {
-  int size = obs_manager_.GetObservationSize(scene_);
+  int size = obs_manager_.GetObservationSize();
   std::vector<float> buffer(kNumEnemies * size - 1);  // One less than expected
 
   EXPECT_THROW(
@@ -39,7 +38,7 @@ TEST_F(ObservationManagerTest,
 
 TEST_F(ObservationManagerTest,
        FillObservationBuffer_ThrowsOnSizeMismatch_TooLarge) {
-  int size = obs_manager_.GetObservationSize(scene_);
+  int size = obs_manager_.GetObservationSize();
   std::vector<float> buffer(kNumEnemies * size + 1);  // One more than expected
 
   EXPECT_THROW(
@@ -49,7 +48,7 @@ TEST_F(ObservationManagerTest,
 
 TEST_F(ObservationManagerTest,
        FillObservationBuffer_DoesNotThrowOnCorrectSize) {
-  int size = obs_manager_.GetObservationSize(scene_);
+  int size = obs_manager_.GetObservationSize();
   std::vector<float> buffer(kNumEnemies * size);
 
   EXPECT_NO_THROW(
@@ -67,7 +66,7 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_ContainsTypeInformation) {
   scene_.enemy.ray_caster.ray_hit_types[history_idx][target_ray][target_enemy] =
       target_type;
 
-  int size = obs_manager_.GetObservationSize(scene_);
+  int size = obs_manager_.GetObservationSize();
   std::vector<float> buffer(kNumEnemies * size);
   obs_manager_.FillObservationBuffer(buffer.data(), buffer.size(), scene_);
   bool found_specific_type = false;
@@ -83,7 +82,7 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_ContainsTypeInformation) {
 
 TEST_F(ObservationManagerTest, FillObservationBuffer_BufferFullyPopulated) {
   // Initialize buffer with NaN to detect unpopulated values
-  int size = obs_manager_.GetObservationSize(scene_);
+  int size = obs_manager_.GetObservationSize();
   std::vector<float> buffer(kNumEnemies * size,
                             std::numeric_limits<float>::quiet_NaN());
 

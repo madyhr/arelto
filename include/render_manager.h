@@ -17,6 +17,11 @@
 
 namespace arelto {
 
+struct TextLayout {
+  int center_width;
+  int wrap_width;
+};
+
 struct RenderResources {
   SDL_Window* window = nullptr;
   SDL_Renderer* renderer = nullptr;
@@ -70,11 +75,11 @@ class RenderManager {
   void RenderTiledMap();
   void RenderPlayer(const Player& player, float alpha);
   int SetupEnemyGeometry(const Enemy& enemy, float alpha);
-  void RenderEnemies(const Enemy& enemy, int num_vertices);
+  void RenderEnemies(int num_vertices);
   void SetupProjectileGeometry(const Projectiles& projectiles, float alpha);
-  void RenderProjectiles(const Projectiles& projectiles);
+  void RenderProjectiles();
   void SetupGemGeometry(const ExpGem& exp_gem, float alpha);
-  void RenderGem(const ExpGem& exp_gem);
+  void RenderGem();
   void SetupChestGeometry(const Chest& chest, float alpha);
   void RenderChests();
   void RenderDebugWorldOccupancyMap(
@@ -89,8 +94,8 @@ class RenderManager {
   // Text primitives
   void RenderDigitString(const std::string& text, int start_x, int start_y,
                          Size2D sprite_size, Size2D char_size);
-  void RenderText(const std::string& text, int x, int y, SDL_Color color,
-                  TTF_Font* font, int center_width = 0, int wrap_width = 0);
+  void RenderText(const std::string& text, SDL_Point pos, SDL_Color color,
+                  TTF_Font* font, TextLayout layout = {0, 0});
 };
 
 }  // namespace arelto

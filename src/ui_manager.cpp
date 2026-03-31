@@ -394,7 +394,7 @@ void UIManager::BuildLevelUpMenu(const UpgradeOptions& options) {
   card_row->SetAnchor(AnchorType::Center);
   int total_width = kNumSpellUpgradeOptions * kLevelUpCardWidth +
                     (kNumSpellUpgradeOptions - 1) * kLevelUpCardGap;
-  card_row->SetSize(total_width, kLevelUpCardHeight);
+  card_row->SetSize(static_cast<float>(total_width), kLevelUpCardHeight);
   card_row->SetSpacing(kLevelUpCardGap);
 
   for (size_t i = 0; i < options.size(); ++i) {
@@ -512,7 +512,7 @@ void UIManager::Update(const Scene& scene, float time) {
   auto* health_bar = GetWidget<UIProgressBar>("health_bar");
   if (health_bar) {
     int current_hp = scene.player.stats_.health;
-    int max_hp = static_cast<int>(scene.player.stats_.max_health.GetValue());
+    float max_hp = scene.player.stats_.max_health.GetValue();
     float percent = static_cast<float>(current_hp) / max_hp;
     health_bar->SetPercent(percent);
   }
@@ -527,7 +527,8 @@ void UIManager::Update(const Scene& scene, float time) {
   auto* exp_bar = GetWidget<UIProgressBar>("exp_bar");
   if (exp_bar) {
     int current_exp = scene.player.stats_.exp_points;
-    int max_exp = scene.player.stats_.exp_points_required.GetValueCeil();
+    float max_exp = static_cast<float>(
+        scene.player.stats_.exp_points_required.GetValueCeil());
     float percent = static_cast<float>(current_exp) / max_exp;
     exp_bar->SetPercent(percent);
   }
@@ -619,7 +620,7 @@ void UIManager::BuildStartScreen() {
   // Distance from bottom = H - (Y + h) = 2/7 * (H - h).
   // SetPosition uses positive Y for down, so negative Y for up from bottom.
   int offset_y = -2 * (kWindowHeight - kBeginButtonHeight) / 7;
-  begin_btn->SetPosition(0, offset_y);
+  begin_btn->SetPosition(0, static_cast<float>(offset_y));
   begin_btn->SetSize(kBeginButtonWidth, kBeginButtonHeight);
   begin_btn->SetTexture(resources_->begin_button_texture);
   begin_btn->SetNormalSrcRect(
@@ -671,7 +672,7 @@ void UIManager::BuildGameOverScreen() {
   auto black_bar = std::make_shared<Panel>();
   black_bar->SetId("game_over_bar");
   black_bar->SetAnchor(AnchorType::Center);
-  black_bar->SetSize(kWindowWidth, kWindowHeight / 3);
+  black_bar->SetSize(kWindowWidth, static_cast<float>(kWindowHeight) / 3.0f);
   black_bar->SetBackgroundColor(WithOpacity(kColorBlack, 128));
 
   auto game_over_image = std::make_shared<UIImage>();
@@ -856,7 +857,7 @@ void UIManager::BuildItemMenu(const UpgradeOptions& options) {
   card_row->SetAnchor(AnchorType::Center);
   int total_width =
       kNumItemOptions * kItemCardWidth + (kNumItemOptions - 1) * kItemCardGap;
-  card_row->SetSize(total_width, kItemCardHeight);
+  card_row->SetSize(static_cast<float>(total_width), kItemCardHeight);
   card_row->SetSpacing(kItemCardGap);
 
   for (size_t i = 0; i < options.size(); ++i) {

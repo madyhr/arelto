@@ -44,7 +44,7 @@ TEST_F(RewardManagerTest, UpdateRewardTerms_AccumulatesSignals) {
   reward_manager_.UpdateRewardTerms(scene_);
 
   // Calculate total (which uses accumulated signals)
-  auto total = reward_manager_.CalculateTotalReward(scene_);
+  auto total = reward_manager_.CalculateTotalReward();
 
   // The constant_one term contributes 2.0 per enemy (1.0 * 2 updates * 1.0 weight)
   for (int i = 0; i < kNumEnemies; ++i) {
@@ -74,7 +74,7 @@ TEST_F(RewardManagerTest, CalculateTotalReward_AppliesWeights) {
       });
 
   reward_manager_.UpdateRewardTerms(scene_);
-  auto total = reward_manager_.CalculateTotalReward(scene_);
+  auto total = reward_manager_.CalculateTotalReward();
 
   // The weighted_term should contribute weight * signal = 10.0 per enemy
   // Other default terms may add to this, so we check the weighted_term's
@@ -92,8 +92,8 @@ TEST_F(RewardManagerTest, CalculateTotalReward_AppliesWeights) {
 TEST_F(RewardManagerTest, CalculateTotalReward_ClearsAccumulated) {
   reward_manager_.UpdateRewardTerms(scene_);
 
-  auto first_total = reward_manager_.CalculateTotalReward(scene_);
-  auto second_total = reward_manager_.CalculateTotalReward(scene_);
+  auto first_total = reward_manager_.CalculateTotalReward();
+  auto second_total = reward_manager_.CalculateTotalReward();
 
   // Without new updates, the accumulated signals should have been cleared
   for (int i = 0; i < kNumEnemies; ++i) {
@@ -110,7 +110,7 @@ TEST_F(RewardManagerTest, FillRewardBuffer_ThrowsOnSizeMismatch) {
   std::vector<float> buffer(kNumEnemies - 1);  // Wrong size
 
   EXPECT_THROW(
-      reward_manager_.FillRewardBuffer(buffer.data(), buffer.size(), scene_),
+      reward_manager_.FillRewardBuffer(buffer.data(), buffer.size()),
       std::runtime_error);
 }
 
@@ -118,14 +118,14 @@ TEST_F(RewardManagerTest, FillRewardBuffer_DoesNotThrowOnCorrectSize) {
   std::vector<float> buffer(kNumEnemies);
 
   EXPECT_NO_THROW(
-      reward_manager_.FillRewardBuffer(buffer.data(), buffer.size(), scene_));
+      reward_manager_.FillRewardBuffer(buffer.data(), buffer.size()));
 }
 
 TEST_F(RewardManagerTest, FillRewardBuffer_ContainsTotalRewards) {
   reward_manager_.UpdateRewardTerms(scene_);
 
   std::vector<float> buffer(kNumEnemies);
-  reward_manager_.FillRewardBuffer(buffer.data(), buffer.size(), scene_);
+  reward_manager_.FillRewardBuffer(buffer.data(), buffer.size());
 
   // All values should be valid (not NaN)
   for (int i = 0; i < kNumEnemies; ++i) {

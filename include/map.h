@@ -98,11 +98,11 @@ class FixedMap {
     }
   }
 
-  inline void SetGrid(int x, int y, int w, int h, EntityType type) {
+  inline void SetGrid(SDL_Rect rect, EntityType type) {
     // Sets a grid of cells to a certain entity type.
-    for (int i = 0; i < w + 1; ++i) {
-      for (int j = 0; j < h + 1; ++j) {
-        Set(x + i, y + j, type);
+    for (int i = 0; i < rect.w + 1; ++i) {
+      for (int j = 0; j < rect.h + 1; ++j) {
+        Set(rect.x + i, rect.y + j, type);
       }
     }
   }

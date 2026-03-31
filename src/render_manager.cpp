@@ -34,7 +34,7 @@ bool RenderManager::Initialize(bool is_headless) {
 
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     std::cerr << "SDL could not initialize! SDL Error: " << SDL_GetError()
-              << std::endl;
+              << '\n';
     return false;
   }
 
@@ -47,7 +47,7 @@ bool RenderManager::Initialize(bool is_headless) {
                        kWindowWidth, kWindowHeight, SDL_WINDOW_SHOWN);
 
   if (resources_.window == nullptr) {
-    std::cerr << "Window could not be created: " << SDL_GetError() << std::endl;
+    std::cerr << "Window could not be created: " << SDL_GetError() << '\n';
     return false;
   }
 
@@ -55,21 +55,19 @@ bool RenderManager::Initialize(bool is_headless) {
       SDL_CreateRenderer(resources_.window, -1, SDL_RENDERER_ACCELERATED);
 
   if (resources_.renderer == nullptr) {
-    std::cerr << "Renderer could not be created: " << SDL_GetError()
-              << std::endl;
+    std::cerr << "Renderer could not be created: " << SDL_GetError() << '\n';
     return false;
   }
 
   int img_flags = IMG_INIT_PNG;
   if (!(IMG_Init(img_flags) & img_flags)) {
     std::cerr << "SDL Images could not be initialized: " << SDL_GetError()
-              << std::endl;
+              << '\n';
     return false;
   }
 
   if (TTF_Init() == -1) {
-    std::cerr << "SDL_ttf could not be initialized: " << TTF_GetError()
-              << std::endl;
+    std::cerr << "SDL_ttf could not be initialized: " << TTF_GetError() << '\n';
     return false;
   }
 
@@ -137,8 +135,7 @@ bool RenderManager::Initialize(bool is_headless) {
   if (resources_.ui_resources.ui_font_medium == nullptr ||
       resources_.ui_resources.ui_font_large == nullptr ||
       resources_.ui_resources.ui_font_huge == nullptr) {
-    std::cerr << "TTF font could not be loaded: " << TTF_GetError()
-              << std::endl;
+    std::cerr << "TTF font could not be loaded: " << TTF_GetError() << '\n';
     return false;
   }
 
@@ -166,7 +163,7 @@ bool RenderManager::Initialize(bool is_headless) {
           resources_.item_textures.begin(), resources_.item_textures.end(),
           [](SDL_Texture* sdl_texture) { return sdl_texture == nullptr; })) {
     std::cerr << "One or more textures could not be loaded: " << SDL_GetError()
-              << std::endl;
+              << '\n';
     return false;
   }
 
@@ -221,11 +218,11 @@ void RenderManager::Render(const Scene& scene, float alpha,
     RenderPlayer(scene.player, alpha);
 
     int num_enemy_vertices = SetupEnemyGeometry(scene.enemy, alpha);
-    RenderEnemies(scene.enemy, num_enemy_vertices);
+    RenderEnemies(num_enemy_vertices);
     SetupProjectileGeometry(scene.projectiles, alpha);
-    RenderProjectiles(scene.projectiles);
+    RenderProjectiles();
     SetupGemGeometry(scene.exp_gem, alpha);
-    RenderGem(scene.exp_gem);
+    RenderGem();
     SetupChestGeometry(scene.chest, alpha);
     RenderChests();
 
@@ -327,21 +324,22 @@ void RenderManager::RenderPlayer(const Player& player, float alpha) {
   bool is_standing_still = player.velocity_.Norm() < 1e-3;
   bool is_facing_right = player.last_horizontal_velocity_ >= 0.0f;
 
-  int src_x = ((SDL_GetTicks64() / kPlayerAnimationFrameDuration) %
-               kPlayerNumSpriteCells) *
-              kPlayerSpriteCellWidth;
+  int src_x =
+      ((static_cast<int>(SDL_GetTicks64()) / kPlayerAnimationFrameDuration) %
+       kPlayerNumSpriteCells) *
+      kPlayerSpriteCellWidth;
   int src_y = is_standing_still ? 0 : kPlayerSpriteCellHeight;
 
   int texture_w, texture_h;
   SDL_QueryTexture(resources_.player_texture, nullptr, nullptr, &texture_w,
                    &texture_h);
 
-  float u_left = static_cast<float>(src_x) / texture_w;
-  float u_right =
-      static_cast<float>(src_x + kPlayerSpriteCellWidth) / texture_w;
-  float v_top = static_cast<float>(src_y) / texture_h;
-  float v_bottom =
-      static_cast<float>(src_y + kPlayerSpriteCellHeight) / texture_h;
+  float u_left = static_cast<float>(src_x) / static_cast<float>(texture_w);
+  float u_right = static_cast<float>(src_x + kPlayerSpriteCellWidth) /
+                  static_cast<float>(texture_w);
+  float v_top = static_cast<float>(src_y) / static_cast<float>(texture_h);
+  float v_bottom = static_cast<float>(src_y + kPlayerSpriteCellHeight) /
+                   static_cast<float>(texture_h);
 
   float vertex_left = is_facing_right ? u_left : u_right;
   float vertex_right = is_facing_right ? u_right : u_left;
@@ -385,8 +383,8 @@ int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
       continue;
     };
 
-    float w = enemy.sprite_size[i].width;
-    float h = enemy.sprite_size[i].height;
+    float w = static_cast<float>(enemy.sprite_size[i].width);
+    float h = static_cast<float>(enemy.sprite_size[i].height);
 
     // Skip setting up the enemy geometry if they are not in view.
     if (enemy.position[i].x + w < cull_left ||
@@ -407,7 +405,7 @@ int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
         ((SDL_GetTicks64() + time_offset) / kEnemyAnimationFrameDuration) %
         kEnemyNumSpriteCells;
 
-    float u_left = frame_idx * cell_uv_width;
+    float u_left = static_cast<float>(frame_idx) * cell_uv_width;
     float u_right = u_left + cell_uv_width;
     float v_top = kTexCoordTop;
     float v_bottom = kTexCoordBottom;
@@ -445,7 +443,7 @@ int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
   return current_vertex_idx;
 };
 
-void RenderManager::RenderEnemies(const Enemy& enemy, int num_vertices) {
+void RenderManager::RenderEnemies(int num_vertices) {
   // We use the number of vertices calculated during the setup of the enemy
   // geometry to render the vertices.
   SDL_RenderGeometry(resources_.renderer, resources_.enemy_texture,
@@ -474,8 +472,8 @@ void RenderManager::SetupProjectileGeometry(const Projectiles& projectiles,
   cull_bottom += kRenderCullPadding;
 
   for (int i = 0; i < num_projectiles; ++i) {
-    float w = projectiles.sprite_size_[i].width;
-    float h = projectiles.sprite_size_[i].height;
+    float w = static_cast<float>(projectiles.sprite_size_[i].width);
+    float h = static_cast<float>(projectiles.sprite_size_[i].height);
 
     // Skip setting up the projectile geometry if they are not in view.
     if (projectiles.position_[i].x + w < cull_left ||
@@ -493,12 +491,12 @@ void RenderManager::SetupProjectileGeometry(const Projectiles& projectiles,
 
     int texture_id = projectiles.proj_type_[i];
 
-    uint16_t time_offset = i * 127;
-    int frame_idx =
-        ((SDL_GetTicks64() + time_offset) / kProjectileAnimationFrameDuration) %
-        kProjectileNumSpriteCells;
+    int time_offset = i * 127;
+    int frame_idx = ((static_cast<int>(SDL_GetTicks64()) + time_offset) /
+                     kProjectileAnimationFrameDuration) %
+                    kProjectileNumSpriteCells;
 
-    float u_left = frame_idx * cell_uv_width;
+    float u_left = static_cast<float>(frame_idx) * cell_uv_width;
     float u_right = u_left + cell_uv_width;
     float v_top = kTexCoordTop;
     float v_bottom = kTexCoordBottom;
@@ -533,7 +531,7 @@ void RenderManager::SetupProjectileGeometry(const Projectiles& projectiles,
   }
 };
 
-void RenderManager::RenderProjectiles(const Projectiles& projectiles) {
+void RenderManager::RenderProjectiles() {
   for (const auto& pair : resources_.projectile_vertices_grouped_) {
     int texture_id = pair.first;
     const std::vector<SDL_Vertex>& vertices = pair.second;
@@ -566,8 +564,8 @@ void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
   cull_bottom += kRenderCullPadding;
 
   for (int i = 0; i < num_gems; ++i) {
-    float w = exp_gem.sprite_size_[i].width;
-    float h = exp_gem.sprite_size_[i].height;
+    float w = static_cast<float>(exp_gem.sprite_size_[i].width);
+    float h = static_cast<float>(exp_gem.sprite_size_[i].height);
 
     // Skip setting up the projectile geometry if they are not in view.
     if (exp_gem.position_[i].x + w < cull_left ||
@@ -587,7 +585,7 @@ void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
 
     int frame_idx = 0;
 
-    float u_left = frame_idx * cell_uv_width;
+    float u_left = static_cast<float>(frame_idx) * cell_uv_width;
     float u_right = u_left + cell_uv_width;
     float v_top = kTexCoordTop;
     float v_bottom = kTexCoordBottom;
@@ -621,7 +619,7 @@ void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
   }
 };
 
-void RenderManager::RenderGem(const ExpGem& exp_gem) {
+void RenderManager::RenderGem() {
   for (const auto& pair : resources_.gem_vertices_grouped_) {
     int texture_id = pair.first;
     const std::vector<SDL_Vertex>& vertices = pair.second;
@@ -721,10 +719,12 @@ void RenderManager::RenderDebugWorldOccupancyMap(
     for (int j = start_y; j < end_y; ++j) {
 
       SDL_Rect render_rect;
-      render_rect.x = static_cast<int>(i * kOccupancyMapResolution -
-                                       camera_.render_position_.x);
-      render_rect.y = static_cast<int>(j * kOccupancyMapResolution -
-                                       camera_.render_position_.y);
+      render_rect.x =
+          static_cast<int>(static_cast<float>(i * kOccupancyMapResolution) -
+                           camera_.render_position_.x);
+      render_rect.y =
+          static_cast<int>(static_cast<float>(j * kOccupancyMapResolution) -
+                           camera_.render_position_.y);
       render_rect.w = kOccupancyMapResolution;
       render_rect.h = kOccupancyMapResolution;
 
@@ -798,8 +798,8 @@ void RenderManager::RenderDebugRayCaster(const Enemy& enemy, float alpha) {
 
     Vector2D center_world = enemy_pos_world + enemy.collider[i].offset;
 
-    float half_w = enemy.collider[i].size.width * 0.5f;
-    float half_h = enemy.collider[i].size.height * 0.5f;
+    float half_w = static_cast<float>(enemy.collider[i].size.width) * 0.5f;
+    float half_h = static_cast<float>(enemy.collider[i].size.height) * 0.5f;
     float ray_offset_dist = std::max(half_h, half_w) + kMinRayDistance;
 
     int ray_history_idx =
@@ -918,8 +918,9 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
         RenderDigitString(lbl->GetText(), bounds.x, bounds.y, sprite_size,
                           char_size);
       } else if (lbl->GetFont()) {
-        RenderText(lbl->GetText(), bounds.x, bounds.y, lbl->GetColor(),
-                   lbl->GetFont(), lbl->GetCenterWidth(), lbl->GetWrapWidth());
+        RenderText(lbl->GetText(), {bounds.x, bounds.y}, lbl->GetColor(),
+                   lbl->GetFont(),
+                   {lbl->GetCenterWidth(), lbl->GetWrapWidth()});
       }
       break;
     }
@@ -946,8 +947,8 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
         SDL_RenderCopy(resources_.renderer, btn->GetTexture(), &src, &bounds);
       }
       if (btn->GetLabelFont() && !btn->GetLabel().empty()) {
-        RenderText(btn->GetLabel(), bounds.x, bounds.y + (bounds.h - 26) / 2,
-                   {255, 255, 255, 255}, btn->GetLabelFont(), bounds.w);
+        RenderText(btn->GetLabel(), {bounds.x, bounds.y + (bounds.h - 26) / 2},
+                   {255, 255, 255, 255}, btn->GetLabelFont(), {bounds.w, 0});
       }
       break;
     }
@@ -984,8 +985,8 @@ void RenderManager::RenderDigitString(const std::string& text, int start_x,
                                       int start_y, Size2D sprite_size,
                                       Size2D char_size) {
 
-  int char_width = char_size.width;
-  int char_height = char_size.height;
+  int char_width = static_cast<int>(char_size.width);
+  int char_height = static_cast<int>(char_size.height);
 
   int current_x = start_x;
 
@@ -995,12 +996,12 @@ void RenderManager::RenderDigitString(const std::string& text, int start_x,
 
     if (c >= '0' && c <= '9') {
       int digit = c - '0';
-      src_rect.x = digit * sprite_size.width;
+      src_rect.x = static_cast<int>(digit * sprite_size.width);
     } else if (c == '/') {
       // TODO: Add more maintainable way of getting the sprite cell for a char.
-      src_rect.x = sprite_size.width * 10;
+      src_rect.x = static_cast<int>(sprite_size.width * 10);
     } else if (c == '-') {
-      src_rect.x = sprite_size.width * 11;
+      src_rect.x = static_cast<int>(sprite_size.width * 11);
     } else {
       // if not one of the above, they are not in the texture atlas, so we skip.
       current_x += char_width;
@@ -1154,28 +1155,28 @@ void RenderManager::RenderQuitConfirmMenu() {
 // and font.
 // Optional: If you specify a positive center_width, then it will center-align
 // the text along that center_width.
-void RenderManager::RenderText(const std::string& text, int x, int y,
+void RenderManager::RenderText(const std::string& text, SDL_Point pos,
                                SDL_Color color, TTF_Font* font,
-                               int center_width, int wrap_width) {
-  if (wrap_width > 0) {
+                               TextLayout layout) {
+  if (layout.wrap_width > 0) {
     TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_CENTER);
   }
   SDL_Surface* surface =
-      wrap_width > 0 ? TTF_RenderText_Blended_Wrapped(font, text.c_str(), color,
-                                                      wrap_width)
-                     : TTF_RenderText_Blended(font, text.c_str(), color);
-  if (wrap_width > 0) {
+      layout.wrap_width > 0 ? TTF_RenderText_Blended_Wrapped(
+                                  font, text.c_str(), color, layout.wrap_width)
+                            : TTF_RenderText_Blended(font, text.c_str(), color);
+  if (layout.wrap_width > 0) {
     TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_LEFT);
   }
   SDL_Texture* texture =
       SDL_CreateTextureFromSurface(resources_.renderer, surface);
 
-  int render_x = x;
-  if (center_width > 0) {
-    render_x = x + (center_width - surface->w) / 2;
+  int render_x = pos.x;
+  if (layout.center_width > 0) {
+    render_x = pos.x + (layout.center_width - surface->w) / 2;
   }
 
-  SDL_Rect dest = {render_x, y, surface->w, surface->h};
+  SDL_Rect dest = {render_x, pos.y, surface->w, surface->h};
   SDL_RenderCopy(resources_.renderer, texture, nullptr, &dest);
 
   SDL_DestroyTexture(texture);

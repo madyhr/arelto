@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <utility>
 #include "entity.h"
 #include "event_manager.h"
 #include "types.h"
@@ -96,14 +97,13 @@ class ItemArchive {
 class ItemStatUpgrade : public Upgrade {
  public:
   ItemStatUpgrade(ItemId item_id, std::string item_name, ItemUpgradeType type,
-                  ModifierType modifier_type, float current_value,
-                  float new_value)
+                  ModifierType modifier_type, ValueRange value_range)
       : item_id_(item_id),
-        item_name_(item_name),
+        item_name_(std::move(item_name)),
         type_(type),
         modifier_type_(modifier_type),
-        current_value_(current_value),
-        new_value_(new_value) {}
+        current_value_(value_range.current),
+        updated_value_(value_range.updated) {}
 
   void Apply(Player& player) override {
     Stat* stat_to_upgrade;
@@ -116,7 +116,7 @@ class ItemStatUpgrade : public Upgrade {
         break;
     }
 
-    float modifier_value = new_value_ - current_value_;
+    float modifier_value = updated_value_ - current_value_;
 
     Modifier mod = Modifier{modifier_value, modifier_type_, nullptr};
     stat_to_upgrade->AddModifier(mod);
@@ -144,7 +144,7 @@ class ItemStatUpgrade : public Upgrade {
   }
   std::string GetNewValueString() const override {
     std::stringstream ss;
-    ss << std::fixed << std::setprecision(2) << new_value_;
+    ss << std::fixed << std::setprecision(2) << updated_value_;
     return ss.str();
   }
 
@@ -154,7 +154,7 @@ class ItemStatUpgrade : public Upgrade {
   ItemUpgradeType type_;
   ModifierType modifier_type_;
   float current_value_;
-  float new_value_;
+  float updated_value_;
 };
 
 }  // namespace arelto

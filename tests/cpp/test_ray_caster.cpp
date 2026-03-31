@@ -64,7 +64,7 @@ TEST_F(RayCasterTest, CastRay_NoObstacles_ReturnsLargeDistance) {
   // Let's protect our test by setting boundaries.
   // No need to set manual borders here as SetUp does it.
 
-  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
 
   // Should hit the right wall (from SetUp borders)
   // Map width is kOccupancyMapWidth * Resolution.
@@ -90,7 +90,7 @@ TEST_F(RayCasterTest, CastRay_OrthogonalX_DetectsWall) {
 
   Vector2D ray_dir = {1.0f, 0.0f};  // Right
 
-  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
 
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
   EXPECT_NEAR(hit.blocking_hit.distance, 50.0f, 1.0f);
@@ -106,7 +106,7 @@ TEST_F(RayCasterTest, CastRay_OrthogonalY_DetectsWall) {
 
   Vector2D ray_dir = {0.0f, 1.0f};  // Down
 
-  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
 
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
   EXPECT_NEAR(hit.blocking_hit.distance, 50.0f, 1.0f);
@@ -135,7 +135,7 @@ TEST_F(RayCasterTest, CastRay_NegativeDirection_DetectsWall) {
 
   Vector2D ray_dir = {-1.0f, 0.0f};  // Left
 
-  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
 
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
   EXPECT_NEAR(hit.blocking_hit.distance, 37.5f, 1.0f);
@@ -155,7 +155,7 @@ TEST_F(RayCasterTest, CastRay_Diagonal_DetectsWall) {
   Vector2D ray_dir = {1.0f, 1.0f};
   ray_dir = ray_dir.Normalized();
 
-  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
 
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
   EXPECT_GT(hit.blocking_hit.distance, 0.0f);
@@ -170,7 +170,7 @@ TEST_F(RayCasterTest, CastRay_CloseProximity_DetectsImmediateWall) {
   Vector2D start_pos = {124.0f, 112.5f};
   Vector2D ray_dir = {1.0f, 0.0f};
 
-  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
 
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
   // Wall starts at 5*25=125. Start=124. Dist=1.0.
@@ -188,7 +188,7 @@ TEST_F(RayCasterTest, CastRay_ProjectileAndWall) {
   // Add Wall at (6, 4)
   SetWall(6, 4);
 
-  DualRayHit hit = CastRay(start_pos, ray_dir, occupancy_map_);
+  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
 
   // Blocking hit should be the wall
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
@@ -213,7 +213,7 @@ TEST_F(RayCasterTest, IsEntityTypePresent_Found) {
   // Set one to wall
   history[0][0][0] = EntityType::terrain;
 
-  EXPECT_TRUE(IsEntityTypePresent(history, 0, 0, EntityType::terrain));
+  EXPECT_TRUE(IsEntityTypePresent(history, {0, 0}, EntityType::terrain));
 }
 
 TEST_F(RayCasterTest, IsEntityTypePresent_NotFound) {
@@ -224,7 +224,7 @@ TEST_F(RayCasterTest, IsEntityTypePresent_NotFound) {
     }
   }
 
-  EXPECT_FALSE(IsEntityTypePresent(history, 0, 0, EntityType::terrain));
+  EXPECT_FALSE(IsEntityTypePresent(history, {0, 0}, EntityType::terrain));
 }
 
 }  // namespace

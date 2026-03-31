@@ -31,7 +31,7 @@ TEST_F(ActionManagerTest, ReadActionBuffer_SetsVelocitiesCorrectly_AllZero) {
   // Buffer value 1 -> velocity 0.0f
   // Buffer value 2 -> velocity 1.0f
 
-  int action_size = action_manager_.GetActionSize(scene_);
+  int action_size = action_manager_.GetActionSize();
   std::vector<int> buffer(kNumEnemies * action_size);
 
   // Set all actions to 1 (which maps to 0.0f velocity)
@@ -49,7 +49,7 @@ TEST_F(ActionManagerTest, ReadActionBuffer_SetsVelocitiesCorrectly_AllZero) {
 
 TEST_F(ActionManagerTest,
        ReadActionBuffer_SetsVelocitiesCorrectly_AllPositive) {
-  int action_size = action_manager_.GetActionSize(scene_);
+  int action_size = action_manager_.GetActionSize();
   std::vector<int> buffer(kNumEnemies * action_size);
 
   // Set all x velocities to 2 (-> 1.0f) and all y velocities to 2 (-> 1.0f)
@@ -68,7 +68,7 @@ TEST_F(ActionManagerTest,
 
 TEST_F(ActionManagerTest,
        ReadActionBuffer_SetsVelocitiesCorrectly_AllNegative) {
-  int action_size = action_manager_.GetActionSize(scene_);
+  int action_size = action_manager_.GetActionSize();
   std::vector<int> buffer(kNumEnemies * action_size);
 
   // Set all x velocities to 0 (-> -1.0f) and all y velocities to 0 (-> -1.0f)
@@ -85,7 +85,7 @@ TEST_F(ActionManagerTest,
 }
 
 TEST_F(ActionManagerTest, ReadActionBuffer_SetsVelocitiesCorrectly_Mixed) {
-  int action_size = action_manager_.GetActionSize(scene_);
+  int action_size = action_manager_.GetActionSize();
   std::vector<int> buffer(kNumEnemies * action_size);
 
   // Set x velocities to 2 (-> 1.0f) and y velocities to 0 (-> -1.0f)
@@ -103,7 +103,7 @@ TEST_F(ActionManagerTest, ReadActionBuffer_SetsVelocitiesCorrectly_Mixed) {
 }
 
 TEST_F(ActionManagerTest, ReadActionBuffer_ThrowsOnSizeMismatch_TooSmall) {
-  int action_size = action_manager_.GetActionSize(scene_);
+  int action_size = action_manager_.GetActionSize();
   std::vector<int> buffer(kNumEnemies * action_size -
                           1);  // One less than expected
 
@@ -113,7 +113,7 @@ TEST_F(ActionManagerTest, ReadActionBuffer_ThrowsOnSizeMismatch_TooSmall) {
 }
 
 TEST_F(ActionManagerTest, ReadActionBuffer_ThrowsOnSizeMismatch_TooLarge) {
-  int action_size = action_manager_.GetActionSize(scene_);
+  int action_size = action_manager_.GetActionSize();
   std::vector<int> buffer(kNumEnemies * action_size +
                           1);  // One more than expected
 
@@ -123,7 +123,7 @@ TEST_F(ActionManagerTest, ReadActionBuffer_ThrowsOnSizeMismatch_TooLarge) {
 }
 
 TEST_F(ActionManagerTest, ReadActionBuffer_AllEnemiesReceiveActions) {
-  int action_size = action_manager_.GetActionSize(scene_);
+  int action_size = action_manager_.GetActionSize();
   std::vector<int> buffer(kNumEnemies * action_size);
 
   // Set unique actions for each enemy to verify proper distribution

@@ -9,15 +9,16 @@
 namespace arelto {
 
 Vector2D GetCentroid(const Vector2D& position, const Size2D& size) {
-  return {position.x + 0.5f * size.width, position.y + 0.5f * size.height};
+  return {position.x + 0.5f * static_cast<float>(size.width),
+          position.y + 0.5f * static_cast<float>(size.height)};
 }
 
 AABB GetAABB(const Vector2D& position, const Size2D& size,
              const EntityType& type, const int& storage_index) {
   return {position.x,
           position.y,
-          position.x + size.width,
-          position.y + size.height,
+          position.x + static_cast<float>(size.width),
+          position.y + static_cast<float>(size.height),
           type,
           storage_index};
 };
@@ -25,8 +26,8 @@ AABB GetAABB(const Vector2D& position, const Size2D& size,
 AABB GetCollisionAABB(const Vector2D& centroid, const Size2D& size,
                       const EntityType& type, const int& storage_index) {
 
-  float half_w = 0.5 * size.width;
-  float half_h = 0.5 * size.height;
+  float half_w = 0.5f * static_cast<float>(size.width);
+  float half_h = 0.5f * static_cast<float>(size.height);
 
   return {centroid.x - half_w,
           centroid.y - half_h,
@@ -83,15 +84,15 @@ void Projectiles::AddProjectile(ProjectileData proj) {
 void Projectiles::DestroyProjectile(int idx) {
   size_t last_idx = position_.size() - 1;
   if (idx != last_idx) {
-    owner_id_[idx] = std::move(owner_id_[last_idx]);
-    position_[idx] = std::move(position_[last_idx]);
-    prev_position_[idx] = std::move(prev_position_[last_idx]);
-    direction_[idx] = std::move(direction_[last_idx]);
-    speed_[idx] = std::move(speed_[last_idx]);
-    collider_[idx] = std::move(collider_[last_idx]);
-    sprite_size_[idx] = std::move(sprite_size_[last_idx]);
-    inv_mass_[idx] = std::move(inv_mass_[last_idx]);
-    proj_type_[idx] = std::move(proj_type_[last_idx]);
+    owner_id_[idx] = owner_id_[last_idx];
+    position_[idx] = position_[last_idx];
+    prev_position_[idx] = prev_position_[last_idx];
+    direction_[idx] = direction_[last_idx];
+    speed_[idx] = speed_[last_idx];
+    collider_[idx] = collider_[last_idx];
+    sprite_size_[idx] = sprite_size_[last_idx];
+    inv_mass_[idx] = inv_mass_[last_idx];
+    proj_type_[idx] = proj_type_[last_idx];
   }
 
   owner_id_.pop_back();
@@ -196,11 +197,11 @@ void ExpGem::AddExpGem(ExpGemData gem) {
 void ExpGem::DestroyExpGem(int idx) {
   size_t last_idx = position_.size() - 1;
   if (idx != last_idx) {
-    rarity_[idx] = std::move(rarity_[last_idx]);
-    position_[idx] = std::move(position_[last_idx]);
-    prev_position_[idx] = std::move(prev_position_[last_idx]);
-    collider_[idx] = std::move(collider_[last_idx]);
-    sprite_size_[idx] = std::move(sprite_size_[last_idx]);
+    rarity_[idx] = rarity_[last_idx];
+    position_[idx] = position_[last_idx];
+    prev_position_[idx] = prev_position_[last_idx];
+    collider_[idx] = collider_[last_idx];
+    sprite_size_[idx] = sprite_size_[last_idx];
   }
 
   rarity_.pop_back();
@@ -244,10 +245,10 @@ void Chest::AddChest(ChestData chest) {
 void Chest::DestroyChest(int idx) {
   size_t last_idx = position_.size() - 1;
   if (idx != last_idx) {
-    position_[idx] = std::move(position_[last_idx]);
-    prev_position_[idx] = std::move(prev_position_[last_idx]);
-    collider_[idx] = std::move(collider_[last_idx]);
-    sprite_size_[idx] = std::move(sprite_size_[last_idx]);
+    position_[idx] = position_[last_idx];
+    prev_position_[idx] = prev_position_[last_idx];
+    collider_[idx] = collider_[last_idx];
+    sprite_size_[idx] = sprite_size_[last_idx];
   }
   position_.pop_back();
   prev_position_.pop_back();

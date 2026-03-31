@@ -66,14 +66,14 @@ struct Scene {
 
     // Add slight variation to each enemy to make it more interesting.
     for (int i = 0; i < kNumEnemies; ++i) {
-      enemy.movement_speed[i] += GenerateRandomInt(1, 100);
+      enemy.movement_speed[i] += static_cast<float>(GenerateRandomInt(1, 100));
       int random_width = GenerateRandomInt(1, 50);
       int random_height = GenerateRandomInt(1, 50);
       enemy.sprite_size[i].width += random_width;
       enemy.sprite_size[i].height += random_height;
       // TODO: Figure out a more maintainable solution to collider + sprite size randomization.
-      enemy.collider[i].offset.x += 0.5f * random_width;
-      enemy.collider[i].offset.y += 0.5f * random_height;
+      enemy.collider[i].offset.x += 0.5f * static_cast<float>(random_width);
+      enemy.collider[i].offset.y += 0.5f * static_cast<float>(random_height);
       enemy.collider[i].size.width += random_width;
       enemy.collider[i].size.height += random_height;
     };

@@ -20,7 +20,7 @@ bool PhysicsManager::Initialize() {
 void PhysicsManager::StepPhysics(Scene& scene, EventManager& event_manager) {
 
   UpdatePlayerState(scene.player);
-  UpdateEnemyState(scene.enemy, scene.player);
+  UpdateEnemyState(scene.enemy);
   UpdateProjectileState(scene.projectiles);
 
   HandleCollisions(scene, event_manager);
@@ -39,7 +39,7 @@ void PhysicsManager::UpdatePlayerState(Player& player) {
   }
 };
 
-void PhysicsManager::UpdateEnemyState(Enemy& enemy, const Player& player) {
+void PhysicsManager::UpdateEnemyState(Enemy& enemy) {
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemy.is_alive[i]) {
       enemy.velocity[i] = enemy.velocity[i].Normalized();
@@ -92,11 +92,15 @@ void PhysicsManager::HandlePlayerOOB(Player& player) {
   if (player.position_.y < 0) {
     player.position_.y = 0;
   }
-  if ((player.position_.x + player.stats_.sprite_size.width) > kMapWidth) {
-    player.position_.x = kMapWidth - player.stats_.sprite_size.width;
+  if ((player.position_.x +
+       static_cast<float>(player.stats_.sprite_size.width)) > kMapWidth) {
+    player.position_.x =
+        static_cast<float>(kMapWidth - player.stats_.sprite_size.width);
   }
-  if ((player.position_.y + player.stats_.sprite_size.height) > kMapHeight) {
-    player.position_.y = kMapHeight - player.stats_.sprite_size.height;
+  if ((player.position_.y +
+       static_cast<float>(player.stats_.sprite_size.height)) > kMapHeight) {
+    player.position_.y =
+        static_cast<float>(kMapHeight - player.stats_.sprite_size.height);
   }
 };
 
@@ -109,12 +113,15 @@ void PhysicsManager::HandleEnemyOOB(Enemy& enemies) {
       if (enemies.position[i].y < 0) {
         enemies.position[i].y = 0;
       }
-      if ((enemies.position[i].x + enemies.sprite_size[i].width) > kMapWidth) {
-        enemies.position[i].x = kMapWidth - enemies.sprite_size[i].width;
+      if ((enemies.position[i].x +
+           static_cast<float>(enemies.sprite_size[i].width)) > kMapWidth) {
+        enemies.position[i].x =
+            static_cast<float>(kMapWidth - enemies.sprite_size[i].width);
       }
-      if ((enemies.position[i].y + enemies.sprite_size[i].height) >
-          kMapHeight) {
-        enemies.position[i].y = kMapHeight - enemies.sprite_size[i].height;
+      if ((enemies.position[i].y +
+           static_cast<float>(enemies.sprite_size[i].height)) > kMapHeight) {
+        enemies.position[i].y =
+            static_cast<float>(kMapHeight - enemies.sprite_size[i].height);
       }
     }
   }
@@ -127,10 +134,10 @@ void PhysicsManager::HandleProjectileOOB(Projectiles& projectiles) {
   }
   for (int i = 0; i < num_projectiles; ++i) {
     if (projectiles.position_[i].x < 0 || projectiles.position_[i].y < 0 ||
-        (projectiles.position_[i].x + projectiles.sprite_size_[i].width) >
-            kMapWidth ||
-        (projectiles.position_[i].y + projectiles.sprite_size_[i].height) >
-            kMapHeight) {
+        (projectiles.position_[i].x +
+         static_cast<float>(projectiles.sprite_size_[i].width)) > kMapWidth ||
+        (projectiles.position_[i].y +
+         static_cast<float>(projectiles.sprite_size_[i].height)) > kMapHeight) {
       projectiles.to_be_destroyed_.insert(i);
     }
   }

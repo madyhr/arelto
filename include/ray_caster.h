@@ -53,13 +53,22 @@ struct EnemyRayCaster {
   int history_idx = 0;
 };
 
+struct Ray {
+  Vector2D start_pos;
+  Vector2D ray_dir;
+};
+
+struct RayHistoryIndex {
+  size_t history_idx;
+  size_t enemy_idx;
+};
+
 void SetupEnemyRayCasterPattern(EnemyRayCaster& pattern);
 DualRayHit CastRay(
-    const Vector2D& start_pos, const Vector2D& ray_dir,
+    const Ray& ray,
     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
 bool IsEntityTypePresent(const RayHistoryTypes& ray_hit_types,
-                         size_t history_idx, size_t enemy_idx,
-                         EntityType target);
+                         RayHistoryIndex index, EntityType target);
 
 }  // namespace arelto
 

@@ -5,6 +5,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 #include "abilities.h"
 #include "entity.h"
 #include "types.h"
@@ -27,12 +28,12 @@ using UpgradeOptions = std::vector<std::unique_ptr<Upgrade>>;
 class SpellStatUpgrade : public Upgrade {
  public:
   SpellStatUpgrade(SpellId spell_id, std::string spell_name,
-                   SpellUpgradeType type, float current_value, float new_value)
+                   SpellUpgradeType type, ValueRange value_range)
       : spell_id_(spell_id),
-        spell_name_(spell_name),
+        spell_name_(std::move(spell_name)),
         type_(type),
-        current_value_(current_value),
-        new_value_(new_value) {}
+        current_value_(value_range.current),
+        updated_value_(value_range.updated) {}
 
   void Apply(Player& player) override {
     BaseProjectileSpell* spell = player.GetSpell(spell_id_);
@@ -40,7 +41,7 @@ class SpellStatUpgrade : public Upgrade {
       return;
     }
 
-    spell->ModifyStat(type_, new_value_);
+    spell->ModifyStat(type_, updated_value_);
 
     player.spell_stats_.SetProjectileSpellStats(*spell);
   }
@@ -73,7 +74,7 @@ class SpellStatUpgrade : public Upgrade {
 
   std::string GetNewValueString() const override {
     std::stringstream ss;
-    ss << std::fixed << std::setprecision(2) << new_value_;
+    ss << std::fixed << std::setprecision(2) << updated_value_;
     return ss.str();
   }
 
@@ -82,7 +83,7 @@ class SpellStatUpgrade : public Upgrade {
   std::string spell_name_;
   SpellUpgradeType type_;
   float current_value_;
-  float new_value_;
+  float updated_value_;
 };
 
 }  // namespace arelto

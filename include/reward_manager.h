@@ -36,10 +36,10 @@ class RewardManager {
   void UpdateRewardTerms(const Scene& scene);
   void AddTerm(std::string name, float weight, RewardFunction func);
   void RegisterRewardTerms();
-  std::array<float, kNumEnemies> CalculateTotalReward(const Scene& scene);
+  std::array<float, kNumEnemies> CalculateTotalReward();
   std::map<std::string, std::array<float, kNumEnemies>> GetLastRewardDict();
   std::map<std::string, std::array<float, kNumEnemies>> GetLastSignalDict();
-  void FillRewardBuffer(float* buffer_ptr, int buffer_size, const Scene& scene);
+  void FillRewardBuffer(float* buffer_ptr, int buffer_size);
   int GetRewardSize();
 
  private:

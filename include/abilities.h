@@ -5,6 +5,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <utility>
 #include "constants/projectile.h"
 #include "types.h"
 
@@ -37,7 +38,7 @@ class BaseProjectileSpell : public BaseSpell {
 
  public:
   BaseProjectileSpell(SpellId id, std::string name)
-      : BaseSpell(id), name_(name) {};
+      : BaseSpell(id), name_(std::move(name)) {};
   virtual float GetSpeed() { return speed_; };
   virtual void SetSpeed(float speed) { speed_ = speed; };
   virtual float GetInvMass() { return inv_mass_; };
@@ -79,6 +80,8 @@ class BaseProjectileSpell : public BaseSpell {
         }
         break;
       }
+      case SpellUpgradeType::count:
+        break;
     }
   }
 };

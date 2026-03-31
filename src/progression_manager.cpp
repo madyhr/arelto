@@ -70,8 +70,8 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
       break;
   }
 
-  return std::make_unique<SpellStatUpgrade>(spell_id, spell_name, type,
-                                            ValueRange{current_value, new_value});
+  return std::make_unique<SpellStatUpgrade>(
+      spell_id, spell_name, type, ValueRange{current_value, new_value});
 }
 
 std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(

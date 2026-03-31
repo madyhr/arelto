@@ -7,7 +7,7 @@
 
 namespace arelto {
 
-int ObservationManager::GetObservationSize(const Scene& scene) {
+int ObservationManager::GetObservationSize() {
   return 2 * kNumRays * kNumRayTypes * kRayHistoryLength;
 };
 
@@ -19,7 +19,7 @@ void ObservationManager::FillObservationBuffer(float* buffer_ptr,
                                                int buffer_size,
                                                const Scene& scene) {
 
-  if (buffer_size != kNumEnemies * GetObservationSize(scene)) {
+  if (buffer_size != kNumEnemies * GetObservationSize()) {
     throw std::runtime_error("Buffer size mismatch");
   };
 

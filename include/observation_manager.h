@@ -9,7 +9,7 @@ namespace arelto {
 class ObservationManager {
 
  public:
-  int GetObservationSize(const Scene& scene);
+  int GetObservationSize();
   void FillObservationBuffer(float* buffer_ptr, int buffer_size,
                              const Scene& scene);
 };

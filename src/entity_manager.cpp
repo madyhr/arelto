@@ -150,7 +150,7 @@ void EntityManager::UpdateEnemyRayCaster(
         dual_hit.blocking_hit = {0.0f, EntityType::terrain};
         dual_hit.non_blocking_hit = {0.0f, EntityType::None};
       } else {
-        dual_hit = CastRay(start_pos, dir, occupancy_map);
+        dual_hit = CastRay({start_pos, dir}, occupancy_map);
       }
 
       enemy.ray_caster.ray_hit_distances[history_idx][ray_idx][enemy_idx] =

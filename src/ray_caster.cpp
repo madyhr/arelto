@@ -9,7 +9,7 @@ namespace arelto {
 // This function assumes that the occupancy map is surrounded by grid cells
 // that have an EntityType other than None.
 DualRayHit CastRay(
-    const Vector2D& start_pos, const Vector2D& ray_dir,
+    const Ray& ray,
     const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
 
   int step_x, step_y;
@@ -19,14 +19,14 @@ DualRayHit CastRay(
   RayHit blocking_hit = {0.0f, EntityType::None};
   RayHit non_blocking_hit = {0.0f, EntityType::None};
 
-  Vector2D grid_pos = WorldToGrid(start_pos);
+  Vector2D grid_pos = WorldToGrid(ray.start_pos);
   int map_grid_x = static_cast<int>(grid_pos.x);
   int map_grid_y = static_cast<int>(grid_pos.y);
 
-  float delta_dist_x = std::abs(1 / ray_dir.x);
-  float delta_dist_y = std::abs(1 / ray_dir.y);
+  float delta_dist_x = std::abs(1 / ray.ray_dir.x);
+  float delta_dist_y = std::abs(1 / ray.ray_dir.y);
 
-  if (ray_dir.x < 0) {
+  if (ray.ray_dir.x < 0) {
     step_x = -1;
     side_dist_x = (grid_pos.x - map_grid_x) * delta_dist_x;
   } else {
@@ -34,7 +34,7 @@ DualRayHit CastRay(
     side_dist_x = (map_grid_x + 1 - grid_pos.x) * delta_dist_x;
   }
 
-  if (ray_dir.y < 0) {
+  if (ray.ray_dir.y < 0) {
     step_y = -1;
     side_dist_y = (grid_pos.y - map_grid_y) * delta_dist_y;
   } else {

@@ -9,7 +9,7 @@ namespace arelto {
 class ActionManager {
 
  public:
-  int GetActionSize(const Scene& scene);
+  int GetActionSize();
   void ReadActionBuffer(int* buffer_ptr, int buffer_size, Scene& scene);
 };
 

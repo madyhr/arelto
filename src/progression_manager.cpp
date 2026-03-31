@@ -88,11 +88,11 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(
       break;
   }
 
-  float new_value = current_value + item.value;
+  float updated_value = current_value + item.value;
 
   return std::make_unique<ItemStatUpgrade>(
-      item_id, item.name, item.upgrade_type, item.modifier_type, current_value,
-      new_value);
+      item_id, item.name, item.upgrade_type, item.modifier_type,
+      ItemValueRange{current_value, updated_value});
 }
 
 void ProgressionManager::ApplyLevelUpUpgrade(Scene& scene, int option_index) {

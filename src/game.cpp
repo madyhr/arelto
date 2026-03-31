@@ -24,7 +24,7 @@ namespace arelto {
 
 volatile std::sig_atomic_t Game::stop_request_ = 0;
 
-void Game::SignalHandler(int signal) {
+void Game::SignalHandler(int /*signal*/) {
   stop_request_ = 1;
 }
 
@@ -62,7 +62,7 @@ bool Game::Initialize() {
     return false;
   }
 
-  time_ = (float)(SDL_GetTicks64() / 1000.0f);
+  time_ = static_cast<float>(SDL_GetTicks64()) / 1000.0f;
   SetGameState(is_running);
 
   return true;
@@ -219,17 +219,18 @@ void Game::ResetGame() {
 
 // Runs the game loop continuously.
 void Game::RunGameLoop() {
-  float current_time = static_cast<float>(SDL_GetTicks64() / 1000.0f);
+  float current_time = static_cast<float>(SDL_GetTicks64()) / 1000.0f;
   float accumulator = 0.0f;
 
   while (game_state_ != in_shutdown) {
 
     ProcessInput();
 
+    float new_time = static_cast<float>(SDL_GetTicks64()) / 1000.0f;
+
     switch (game_state_) {
 
       case is_running: {
-        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         float frame_time = new_time - current_time;
         current_time = new_time;
 
@@ -270,7 +271,6 @@ void Game::RunGameLoop() {
         break;
 
       case in_settings_menu: {
-        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         current_time = new_time;
 
         if (game_status_.is_headless) {
@@ -281,14 +281,12 @@ void Game::RunGameLoop() {
       }
 
       case in_level_up: {
-        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         current_time = new_time;
         RenderGame(0.0f);
         break;
       }
 
       case in_quit_confirm: {
-        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         current_time = new_time;
 
         if (game_status_.is_headless) {
@@ -298,7 +296,6 @@ void Game::RunGameLoop() {
         break;
       }
       case in_chest_opening: {
-        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         float dt = new_time - current_time;
         current_time = new_time;
 
@@ -317,7 +314,6 @@ void Game::RunGameLoop() {
         break;
       }
       case in_item_selection: {
-        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         current_time = new_time;
         RenderGame(0.0f);
         break;
@@ -489,8 +485,8 @@ void Game::ProcessInput() {
   }
 
   cursor_position_ = {
-      (float)(cursor_pos_x + render_manager_.camera_.position_.x),
-      (float)(cursor_pos_y + render_manager_.camera_.position_.y)};
+      static_cast<float>(cursor_pos_x) + render_manager_.camera_.position_.x,
+      static_cast<float>(cursor_pos_y) + render_manager_.camera_.position_.y};
 
   if (game_state_ == is_running) {
     ProcessPlayerInput();
@@ -631,8 +627,8 @@ void Game::ProcessSettingsMenuInput(uint32_t mouse_state) {
           mouse_x <= slider_bounds.x + slider_bounds.w &&
           mouse_y >= slider_bounds.y - 10 &&
           mouse_y <= slider_bounds.y + slider_bounds.h + 10) {
-        float percent =
-            static_cast<float>(mouse_x - slider_bounds.x) / slider_bounds.w;
+        float percent = static_cast<float>(mouse_x - slider_bounds.x) /
+                        static_cast<float>(slider_bounds.w);
         audio_manager_.SetMusicVolume(percent);
       }
     }

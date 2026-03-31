@@ -25,7 +25,7 @@ class PhysicsManager {
   float physics_dt_;
   CollisionManager collision_manager_;
   void UpdatePlayerState(Player& player);
-  void UpdateEnemyState(Enemy& enemy, const Player& player);
+  void UpdateEnemyState(Enemy& enemy);
   void UpdateProjectileState(Projectiles& projectiles);
   void HandleCollisions(Scene& scene, EventManager& event_manager);
   void HandleOutOfBounds(Player& player, Enemy& enemy,

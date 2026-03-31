@@ -20,7 +20,7 @@ float FrameStats::get_average_frame_time() {
   if (current_buffer_length == 0) {
     return 0.0f;
   }
-  return static_cast<float>(frame_time_sum / current_buffer_length);
+  return frame_time_sum / static_cast<float>(current_buffer_length);
 };
 
 void FrameStats::print_fps_running_average(float dt) {

@@ -18,7 +18,7 @@ void EntityManager::Update(Scene& scene, float dt,
   UpdateGemStatus(scene);
   UpdateChestStatus(scene);
 
-  UpdateObservations(scene, dt);
+  UpdateObservations(scene);
 }
 
 void EntityManager::UpdateEnemyStatus(Scene& scene, float dt) {
@@ -49,7 +49,7 @@ void EntityManager::UpdateChestStatus(Scene& scene) {
   scene.chest.DestroyChests();
 }
 
-void EntityManager::UpdateObservations(Scene& scene, float dt) {
+void EntityManager::UpdateObservations(Scene& scene) {
   if (physics_tick_count_ % kOccupancyMapTimeDecimation == 0) {
     UpdateWorldOccupancyMap(scene.occupancy_map, scene.player, scene.enemy,
                             scene.projectiles);
@@ -125,8 +125,10 @@ void EntityManager::UpdateEnemyRayCaster(
       Vector2D center =
           enemy.position[enemy_idx] + enemy.collider[enemy_idx].offset;
 
-      float half_w = enemy.collider[enemy_idx].size.width * 0.5f;
-      float half_h = enemy.collider[enemy_idx].size.height * 0.5f;
+      float half_w =
+          static_cast<float>(enemy.collider[enemy_idx].size.width) * 0.5f;
+      float half_h =
+          static_cast<float>(enemy.collider[enemy_idx].size.height) * 0.5f;
 
       // a small offset is added to ensure the rays do not clip the corners
       // of the collider. Note: this does add blind spots.

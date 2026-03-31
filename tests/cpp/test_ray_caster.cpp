@@ -213,7 +213,7 @@ TEST_F(RayCasterTest, IsEntityTypePresent_Found) {
   // Set one to wall
   history[0][0][0] = EntityType::terrain;
 
-  EXPECT_TRUE(IsEntityTypePresent(history, 0, 0, EntityType::terrain));
+  EXPECT_TRUE(IsEntityTypePresent(history, {0, 0}, EntityType::terrain));
 }
 
 TEST_F(RayCasterTest, IsEntityTypePresent_NotFound) {
@@ -224,7 +224,7 @@ TEST_F(RayCasterTest, IsEntityTypePresent_NotFound) {
     }
   }
 
-  EXPECT_FALSE(IsEntityTypePresent(history, 0, 0, EntityType::terrain));
+  EXPECT_FALSE(IsEntityTypePresent(history, {0, 0}, EntityType::terrain));
 }
 
 }  // namespace

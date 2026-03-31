@@ -28,18 +28,20 @@ DualRayHit CastRay(
 
   if (ray.ray_dir.x < 0) {
     step_x = -1;
-    side_dist_x = (grid_pos.x - map_grid_x) * delta_dist_x;
+    side_dist_x = (grid_pos.x - static_cast<float>(map_grid_x)) * delta_dist_x;
   } else {
     step_x = 1;
-    side_dist_x = (map_grid_x + 1 - grid_pos.x) * delta_dist_x;
+    side_dist_x =
+        (static_cast<float>(map_grid_x) + 1 - grid_pos.x) * delta_dist_x;
   }
 
   if (ray.ray_dir.y < 0) {
     step_y = -1;
-    side_dist_y = (grid_pos.y - map_grid_y) * delta_dist_y;
+    side_dist_y = (grid_pos.y - static_cast<float>(map_grid_y)) * delta_dist_y;
   } else {
     step_y = 1;
-    side_dist_y = (map_grid_y + 1 - grid_pos.y) * delta_dist_y;
+    side_dist_y =
+        (static_cast<float>(map_grid_y) + 1 - grid_pos.y) * delta_dist_y;
   }
 
   bool blocking_found = false;
@@ -93,21 +95,21 @@ DualRayHit CastRay(
 void SetupEnemyRayCasterPattern(EnemyRayCaster& ray_caster) {
 
   size_t num_rays = ray_caster.pattern.ray_dir.size();
+  float degrees_per_ray = 360.0f / static_cast<float>(num_rays);
 
   for (int i = 0; i < num_rays; ++i) {
-    float degree = i * (360.0f / num_rays);
+    float degree = static_cast<float>(i) * degrees_per_ray;
     ray_caster.pattern.ray_dir[i] = {std::cos(Deg2Rad(degree)),
                                      std::sin(Deg2Rad(degree))};
   }
 };
 
 bool IsEntityTypePresent(const RayHistoryTypes& ray_hit_types,
-                         size_t history_idx, size_t enemy_idx,
-                         EntityType target) {
-  const auto& history_frame = ray_hit_types[history_idx];
+                         RayHistoryIndex index, EntityType target) {
+  const auto& history_frame = ray_hit_types[index.history_idx];
 
   for (size_t r = 0; r < kNumRays; ++r) {
-    if (history_frame[r][enemy_idx] == target) {
+    if (history_frame[r][index.enemy_idx] == target) {
       return true;
     }
   }

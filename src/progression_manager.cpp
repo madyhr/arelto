@@ -71,7 +71,7 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
   }
 
   return std::make_unique<SpellStatUpgrade>(spell_id, spell_name, type,
-                                            current_value, new_value);
+                                            ValueRange{current_value, new_value});
 }
 
 std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(
@@ -92,7 +92,7 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(
 
   return std::make_unique<ItemStatUpgrade>(
       item_id, item.name, item.upgrade_type, item.modifier_type,
-      ItemValueRange{current_value, updated_value});
+      ValueRange{current_value, updated_value});
 }
 
 void ProgressionManager::ApplyLevelUpUpgrade(Scene& scene, int option_index) {

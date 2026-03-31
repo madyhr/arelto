@@ -188,6 +188,11 @@ struct Collider {
 
 enum class ModifierType { flat = 0, percent_add, percent_mult };
 
+struct ValueRange {
+  float current;
+  float updated;
+};
+
 struct Modifier {
   float value;
   ModifierType type;

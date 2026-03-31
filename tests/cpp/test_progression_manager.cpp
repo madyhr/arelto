@@ -160,7 +160,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
 
   auto upgrade = std::make_unique<SpellStatUpgrade>(target_spell, spell_name,
                                                     SpellUpgradeType::damage,
-                                                    initial_damage, new_damage);
+                                                    ValueRange{initial_damage, new_damage});
 
   scene_.level_up_options.clear();
   scene_.level_up_options.push_back(std::move(upgrade));

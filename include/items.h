@@ -66,11 +66,6 @@ class HealOnKillEffect : public ItemTriggerEffect {
 enum ItemId : int { elia_armor_plate = 0, count };
 enum class ItemUpgradeType : int { armor = 0, count };
 
-struct ItemValueRange {
-  float current;
-  float updated;
-};
-
 struct Item {
   ItemId id;
   std::string name;
@@ -102,7 +97,7 @@ class ItemArchive {
 class ItemStatUpgrade : public Upgrade {
  public:
   ItemStatUpgrade(ItemId item_id, std::string item_name, ItemUpgradeType type,
-                  ModifierType modifier_type, ItemValueRange value_range)
+                  ModifierType modifier_type, ValueRange value_range)
       : item_id_(item_id),
         item_name_(std::move(item_name)),
         type_(type),

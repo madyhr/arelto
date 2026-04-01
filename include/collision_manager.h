@@ -24,8 +24,8 @@ class CollisionManager {
   CollisionType GetCollisionType(const CollisionPair& cp);
   void ResolveCollisionPairsSAP(Scene& scene, EventManager& event_manager);
   void ResolveEnemyProjectileCollision(const CollisionPair& cp, Enemy& enemy,
-                                       Projectiles& projectiles, Player& player,
-                                       EventManager& event_manager);
+                                       Projectiles& projectiles,
+                                       const Player& player);
 
   void ResolveEnemyEnemyCollision(const CollisionPair& cp, Enemy& enemy);
   void ResolvePlayerEnemyCollision(const CollisionPair& cp, Player& player,

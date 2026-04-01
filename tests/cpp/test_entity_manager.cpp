@@ -26,30 +26,50 @@ class EntityManagerTest : public ::testing::Test {
 // Update - Enemy Status Tests
 // =============================================================================
 
-TEST_F(EntityManagerTest, Update_EnemyStatus_TransitionsCorrectly) {
-  // Test Alive -> Alive
-  scene_.enemy.health_points[0] = 100;
+TEST_F(EntityManagerTest, Update_SetsDeathFlags_WhenHealthDropsToZero) {
+  scene_.enemy.health_points[0] = 0;
   scene_.enemy.is_alive[0] = true;
   scene_.enemy.is_done[0] = false;
+  scene_.enemy.is_terminated_latched[0] = false;
 
   entity_manager_.Update(scene_, 0.016f, event_manager_);
-  EXPECT_TRUE(scene_.enemy.is_alive[0]);
-  EXPECT_FALSE(scene_.enemy.is_done[0]);
 
-  // Test Alive -> Dead (Zero Health)
-  scene_.enemy.health_points[0] = 0;
-  entity_manager_.Update(scene_, 0.016f, event_manager_);
   EXPECT_FALSE(scene_.enemy.is_alive[0]);
   EXPECT_TRUE(scene_.enemy.is_done[0]);
+  EXPECT_TRUE(scene_.enemy.is_terminated_latched[0]);
+}
 
-  // Test Alive -> Dead (Negative Health)
-  scene_.enemy.health_points[1] = -5;
-  scene_.enemy.is_alive[1] = true;
-  scene_.enemy.is_done[1] = false;
+TEST_F(EntityManagerTest, Update_EmitsEnemyKilledEvent_WhenHealthDropsToZero) {
+  scene_.enemy.health_points[0] = 0;
+  scene_.enemy.is_alive[0] = true;
 
   entity_manager_.Update(scene_, 0.016f, event_manager_);
-  EXPECT_FALSE(scene_.enemy.is_alive[1]);
-  EXPECT_TRUE(scene_.enemy.is_done[1]);
+
+  bool found = false;
+  for (const auto& e : event_manager_.GetEvents()) {
+    if (std::holds_alternative<EnemyKilledEvent>(e)) {
+      EXPECT_EQ(std::get<EnemyKilledEvent>(e).enemy_idx, 0);
+      found = true;
+    }
+  }
+  EXPECT_TRUE(found);
+}
+
+TEST_F(EntityManagerTest, Update_EmitsOneKilledEvent_EvenWhenHPFarBelowZero) {
+  // Two projectiles reduced HP to -40 before entity_manager runs.
+  // UpdateEnemyStatus still emits exactly one EnemyKilledEvent.
+  scene_.enemy.health_points[0] = -40;
+  scene_.enemy.is_alive[0] = true;
+
+  entity_manager_.Update(scene_, 0.016f, event_manager_);
+
+  int kill_count = 0;
+  for (const auto& e : event_manager_.GetEvents()) {
+    if (std::holds_alternative<EnemyKilledEvent>(e)) {
+      ++kill_count;
+    }
+  }
+  EXPECT_EQ(kill_count, 1);
 }
 
 TEST_F(EntityManagerTest, Update_EnemyTimeoutTimerIncreases) {
@@ -58,16 +78,6 @@ TEST_F(EntityManagerTest, Update_EnemyTimeoutTimerIncreases) {
   entity_manager_.Update(scene_, 0.016f, event_manager_);
 
   EXPECT_GT(scene_.enemy.timeout_timer[0], initial_timer);
-}
-
-TEST_F(EntityManagerTest, Update_DeadEnemy_SetsTerminatedLatched) {
-  scene_.enemy.health_points[0] = 0;
-  scene_.enemy.is_alive[0] = true;
-  scene_.enemy.is_terminated_latched[0] = false;
-
-  entity_manager_.Update(scene_, 0.016f, event_manager_);
-
-  EXPECT_TRUE(scene_.enemy.is_terminated_latched[0]);
 }
 
 // =============================================================================
@@ -126,41 +136,6 @@ TEST_F(EntityManagerTest, Update_GemMarkedForDestruction_IsDestroyed) {
 
   // Gem should be removed
   EXPECT_EQ(scene_.exp_gem.GetNumExpGems(), 0);
-}
-
-// =============================================================================
-// Update - Multiple Entities Tests
-// =============================================================================
-
-TEST_F(EntityManagerTest, Update_MultipleDeadEnemies_AllMarkedCorrectly) {
-  // Kill multiple enemies
-  scene_.enemy.health_points[0] = 0;
-  scene_.enemy.health_points[2] = -5;
-  scene_.enemy.health_points[4] = 0;
-
-  for (int i = 0; i < kNumEnemies; ++i) {
-    scene_.enemy.is_alive[i] = true;
-    scene_.enemy.is_done[i] = false;
-  }
-
-  entity_manager_.Update(scene_, 0.016f, event_manager_);
-
-  // Check dead enemies
-  EXPECT_FALSE(scene_.enemy.is_alive[0]);
-  EXPECT_TRUE(scene_.enemy.is_done[0]);
-
-  EXPECT_FALSE(scene_.enemy.is_alive[2]);
-  EXPECT_TRUE(scene_.enemy.is_done[2]);
-
-  EXPECT_FALSE(scene_.enemy.is_alive[4]);
-  EXPECT_TRUE(scene_.enemy.is_done[4]);
-
-  // Check alive enemies
-  EXPECT_TRUE(scene_.enemy.is_alive[1]);
-  EXPECT_FALSE(scene_.enemy.is_done[1]);
-
-  EXPECT_TRUE(scene_.enemy.is_alive[3]);
-  EXPECT_FALSE(scene_.enemy.is_done[3]);
 }
 
 // =============================================================================

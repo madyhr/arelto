@@ -253,7 +253,7 @@ TEST_F(PhysicsManagerTest, StepPhysics_EmitsEventsIntoQueue_ReadyForDispatch) {
 
 TEST_F(PhysicsManagerTest, EventManager_FlushClearsStaleEventsBeforeNewStep) {
   // Simulate a stale event surviving from a "previous step"
-  event_manager_.Emit(EnemyKilledEvent{99, 0, 0});
+  event_manager_.Emit(EnemyKilledEvent{99});
   ASSERT_EQ(event_manager_.GetEvents().size(), 1);
 
   // Flush (as StepGamePhysics does at start of each step)

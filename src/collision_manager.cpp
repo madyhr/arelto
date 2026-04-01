@@ -117,7 +117,7 @@ void CollisionManager::ResolveCollisionPairsSAP(Scene& scene,
         continue;
       case CollisionType::enemy_projectile:
         ResolveEnemyProjectileCollision(cp, scene.enemy, scene.projectiles,
-                                        scene.player, event_manager);
+                                        scene.player);
         continue;
       case CollisionType::player_gem:
         ResolvePlayerGemCollision(cp, scene.player, scene.exp_gem,
@@ -243,9 +243,10 @@ void CollisionManager::ResolvePlayerEnemyCollision(
   }
 };
 
-void CollisionManager::ResolveEnemyProjectileCollision(
-    const CollisionPair& cp, Enemy& enemy, Projectiles& projectiles,
-    Player& player, EventManager& event_manager) {
+void CollisionManager::ResolveEnemyProjectileCollision(const CollisionPair& cp,
+                                                       Enemy& enemy,
+                                                       Projectiles& projectiles,
+                                                       const Player& player) {
   bool a_is_proj = cp.type_a == EntityType::projectile;
   int proj_idx = a_is_proj ? cp.index_a : cp.index_b;
   int enemy_idx = a_is_proj ? cp.index_b : cp.index_a;
@@ -253,9 +254,6 @@ void CollisionManager::ResolveEnemyProjectileCollision(
   int proj_id = projectiles.proj_type_[proj_idx];
   int spell_damage = player.spell_stats_.damage[proj_id];
   enemy.health_points[enemy_idx] -= spell_damage;
-  if (enemy.health_points[enemy_idx] <= 0) {
-    event_manager.Emit(EnemyKilledEvent{enemy_idx, proj_idx, spell_damage});
-  }
 };
 
 void CollisionManager::ResolvePlayerGemCollision(const CollisionPair& cp,

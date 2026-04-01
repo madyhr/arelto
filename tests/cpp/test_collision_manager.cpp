@@ -254,44 +254,40 @@ TEST_F(CollisionManagerTest,
 }
 
 TEST_F(CollisionManagerTest,
-       EnemyProjectileCollision_EmitsEnemyKilledEvent_WhenHealthDropsToZero) {
+       EnemyProjectileCollision_DoubleHit_BothProjectilesDestroyed) {
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
   scene_.enemy.health_points[0] = 10;
-  scene_.player.spell_stats_.damage[0] = 25;  // overkill
+  scene_.player.spell_stats_.damage[0] = 25;  // lethal
 
   ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);
+  scene_.projectiles.AddProjectile(proj);
   scene_.projectiles.AddProjectile(proj);
   scene_.player.position_ = {10000.0f, 10000.0f};
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
-  bool found = false;
-  for (const auto& e : event_manager_.GetEvents()) {
-    if (std::holds_alternative<EnemyKilledEvent>(e)) {
-      EXPECT_EQ(std::get<EnemyKilledEvent>(e).enemy_idx, 0);
-      found = true;
-    }
-  }
-  EXPECT_TRUE(found);
+  EXPECT_TRUE(scene_.projectiles.to_be_destroyed_.count(0) > 0);
+  EXPECT_TRUE(scene_.projectiles.to_be_destroyed_.count(1) > 0);
 }
 
 TEST_F(CollisionManagerTest,
-       EnemyProjectileCollision_NoKillEvent_WhenHealthRemains) {
+       EnemyProjectileCollision_DoubleHit_DamageAppliedByBothProjectiles) {
+  // With no is_alive guard in collision_manager, both projectiles deal damage.
+  // EntityManager's UpdateEnemyStatus still emits only one EnemyKilledEvent.
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
-  scene_.enemy.health_points[0] = 100;
-  scene_.player.spell_stats_.damage[0] = 10;  // not enough to kill
+  scene_.enemy.health_points[0] = 10;
+  scene_.player.spell_stats_.damage[0] = 25;
 
   ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);
+  scene_.projectiles.AddProjectile(proj);
   scene_.projectiles.AddProjectile(proj);
   scene_.player.position_ = {10000.0f, 10000.0f};
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
-  for (const auto& e : event_manager_.GetEvents()) {
-    EXPECT_FALSE(std::holds_alternative<EnemyKilledEvent>(e));
-  }
+  EXPECT_EQ(scene_.enemy.health_points[0], 10 - 25 - 25);
 }
 
 TEST_F(CollisionManagerTest, PlayerGemCollision_EmitsGemCollectedEvent) {

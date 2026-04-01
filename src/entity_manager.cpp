@@ -50,7 +50,7 @@ void EntityManager::ProcessPendingSpawns(Scene& scene) {
 
 void EntityManager::Update(Scene& scene, float dt,
                            EventManager& event_manager) {
-  UpdateEnemyStatus(scene, dt);
+  UpdateEnemyStatus(scene, dt, event_manager);
   UpdateProjectilesStatus(scene, event_manager);
   UpdateGemStatus(scene);
   UpdateChestStatus(scene);
@@ -58,7 +58,8 @@ void EntityManager::Update(Scene& scene, float dt,
   UpdateObservations(scene);
 }
 
-void EntityManager::UpdateEnemyStatus(Scene& scene, float dt) {
+void EntityManager::UpdateEnemyStatus(Scene& scene, float dt,
+                                      EventManager& event_manager) {
   for (int i = 0; i < kNumEnemies; ++i) {
     scene.enemy.timeout_timer[i] += dt;
 
@@ -66,6 +67,7 @@ void EntityManager::UpdateEnemyStatus(Scene& scene, float dt) {
       scene.enemy.is_alive[i] = false;
       scene.enemy.is_done[i] = true;
       scene.enemy.is_terminated_latched[i] = true;
+      event_manager.Emit(EnemyKilledEvent{i});
     };
   };
 }

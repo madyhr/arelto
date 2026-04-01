@@ -20,8 +20,6 @@ using SubscriptionId = int;
 
 struct EnemyKilledEvent {
   int enemy_idx;
-  int proj_idx;
-  int damage;
 };
 struct PlayerDamagedEvent {
   int enemy_idx;

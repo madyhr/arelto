@@ -1,15 +1,52 @@
 // src/entity_manager.cpp
 #include "entity_manager.h"
 #include <algorithm>
+#include "constants/chest.h"
 #include "constants/enemy.h"
+#include "constants/exp_gem.h"
 #include "constants/ray_caster.h"
 #include "event_manager.h"
+#include "random.h"
 #include "types.h"
 
 namespace arelto {
 
 EntityManager::EntityManager() {}
 EntityManager::~EntityManager() {}
+
+void EntityManager::Initialize(Scene& scene, EventManager& event_manager) {
+  event_manager.Subscribe<EnemyKilledEvent>(
+      [&scene, this](const EnemyKilledEvent& e, EventContext&) {
+        Vector2D centroid = GetCentroid(scene.enemy.position[e.enemy_idx],
+                                        scene.enemy.collider[e.enemy_idx].size);
+
+        Rarity random_rarity = static_cast<Rarity>(GenerateRandomInt(0, 3));
+        pending_gem_spawns_.push_back(
+            {random_rarity, centroid, centroid, kExpGemCollider[random_rarity],
+             kExpGemInvMass, kExpGemSpriteSize[random_rarity]});
+
+        float chest_roll =
+            static_cast<float>(GenerateRandomInt(0, 99)) / 100.0f;
+        if (chest_roll < kChestSpawnChance) {
+          pending_chest_spawns_.push_back({centroid, centroid, kChestCollider,
+                                           kChestInvMass, kChestSpriteSize});
+        }
+      });
+}
+
+void EntityManager::ProcessPendingSpawns(Scene& scene) {
+  for (const ExpGemData& gem_data : pending_gem_spawns_) {
+    scene.exp_gem.AddExpGem(gem_data);
+  }
+  pending_gem_spawns_.clear();
+
+  for (const ChestData& chest_data : pending_chest_spawns_) {
+    scene.chest.AddChest(chest_data);
+  }
+  pending_chest_spawns_.clear();
+
+  RespawnEnemy(scene.enemy, scene.player);
+}
 
 void EntityManager::Update(Scene& scene, float dt,
                            EventManager& event_manager) {

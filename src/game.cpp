@@ -57,6 +57,7 @@ bool Game::Initialize() {
   scene_.item_archive = &item_archive_;
 
   RegisterGameStateHandlers();
+  entity_manager_.Initialize(scene_, event_manager_);
 
   if (!(Game::InitializeCamera())) {
     return false;
@@ -253,9 +254,7 @@ void Game::RunGameLoop() {
           break;
         }
 
-        scene_.SpawnExpGem();
-        scene_.SpawnChest();
-        RespawnEnemy(scene_.enemy, scene_.player);
+        entity_manager_.ProcessPendingSpawns(scene_);
         RenderGame(alpha);
         game_status_.frame_stats.print_fps_running_average(frame_time);
         break;
@@ -333,13 +332,11 @@ void Game::StepGame(float dt) {
       accumulator_step_ -= physics_manager_.GetPhysicsDt();
     }
 
-    // The RespawnEnemy function is called outside of the accumulator loop to
-    // make sure that an enemy stays dead between calls of StepGame(). This
-    // could otherwise corrupt the termination signals if the enemy died,
-    // respawned and died again in the same accumulator loop.
-    scene_.SpawnExpGem();
-    scene_.SpawnChest();
-    RespawnEnemy(scene_.enemy, scene_.player);
+    // ProcessPendingSpawns is called outside the accumulator loop to ensure
+    // an enemy stays dead between StepGame() calls. Respawning inside the loop
+    // could corrupt RL termination signals if the same enemy died, respawned,
+    // and died again within a single call.
+    entity_manager_.ProcessPendingSpawns(scene_);
   } else if (game_state_ == in_chest_opening) {
     auto* chest_root = render_manager_.GetUIManager().GetChestOpeningRoot();
     if (chest_root) {

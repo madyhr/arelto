@@ -114,6 +114,7 @@ TEST_F(EntityManagerTest, Update_GemMarkedForDestruction_IsDestroyed) {
                       {100.0f, 100.0f},
                       {100.0f, 100.0f},
                       {{8.0f, 8.0f}, {16, 16}},
+                      5.0f,
                       {16, 16}};
   scene_.exp_gem.AddExpGem(gem_data);
   ASSERT_EQ(scene_.exp_gem.GetNumExpGems(), 1);
@@ -239,7 +240,8 @@ TEST_F(EntityManagerTest, Update_UpdatesRayCaster_DetectsProjectiles) {
 // Event Emission Tests
 // =============================================================================
 
-TEST_F(EntityManagerTest, UpdateProjectilesStatus_EmitsProjectileDestroyedEvent) {
+TEST_F(EntityManagerTest,
+       UpdateProjectilesStatus_EmitsProjectileDestroyedEvent) {
   ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);
   scene_.projectiles.AddProjectile(proj);
   scene_.projectiles.AddProjectile(proj);

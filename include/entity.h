@@ -91,6 +91,7 @@ class ExpGem {
   std::vector<Vector2D> position_;
   std::vector<Vector2D> prev_position_;
   std::vector<Collider> collider_;
+  std::vector<float> inv_mass_;
   std::vector<Size2D> sprite_size_;
   std::unordered_set<int> to_be_destroyed_;
   EntityType entity_type_ = EntityType::exp_gem;
@@ -107,6 +108,7 @@ class Chest {
   std::vector<Vector2D> position_;
   std::vector<Vector2D> prev_position_;
   std::vector<Collider> collider_;
+  std::vector<float> inv_mass_;
   std::vector<Size2D> sprite_size_;
   std::unordered_set<int> to_be_destroyed_;
   EntityType entity_type_ = EntityType::chest;

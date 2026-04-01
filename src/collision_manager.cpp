@@ -5,7 +5,9 @@
 #include <array>
 #include <vector>
 #include "abilities.h"
+#include "constants/chest.h"
 #include "constants/enemy.h"
+#include "constants/exp_gem.h"
 #include "entity.h"
 #include "event_manager.h"
 #include "scene.h"
@@ -65,6 +67,7 @@ void CollisionManager::HandleCollisionsSAP(Scene& scene,
 
   FindCollisionPairsSAP(entity_aabb_);
   ResolveCollisionPairsSAP(scene, event_manager);
+  SeparateGemChestPairs(scene.chest, scene.exp_gem);
 };
 
 void CollisionManager::FindCollisionPairsSAP(std::vector<AABB>& sorted_aabb) {
@@ -122,6 +125,8 @@ void CollisionManager::ResolveCollisionPairsSAP(Scene& scene,
         continue;
       case CollisionType::player_chest:
         ResolvePlayerChestCollision(cp, scene.chest, event_manager);
+        continue;
+      case CollisionType::gem_chest:
         continue;
     }
   }
@@ -273,6 +278,47 @@ void CollisionManager::ResolvePlayerChestCollision(
   int chest_idx = a_is_chest ? cp.index_a : cp.index_b;
   chest.to_be_destroyed_.insert(chest_idx);
   event_manager.Emit(ChestOpenedEvent{chest_idx});
+};
+
+void CollisionManager::SeparateGemChestPairs(Chest& chest, ExpGem& exp_gem) {
+  for (int gem_idx = 0; gem_idx < static_cast<int>(exp_gem.GetNumExpGems());
+       ++gem_idx) {
+    Vector2D gem_centroid =
+        exp_gem.position_[gem_idx] + exp_gem.collider_[gem_idx].offset;
+
+    for (int chest_idx = 0; chest_idx < static_cast<int>(chest.GetNumChests());
+         ++chest_idx) {
+      Vector2D chest_centroid =
+          chest.position_[chest_idx] + chest.collider_[chest_idx].offset;
+
+      Vector2D separation_vector = chest_centroid - gem_centroid;
+      float current_distance = separation_vector.Norm();
+
+      if (current_distance >= kGemChestMinSeparation) {
+        continue;
+      }
+
+      // When spawned at the same position the separation vector is zero, so we default to
+      // using +x as the push direction.
+      Vector2D push_direction = current_distance > 0.0f
+                                    ? separation_vector.Normalized()
+                                    : Vector2D{1.0f, 0.0f};
+
+      float push_amount = kGemChestMinSeparation - current_distance;
+      float push_factor =
+          chest.inv_mass_[chest_idx] /
+          (exp_gem.inv_mass_[gem_idx] + chest.inv_mass_[chest_idx]);
+
+      exp_gem.position_[gem_idx] -=
+          push_direction * (push_amount * (1.0f - push_factor));
+      chest.position_[chest_idx] +=
+          push_direction * (push_amount * push_factor);
+
+      // Recomputing gem centroid for subsequent chest iterations
+      gem_centroid =
+          exp_gem.position_[gem_idx] + exp_gem.collider_[gem_idx].offset;
+    }
+  }
 };
 
 }  // namespace arelto

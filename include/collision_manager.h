@@ -34,6 +34,7 @@ class CollisionManager {
                                  ExpGem& exp_gem, EventManager& event_manager);
   void ResolvePlayerChestCollision(const CollisionPair& cp, Chest& chest,
                                    EventManager& event_manager);
+  void SeparateGemChestPairs(Chest& chest, ExpGem& exp_gem);
   std::array<Vector2D, 2> GetDisplacementVectors(
       const std::array<AABB, 2>& aabbs,
       const std::array<Vector2D, 2>& centroids,

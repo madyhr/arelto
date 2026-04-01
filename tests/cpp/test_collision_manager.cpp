@@ -140,6 +140,7 @@ TEST_F(CollisionManagerTest,
                       {100.0f, 100.0f},
                       {100.0f, 100.0f},
                       {{8.0f, 8.0f}, {16, 16}},
+                      5.0f,
                       {16, 16}};
   scene_.exp_gem.AddExpGem(gem_data);
 
@@ -180,8 +181,7 @@ TEST_F(CollisionManagerTest,
 // Event Emission Tests
 // =============================================================================
 
-TEST_F(CollisionManagerTest,
-       PlayerEnemyCollision_EmitsPlayerDamagedEvent) {
+TEST_F(CollisionManagerTest, PlayerEnemyCollision_EmitsPlayerDamagedEvent) {
   scene_.player.position_ = {100.0f, 100.0f};
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
@@ -294,13 +294,13 @@ TEST_F(CollisionManagerTest,
   }
 }
 
-TEST_F(CollisionManagerTest,
-       PlayerGemCollision_EmitsGemCollectedEvent) {
+TEST_F(CollisionManagerTest, PlayerGemCollision_EmitsGemCollectedEvent) {
   scene_.player.position_ = {100.0f, 100.0f};
   ExpGemData gem{Rarity::common,
                  {100.0f, 100.0f},
                  {100.0f, 100.0f},
                  {{8.0f, 8.0f}, {16, 16}},
+                 5.0f,
                  {16, 16}};
   scene_.exp_gem.AddExpGem(gem);
 
@@ -318,10 +318,13 @@ TEST_F(CollisionManagerTest,
   EXPECT_TRUE(found);
 }
 
-TEST_F(CollisionManagerTest,
-       PlayerChestCollision_EmitsChestOpenedEvent) {
+TEST_F(CollisionManagerTest, PlayerChestCollision_EmitsChestOpenedEvent) {
   scene_.player.position_ = {100.0f, 100.0f};
-  ChestData chest{{100.0f, 100.0f}, {100.0f, 100.0f}, {{8.0f, 8.0f}, {32, 32}}, {32, 32}};
+  ChestData chest{{100.0f, 100.0f},
+                  {100.0f, 100.0f},
+                  {{8.0f, 8.0f}, {32, 32}},
+                  0.01f,
+                  {32, 32}};
   scene_.chest.AddChest(chest);
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);

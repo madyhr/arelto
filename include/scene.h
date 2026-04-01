@@ -2,9 +2,7 @@
 #ifndef RL2_SCENE_H_
 #define RL2_SCENE_H_
 
-#include "constants/chest.h"
 #include "constants/enemy.h"
-#include "constants/exp_gem.h"
 #include "constants/player.h"
 #include "entity.h"
 #include "items.h"
@@ -78,44 +76,9 @@ struct Scene {
       enemy.collider[i].size.height += random_height;
     };
 
-    // Projectiles
     projectiles.ResetAllProjectiles();
-
-    // Exp Gems
     exp_gem.ResetAllExpGems();
-
-    // Chests
     chest.ResetAllChests();
-  };
-
-  void SpawnExpGem() {
-    for (int i = 0; i < kNumEnemies; ++i) {
-      if (enemy.is_done[i]) {
-        Vector2D enemy_centroid =
-            GetCentroid(enemy.position[i], enemy.collider[i].size);
-
-        Rarity random_rarity = static_cast<Rarity>(GenerateRandomInt(0, 3));
-        ExpGemData gem_data = {random_rarity, enemy_centroid, enemy_centroid,
-                               kExpGemCollider[random_rarity],
-                               kExpGemSpriteSize[random_rarity]};
-        exp_gem.AddExpGem(gem_data);
-      }
-    }
-  };
-
-  void SpawnChest() {
-    for (int i = 0; i < kNumEnemies; ++i) {
-      if (enemy.is_done[i]) {
-        float roll = static_cast<float>(GenerateRandomInt(0, 99)) / 100.0f;
-        if (roll < kChestSpawnChance) {
-          Vector2D enemy_centroid =
-              GetCentroid(enemy.position[i], enemy.collider[i].size);
-          ChestData chest_data = {enemy_centroid, enemy_centroid,
-                                  kChestCollider, kChestSpriteSize};
-          chest.AddChest(chest_data);
-        }
-      }
-    }
   };
 };
 

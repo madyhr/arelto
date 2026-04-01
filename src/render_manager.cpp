@@ -7,6 +7,7 @@
 #include <SDL_render.h>
 #include <algorithm>
 #include <iostream>
+#include "constants/chest.h"
 #include "constants/enemy.h"
 #include "constants/exp_gem.h"
 #include "constants/game.h"

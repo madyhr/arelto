@@ -191,6 +191,7 @@ void ExpGem::AddExpGem(ExpGemData gem) {
   // avoid errors during render interpolation.
   prev_position_.push_back(gem.position);
   collider_.push_back(gem.collider);
+  inv_mass_.push_back(gem.inv_mass);
   sprite_size_.push_back(gem.sprite_size);
 };
 
@@ -201,6 +202,7 @@ void ExpGem::DestroyExpGem(int idx) {
     position_[idx] = position_[last_idx];
     prev_position_[idx] = prev_position_[last_idx];
     collider_[idx] = collider_[last_idx];
+    inv_mass_[idx] = inv_mass_[last_idx];
     sprite_size_[idx] = sprite_size_[last_idx];
   }
 
@@ -208,6 +210,7 @@ void ExpGem::DestroyExpGem(int idx) {
   position_.pop_back();
   prev_position_.pop_back();
   collider_.pop_back();
+  inv_mass_.pop_back();
   sprite_size_.pop_back();
 };
 
@@ -232,6 +235,7 @@ void ExpGem::ResetAllExpGems() {
   prev_position_.clear();
   sprite_size_.clear();
   collider_.clear();
+  inv_mass_.clear();
   to_be_destroyed_.clear();
 };
 
@@ -239,6 +243,7 @@ void Chest::AddChest(ChestData chest) {
   position_.push_back(chest.position);
   prev_position_.push_back(chest.position);
   collider_.push_back(chest.collider);
+  inv_mass_.push_back(chest.inv_mass);
   sprite_size_.push_back(chest.sprite_size);
 };
 
@@ -248,11 +253,13 @@ void Chest::DestroyChest(int idx) {
     position_[idx] = position_[last_idx];
     prev_position_[idx] = prev_position_[last_idx];
     collider_[idx] = collider_[last_idx];
+    inv_mass_[idx] = inv_mass_[last_idx];
     sprite_size_[idx] = sprite_size_[last_idx];
   }
   position_.pop_back();
   prev_position_.pop_back();
   collider_.pop_back();
+  inv_mass_.pop_back();
   sprite_size_.pop_back();
 };
 
@@ -273,6 +280,7 @@ void Chest::ResetAllChests() {
   position_.clear();
   prev_position_.clear();
   collider_.clear();
+  inv_mass_.clear();
   sprite_size_.clear();
   to_be_destroyed_.clear();
 };

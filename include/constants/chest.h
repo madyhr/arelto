@@ -23,6 +23,9 @@ constexpr int kChestColliderWidth =
 constexpr int kChestColliderHeight =
     kChestSpriteHeight - kSpriteColliderMargin / 2;
 
+constexpr float kChestInvMass = 1.0f;
+
+constexpr float kGemChestMinSeparation = 50.0f;
 constexpr Size2D kChestSpriteSize = {kChestSpriteWidth, kChestSpriteHeight};
 constexpr Collider kChestCollider = {
     {0.5f * kChestSpriteWidth, 0.5f * kChestSpriteHeight},

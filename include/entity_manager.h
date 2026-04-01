@@ -1,6 +1,7 @@
 #ifndef RL2_ENTITY_MANAGER_H_
 #define RL2_ENTITY_MANAGER_H_
 
+#include <vector>
 #include "constants/map.h"
 #include "entity.h"
 #include "event_manager.h"
@@ -14,10 +15,14 @@ class EntityManager {
   EntityManager();
   ~EntityManager();
 
+  void Initialize(Scene& scene, EventManager& event_manager);
   void Update(Scene& scene, float dt, EventManager& event_manager);
+  void ProcessPendingSpawns(Scene& scene);
 
  private:
   int physics_tick_count_ = 0;
+  std::vector<ExpGemData> pending_gem_spawns_;
+  std::vector<ChestData> pending_chest_spawns_;
 
   void UpdateEnemyStatus(Scene& scene, float dt);
   void UpdateProjectilesStatus(Scene& scene, EventManager& event_manager);

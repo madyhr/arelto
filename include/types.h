@@ -302,6 +302,7 @@ enum class CollisionType : int {
   enemy_projectile,
   player_gem,
   player_chest,
+  gem_chest
 };
 
 struct EntityPosition {
@@ -359,6 +360,7 @@ struct ExpGemData {
   Vector2D position;
   Vector2D prev_position;
   Collider collider;
+  float inv_mass;
   Size2D sprite_size;
 };
 
@@ -366,6 +368,7 @@ struct ChestData {
   Vector2D position;
   Vector2D prev_position;
   Collider collider;
+  float inv_mass;
   Size2D sprite_size;
 };
 

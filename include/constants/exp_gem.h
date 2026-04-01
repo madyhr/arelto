@@ -8,6 +8,7 @@
 namespace arelto {
 constexpr int kExpGemVertices = 6;
 
+constexpr float kExpGemInvMass = 1.0f;
 constexpr int kExpGemCommonSpriteWidth = 25;
 constexpr int kExpGemCommonSpriteHeight = 33;
 constexpr int kExpGemCommonColliderWidth =

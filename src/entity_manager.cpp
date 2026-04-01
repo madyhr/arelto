@@ -50,12 +50,21 @@ void EntityManager::ProcessPendingSpawns(Scene& scene) {
 
 void EntityManager::Update(Scene& scene, float dt,
                            EventManager& event_manager) {
+  UpdatePlayerStatus(scene, dt, event_manager);
   UpdateEnemyStatus(scene, dt, event_manager);
   UpdateProjectilesStatus(scene, event_manager);
   UpdateGemStatus(scene);
   UpdateChestStatus(scene);
 
   UpdateObservations(scene);
+}
+
+void EntityManager::UpdatePlayerStatus(Scene& scene, float /*dt*/,
+                                       EventManager& event_manager) {
+  if (scene.player.is_alive_ && scene.player.stats_.health <= 0) {
+    scene.player.is_alive_ = false;
+    event_manager.Emit(PlayerDeadEvent{});
+  }
 }
 
 void EntityManager::UpdateEnemyStatus(Scene& scene, float dt,

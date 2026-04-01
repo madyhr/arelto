@@ -24,6 +24,7 @@ class EntityManager {
   std::vector<ExpGemData> pending_gem_spawns_;
   std::vector<ChestData> pending_chest_spawns_;
 
+  void UpdatePlayerStatus(Scene& scene, float dt, EventManager& event_manager);
   void UpdateEnemyStatus(Scene& scene, float dt, EventManager& event_manager);
   void UpdateProjectilesStatus(Scene& scene, EventManager& event_manager);
   void UpdateGemStatus(Scene& scene);

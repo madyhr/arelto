@@ -65,6 +65,7 @@ struct Enemy {
 class Player {
  public:
   EntityType entity_type_ = EntityType::player;
+  bool is_alive_ = true;
   Stats stats_;
   Vector2D position_;
   Vector2D prev_position_;

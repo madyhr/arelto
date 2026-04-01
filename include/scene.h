@@ -41,6 +41,7 @@ struct Scene {
     player.stats_.exp_points = 0;
     player.stats_.exp_points_required.SetBaseValue(
         kPlayerInitialExpRequirement);
+    player.is_alive_ = true;
     player.position_ = Vector2D{kPlayerInitX, kPlayerInitY};
     player.prev_position_ = player.position_;
     player.last_horizontal_velocity_ = 0.0f;

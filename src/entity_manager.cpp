@@ -53,8 +53,8 @@ void EntityManager::Update(Scene& scene, float dt,
   UpdatePlayerStatus(scene, dt, event_manager);
   UpdateEnemyStatus(scene, dt, event_manager);
   UpdateProjectilesStatus(scene, event_manager);
-  UpdateGemStatus(scene);
-  UpdateChestStatus(scene);
+  UpdateGemStatus(scene, event_manager);
+  UpdateChestStatus(scene, event_manager);
 
   UpdateObservations(scene);
 }
@@ -72,7 +72,7 @@ void EntityManager::UpdateEnemyStatus(Scene& scene, float dt,
   for (int i = 0; i < kNumEnemies; ++i) {
     scene.enemy.timeout_timer[i] += dt;
 
-    if (scene.enemy.health_points[i] <= 0) {
+    if (scene.enemy.is_alive[i] && scene.enemy.health_points[i] <= 0) {
       scene.enemy.is_alive[i] = false;
       scene.enemy.is_done[i] = true;
       scene.enemy.is_terminated_latched[i] = true;
@@ -89,11 +89,19 @@ void EntityManager::UpdateProjectilesStatus(Scene& scene,
   scene.projectiles.DestroyProjectiles();
 }
 
-void EntityManager::UpdateGemStatus(Scene& scene) {
+void EntityManager::UpdateGemStatus(Scene& scene, EventManager& event_manager) {
+  for (int idx : scene.exp_gem.to_be_destroyed_) {
+    int exp_value = kExpGemValues[scene.exp_gem.rarity_[idx]];
+    scene.player.stats_.exp_points += exp_value;
+    event_manager.Emit(GemCollectedEvent{idx, exp_value});
+  }
   scene.exp_gem.DestroyExpGems();
 }
 
-void EntityManager::UpdateChestStatus(Scene& scene) {
+void EntityManager::UpdateChestStatus(Scene& scene, EventManager& event_manager) {
+  for (int idx : scene.chest.to_be_destroyed_) {
+    event_manager.Emit(ChestOpenedEvent{idx});
+  }
   scene.chest.DestroyChests();
 }
 

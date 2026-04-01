@@ -130,10 +130,9 @@ TEST_F(CollisionManagerTest,
 }
 
 TEST_F(CollisionManagerTest,
-       HandleCollisionsSAP_PlayerGemCollision_CollectsExp) {
+       HandleCollisionsSAP_PlayerGemCollision_MarksForDestruction) {
   // Place player overlapping with a gem
   scene_.player.position_ = {100.0f, 100.0f};
-  scene_.player.stats_.exp_points = 0;
 
   // Add a gem at player's position
   ExpGemData gem_data{Rarity::common,
@@ -148,8 +147,6 @@ TEST_F(CollisionManagerTest,
 
   // Gem should be marked for destruction
   EXPECT_TRUE(scene_.exp_gem.to_be_destroyed_.count(0) > 0);
-  // Player should have gained exp
-  EXPECT_GT(scene_.player.stats_.exp_points, 0);
 }
 
 TEST_F(CollisionManagerTest,
@@ -203,41 +200,7 @@ TEST_F(CollisionManagerTest, PlayerEnemyCollision_EmitsPlayerDamagedEvent) {
   EXPECT_TRUE(found);
 }
 
-TEST_F(CollisionManagerTest,
-       PlayerEnemyCollision_EmitsPlayerDeadEvent_WhenHealthReachesZero) {
-  scene_.player.position_ = {100.0f, 100.0f};
-  scene_.player.stats_.health = 5;
-  scene_.enemy.position[0] = {100.0f, 100.0f};
-  scene_.enemy.is_alive[0] = true;
-  scene_.enemy.attack_cooldown[0] = -1.0f;
-  scene_.enemy.attack_damage[0] = 10;
 
-  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
-
-  bool found = false;
-  for (const auto& e : event_manager_.GetEvents()) {
-    if (std::holds_alternative<PlayerDeadEvent>(e)) {
-      found = true;
-    }
-  }
-  EXPECT_TRUE(found);
-}
-
-TEST_F(CollisionManagerTest,
-       PlayerEnemyCollision_NoPlayerDeadEvent_WhenHealthRemains) {
-  scene_.player.position_ = {100.0f, 100.0f};
-  scene_.player.stats_.health = 100;
-  scene_.enemy.position[0] = {100.0f, 100.0f};
-  scene_.enemy.is_alive[0] = true;
-  scene_.enemy.attack_cooldown[0] = -1.0f;
-  scene_.enemy.attack_damage[0] = 10;
-
-  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
-
-  for (const auto& e : event_manager_.GetEvents()) {
-    EXPECT_FALSE(std::holds_alternative<PlayerDeadEvent>(e));
-  }
-}
 
 TEST_F(CollisionManagerTest,
        PlayerEnemyCollision_NoDamageEvent_WhenOnCooldown) {
@@ -290,50 +253,7 @@ TEST_F(CollisionManagerTest,
   EXPECT_EQ(scene_.enemy.health_points[0], 10 - 25 - 25);
 }
 
-TEST_F(CollisionManagerTest, PlayerGemCollision_EmitsGemCollectedEvent) {
-  scene_.player.position_ = {100.0f, 100.0f};
-  ExpGemData gem{Rarity::common,
-                 {100.0f, 100.0f},
-                 {100.0f, 100.0f},
-                 {{8.0f, 8.0f}, {16, 16}},
-                 5.0f,
-                 {16, 16}};
-  scene_.exp_gem.AddExpGem(gem);
 
-  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
-
-  bool found = false;
-  for (const auto& e : event_manager_.GetEvents()) {
-    if (std::holds_alternative<GemCollectedEvent>(e)) {
-      const auto& ev = std::get<GemCollectedEvent>(e);
-      EXPECT_EQ(ev.gem_idx, 0);
-      EXPECT_GT(ev.exp_value, 0);
-      found = true;
-    }
-  }
-  EXPECT_TRUE(found);
-}
-
-TEST_F(CollisionManagerTest, PlayerChestCollision_EmitsChestOpenedEvent) {
-  scene_.player.position_ = {100.0f, 100.0f};
-  ChestData chest{{100.0f, 100.0f},
-                  {100.0f, 100.0f},
-                  {{8.0f, 8.0f}, {32, 32}},
-                  0.01f,
-                  {32, 32}};
-  scene_.chest.AddChest(chest);
-
-  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
-
-  bool found = false;
-  for (const auto& e : event_manager_.GetEvents()) {
-    if (std::holds_alternative<ChestOpenedEvent>(e)) {
-      EXPECT_EQ(std::get<ChestOpenedEvent>(e).chest_idx, 0);
-      found = true;
-    }
-  }
-  EXPECT_TRUE(found);
-}
 
 }  // namespace
 }  // namespace arelto

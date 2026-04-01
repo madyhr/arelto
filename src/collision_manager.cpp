@@ -7,7 +7,6 @@
 #include "abilities.h"
 #include "constants/chest.h"
 #include "constants/enemy.h"
-#include "constants/exp_gem.h"
 #include "entity.h"
 #include "event_manager.h"
 #include "scene.h"
@@ -107,6 +106,7 @@ void CollisionManager::ResolveCollisionPairsSAP(Scene& scene,
       case CollisionType::enemy_terrain:
       case CollisionType::projectile_terrain:
       case CollisionType::player_projectile:
+      case CollisionType::gem_chest:
         continue;
       case CollisionType::player_enemy:
         ResolvePlayerEnemyCollision(cp, scene.player, scene.enemy,
@@ -120,13 +120,10 @@ void CollisionManager::ResolveCollisionPairsSAP(Scene& scene,
                                         scene.player);
         continue;
       case CollisionType::player_gem:
-        ResolvePlayerGemCollision(cp, scene.player, scene.exp_gem,
-                                  event_manager);
+        ResolvePlayerGemCollision(cp, scene.exp_gem);
         continue;
       case CollisionType::player_chest:
-        ResolvePlayerChestCollision(cp, scene.chest, event_manager);
-        continue;
-      case CollisionType::gem_chest:
+        ResolvePlayerChestCollision(cp, scene.chest);
         continue;
     }
   }
@@ -254,25 +251,19 @@ void CollisionManager::ResolveEnemyProjectileCollision(const CollisionPair& cp,
 };
 
 void CollisionManager::ResolvePlayerGemCollision(const CollisionPair& cp,
-                                                 Player& player,
-                                                 ExpGem& exp_gem,
-                                                 EventManager& event_manager) {
+                                                 ExpGem& exp_gem) {
 
   bool a_is_gem = cp.type_a == EntityType::exp_gem;
   int gem_idx = a_is_gem ? cp.index_a : cp.index_b;
-  int exp_value = kExpGemValues[exp_gem.rarity_[gem_idx]];
 
   exp_gem.to_be_destroyed_.insert(gem_idx);
-  player.stats_.exp_points += exp_value;
-  event_manager.Emit(GemCollectedEvent{gem_idx, exp_value});
 };
 
-void CollisionManager::ResolvePlayerChestCollision(
-    const CollisionPair& cp, Chest& chest, EventManager& event_manager) {
+void CollisionManager::ResolvePlayerChestCollision(const CollisionPair& cp,
+                                                   Chest& chest) {
   bool a_is_chest = cp.type_a == EntityType::chest;
   int chest_idx = a_is_chest ? cp.index_a : cp.index_b;
   chest.to_be_destroyed_.insert(chest_idx);
-  event_manager.Emit(ChestOpenedEvent{chest_idx});
 };
 
 void CollisionManager::SeparateGemChestPairs(Chest& chest, ExpGem& exp_gem) {

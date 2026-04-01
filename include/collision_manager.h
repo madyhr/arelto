@@ -30,10 +30,8 @@ class CollisionManager {
   void ResolveEnemyEnemyCollision(const CollisionPair& cp, Enemy& enemy);
   void ResolvePlayerEnemyCollision(const CollisionPair& cp, Player& player,
                                    Enemy& enemy, EventManager& event_manager);
-  void ResolvePlayerGemCollision(const CollisionPair& cp, Player& player,
-                                 ExpGem& exp_gem, EventManager& event_manager);
-  void ResolvePlayerChestCollision(const CollisionPair& cp, Chest& chest,
-                                   EventManager& event_manager);
+  void ResolvePlayerGemCollision(const CollisionPair& cp, ExpGem& exp_gem);
+  void ResolvePlayerChestCollision(const CollisionPair& cp, Chest& chest);
   void SeparateGemChestPairs(Chest& chest, ExpGem& exp_gem);
   std::array<Vector2D, 2> GetDisplacementVectors(
       const std::array<AABB, 2>& aabbs,

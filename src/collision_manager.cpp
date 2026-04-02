@@ -4,9 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <vector>
-#include "abilities.h"
 #include "constants/chest.h"
-#include "constants/enemy.h"
 #include "entity.h"
 #include "event_manager.h"
 #include "scene.h"
@@ -106,7 +104,6 @@ void CollisionManager::ResolveCollisionPairsSAP(Scene& scene,
       case CollisionType::enemy_terrain:
       case CollisionType::projectile_terrain:
       case CollisionType::player_projectile:
-      case CollisionType::gem_chest:
         continue;
       case CollisionType::player_enemy:
         ResolvePlayerEnemyCollision(cp, scene.player, scene.enemy,
@@ -116,14 +113,13 @@ void CollisionManager::ResolveCollisionPairsSAP(Scene& scene,
         ResolveEnemyEnemyCollision(cp, scene.enemy);
         continue;
       case CollisionType::enemy_projectile:
-        ResolveEnemyProjectileCollision(cp, scene.enemy, scene.projectiles,
-                                        scene.player);
+        ResolveEnemyProjectileCollision(cp, event_manager);
         continue;
-      case CollisionType::player_gem:
-        ResolvePlayerGemCollision(cp, scene.exp_gem);
+      case CollisionType::player_expgem:
+        ResolvePlayerExpGemCollision(cp, event_manager);
         continue;
       case CollisionType::player_chest:
-        ResolvePlayerChestCollision(cp, scene.chest);
+        ResolvePlayerChestCollision(cp, event_manager);
         continue;
     }
   }
@@ -141,7 +137,7 @@ CollisionType CollisionManager::GetCollisionType(const CollisionPair& cp) {
   if (type_a == EntityType::player && type_b == EntityType::enemy) {
     return CollisionType::player_enemy;
   } else if (type_a == EntityType::player && type_b == EntityType::exp_gem) {
-    return CollisionType::player_gem;
+    return CollisionType::player_expgem;
   } else if (type_a == EntityType::player && type_b == EntityType::chest) {
     return CollisionType::player_chest;
   } else if (type_a == EntityType::enemy && type_b == EntityType::enemy) {
@@ -226,44 +222,32 @@ void CollisionManager::ResolvePlayerEnemyCollision(
   player.position_ += displacement_vectors[0];
   enemy.position[enemy_idx] += displacement_vectors[1];
 
-  if (enemy.attack_cooldown[enemy_idx] < 0.0f) {
-    int damage_dealt =
-        std::max(0, enemy.attack_damage[enemy_idx] -
-                        static_cast<int>(player.stats_.armor.GetValue()));
-    player.stats_.health -= damage_dealt;
-    enemy.damage_dealt_sim_step[enemy_idx] += enemy.attack_damage[enemy_idx];
-    enemy.attack_cooldown[enemy_idx] = kEnemyAttackCooldown;
-    event_manager.Emit(PlayerDamagedEvent{enemy_idx, damage_dealt});
-  }
+  event_manager.Emit(PlayerEnemyCollisionEvent{enemy_idx});
 };
 
-void CollisionManager::ResolveEnemyProjectileCollision(const CollisionPair& cp,
-                                                       Enemy& enemy,
-                                                       Projectiles& projectiles,
-                                                       const Player& player) {
+void CollisionManager::ResolveEnemyProjectileCollision(
+    const CollisionPair& cp, EventManager& event_manager) {
   bool a_is_proj = cp.type_a == EntityType::projectile;
   int proj_idx = a_is_proj ? cp.index_a : cp.index_b;
   int enemy_idx = a_is_proj ? cp.index_b : cp.index_a;
-  projectiles.to_be_destroyed_.insert(proj_idx);
-  int proj_id = projectiles.proj_type_[proj_idx];
-  int spell_damage = player.spell_stats_.damage[proj_id];
-  enemy.health_points[enemy_idx] -= spell_damage;
+
+  event_manager.Emit(EnemyProjectileCollisionEvent{enemy_idx, proj_idx});
 };
 
-void CollisionManager::ResolvePlayerGemCollision(const CollisionPair& cp,
-                                                 ExpGem& exp_gem) {
+void CollisionManager::ResolvePlayerExpGemCollision(
+    const CollisionPair& cp, EventManager& event_manager) {
 
   bool a_is_gem = cp.type_a == EntityType::exp_gem;
   int gem_idx = a_is_gem ? cp.index_a : cp.index_b;
 
-  exp_gem.to_be_destroyed_.insert(gem_idx);
+  event_manager.Emit(PlayerExpGemCollisionEvent{gem_idx});
 };
 
-void CollisionManager::ResolvePlayerChestCollision(const CollisionPair& cp,
-                                                   Chest& chest) {
+void CollisionManager::ResolvePlayerChestCollision(
+    const CollisionPair& cp, EventManager& event_manager) {
   bool a_is_chest = cp.type_a == EntityType::chest;
   int chest_idx = a_is_chest ? cp.index_a : cp.index_b;
-  chest.to_be_destroyed_.insert(chest_idx);
+  event_manager.Emit(PlayerChestCollisionEvent{chest_idx});
 };
 
 void CollisionManager::SeparateGemChestPairs(Chest& chest, ExpGem& exp_gem) {

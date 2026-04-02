@@ -232,16 +232,16 @@ TEST_F(PhysicsManagerTest, StepPhysics_ResolvesCollisions) {
 // =============================================================================
 
 TEST_F(PhysicsManagerTest, StepPhysics_EmitsEventsIntoQueue_ReadyForDispatch) {
-  // Set up player-enemy collision that will deal damage
+  // Set up player-enemy collision
   scene_.player.position_ = {100.0f, 100.0f};
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
-  scene_.enemy.attack_damage[0] = 10;
-  scene_.enemy.attack_cooldown[0] = -1.0f;
 
   bool handler_called = false;
-  event_manager_.Subscribe<PlayerDamagedEvent>(
-      [&](const PlayerDamagedEvent&, EventContext&) { handler_called = true; });
+  event_manager_.Subscribe<PlayerEnemyCollisionEvent>(
+      [&](const PlayerEnemyCollisionEvent&, EventContext&) {
+        handler_called = true;
+      });
 
   physics_manager_.StepPhysics(scene_, event_manager_);
 

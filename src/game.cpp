@@ -104,11 +104,13 @@ void Game::StepGamePhysics() {
   event_manager_.Flush();
 
   physics_manager_.StepPhysics(scene_, event_manager_);
-  entity_manager_.Update(scene_, physics_manager_.GetPhysicsDt(),
-                         event_manager_);
 
   EventContext event_context{scene_.player};
   event_manager_.Dispatch(event_context);
+
+  entity_manager_.Cleanup();
+  obs_manager_.UpdateObservations(scene_);
+
   ProcessGameStateTransitionQueue();
 
   time_ += physics_manager_.GetPhysicsDt();
@@ -191,8 +193,8 @@ void Game::RegisterGameStateHandlers() {
         RequestGameStateTransition(is_gameover);
       });
 
-  event_manager_.Subscribe<GemCollectedEvent>(
-      [this](const GemCollectedEvent&, EventContext&) {
+  event_manager_.Subscribe<ExpGemCollectedEvent>(
+      [this](const ExpGemCollectedEvent&, EventContext&) {
         if (!progression_manager_.CheckLevelUp(scene_.player))
           return;
         RequestGameStateTransition(in_level_up);
@@ -254,7 +256,7 @@ void Game::RunGameLoop() {
           break;
         }
 
-        entity_manager_.ProcessPendingSpawns(scene_);
+        entity_manager_.ProcessPendingSpawns();
         RenderGame(alpha);
         game_status_.frame_stats.print_fps_running_average(frame_time);
         break;
@@ -336,7 +338,7 @@ void Game::StepGame(float dt) {
     // an enemy stays dead between StepGame() calls. Respawning inside the loop
     // could corrupt RL termination signals if the same enemy died, respawned,
     // and died again within a single call.
-    entity_manager_.ProcessPendingSpawns(scene_);
+    entity_manager_.ProcessPendingSpawns();
   } else if (game_state_ == in_chest_opening) {
     auto* chest_root = render_manager_.GetUIManager().GetChestOpeningRoot();
     if (chest_root) {

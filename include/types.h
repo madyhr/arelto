@@ -300,9 +300,8 @@ enum class CollisionType : int {
   enemy_enemy,
   player_projectile,
   enemy_projectile,
-  player_gem,
+  player_expgem,
   player_chest,
-  gem_chest
 };
 
 struct EntityPosition {

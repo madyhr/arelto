@@ -8,6 +8,7 @@
 #include "collision_manager.h"
 #include "constants/enemy.h"
 #include "entity.h"
+#include "entity_manager.h"
 #include "event_manager.h"
 #include "scene.h"
 #include "test_helpers.h"
@@ -21,10 +22,12 @@ class CollisionManagerTest : public ::testing::Test {
   void SetUp() override {
     scene_ = testing::CreateTestScene();
     testing::DeactivateAllEnemies(scene_.enemy);
+    entity_manager_.Initialize(scene_, event_manager_);
   }
 
   Scene scene_;
   CollisionManager collision_manager_;
+  EntityManager entity_manager_;
   EventManager event_manager_;
 };
 
@@ -109,6 +112,10 @@ TEST_F(CollisionManagerTest,
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
+  // Damage is applied during event dispatch
+  EventContext event_context{scene_.player};
+  event_manager_.Dispatch(event_context);
+
   // Player should have taken damage
   EXPECT_EQ(scene_.player.stats_.health, 90);
 }
@@ -125,12 +132,15 @@ TEST_F(CollisionManagerTest,
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
+  EventContext event_context{scene_.player};
+  event_manager_.Dispatch(event_context);
+
   // Player should NOT have taken damage (enemy on cooldown)
   EXPECT_EQ(scene_.player.stats_.health, 100);
 }
 
 TEST_F(CollisionManagerTest,
-       HandleCollisionsSAP_PlayerGemCollision_MarksForDestruction) {
+       HandleCollisionsSAP_PlayerExpGemCollision_EmitsEvent) {
   // Place player overlapping with a gem
   scene_.player.position_ = {100.0f, 100.0f};
 
@@ -145,12 +155,20 @@ TEST_F(CollisionManagerTest,
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
-  // Gem should be marked for destruction
-  EXPECT_TRUE(scene_.exp_gem.to_be_destroyed_.count(0) > 0);
+  auto& events = event_manager_.GetEvents();
+  bool found = false;
+  for (const auto& e : events) {
+    if (std::holds_alternative<PlayerExpGemCollisionEvent>(e)) {
+      const auto& ev = std::get<PlayerExpGemCollisionEvent>(e);
+      EXPECT_EQ(ev.gem_idx, 0);
+      found = true;
+    }
+  }
+  EXPECT_TRUE(found);
 }
 
 TEST_F(CollisionManagerTest,
-       HandleCollisionsSAP_EnemyProjectileCollision_DealsDamage) {
+       HandleCollisionsSAP_EnemyProjectileCollision_EmitsEvent) {
   // Place enemy and projectile overlapping
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
@@ -168,10 +186,18 @@ TEST_F(CollisionManagerTest,
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
-  // Projectile should be marked for destruction
-  EXPECT_TRUE(scene_.projectiles.to_be_destroyed_.count(0) > 0);
-  // Enemy should have taken damage
-  EXPECT_EQ(scene_.enemy.health_points[0], 75);
+  // Event should be emitted
+  auto& events = event_manager_.GetEvents();
+  bool found = false;
+  for (const auto& e : events) {
+    if (std::holds_alternative<EnemyProjectileCollisionEvent>(e)) {
+      const auto& ev = std::get<EnemyProjectileCollisionEvent>(e);
+      EXPECT_EQ(ev.enemy_idx, 0);
+      EXPECT_EQ(ev.proj_idx, 0);
+      found = true;
+    }
+  }
+  EXPECT_TRUE(found);
 }
 
 // =============================================================================
@@ -187,6 +213,10 @@ TEST_F(CollisionManagerTest, PlayerEnemyCollision_EmitsPlayerDamagedEvent) {
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
+  // PlayerDamagedEvent is emitted by the entity manager handler during dispatch
+  EventContext event_context{scene_.player};
+  event_manager_.Dispatch(event_context);
+
   auto& events = event_manager_.GetEvents();
   bool found = false;
   for (const auto& e : events) {
@@ -200,8 +230,6 @@ TEST_F(CollisionManagerTest, PlayerEnemyCollision_EmitsPlayerDamagedEvent) {
   EXPECT_TRUE(found);
 }
 
-
-
 TEST_F(CollisionManagerTest,
        PlayerEnemyCollision_NoDamageEvent_WhenOnCooldown) {
   scene_.player.position_ = {100.0f, 100.0f};
@@ -211,13 +239,16 @@ TEST_F(CollisionManagerTest,
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
+  EventContext event_context{scene_.player};
+  event_manager_.Dispatch(event_context);
+
   for (const auto& e : event_manager_.GetEvents()) {
     EXPECT_FALSE(std::holds_alternative<PlayerDamagedEvent>(e));
   }
 }
 
 TEST_F(CollisionManagerTest,
-       EnemyProjectileCollision_DoubleHit_BothProjectilesDestroyed) {
+       EnemyProjectileCollision_DoubleHit_EmitsTwoEvents) {
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
   scene_.enemy.health_points[0] = 10;
@@ -230,30 +261,15 @@ TEST_F(CollisionManagerTest,
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
-  EXPECT_TRUE(scene_.projectiles.to_be_destroyed_.count(0) > 0);
-  EXPECT_TRUE(scene_.projectiles.to_be_destroyed_.count(1) > 0);
+  auto& events = event_manager_.GetEvents();
+  int event_count = 0;
+  for (const auto& e : events) {
+    if (std::holds_alternative<EnemyProjectileCollisionEvent>(e)) {
+      event_count++;
+    }
+  }
+  EXPECT_EQ(event_count, 2);
 }
-
-TEST_F(CollisionManagerTest,
-       EnemyProjectileCollision_DoubleHit_DamageAppliedByBothProjectiles) {
-  // With no is_alive guard in collision_manager, both projectiles deal damage.
-  // EntityManager's UpdateEnemyStatus still emits only one EnemyKilledEvent.
-  scene_.enemy.position[0] = {100.0f, 100.0f};
-  scene_.enemy.is_alive[0] = true;
-  scene_.enemy.health_points[0] = 10;
-  scene_.player.spell_stats_.damage[0] = 25;
-
-  ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);
-  scene_.projectiles.AddProjectile(proj);
-  scene_.projectiles.AddProjectile(proj);
-  scene_.player.position_ = {10000.0f, 10000.0f};
-
-  collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
-
-  EXPECT_EQ(scene_.enemy.health_points[0], 10 - 25 - 25);
-}
-
-
 
 }  // namespace
 }  // namespace arelto

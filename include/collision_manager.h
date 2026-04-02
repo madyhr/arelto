@@ -23,15 +23,16 @@ class CollisionManager {
   void FindCollisionPairsSAP(std::vector<AABB>& sorted_aabb);
   CollisionType GetCollisionType(const CollisionPair& cp);
   void ResolveCollisionPairsSAP(Scene& scene, EventManager& event_manager);
-  void ResolveEnemyProjectileCollision(const CollisionPair& cp, Enemy& enemy,
-                                       Projectiles& projectiles,
-                                       const Player& player);
+  void ResolveEnemyProjectileCollision(const CollisionPair& cp,
+                                       EventManager& event_manager);
 
   void ResolveEnemyEnemyCollision(const CollisionPair& cp, Enemy& enemy);
   void ResolvePlayerEnemyCollision(const CollisionPair& cp, Player& player,
                                    Enemy& enemy, EventManager& event_manager);
-  void ResolvePlayerGemCollision(const CollisionPair& cp, ExpGem& exp_gem);
-  void ResolvePlayerChestCollision(const CollisionPair& cp, Chest& chest);
+  void ResolvePlayerExpGemCollision(const CollisionPair& cp,
+                                    EventManager& event_manager);
+  void ResolvePlayerChestCollision(const CollisionPair& cp,
+                                   EventManager& event_manager);
   void SeparateGemChestPairs(Chest& chest, ExpGem& exp_gem);
   std::array<Vector2D, 2> GetDisplacementVectors(
       const std::array<AABB, 2>& aabbs,

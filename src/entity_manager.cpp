@@ -4,7 +4,6 @@
 #include "constants/chest.h"
 #include "constants/enemy.h"
 #include "constants/exp_gem.h"
-#include "constants/ray_caster.h"
 #include "event_manager.h"
 #include "random.h"
 #include "types.h"
@@ -15,216 +14,157 @@ EntityManager::EntityManager() {}
 EntityManager::~EntityManager() {}
 
 void EntityManager::Initialize(Scene& scene, EventManager& event_manager) {
+  // Scene and event manager references are stored for use in event handlers and lifecycle methods.
+  // This simplifies the function signatures of those methods and allows them to be used as event
+  // handlers without needing to bind extra arguments or use long, verbose lambdas.
+  scene_ = &scene;
+  event_manager_ = &event_manager;
+
   event_manager.Subscribe<EnemyKilledEvent>(
-      [&scene, this](const EnemyKilledEvent& e, EventContext&) {
-        Vector2D centroid = GetCentroid(scene.enemy.position[e.enemy_idx],
-                                        scene.enemy.collider[e.enemy_idx].size);
+      [this](const EnemyKilledEvent& event, EventContext& event_context) {
+        OnEnemyKilled(event, event_context);
+      });
 
-        Rarity random_rarity = static_cast<Rarity>(GenerateRandomInt(0, 3));
-        pending_gem_spawns_.push_back(
-            {random_rarity, centroid, centroid, kExpGemCollider[random_rarity],
-             kExpGemInvMass, kExpGemSpriteSize[random_rarity]});
+  event_manager.Subscribe<PlayerExpGemCollisionEvent>(
+      [this](const PlayerExpGemCollisionEvent& event,
+             EventContext& event_context) {
+        OnPlayerExpGemCollision(event, event_context);
+      });
 
-        float chest_roll =
-            static_cast<float>(GenerateRandomInt(0, 99)) / 100.0f;
-        if (chest_roll < kChestSpawnChance) {
-          pending_chest_spawns_.push_back({centroid, centroid, kChestCollider,
-                                           kChestInvMass, kChestSpriteSize});
-        }
+  event_manager.Subscribe<PlayerChestCollisionEvent>(
+      [this](const PlayerChestCollisionEvent& event,
+             EventContext& event_context) {
+        OnPlayerChestCollision(event, event_context);
+      });
+
+  event_manager.Subscribe<PlayerEnemyCollisionEvent>(
+      [this](const PlayerEnemyCollisionEvent& event,
+             EventContext& event_context) {
+        OnPlayerEnemyCollision(event, event_context);
+      });
+
+  event_manager.Subscribe<EnemyProjectileCollisionEvent>(
+      [this](const EnemyProjectileCollisionEvent& event,
+             EventContext& event_context) {
+        OnEnemyProjectileCollision(event, event_context);
       });
 }
 
-void EntityManager::ProcessPendingSpawns(Scene& scene) {
-  for (const ExpGemData& gem_data : pending_gem_spawns_) {
-    scene.exp_gem.AddExpGem(gem_data);
+// ---------------------------------------------------------------------------
+// Event Handlers
+// ---------------------------------------------------------------------------
+
+void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
+                                  EventContext& /*context*/) {
+  Vector2D centroid = GetCentroid(scene_->enemy.position[event.enemy_idx],
+                                  scene_->enemy.collider[event.enemy_idx].size);
+
+  Rarity random_rarity = static_cast<Rarity>(GenerateRandomInt(0, 3));
+  pending_exp_gem_spawns_.push_back(
+      {random_rarity, centroid, centroid, kExpGemCollider[random_rarity],
+       kExpGemInvMass, kExpGemSpriteSize[random_rarity]});
+
+  float chest_roll = static_cast<float>(GenerateRandomInt(0, 99)) / 100.0f;
+  if (chest_roll < kChestSpawnChance) {
+    pending_chest_spawns_.push_back(
+        {centroid, centroid, kChestCollider, kChestInvMass, kChestSpriteSize});
   }
-  pending_gem_spawns_.clear();
+
+  pending_enemy_respawns_.push_back(event.enemy_idx);
+}
+
+void EntityManager::OnPlayerExpGemCollision(
+    const PlayerExpGemCollisionEvent& event, EventContext& /*event_context*/) {
+  int exp_value = kExpGemValues[scene_->exp_gem.rarity_[event.gem_idx]];
+  scene_->player.stats_.exp_points += exp_value;
+  scene_->exp_gem.to_be_destroyed_.insert(event.gem_idx);
+  event_manager_->Emit(ExpGemCollectedEvent{event.gem_idx, exp_value});
+}
+
+void EntityManager::OnPlayerChestCollision(
+    const PlayerChestCollisionEvent& event, EventContext& /*context*/) {
+  scene_->chest.to_be_destroyed_.insert(event.chest_idx);
+  event_manager_->Emit(ChestOpenedEvent{event.chest_idx});
+}
+
+void EntityManager::OnPlayerEnemyCollision(
+    const PlayerEnemyCollisionEvent& event, EventContext& /*event_context*/) {
+  int idx = event.enemy_idx;
+
+  if (scene_->enemy.attack_cooldown[idx] < 0.0f) {
+    int damage_dealt = std::max(
+        0, scene_->enemy.attack_damage[idx] -
+               static_cast<int>(scene_->player.stats_.armor.GetValue()));
+    scene_->player.stats_.health -= damage_dealt;
+    scene_->enemy.damage_dealt_sim_step[idx] +=
+        scene_->enemy.attack_damage[idx];
+    scene_->enemy.attack_cooldown[idx] = kEnemyAttackCooldown;
+    event_manager_->Emit(PlayerDamagedEvent{idx, damage_dealt});
+
+    if (scene_->player.is_alive_ && scene_->player.stats_.health <= 0) {
+      scene_->player.is_alive_ = false;
+      event_manager_->Emit(PlayerDeadEvent{});
+    }
+  }
+}
+
+void EntityManager::OnEnemyProjectileCollision(
+    const EnemyProjectileCollisionEvent& event,
+    EventContext& /*event_context*/) {
+  scene_->projectiles.to_be_destroyed_.insert(event.proj_idx);
+  int proj_id = scene_->projectiles.proj_type_[event.proj_idx];
+  int spell_damage = scene_->player.spell_stats_.damage[proj_id];
+  scene_->enemy.health_points[event.enemy_idx] -= spell_damage;
+  int enemy_idx = event.enemy_idx;
+  if (scene_->enemy.is_alive[enemy_idx] &&
+      scene_->enemy.health_points[enemy_idx] <= 0) {
+    scene_->enemy.is_alive[enemy_idx] = false;
+    scene_->enemy.is_done[enemy_idx] = true;
+    scene_->enemy.is_terminated_latched[enemy_idx] = true;
+    event_manager_->Emit(EnemyKilledEvent{enemy_idx});
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Entity Lifecycle
+// ---------------------------------------------------------------------------
+
+void EntityManager::ProcessPendingSpawns() {
+  for (const ExpGemData& gem_data : pending_exp_gem_spawns_) {
+    scene_->exp_gem.AddExpGem(gem_data);
+  }
+  pending_exp_gem_spawns_.clear();
 
   for (const ChestData& chest_data : pending_chest_spawns_) {
-    scene.chest.AddChest(chest_data);
+    scene_->chest.AddChest(chest_data);
   }
   pending_chest_spawns_.clear();
 
-  RespawnEnemy(scene.enemy, scene.player);
-}
-
-void EntityManager::Update(Scene& scene, float dt,
-                           EventManager& event_manager) {
-  UpdatePlayerStatus(scene, dt, event_manager);
-  UpdateEnemyStatus(scene, dt, event_manager);
-  UpdateProjectilesStatus(scene, event_manager);
-  UpdateGemStatus(scene, event_manager);
-  UpdateChestStatus(scene, event_manager);
-
-  UpdateObservations(scene);
-}
-
-void EntityManager::UpdatePlayerStatus(Scene& scene, float /*dt*/,
-                                       EventManager& event_manager) {
-  if (scene.player.is_alive_ && scene.player.stats_.health <= 0) {
-    scene.player.is_alive_ = false;
-    event_manager.Emit(PlayerDeadEvent{});
+  for (const int enemy_idx : pending_enemy_respawns_) {
+    RespawnEnemyAtIndex(scene_->enemy, scene_->player, enemy_idx);
   }
+  pending_enemy_respawns_.clear();
 }
 
-void EntityManager::UpdateEnemyStatus(Scene& scene, float dt,
-                                      EventManager& event_manager) {
-  for (int i = 0; i < kNumEnemies; ++i) {
-    scene.enemy.timeout_timer[i] += dt;
-
-    if (scene.enemy.is_alive[i] && scene.enemy.health_points[i] <= 0) {
-      scene.enemy.is_alive[i] = false;
-      scene.enemy.is_done[i] = true;
-      scene.enemy.is_terminated_latched[i] = true;
-      event_manager.Emit(EnemyKilledEvent{i});
-    };
-  };
+void EntityManager::Cleanup() {
+  ResolveProjectileDestruction();
+  ResolveExpGemDestruction();
+  ResolveChestDestruction();
 }
 
-void EntityManager::UpdateProjectilesStatus(Scene& scene,
-                                            EventManager& event_manager) {
-  for (int idx : scene.projectiles.to_be_destroyed_) {
-    event_manager.Emit(ProjectileDestroyedEvent{idx});
+void EntityManager::ResolveProjectileDestruction() {
+  for (int idx : scene_->projectiles.to_be_destroyed_) {
+    event_manager_->Emit(ProjectileDestroyedEvent{idx});
   }
-  scene.projectiles.DestroyProjectiles();
+  scene_->projectiles.DestroyProjectiles();
 }
 
-void EntityManager::UpdateGemStatus(Scene& scene, EventManager& event_manager) {
-  for (int idx : scene.exp_gem.to_be_destroyed_) {
-    int exp_value = kExpGemValues[scene.exp_gem.rarity_[idx]];
-    scene.player.stats_.exp_points += exp_value;
-    event_manager.Emit(GemCollectedEvent{idx, exp_value});
-  }
-  scene.exp_gem.DestroyExpGems();
+void EntityManager::ResolveExpGemDestruction() {
+  scene_->exp_gem.DestroyExpGems();
 }
 
-void EntityManager::UpdateChestStatus(Scene& scene, EventManager& event_manager) {
-  for (int idx : scene.chest.to_be_destroyed_) {
-    event_manager.Emit(ChestOpenedEvent{idx});
-  }
-  scene.chest.DestroyChests();
-}
-
-void EntityManager::UpdateObservations(Scene& scene) {
-  if (physics_tick_count_ % kOccupancyMapTimeDecimation == 0) {
-    UpdateWorldOccupancyMap(scene.occupancy_map, scene.player, scene.enemy,
-                            scene.projectiles);
-    UpdateEnemyRayCaster(scene.enemy, scene.occupancy_map);
-  }
-  physics_tick_count_++;
-}
-
-void EntityManager::UpdateWorldOccupancyMap(
-    FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
-    Player& player, Enemy& enemy, Projectiles& projectiles) {
-  occupancy_map.Clear();
-
-  // Helper lambda to use an entity's AABB to set the entity type on the
-  // world occupancy map accordingly.
-  auto MarkOccupancy = [&](Vector2D pos, Collider col, EntityType type) {
-    Vector2D center = pos + col.offset;
-    AABB aabb = GetCollisionAABB(center, col.size);
-
-    Vector2D grid_min = WorldToGrid(Vector2D{aabb.min_x, aabb.min_y});
-    Vector2D grid_max = WorldToGrid(Vector2D{aabb.max_x, aabb.max_y});
-
-    int start_x = static_cast<int>(grid_min.x);
-    int start_y = static_cast<int>(grid_min.y);
-    int end_x = static_cast<int>(grid_max.x);
-    int end_y = static_cast<int>(grid_max.y);
-
-    start_x = std::max(0, start_x);
-    start_y = std::max(0, start_y);
-    end_x = std::min(kOccupancyMapWidth - 1, end_x);
-    end_y = std::min(kOccupancyMapHeight - 1, end_y);
-
-    for (int x = start_x; x <= end_x; ++x) {
-      for (int y = start_y; y <= end_y; ++y) {
-        occupancy_map.Add(x, y, type);
-      }
-    }
-  };
-
-  MarkOccupancy(player.position_, player.collider_, player.entity_type_);
-
-  for (int i = 0; i < kNumEnemies; ++i) {
-    if (enemy.is_alive[i]) {
-      MarkOccupancy(enemy.position[i], enemy.collider[i], enemy.entity_type);
-    }
-  }
-
-  const size_t num_proj = projectiles.GetNumProjectiles();
-  for (int i = 0; i < num_proj; ++i) {
-    MarkOccupancy(projectiles.position_[i], projectiles.collider_[i],
-                  projectiles.entity_type_);
-  };
-
-  // A border is added around the map to ensure that a ray always hits a grid
-  // cell with a EntityType other than None and thereby always terminates.
-  occupancy_map.AddBorder(EntityType::terrain);
-}
-
-void EntityManager::UpdateEnemyRayCaster(
-    Enemy& enemy,
-    const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map) {
-  int history_idx = enemy.ray_caster.history_idx;
-
-#pragma omp parallel for
-  for (int ray_idx = 0; ray_idx < kNumRays; ++ray_idx) {
-    Vector2D dir = enemy.ray_caster.pattern.ray_dir[ray_idx];
-
-    for (int enemy_idx = 0; enemy_idx < kNumEnemies; ++enemy_idx) {
-      if (!enemy.is_alive[enemy_idx]) {
-        continue;
-      }
-
-      Vector2D center =
-          enemy.position[enemy_idx] + enemy.collider[enemy_idx].offset;
-
-      float half_w =
-          static_cast<float>(enemy.collider[enemy_idx].size.width) * 0.5f;
-      float half_h =
-          static_cast<float>(enemy.collider[enemy_idx].size.height) * 0.5f;
-
-      // a small offset is added to ensure the rays do not clip the corners
-      // of the collider. Note: this does add blind spots.
-      float ray_offset = std::max(half_h, half_w) + kMinRayDistance;
-      Vector2D start_pos = center + dir * ray_offset;
-
-      Vector2D grid_pos = WorldToGrid(start_pos);
-
-      // Before actually casting a ray, since we cast the ray offset from the
-      // center position, we need to check if we are about to cast through
-      // terrain which could lead to a ray going OOB. In that case, we should
-      // just skip the ray casting altogether and we can set the distance to 0.
-      bool out_of_bounds = grid_pos.x >= kOccupancyMapWidth - 1 ||
-                           grid_pos.y >= kOccupancyMapHeight - 1 ||
-                           grid_pos.x <= 1 || grid_pos.y <= 1;
-
-      DualRayHit dual_hit;
-      if (out_of_bounds) {
-        dual_hit.blocking_hit = {0.0f, EntityType::terrain};
-        dual_hit.non_blocking_hit = {0.0f, EntityType::None};
-      } else {
-        dual_hit = CastRay({start_pos, dir}, occupancy_map);
-      }
-
-      enemy.ray_caster.ray_hit_distances[history_idx][ray_idx][enemy_idx] =
-          dual_hit.blocking_hit.distance;
-      enemy.ray_caster.ray_hit_types[history_idx][ray_idx][enemy_idx] =
-          dual_hit.blocking_hit.entity_type;
-
-      enemy.ray_caster
-          .non_blocking_ray_hit_distances[history_idx][ray_idx][enemy_idx] =
-          dual_hit.non_blocking_hit.distance;
-      enemy.ray_caster
-          .non_blocking_ray_hit_types[history_idx][ray_idx][enemy_idx] =
-          dual_hit.non_blocking_hit.entity_type;
-    }
-  }
-
-  enemy.ray_caster.history_idx =
-      (enemy.ray_caster.history_idx + 1) % kRayHistoryLength;
+void EntityManager::ResolveChestDestruction() {
+  scene_->chest.DestroyChests();
 }
 
 }  // namespace arelto

@@ -43,7 +43,7 @@ TEST_F(EventManagerTest, Emit_SingleEvent_Stored) {
 TEST_F(EventManagerTest, Emit_MultipleEvents_AllStored) {
   event_manager_.Emit(EnemyKilledEvent{0});
   event_manager_.Emit(PlayerDamagedEvent{2, 10});
-  event_manager_.Emit(GemCollectedEvent{5, 50});
+  event_manager_.Emit(ExpGemCollectedEvent{5, 50});
 
   EXPECT_EQ(event_manager_.GetEvents().size(), 3);
 }
@@ -63,11 +63,11 @@ TEST_F(EventManagerTest, Flush_AllowsNewEventsAfterFlush) {
   event_manager_.Emit(EnemyKilledEvent{0});
   event_manager_.Flush();
 
-  event_manager_.Emit(GemCollectedEvent{3, 100});
+  event_manager_.Emit(ExpGemCollectedEvent{3, 100});
 
   ASSERT_EQ(event_manager_.GetEvents().size(), 1);
-  EXPECT_TRUE(
-      std::holds_alternative<GemCollectedEvent>(event_manager_.GetEvents()[0]));
+  EXPECT_TRUE(std::holds_alternative<ExpGemCollectedEvent>(
+      event_manager_.GetEvents()[0]));
 }
 
 // =============================================================================
@@ -117,12 +117,12 @@ TEST_F(EventManagerTest, Dispatch_CallsHandlersInEmitOrder) {
 
 TEST_F(EventManagerTest, Dispatch_MultipleHandlersSameType_BothCalled) {
   int call_count = 0;
-  event_manager_.Subscribe<GemCollectedEvent>(
-      [&](const GemCollectedEvent&, EventContext&) { ++call_count; });
-  event_manager_.Subscribe<GemCollectedEvent>(
-      [&](const GemCollectedEvent&, EventContext&) { ++call_count; });
+  event_manager_.Subscribe<ExpGemCollectedEvent>(
+      [&](const ExpGemCollectedEvent&, EventContext&) { ++call_count; });
+  event_manager_.Subscribe<ExpGemCollectedEvent>(
+      [&](const ExpGemCollectedEvent&, EventContext&) { ++call_count; });
 
-  event_manager_.Emit(GemCollectedEvent{0, 50});
+  event_manager_.Emit(ExpGemCollectedEvent{0, 50});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
@@ -153,10 +153,10 @@ TEST_F(EventManagerTest,
   bool gem_handler_called = false;
   event_manager_.Subscribe<EnemyKilledEvent>([&](const EnemyKilledEvent&,
                                                  EventContext&) {
-    event_manager_.Emit(GemCollectedEvent{/*gem_idx=*/9, /*exp_value=*/100});
+    event_manager_.Emit(ExpGemCollectedEvent{/*gem_idx=*/9, /*exp_value=*/100});
   });
-  event_manager_.Subscribe<GemCollectedEvent>(
-      [&](const GemCollectedEvent& e, EventContext&) {
+  event_manager_.Subscribe<ExpGemCollectedEvent>(
+      [&](const ExpGemCollectedEvent& e, EventContext&) {
         EXPECT_EQ(e.gem_idx, 9);
         gem_handler_called = true;
       });
@@ -175,13 +175,13 @@ TEST_F(EventManagerTest, Dispatch_MultipleEventTypes_AllHandlersFire) {
       [&](const EnemyKilledEvent&, EventContext&) {
         enemy_handler_called = true;
       });
-  event_manager_.Subscribe<GemCollectedEvent>(
-      [&](const GemCollectedEvent&, EventContext&) {
+  event_manager_.Subscribe<ExpGemCollectedEvent>(
+      [&](const ExpGemCollectedEvent&, EventContext&) {
         gem_handler_called = true;
       });
 
   event_manager_.Emit(EnemyKilledEvent{0});
-  event_manager_.Emit(GemCollectedEvent{5, 50});
+  event_manager_.Emit(ExpGemCollectedEvent{5, 50});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 

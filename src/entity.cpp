@@ -37,33 +37,32 @@ AABB GetCollisionAABB(const Vector2D& centroid, const Size2D& size,
           storage_index};
 };
 
-void RespawnEnemy(Enemy& enemy, const Player& player) {
-
+void RespawnEnemyAtIndex(Enemy& enemy, const Player& player, int idx) {
   int max_x = kMapWidth - kEnemySpriteWidth;
   int max_y = kMapHeight - kEnemySpriteHeight;
 
+  Vector2D potential_pos;
+  do {
+    potential_pos = {(float)GenerateRandomInt(0, max_x),
+                     (float)GenerateRandomInt(0, max_y)};
+  } while ((potential_pos - player.position_).Norm() <
+           kEnemyMinimumInitialDistance);
+
+  enemy.position[idx] = potential_pos;
+  enemy.prev_position[idx] = potential_pos;
+  enemy.prev_velocity[idx] = {0.0f, 0.0f};
+  enemy.health_points[idx] = kEnemyHealth;
+  enemy.damage_dealt_sim_step[idx] = 0;
+  enemy.is_alive[idx] = true;
+  enemy.is_done[idx] = false;
+}
+
+void SpawnAllEnemies(Enemy& enemy, const Player& player) {
   for (int i = 0; i < kNumEnemies; ++i) {
-    if (enemy.is_alive[i] && !enemy.is_done[i]) {
-      continue;
+    bool enemy_needs_spawn = !enemy.is_alive[i] || enemy.is_done[i];
+    if (enemy_needs_spawn) {
+      RespawnEnemyAtIndex(enemy, player, i);
     }
-
-    Vector2D potential_pos;
-
-    do {
-      potential_pos = {(float)GenerateRandomInt(0, max_x),
-                       (float)GenerateRandomInt(0, max_y)};
-
-    } while ((potential_pos - player.position_).Norm() <
-             kEnemyMinimumInitialDistance);
-
-    enemy.position[i] = potential_pos;
-    enemy.prev_position[i] = potential_pos;
-    enemy.prev_velocity[i] = {0.0f, 0.0f};
-    enemy.health_points[i] = kEnemyHealth;
-    enemy.damage_dealt_sim_step[i] = 0;
-    enemy.is_alive[i] = true;
-    enemy.is_done[i] = false;
-    enemy.timeout_timer[i] = 0.0f;
   };
 };
 

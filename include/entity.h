@@ -52,7 +52,6 @@ struct Enemy {
   std::array<int, kNumEnemies> damage_dealt_sim_step;
   // this is used for RL training and signifies the end of an episode if true.
   std::array<bool, kNumEnemies> is_done;
-  std::array<float, kNumEnemies> timeout_timer;
   // this is used for enemy terminations that happen due to a timeout
   std::array<bool, kNumEnemies> is_truncated_latched;
   // this is used for enemy terminations that happen before a timeout
@@ -127,7 +126,8 @@ AABB GetAABB(const Vector2D& position, const Size2D& size,
 AABB GetCollisionAABB(const Vector2D& centroid, const Size2D& size,
                       const EntityType& type = EntityType::None,
                       const int& storage_index = 0);
-void RespawnEnemy(Enemy& enemy, const Player& player);
+void RespawnEnemyAtIndex(Enemy& enemy, const Player& player, int idx);
+void SpawnAllEnemies(Enemy& enemy, const Player& player);
 }  // namespace arelto
 
 #endif

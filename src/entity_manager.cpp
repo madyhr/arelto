@@ -59,15 +59,23 @@ void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
   Vector2D centroid = GetCentroid(scene_->enemy.position[event.enemy_idx],
                                   scene_->enemy.collider[event.enemy_idx].size);
 
-  Rarity random_rarity = static_cast<Rarity>(GenerateRandomInt(0, 3));
-  pending_exp_gem_spawns_.push_back(
-      {random_rarity, centroid, centroid, kExpGemCollider[random_rarity],
-       kExpGemInvMass, kExpGemSpriteSize[random_rarity]});
-
   float chest_roll = static_cast<float>(GenerateRandomInt(0, 99)) / 100.0f;
-  if (chest_roll < kChestSpawnChance) {
-    pending_chest_spawns_.push_back(
-        {centroid, centroid, kChestCollider, kChestInvMass, kChestSpriteSize});
+  bool chest_will_spawn = chest_roll < kChestSpawnChance;
+
+  float spawn_offset = chest_will_spawn ? kGemChestMinSeparation * 0.5f : 0.0f;
+  Vector2D gem_position = {centroid.x - spawn_offset, centroid.y};
+
+  Rarity random_rarity = static_cast<Rarity>(GenerateRandomInt(0, 3));
+  pending_exp_gem_spawns_.push_back({random_rarity, gem_position, gem_position,
+                                     kExpGemCollider[random_rarity],
+                                     kExpGemInvMass,
+                                     kExpGemSpriteSize[random_rarity]});
+
+  if (chest_will_spawn) {
+    Vector2D chest_position = {centroid.x + spawn_offset, centroid.y};
+    pending_chest_spawns_.push_back({chest_position, chest_position,
+                                     kChestCollider, kChestInvMass,
+                                     kChestSpriteSize});
   }
 
   pending_enemy_respawns_.push_back(event.enemy_idx);

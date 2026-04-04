@@ -1,6 +1,5 @@
 // src/entity_manager.cpp
 #include "entity_manager.h"
-#include <algorithm>
 #include "constants/chest.h"
 #include "constants/enemy.h"
 #include "constants/exp_gem.h"
@@ -13,11 +12,7 @@ namespace arelto {
 EntityManager::EntityManager() {}
 EntityManager::~EntityManager() {}
 
-void EntityManager::Initialize(Scene& scene, EventManager& event_manager) {
-  // Scene and event manager references are stored for use in event handlers and lifecycle methods.
-  // This simplifies the function signatures of those methods and allows them to be used as event
-  // handlers without needing to bind extra arguments or use long, verbose lambdas.
-  scene_ = &scene;
+void EntityManager::Initialize(EventManager& event_manager) {
   event_manager_ = &event_manager;
 
   event_manager.Subscribe<EnemyKilledEvent>(
@@ -65,9 +60,10 @@ void EntityManager::Initialize(Scene& scene, EventManager& event_manager) {
 // ---------------------------------------------------------------------------
 
 void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
-                                  EventContext& /*context*/) {
-  Vector2D centroid = GetCentroid(scene_->enemy.position[event.enemy_idx],
-                                  scene_->enemy.collider[event.enemy_idx].size);
+                                  EventContext& context) {
+  Vector2D centroid =
+      GetCentroid(context.scene.enemy.position[event.enemy_idx],
+                  context.scene.enemy.collider[event.enemy_idx].size);
 
   float chest_roll = static_cast<float>(GenerateRandomInt(0, 99)) / 100.0f;
   bool chest_will_spawn = chest_roll < kChestSpawnChance;
@@ -92,65 +88,65 @@ void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
 }
 
 void EntityManager::OnPlayerExpGemCollision(
-    const PlayerExpGemCollisionEvent& event, EventContext& /*event_context*/) {
-  int exp_value = kExpGemValues[scene_->exp_gem.rarity_[event.gem_idx]];
-  scene_->player.stats_.exp_points += exp_value;
-  scene_->exp_gem.to_be_destroyed_.insert(event.gem_idx);
+    const PlayerExpGemCollisionEvent& event, EventContext& context) {
+  int exp_value = kExpGemValues[context.scene.exp_gem.rarity_[event.gem_idx]];
+  context.scene.player.stats_.exp_points += exp_value;
+  context.scene.exp_gem.to_be_destroyed_.insert(event.gem_idx);
   event_manager_->Emit(ExpGemCollectedEvent{event.gem_idx, exp_value});
 }
 
 void EntityManager::OnPlayerChestCollision(
-    const PlayerChestCollisionEvent& event, EventContext& /*context*/) {
-  scene_->chest.to_be_destroyed_.insert(event.chest_idx);
+    const PlayerChestCollisionEvent& event, EventContext& context) {
+  context.scene.chest.to_be_destroyed_.insert(event.chest_idx);
   event_manager_->Emit(ChestOpenedEvent{event.chest_idx});
 }
 
 void EntityManager::OnPlayerDamaged(const PlayerDamagedEvent& event,
-                                    EventContext& /*event_context*/) {
-  if (!scene_->player.is_alive_ || scene_->player.is_invulnerable) {
+                                    EventContext& context) {
+  if (!context.scene.player.is_alive_ || context.scene.player.is_invulnerable) {
     return;
   }
 
-  scene_->player.TakeDamage(event.damage);
-  if (scene_->player.is_alive_ && scene_->player.stats_.health <= 0) {
-    scene_->player.is_alive_ = false;
+  context.scene.player.TakeDamage(event.damage);
+  if (context.scene.player.is_alive_ &&
+      context.scene.player.stats_.health <= 0) {
+    context.scene.player.is_alive_ = false;
     event_manager_->Emit(PlayerDeadEvent{});
   }
 }
 
 void EntityManager::OnPlayerEnemyCollision(
-    const PlayerEnemyCollisionEvent& event, EventContext& /*event_context*/) {
+    const PlayerEnemyCollisionEvent& event, EventContext& context) {
   int idx = event.enemy_idx;
-  if (scene_->enemy.attack_cooldown[idx] < 0.0f) {
-    int attack_damage = scene_->enemy.attack_damage[idx];
-    scene_->enemy.damage_dealt_sim_step[idx] += attack_damage;
-    scene_->enemy.attack_cooldown[idx] = kEnemyAttackCooldown;
+  if (context.scene.enemy.attack_cooldown[idx] < 0.0f) {
+    int attack_damage = context.scene.enemy.attack_damage[idx];
+    context.scene.enemy.damage_dealt_sim_step[idx] += attack_damage;
+    context.scene.enemy.attack_cooldown[idx] = kEnemyAttackCooldown;
     event_manager_->Emit(PlayerDamagedEvent{idx, attack_damage});
   }
 }
 
 void EntityManager::OnEnemyDamaged(const EnemyDamagedEvent& event,
-                                   EventContext& /*event_context*/) {
+                                   EventContext& context) {
   int enemy_idx = event.enemy_idx;
-  if (!scene_->enemy.is_alive[enemy_idx]) {
+  if (!context.scene.enemy.is_alive[enemy_idx]) {
     return;
   }
 
-  scene_->enemy.health_points[enemy_idx] -= event.damage;
-  if (scene_->enemy.health_points[enemy_idx] <= 0) {
-    scene_->enemy.is_alive[enemy_idx] = false;
-    scene_->enemy.is_done[enemy_idx] = true;
-    scene_->enemy.is_terminated_latched[enemy_idx] = true;
+  context.scene.enemy.health_points[enemy_idx] -= event.damage;
+  if (context.scene.enemy.health_points[enemy_idx] <= 0) {
+    context.scene.enemy.is_alive[enemy_idx] = false;
+    context.scene.enemy.is_done[enemy_idx] = true;
+    context.scene.enemy.is_terminated_latched[enemy_idx] = true;
     event_manager_->Emit(EnemyKilledEvent{enemy_idx});
   }
 }
 
 void EntityManager::OnEnemyProjectileCollision(
-    const EnemyProjectileCollisionEvent& event,
-    EventContext& /*event_context*/) {
-  scene_->projectiles.to_be_destroyed_.insert(event.proj_idx);
-  int proj_id = scene_->projectiles.proj_type_[event.proj_idx];
-  int spell_damage = scene_->player.spell_stats_.damage[proj_id];
+    const EnemyProjectileCollisionEvent& event, EventContext& context) {
+  context.scene.projectiles.to_be_destroyed_.insert(event.proj_idx);
+  int proj_id = context.scene.projectiles.proj_type_[event.proj_idx];
+  int spell_damage = context.scene.player.spell_stats_.damage[proj_id];
   event_manager_->Emit(EnemyDamagedEvent{event.enemy_idx, spell_damage});
 }
 
@@ -158,42 +154,42 @@ void EntityManager::OnEnemyProjectileCollision(
 // Entity Lifecycle
 // ---------------------------------------------------------------------------
 
-void EntityManager::ProcessPendingSpawns() {
+void EntityManager::ProcessPendingSpawns(Scene& scene) {
   for (const ExpGemData& gem_data : pending_exp_gem_spawns_) {
-    scene_->exp_gem.AddExpGem(gem_data);
+    scene.exp_gem.AddExpGem(gem_data);
   }
   pending_exp_gem_spawns_.clear();
 
   for (const ChestData& chest_data : pending_chest_spawns_) {
-    scene_->chest.AddChest(chest_data);
+    scene.chest.AddChest(chest_data);
   }
   pending_chest_spawns_.clear();
 
   for (const int enemy_idx : pending_enemy_respawns_) {
-    RespawnEnemyAtIndex(scene_->enemy, scene_->player, enemy_idx);
+    RespawnEnemyAtIndex(scene.enemy, scene.player, enemy_idx);
   }
   pending_enemy_respawns_.clear();
 }
 
-void EntityManager::Cleanup() {
-  ResolveProjectileDestruction();
-  ResolveExpGemDestruction();
-  ResolveChestDestruction();
+void EntityManager::Cleanup(Scene& scene) {
+  ResolveProjectileDestruction(scene);
+  ResolveExpGemDestruction(scene);
+  ResolveChestDestruction(scene);
 }
 
-void EntityManager::ResolveProjectileDestruction() {
-  for (int idx : scene_->projectiles.to_be_destroyed_) {
+void EntityManager::ResolveProjectileDestruction(Scene& scene) {
+  for (int idx : scene.projectiles.to_be_destroyed_) {
     event_manager_->Emit(ProjectileDestroyedEvent{idx});
   }
-  scene_->projectiles.DestroyProjectiles();
+  scene.projectiles.DestroyProjectiles();
 }
 
-void EntityManager::ResolveExpGemDestruction() {
-  scene_->exp_gem.DestroyExpGems();
+void EntityManager::ResolveExpGemDestruction(Scene& scene) {
+  scene.exp_gem.DestroyExpGems();
 }
 
-void EntityManager::ResolveChestDestruction() {
-  scene_->chest.DestroyChests();
+void EntityManager::ResolveChestDestruction(Scene& scene) {
+  scene.chest.DestroyChests();
 }
 
 }  // namespace arelto

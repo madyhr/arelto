@@ -7,6 +7,7 @@
 #include <utility>
 #include "entity.h"
 #include "event_manager.h"
+#include "scene.h"
 #include "types.h"
 #include "upgrades.h"
 
@@ -53,7 +54,7 @@ class HealOnKillEffect : public ItemTriggerEffect {
   void RegisterHandlers(EventManager& event_manager) override {
     Track<EnemyKilledEvent>(event_manager, [this](const EnemyKilledEvent&,
                                                   EventContext& event_context) {
-      event_context.player.stats_.health += heal_amount_;
+      event_context.scene.player.stats_.health += heal_amount_;
     });
   }
 

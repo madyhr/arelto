@@ -18,7 +18,7 @@ class EventManagerTest : public ::testing::Test {
   Scene scene_;
   EventManager event_manager_;
 
-  EventContext MakeEventContext() { return EventContext{scene_.player}; }
+  EventContext MakeEventContext() { return EventContext{scene_}; }
 };
 
 // =============================================================================
@@ -207,12 +207,12 @@ TEST_F(EventManagerTest, Dispatch_ContextMutationVisibleToSubsequentHandlers) {
   int health_seen_by_second_handler = 0;
   event_manager_.Subscribe<EnemyKilledEvent>(
       [&](const EnemyKilledEvent&, EventContext& event_context) {
-        event_context.player.stats_.health += 99;
+        event_context.scene.player.stats_.health += 99;
       });
-  event_manager_.Subscribe<EnemyKilledEvent>(
-      [&](const EnemyKilledEvent&, EventContext& event_context) {
-        health_seen_by_second_handler = event_context.player.stats_.health;
-      });
+  event_manager_.Subscribe<EnemyKilledEvent>([&](const EnemyKilledEvent&,
+                                                 EventContext& event_context) {
+    health_seen_by_second_handler = event_context.scene.player.stats_.health;
+  });
 
   int initial_health = scene_.player.stats_.health;
   event_manager_.Emit(EnemyKilledEvent{0});

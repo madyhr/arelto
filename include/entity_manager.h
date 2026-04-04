@@ -12,20 +12,19 @@ class EntityManager {
   EntityManager();
   ~EntityManager();
 
-  void Initialize(Scene& scene, EventManager& event_manager);
-  void Cleanup();
-  void ProcessPendingSpawns();
+  void Initialize(EventManager& event_manager);
+  void Cleanup(Scene& scene);
+  void ProcessPendingSpawns(Scene& scene);
 
  private:
-  Scene* scene_ = nullptr;
   EventManager* event_manager_ = nullptr;
   std::vector<ExpGemData> pending_exp_gem_spawns_;
   std::vector<ChestData> pending_chest_spawns_;
   std::vector<int> pending_enemy_respawns_;
 
-  void ResolveProjectileDestruction();
-  void ResolveExpGemDestruction();
-  void ResolveChestDestruction();
+  void ResolveProjectileDestruction(Scene& scene);
+  void ResolveExpGemDestruction(Scene& scene);
+  void ResolveChestDestruction(Scene& scene);
 
   void OnEnemyKilled(const EnemyKilledEvent& event, EventContext& context);
   void OnPlayerExpGemCollision(const PlayerExpGemCollisionEvent& event,

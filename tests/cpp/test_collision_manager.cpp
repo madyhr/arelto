@@ -22,7 +22,7 @@ class CollisionManagerTest : public ::testing::Test {
   void SetUp() override {
     scene_ = testing::CreateTestScene();
     testing::DeactivateAllEnemies(scene_.enemy);
-    entity_manager_.Initialize(scene_, event_manager_);
+    entity_manager_.Initialize(event_manager_);
   }
 
   Scene scene_;
@@ -113,7 +113,7 @@ TEST_F(CollisionManagerTest,
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // Damage is applied during event dispatch
-  EventContext event_context{scene_.player};
+  EventContext event_context{scene_};
   event_manager_.Dispatch(event_context);
 
   // Player should have taken damage
@@ -132,7 +132,7 @@ TEST_F(CollisionManagerTest,
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
-  EventContext event_context{scene_.player};
+  EventContext event_context{scene_};
   event_manager_.Dispatch(event_context);
 
   // Player should NOT have taken damage (enemy on cooldown)
@@ -214,7 +214,7 @@ TEST_F(CollisionManagerTest, PlayerEnemyCollision_EmitsPlayerDamagedEvent) {
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // PlayerDamagedEvent is emitted by the entity manager handler during dispatch
-  EventContext event_context{scene_.player};
+  EventContext event_context{scene_};
   event_manager_.Dispatch(event_context);
 
   auto& events = event_manager_.GetEvents();
@@ -239,7 +239,7 @@ TEST_F(CollisionManagerTest,
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
-  EventContext event_context{scene_.player};
+  EventContext event_context{scene_};
   event_manager_.Dispatch(event_context);
 
   for (const auto& e : event_manager_.GetEvents()) {

@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "items.h"
 #include "scene.h"
 #include "ui/widget.h"
 #include "upgrades.h"

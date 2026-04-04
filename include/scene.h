@@ -5,13 +5,15 @@
 #include "constants/enemy.h"
 #include "constants/player.h"
 #include "entity.h"
-#include "items.h"
 #include "random.h"
 #include "ray_caster.h"
 #include "types.h"
 #include "upgrades.h"
 
 namespace arelto {
+
+// forward declaration to avoid circular dependency with items.h
+class ItemArchive;
 
 struct Scene {
 

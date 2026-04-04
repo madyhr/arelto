@@ -57,7 +57,7 @@ bool Game::Initialize() {
   scene_.item_archive = &item_archive_;
 
   RegisterGameStateHandlers();
-  entity_manager_.Initialize(scene_, event_manager_);
+  entity_manager_.Initialize(event_manager_);
 
   if (!(Game::InitializeCamera())) {
     return false;
@@ -105,10 +105,10 @@ void Game::StepGamePhysics() {
 
   physics_manager_.StepPhysics(scene_, event_manager_);
 
-  EventContext event_context{scene_.player};
+  EventContext event_context{scene_};
   event_manager_.Dispatch(event_context);
 
-  entity_manager_.Cleanup();
+  entity_manager_.Cleanup(scene_);
   obs_manager_.UpdateObservations(scene_);
 
   ProcessGameStateTransitionQueue();
@@ -256,7 +256,7 @@ void Game::RunGameLoop() {
           break;
         }
 
-        entity_manager_.ProcessPendingSpawns();
+        entity_manager_.ProcessPendingSpawns(scene_);
         RenderGame(alpha);
         game_status_.frame_stats.print_fps_running_average(frame_time);
         break;
@@ -338,7 +338,7 @@ void Game::StepGame(float dt) {
     // an enemy stays dead between StepGame() calls. Respawning inside the loop
     // could corrupt RL termination signals if the same enemy died, respawned,
     // and died again within a single call.
-    entity_manager_.ProcessPendingSpawns();
+    entity_manager_.ProcessPendingSpawns(scene_);
   } else if (game_state_ == in_chest_opening) {
     auto* chest_root = render_manager_.GetUIManager().GetChestOpeningRoot();
     if (chest_root) {

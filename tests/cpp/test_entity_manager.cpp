@@ -26,7 +26,7 @@ class EntityManagerTest : public ::testing::Test {
 // =============================================================================
 
 TEST_F(EntityManagerTest, Cleanup_ProjectileMarkedForDestruction_IsDestroyed) {
-  entity_manager_.Initialize(scene_, event_manager_);
+  entity_manager_.Initialize(event_manager_);
   // Add a projectile
   ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);
   scene_.projectiles.AddProjectile(proj);
@@ -34,14 +34,14 @@ TEST_F(EntityManagerTest, Cleanup_ProjectileMarkedForDestruction_IsDestroyed) {
 
   // Mark it for destruction
   scene_.projectiles.to_be_destroyed_.insert(0);
-  entity_manager_.Cleanup();
+  entity_manager_.Cleanup(scene_);
 
   // Projectile should be removed
   EXPECT_EQ(scene_.projectiles.GetNumProjectiles(), 0);
 }
 
 TEST_F(EntityManagerTest, Cleanup_NoMarkedProjectiles_CountUnchanged) {
-  entity_manager_.Initialize(scene_, event_manager_);
+  entity_manager_.Initialize(event_manager_);
   // Add projectiles
   for (int i = 0; i < 3; ++i) {
     ProjectileData proj = testing::CreateProjectileAt(
@@ -49,7 +49,7 @@ TEST_F(EntityManagerTest, Cleanup_NoMarkedProjectiles_CountUnchanged) {
     scene_.projectiles.AddProjectile(proj);
   }
   ASSERT_EQ(scene_.projectiles.GetNumProjectiles(), 3);
-  entity_manager_.Cleanup();
+  entity_manager_.Cleanup(scene_);
 
   // All projectiles should still exist
   EXPECT_EQ(scene_.projectiles.GetNumProjectiles(), 3);
@@ -60,7 +60,7 @@ TEST_F(EntityManagerTest, Cleanup_NoMarkedProjectiles_CountUnchanged) {
 // =============================================================================
 
 TEST_F(EntityManagerTest, Cleanup_GemMarkedForDestruction_IsDestroyed) {
-  entity_manager_.Initialize(scene_, event_manager_);
+  entity_manager_.Initialize(event_manager_);
   // Add a gem
   ExpGemData gem_data{Rarity::common,
                       {100.0f, 100.0f},
@@ -73,7 +73,7 @@ TEST_F(EntityManagerTest, Cleanup_GemMarkedForDestruction_IsDestroyed) {
 
   // Mark it for destruction
   scene_.exp_gem.to_be_destroyed_.insert(0);
-  entity_manager_.Cleanup();
+  entity_manager_.Cleanup(scene_);
 
   // Gem should be removed
   EXPECT_EQ(scene_.exp_gem.GetNumExpGems(), 0);
@@ -86,14 +86,14 @@ TEST_F(EntityManagerTest, Cleanup_GemMarkedForDestruction_IsDestroyed) {
 TEST_F(EntityManagerTest,
        CleanupProjectilesStatus_EmitsProjectileDestroyedEvent) {
   ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);
-  entity_manager_.Initialize(scene_, event_manager_);
+  entity_manager_.Initialize(event_manager_);
   scene_.projectiles.AddProjectile(proj);
   scene_.projectiles.AddProjectile(proj);
 
   // Mark both for destruction
   scene_.projectiles.to_be_destroyed_.insert(0);
   scene_.projectiles.to_be_destroyed_.insert(1);
-  entity_manager_.Cleanup();
+  entity_manager_.Cleanup(scene_);
 
   int destroyed_count = 0;
   for (const auto& e : event_manager_.GetEvents()) {
@@ -110,7 +110,7 @@ TEST_F(EntityManagerTest,
 
 TEST_F(EntityManagerTest,
        ProcessPendingSpawns_EnemyKilledEventEmitted_EnemyRespawns) {
-  entity_manager_.Initialize(scene_, event_manager_);
+  entity_manager_.Initialize(event_manager_);
 
   // Kill enemy at index 0
   int enemy_idx = 0;
@@ -120,10 +120,10 @@ TEST_F(EntityManagerTest,
 
   // Emit the kill event and dispatch it so OnEnemyKilled queues the respawn
   event_manager_.Emit(EnemyKilledEvent{enemy_idx});
-  EventContext event_context{scene_.player};
+  EventContext event_context{scene_};
   event_manager_.Dispatch(event_context);
 
-  entity_manager_.ProcessPendingSpawns();
+  entity_manager_.ProcessPendingSpawns(scene_);
 
   EXPECT_TRUE(scene_.enemy.is_alive[enemy_idx]);
   EXPECT_FALSE(scene_.enemy.is_done[enemy_idx]);

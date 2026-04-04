@@ -10,7 +10,7 @@
 
 namespace arelto {
 
-class Player;  // forward declaration for EventContext
+struct Scene;  // forward declaration for EventContext
 
 using SubscriptionId = int;
 
@@ -63,7 +63,7 @@ using GameEvent =
 
 // The context that is passed to every handler during a Dispatch call.
 struct EventContext {
-  Player& player;
+  Scene& scene;
 };
 
 // -----------------------------------------------------------------------------

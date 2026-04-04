@@ -245,8 +245,8 @@ TEST_F(PhysicsManagerTest, StepPhysics_EmitsEventsIntoQueue_ReadyForDispatch) {
 
   physics_manager_.StepPhysics(scene_, event_manager_);
 
-  // Events are in the queue; calling Dispatch should fire the handler
-  EventContext event_context{scene_.player};
+  // Events are in the queue so calling Dispatch should fire the handler
+  EventContext event_context{scene_};
   event_manager_.Dispatch(event_context);
   EXPECT_TRUE(handler_called);
 }

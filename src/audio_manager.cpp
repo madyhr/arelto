@@ -25,7 +25,7 @@ bool AudioManager::Initialize() {
     return false;
   }
 
-  soundtrack_ = Mix_LoadMUS("assets/music/arelto_a6ee808.mp3");
+  soundtrack_ = Mix_LoadMUS("assets/music/crown_of_the_last_boss.mp3");
   if (soundtrack_ == nullptr) {
     printf("Failed to load music! SDL_mixer Error: %s\n", Mix_GetError());
   }

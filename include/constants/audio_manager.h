@@ -6,7 +6,7 @@ namespace arelto {
 
 constexpr float kMusicVolumeStep = 0.05;
 constexpr float kMusicVolumeInitial = 0.2;
-constexpr int kMusicVolumeFadeInMs = 1000;
+constexpr int kMusicVolumeFadeInMs = 0;
 
 }  // namespace arelto
 

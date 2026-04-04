@@ -83,6 +83,7 @@ class Player {
                                                     Vector2D cursor_position);
   BaseProjectileSpell* GetSpell(SpellId id);
   const BaseProjectileSpell* GetSpell(SpellId id) const;
+  void TakeDamage(int damage);
 };
 
 class ExpGem {

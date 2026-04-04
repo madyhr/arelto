@@ -107,10 +107,7 @@ void EntityManager::OnPlayerChestCollision(
 
 void EntityManager::OnPlayerDamaged(const PlayerDamagedEvent& event,
                                     EventContext& /*event_context*/) {
-  int raw_damage = event.damage;
-  int armor = static_cast<int>(scene_->player.stats_.armor.GetValue());
-  int final_damage = std::max(0, raw_damage - armor);
-  scene_->player.stats_.health -= final_damage;
+  scene_->player.TakeDamage(event.damage);
   if (scene_->player.is_alive_ && scene_->player.stats_.health <= 0) {
     scene_->player.is_alive_ = false;
     event_manager_->Emit(PlayerDeadEvent{});

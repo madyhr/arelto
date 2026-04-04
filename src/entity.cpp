@@ -183,6 +183,13 @@ const BaseProjectileSpell* Player::GetSpell(SpellId id) const {
   }
 }
 
+void Player::TakeDamage(int damage) {
+  int raw_damage = damage;
+  int armor = static_cast<int>(stats_.armor.GetValue());
+  int final_damage = std::max(0, raw_damage - armor);
+  stats_.health -= final_damage;
+};
+
 void ExpGem::AddExpGem(ExpGemData gem) {
   rarity_.push_back(gem.rarity);
   position_.push_back(gem.position);

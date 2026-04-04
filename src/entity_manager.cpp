@@ -107,6 +107,10 @@ void EntityManager::OnPlayerChestCollision(
 
 void EntityManager::OnPlayerDamaged(const PlayerDamagedEvent& event,
                                     EventContext& /*event_context*/) {
+  if (!scene_->player.is_alive_ || scene_->player.is_invulnerable) {
+    return;
+  }
+
   scene_->player.TakeDamage(event.damage);
   if (scene_->player.is_alive_ && scene_->player.stats_.health <= 0) {
     scene_->player.is_alive_ = false;
@@ -128,9 +132,12 @@ void EntityManager::OnPlayerEnemyCollision(
 void EntityManager::OnEnemyDamaged(const EnemyDamagedEvent& event,
                                    EventContext& /*event_context*/) {
   int enemy_idx = event.enemy_idx;
+  if (!scene_->enemy.is_alive[enemy_idx]) {
+    return;
+  }
+
   scene_->enemy.health_points[enemy_idx] -= event.damage;
-  if (scene_->enemy.is_alive[enemy_idx] &&
-      scene_->enemy.health_points[enemy_idx] <= 0) {
+  if (scene_->enemy.health_points[enemy_idx] <= 0) {
     scene_->enemy.is_alive[enemy_idx] = false;
     scene_->enemy.is_done[enemy_idx] = true;
     scene_->enemy.is_terminated_latched[enemy_idx] = true;

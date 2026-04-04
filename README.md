@@ -1,6 +1,6 @@
 # Arelto
 
-[Arelto Trailer](https://github.com/user-attachments/assets/1e25ebc1-a985-4f09-a053-23d25260e9a6)
+[Arelto Trailer](https://github.com/user-attachments/assets/58e465bd-da7c-474d-85e8-16b5fe6c0157)
 
 A Reinforcement Learning Rogue-Like (RL2) game where the enemies get smarter over time. Try to survive for as long as you can!
 

@@ -37,10 +37,20 @@ void EntityManager::Initialize(Scene& scene, EventManager& event_manager) {
         OnPlayerChestCollision(event, event_context);
       });
 
+  event_manager.Subscribe<PlayerDamagedEvent>(
+      [this](const PlayerDamagedEvent& event, EventContext& event_context) {
+        OnPlayerDamaged(event, event_context);
+      });
+
   event_manager.Subscribe<PlayerEnemyCollisionEvent>(
       [this](const PlayerEnemyCollisionEvent& event,
              EventContext& event_context) {
         OnPlayerEnemyCollision(event, event_context);
+      });
+
+  event_manager.Subscribe<EnemyDamagedEvent>(
+      [this](const EnemyDamagedEvent& event, EventContext& event_context) {
+        OnEnemyDamaged(event, event_context);
       });
 
   event_manager.Subscribe<EnemyProjectileCollisionEvent>(
@@ -95,24 +105,39 @@ void EntityManager::OnPlayerChestCollision(
   event_manager_->Emit(ChestOpenedEvent{event.chest_idx});
 }
 
+void EntityManager::OnPlayerDamaged(const PlayerDamagedEvent& event,
+                                    EventContext& /*event_context*/) {
+  int raw_damage = event.damage;
+  int armor = static_cast<int>(scene_->player.stats_.armor.GetValue());
+  int final_damage = std::max(0, raw_damage - armor);
+  scene_->player.stats_.health -= final_damage;
+  if (scene_->player.is_alive_ && scene_->player.stats_.health <= 0) {
+    scene_->player.is_alive_ = false;
+    event_manager_->Emit(PlayerDeadEvent{});
+  }
+}
+
 void EntityManager::OnPlayerEnemyCollision(
     const PlayerEnemyCollisionEvent& event, EventContext& /*event_context*/) {
   int idx = event.enemy_idx;
-
   if (scene_->enemy.attack_cooldown[idx] < 0.0f) {
-    int damage_dealt = std::max(
-        0, scene_->enemy.attack_damage[idx] -
-               static_cast<int>(scene_->player.stats_.armor.GetValue()));
-    scene_->player.stats_.health -= damage_dealt;
-    scene_->enemy.damage_dealt_sim_step[idx] +=
-        scene_->enemy.attack_damage[idx];
+    int attack_damage = scene_->enemy.attack_damage[idx];
+    scene_->enemy.damage_dealt_sim_step[idx] += attack_damage;
     scene_->enemy.attack_cooldown[idx] = kEnemyAttackCooldown;
-    event_manager_->Emit(PlayerDamagedEvent{idx, damage_dealt});
+    event_manager_->Emit(PlayerDamagedEvent{idx, attack_damage});
+  }
+}
 
-    if (scene_->player.is_alive_ && scene_->player.stats_.health <= 0) {
-      scene_->player.is_alive_ = false;
-      event_manager_->Emit(PlayerDeadEvent{});
-    }
+void EntityManager::OnEnemyDamaged(const EnemyDamagedEvent& event,
+                                   EventContext& /*event_context*/) {
+  int enemy_idx = event.enemy_idx;
+  scene_->enemy.health_points[enemy_idx] -= event.damage;
+  if (scene_->enemy.is_alive[enemy_idx] &&
+      scene_->enemy.health_points[enemy_idx] <= 0) {
+    scene_->enemy.is_alive[enemy_idx] = false;
+    scene_->enemy.is_done[enemy_idx] = true;
+    scene_->enemy.is_terminated_latched[enemy_idx] = true;
+    event_manager_->Emit(EnemyKilledEvent{enemy_idx});
   }
 }
 
@@ -122,15 +147,7 @@ void EntityManager::OnEnemyProjectileCollision(
   scene_->projectiles.to_be_destroyed_.insert(event.proj_idx);
   int proj_id = scene_->projectiles.proj_type_[event.proj_idx];
   int spell_damage = scene_->player.spell_stats_.damage[proj_id];
-  scene_->enemy.health_points[event.enemy_idx] -= spell_damage;
-  int enemy_idx = event.enemy_idx;
-  if (scene_->enemy.is_alive[enemy_idx] &&
-      scene_->enemy.health_points[enemy_idx] <= 0) {
-    scene_->enemy.is_alive[enemy_idx] = false;
-    scene_->enemy.is_done[enemy_idx] = true;
-    scene_->enemy.is_terminated_latched[enemy_idx] = true;
-    event_manager_->Emit(EnemyKilledEvent{enemy_idx});
-  };
+  event_manager_->Emit(EnemyDamagedEvent{event.enemy_idx, spell_damage});
 }
 
 // ---------------------------------------------------------------------------

@@ -140,12 +140,26 @@ TEST_F(EventManagerTest, Dispatch_HandlerReceivesCorrectPayload) {
   event_manager_.Subscribe<PlayerDamagedEvent>(
       [&](const PlayerDamagedEvent& e, EventContext&) { received = e; });
 
-  event_manager_.Emit(PlayerDamagedEvent{/*enemy_idx=*/3, /*damage_dealt=*/15});
+  event_manager_.Emit(PlayerDamagedEvent{/*enemy_idx=*/3, /*damage=*/15});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
   EXPECT_EQ(received.enemy_idx, 3);
-  EXPECT_EQ(received.damage_dealt, 15);
+  EXPECT_EQ(received.damage, 15);
+}
+
+TEST_F(EventManagerTest,
+       Dispatch_EnemyDamagedEvent_HandlerReceivesCorrectPayload) {
+  EnemyDamagedEvent received{};
+  event_manager_.Subscribe<EnemyDamagedEvent>(
+      [&](const EnemyDamagedEvent& e, EventContext&) { received = e; });
+
+  event_manager_.Emit(EnemyDamagedEvent{/*enemy_idx=*/2, /*damage=*/25});
+  auto event_context = MakeEventContext();
+  event_manager_.Dispatch(event_context);
+
+  EXPECT_EQ(received.enemy_idx, 2);
+  EXPECT_EQ(received.damage, 25);
 }
 
 TEST_F(EventManagerTest,

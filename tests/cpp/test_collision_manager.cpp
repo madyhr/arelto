@@ -223,7 +223,7 @@ TEST_F(CollisionManagerTest, PlayerEnemyCollision_EmitsPlayerDamagedEvent) {
     if (std::holds_alternative<PlayerDamagedEvent>(e)) {
       const auto& ev = std::get<PlayerDamagedEvent>(e);
       EXPECT_EQ(ev.enemy_idx, 0);
-      EXPECT_GE(ev.damage_dealt, 0);
+      EXPECT_GE(ev.damage, 0);
       found = true;
     }
   }

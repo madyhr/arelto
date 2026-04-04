@@ -30,8 +30,7 @@ TEST_F(EventManagerTest, GetEvents_InitiallyEmpty) {
 }
 
 TEST_F(EventManagerTest, Emit_SingleEvent_Stored) {
-  event_manager_.Emit(
-      EnemyKilledEvent{/*enemy_idx=*/0, /*proj_idx=*/1, /*damage=*/25});
+  event_manager_.Emit(EnemyKilledEvent{/*enemy_idx=*/0});
 
   ASSERT_EQ(event_manager_.GetEvents().size(), 1);
   ASSERT_TRUE(
@@ -39,20 +38,18 @@ TEST_F(EventManagerTest, Emit_SingleEvent_Stored) {
 
   const auto& e = std::get<EnemyKilledEvent>(event_manager_.GetEvents()[0]);
   EXPECT_EQ(e.enemy_idx, 0);
-  EXPECT_EQ(e.proj_idx, 1);
-  EXPECT_EQ(e.damage, 25);
 }
 
 TEST_F(EventManagerTest, Emit_MultipleEvents_AllStored) {
-  event_manager_.Emit(EnemyKilledEvent{0, 1, 25});
+  event_manager_.Emit(EnemyKilledEvent{0});
   event_manager_.Emit(PlayerDamagedEvent{2, 10});
-  event_manager_.Emit(GemCollectedEvent{5, 50});
+  event_manager_.Emit(ExpGemCollectedEvent{5, 50});
 
   EXPECT_EQ(event_manager_.GetEvents().size(), 3);
 }
 
 TEST_F(EventManagerTest, Flush_ClearsAllEvents) {
-  event_manager_.Emit(EnemyKilledEvent{0, 1, 25});
+  event_manager_.Emit(EnemyKilledEvent{0});
   event_manager_.Emit(PlayerDamagedEvent{2, 10});
 
   ASSERT_EQ(event_manager_.GetEvents().size(), 2);
@@ -63,14 +60,14 @@ TEST_F(EventManagerTest, Flush_ClearsAllEvents) {
 }
 
 TEST_F(EventManagerTest, Flush_AllowsNewEventsAfterFlush) {
-  event_manager_.Emit(EnemyKilledEvent{0, 1, 25});
+  event_manager_.Emit(EnemyKilledEvent{0});
   event_manager_.Flush();
 
-  event_manager_.Emit(GemCollectedEvent{3, 100});
+  event_manager_.Emit(ExpGemCollectedEvent{3, 100});
 
   ASSERT_EQ(event_manager_.GetEvents().size(), 1);
-  EXPECT_TRUE(
-      std::holds_alternative<GemCollectedEvent>(event_manager_.GetEvents()[0]));
+  EXPECT_TRUE(std::holds_alternative<ExpGemCollectedEvent>(
+      event_manager_.GetEvents()[0]));
 }
 
 // =============================================================================
@@ -82,7 +79,7 @@ TEST_F(EventManagerTest, Subscribe_HandlerCalledOnDispatch) {
   event_manager_.Subscribe<EnemyKilledEvent>(
       [&](const EnemyKilledEvent&, EventContext&) { called = true; });
 
-  event_manager_.Emit(EnemyKilledEvent{0, 1, 25});
+  event_manager_.Emit(EnemyKilledEvent{0});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
@@ -108,8 +105,8 @@ TEST_F(EventManagerTest, Dispatch_CallsHandlersInEmitOrder) {
         order.push_back(e.enemy_idx);
       });
 
-  event_manager_.Emit(EnemyKilledEvent{/*enemy_idx=*/1, 0, 10});
-  event_manager_.Emit(EnemyKilledEvent{/*enemy_idx=*/2, 0, 10});
+  event_manager_.Emit(EnemyKilledEvent{/*enemy_idx=*/1});
+  event_manager_.Emit(EnemyKilledEvent{/*enemy_idx=*/2});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
@@ -120,12 +117,12 @@ TEST_F(EventManagerTest, Dispatch_CallsHandlersInEmitOrder) {
 
 TEST_F(EventManagerTest, Dispatch_MultipleHandlersSameType_BothCalled) {
   int call_count = 0;
-  event_manager_.Subscribe<GemCollectedEvent>(
-      [&](const GemCollectedEvent&, EventContext&) { ++call_count; });
-  event_manager_.Subscribe<GemCollectedEvent>(
-      [&](const GemCollectedEvent&, EventContext&) { ++call_count; });
+  event_manager_.Subscribe<ExpGemCollectedEvent>(
+      [&](const ExpGemCollectedEvent&, EventContext&) { ++call_count; });
+  event_manager_.Subscribe<ExpGemCollectedEvent>(
+      [&](const ExpGemCollectedEvent&, EventContext&) { ++call_count; });
 
-  event_manager_.Emit(GemCollectedEvent{0, 50});
+  event_manager_.Emit(ExpGemCollectedEvent{0, 50});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
@@ -143,12 +140,26 @@ TEST_F(EventManagerTest, Dispatch_HandlerReceivesCorrectPayload) {
   event_manager_.Subscribe<PlayerDamagedEvent>(
       [&](const PlayerDamagedEvent& e, EventContext&) { received = e; });
 
-  event_manager_.Emit(PlayerDamagedEvent{/*enemy_idx=*/3, /*damage_dealt=*/15});
+  event_manager_.Emit(PlayerDamagedEvent{/*enemy_idx=*/3, /*damage=*/15});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
   EXPECT_EQ(received.enemy_idx, 3);
-  EXPECT_EQ(received.damage_dealt, 15);
+  EXPECT_EQ(received.damage, 15);
+}
+
+TEST_F(EventManagerTest,
+       Dispatch_EnemyDamagedEvent_HandlerReceivesCorrectPayload) {
+  EnemyDamagedEvent received{};
+  event_manager_.Subscribe<EnemyDamagedEvent>(
+      [&](const EnemyDamagedEvent& e, EventContext&) { received = e; });
+
+  event_manager_.Emit(EnemyDamagedEvent{/*enemy_idx=*/2, /*damage=*/25});
+  auto event_context = MakeEventContext();
+  event_manager_.Dispatch(event_context);
+
+  EXPECT_EQ(received.enemy_idx, 2);
+  EXPECT_EQ(received.damage, 25);
 }
 
 TEST_F(EventManagerTest,
@@ -156,15 +167,15 @@ TEST_F(EventManagerTest,
   bool gem_handler_called = false;
   event_manager_.Subscribe<EnemyKilledEvent>([&](const EnemyKilledEvent&,
                                                  EventContext&) {
-    event_manager_.Emit(GemCollectedEvent{/*gem_idx=*/9, /*exp_value=*/100});
+    event_manager_.Emit(ExpGemCollectedEvent{/*gem_idx=*/9, /*exp_value=*/100});
   });
-  event_manager_.Subscribe<GemCollectedEvent>(
-      [&](const GemCollectedEvent& e, EventContext&) {
+  event_manager_.Subscribe<ExpGemCollectedEvent>(
+      [&](const ExpGemCollectedEvent& e, EventContext&) {
         EXPECT_EQ(e.gem_idx, 9);
         gem_handler_called = true;
       });
 
-  event_manager_.Emit(EnemyKilledEvent{0, 0, 10});
+  event_manager_.Emit(EnemyKilledEvent{0});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
@@ -178,13 +189,13 @@ TEST_F(EventManagerTest, Dispatch_MultipleEventTypes_AllHandlersFire) {
       [&](const EnemyKilledEvent&, EventContext&) {
         enemy_handler_called = true;
       });
-  event_manager_.Subscribe<GemCollectedEvent>(
-      [&](const GemCollectedEvent&, EventContext&) {
+  event_manager_.Subscribe<ExpGemCollectedEvent>(
+      [&](const ExpGemCollectedEvent&, EventContext&) {
         gem_handler_called = true;
       });
 
-  event_manager_.Emit(EnemyKilledEvent{0, 0, 10});
-  event_manager_.Emit(GemCollectedEvent{5, 50});
+  event_manager_.Emit(EnemyKilledEvent{0});
+  event_manager_.Emit(ExpGemCollectedEvent{5, 50});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
@@ -204,7 +215,7 @@ TEST_F(EventManagerTest, Dispatch_ContextMutationVisibleToSubsequentHandlers) {
       });
 
   int initial_health = scene_.player.stats_.health;
-  event_manager_.Emit(EnemyKilledEvent{0, 0, 10});
+  event_manager_.Emit(EnemyKilledEvent{0});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
@@ -233,7 +244,7 @@ TEST_F(EventManagerTest, Unsubscribe_AfterSubscribe_HandlerNotCalled) {
 
   event_manager_.Unsubscribe<EnemyKilledEvent>(id);
 
-  event_manager_.Emit(EnemyKilledEvent{0, 0, 10});
+  event_manager_.Emit(EnemyKilledEvent{0});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
@@ -247,7 +258,7 @@ TEST_F(EventManagerTest, Unsubscribe_InvalidId_IsNoOp) {
 
   event_manager_.Unsubscribe<EnemyKilledEvent>(9999);
 
-  event_manager_.Emit(EnemyKilledEvent{0, 0, 10});
+  event_manager_.Emit(EnemyKilledEvent{0});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
@@ -265,7 +276,7 @@ TEST_F(EventManagerTest,
 
   event_manager_.Unsubscribe<EnemyKilledEvent>(id_a);
 
-  event_manager_.Emit(EnemyKilledEvent{0, 0, 10});
+  event_manager_.Emit(EnemyKilledEvent{0});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
@@ -282,7 +293,7 @@ TEST_F(EventManagerTest, HealOnKillEffect_HealsPlayerOnEnemyKilled) {
   HealOnKillEffect effect(5);
   effect.RegisterHandlers(event_manager_);
 
-  event_manager_.Emit(EnemyKilledEvent{0, 0, 10});
+  event_manager_.Emit(EnemyKilledEvent{0});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 
@@ -308,7 +319,7 @@ TEST_F(EventManagerTest, MultipleHealOnKillEffects_BothFire) {
   effect_a.RegisterHandlers(event_manager_);
   effect_b.RegisterHandlers(event_manager_);
 
-  event_manager_.Emit(EnemyKilledEvent{0, 0, 10});
+  event_manager_.Emit(EnemyKilledEvent{0});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 

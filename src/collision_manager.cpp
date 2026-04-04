@@ -4,10 +4,6 @@
 #include <algorithm>
 #include <array>
 #include <vector>
-#include "abilities.h"
-#include "constants/chest.h"
-#include "constants/enemy.h"
-#include "constants/exp_gem.h"
 #include "entity.h"
 #include "event_manager.h"
 #include "scene.h"
@@ -67,7 +63,6 @@ void CollisionManager::HandleCollisionsSAP(Scene& scene,
 
   FindCollisionPairsSAP(entity_aabb_);
   ResolveCollisionPairsSAP(scene, event_manager);
-  SeparateGemChestPairs(scene.chest, scene.exp_gem);
 };
 
 void CollisionManager::FindCollisionPairsSAP(std::vector<AABB>& sorted_aabb) {
@@ -116,17 +111,13 @@ void CollisionManager::ResolveCollisionPairsSAP(Scene& scene,
         ResolveEnemyEnemyCollision(cp, scene.enemy);
         continue;
       case CollisionType::enemy_projectile:
-        ResolveEnemyProjectileCollision(cp, scene.enemy, scene.projectiles,
-                                        scene.player, event_manager);
+        ResolveEnemyProjectileCollision(cp, event_manager);
         continue;
-      case CollisionType::player_gem:
-        ResolvePlayerGemCollision(cp, scene.player, scene.exp_gem,
-                                  event_manager);
+      case CollisionType::player_expgem:
+        ResolvePlayerExpGemCollision(cp, event_manager);
         continue;
       case CollisionType::player_chest:
-        ResolvePlayerChestCollision(cp, scene.chest, event_manager);
-        continue;
-      case CollisionType::gem_chest:
+        ResolvePlayerChestCollision(cp, event_manager);
         continue;
     }
   }
@@ -144,7 +135,7 @@ CollisionType CollisionManager::GetCollisionType(const CollisionPair& cp) {
   if (type_a == EntityType::player && type_b == EntityType::enemy) {
     return CollisionType::player_enemy;
   } else if (type_a == EntityType::player && type_b == EntityType::exp_gem) {
-    return CollisionType::player_gem;
+    return CollisionType::player_expgem;
   } else if (type_a == EntityType::player && type_b == EntityType::chest) {
     return CollisionType::player_chest;
   } else if (type_a == EntityType::enemy && type_b == EntityType::enemy) {
@@ -229,96 +220,30 @@ void CollisionManager::ResolvePlayerEnemyCollision(
   player.position_ += displacement_vectors[0];
   enemy.position[enemy_idx] += displacement_vectors[1];
 
-  if (enemy.attack_cooldown[enemy_idx] < 0.0f) {
-    int damage_dealt =
-        std::max(0, enemy.attack_damage[enemy_idx] -
-                        static_cast<int>(player.stats_.armor.GetValue()));
-    player.stats_.health -= damage_dealt;
-    enemy.damage_dealt_sim_step[enemy_idx] += enemy.attack_damage[enemy_idx];
-    enemy.attack_cooldown[enemy_idx] = kEnemyAttackCooldown;
-    event_manager.Emit(PlayerDamagedEvent{enemy_idx, damage_dealt});
-    if (player.stats_.health <= 0) {
-      event_manager.Emit(PlayerDeadEvent{});
-    }
-  }
+  event_manager.Emit(PlayerEnemyCollisionEvent{enemy_idx});
 };
 
 void CollisionManager::ResolveEnemyProjectileCollision(
-    const CollisionPair& cp, Enemy& enemy, Projectiles& projectiles,
-    Player& player, EventManager& event_manager) {
+    const CollisionPair& cp, EventManager& event_manager) {
   bool a_is_proj = cp.type_a == EntityType::projectile;
   int proj_idx = a_is_proj ? cp.index_a : cp.index_b;
   int enemy_idx = a_is_proj ? cp.index_b : cp.index_a;
-  projectiles.to_be_destroyed_.insert(proj_idx);
-  int proj_id = projectiles.proj_type_[proj_idx];
-  int spell_damage = player.spell_stats_.damage[proj_id];
-  enemy.health_points[enemy_idx] -= spell_damage;
-  if (enemy.health_points[enemy_idx] <= 0) {
-    event_manager.Emit(EnemyKilledEvent{enemy_idx, proj_idx, spell_damage});
-  }
+
+  event_manager.Emit(EnemyProjectileCollisionEvent{enemy_idx, proj_idx});
 };
 
-void CollisionManager::ResolvePlayerGemCollision(const CollisionPair& cp,
-                                                 Player& player,
-                                                 ExpGem& exp_gem,
-                                                 EventManager& event_manager) {
-
+void CollisionManager::ResolvePlayerExpGemCollision(
+    const CollisionPair& cp, EventManager& event_manager) {
   bool a_is_gem = cp.type_a == EntityType::exp_gem;
   int gem_idx = a_is_gem ? cp.index_a : cp.index_b;
-  int exp_value = kExpGemValues[exp_gem.rarity_[gem_idx]];
-
-  exp_gem.to_be_destroyed_.insert(gem_idx);
-  player.stats_.exp_points += exp_value;
-  event_manager.Emit(GemCollectedEvent{gem_idx, exp_value});
+  event_manager.Emit(PlayerExpGemCollisionEvent{gem_idx});
 };
 
 void CollisionManager::ResolvePlayerChestCollision(
-    const CollisionPair& cp, Chest& chest, EventManager& event_manager) {
+    const CollisionPair& cp, EventManager& event_manager) {
   bool a_is_chest = cp.type_a == EntityType::chest;
   int chest_idx = a_is_chest ? cp.index_a : cp.index_b;
-  chest.to_be_destroyed_.insert(chest_idx);
-  event_manager.Emit(ChestOpenedEvent{chest_idx});
-};
-
-void CollisionManager::SeparateGemChestPairs(Chest& chest, ExpGem& exp_gem) {
-  for (int gem_idx = 0; gem_idx < static_cast<int>(exp_gem.GetNumExpGems());
-       ++gem_idx) {
-    Vector2D gem_centroid =
-        exp_gem.position_[gem_idx] + exp_gem.collider_[gem_idx].offset;
-
-    for (int chest_idx = 0; chest_idx < static_cast<int>(chest.GetNumChests());
-         ++chest_idx) {
-      Vector2D chest_centroid =
-          chest.position_[chest_idx] + chest.collider_[chest_idx].offset;
-
-      Vector2D separation_vector = chest_centroid - gem_centroid;
-      float current_distance = separation_vector.Norm();
-
-      if (current_distance >= kGemChestMinSeparation) {
-        continue;
-      }
-
-      // When spawned at the same position the separation vector is zero, so we default to
-      // using +x as the push direction.
-      Vector2D push_direction = current_distance > 0.0f
-                                    ? separation_vector.Normalized()
-                                    : Vector2D{1.0f, 0.0f};
-
-      float push_amount = kGemChestMinSeparation - current_distance;
-      float push_factor =
-          chest.inv_mass_[chest_idx] /
-          (exp_gem.inv_mass_[gem_idx] + chest.inv_mass_[chest_idx]);
-
-      exp_gem.position_[gem_idx] -=
-          push_direction * (push_amount * (1.0f - push_factor));
-      chest.position_[chest_idx] +=
-          push_direction * (push_amount * push_factor);
-
-      // Recomputing gem centroid for subsequent chest iterations
-      gem_centroid =
-          exp_gem.position_[gem_idx] + exp_gem.collider_[gem_idx].offset;
-    }
-  }
+  event_manager.Emit(PlayerChestCollisionEvent{chest_idx});
 };
 
 }  // namespace arelto

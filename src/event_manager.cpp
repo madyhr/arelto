@@ -7,18 +7,24 @@ void EventManager::Emit(GameEvent event) {
   events_.push_back(event);
 }
 
+// Dispatches all queued events to their respective subscribers.
+// Implementation notes:
+// 1. An index-based loop instead of range-for is used so that handlers can safely call Emit()
+// during dispatch.
+// 2. As handlers may call Emit(), they can cause the `events_` vector to reallocate its memory.
+// The value-copy instead of const ref of `typed_event` prevents Use-After-Free bugs by
+// decoupling the event from the vector's potentially volatile memory.
+// 3. Each event base type has its own list of listener functions to call when that event is heard.
+// Therefore, we need to first get the list specific to this event base type and then loop over
+// and call all listener functions with this event base type and the event context.
 void EventManager::Dispatch(EventContext& event_context) {
-  // We are using an index-based loop instead of range-for so that handlers can safely call
-  // Emit() during dispatch.
   for (size_t i = 0; i < events_.size(); ++i) {
     std::visit(
-        [&](const auto& typed_event) {
+        [&](auto typed_event) {
           // We want to get the clean base type of the unwrapped event to use it for the handler lookup.
           using T = std::decay_t<decltype(typed_event)>;
-          // Each event base type has its own list of listener functions to call when that event is heard.
-          // Therefore, we need to first get the list specific to this event base type and then loop over
-          // and call all listener functions with this event base type and the event context.
-          for (auto& [subscription_id, handler] : std::get<HandlerList<T>>(handlers_)) {
+          for (auto& [subscription_id, handler] :
+               std::get<HandlerList<T>>(handlers_)) {
             handler(typed_event, event_context);
           }
         },

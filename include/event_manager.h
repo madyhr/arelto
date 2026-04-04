@@ -20,14 +20,16 @@ using SubscriptionId = int;
 
 struct EnemyKilledEvent {
   int enemy_idx;
-  int proj_idx;
+};
+struct EnemyDamagedEvent {
+  int enemy_idx;
   int damage;
 };
 struct PlayerDamagedEvent {
   int enemy_idx;
-  int damage_dealt;
+  int damage;
 };
-struct GemCollectedEvent {
+struct ExpGemCollectedEvent {
   int gem_idx;
   int exp_value;
 };
@@ -38,10 +40,26 @@ struct ChestOpenedEvent {
   int chest_idx;
 };
 struct PlayerDeadEvent {};
+struct PlayerExpGemCollisionEvent {
+  int gem_idx;
+};
+struct PlayerChestCollisionEvent {
+  int chest_idx;
+};
+struct PlayerEnemyCollisionEvent {
+  int enemy_idx;
+};
+struct EnemyProjectileCollisionEvent {
+  int enemy_idx;
+  int proj_idx;
+};
 
 using GameEvent =
-    std::variant<EnemyKilledEvent, PlayerDamagedEvent, GemCollectedEvent,
-                 ProjectileDestroyedEvent, ChestOpenedEvent, PlayerDeadEvent>;
+    std::variant<EnemyKilledEvent, EnemyDamagedEvent, PlayerDamagedEvent,
+                 ExpGemCollectedEvent, ProjectileDestroyedEvent,
+                 ChestOpenedEvent, PlayerDeadEvent, PlayerExpGemCollisionEvent,
+                 PlayerChestCollisionEvent, PlayerEnemyCollisionEvent,
+                 EnemyProjectileCollisionEvent>;
 
 // The context that is passed to every handler during a Dispatch call.
 struct EventContext {
@@ -97,10 +115,14 @@ class EventManager {
   std::vector<GameEvent> events_;
   int next_subscription_id_ = 0;
 
-  std::tuple<HandlerList<EnemyKilledEvent>, HandlerList<PlayerDamagedEvent>,
-             HandlerList<GemCollectedEvent>,
+  std::tuple<HandlerList<EnemyKilledEvent>, HandlerList<EnemyDamagedEvent>,
+             HandlerList<PlayerDamagedEvent>, HandlerList<ExpGemCollectedEvent>,
              HandlerList<ProjectileDestroyedEvent>,
-             HandlerList<ChestOpenedEvent>, HandlerList<PlayerDeadEvent>>
+             HandlerList<ChestOpenedEvent>, HandlerList<PlayerDeadEvent>,
+             HandlerList<PlayerExpGemCollisionEvent>,
+             HandlerList<PlayerChestCollisionEvent>,
+             HandlerList<PlayerEnemyCollisionEvent>,
+             HandlerList<EnemyProjectileCollisionEvent>>
       handlers_;
 };
 

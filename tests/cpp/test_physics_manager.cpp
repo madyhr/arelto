@@ -232,16 +232,16 @@ TEST_F(PhysicsManagerTest, StepPhysics_ResolvesCollisions) {
 // =============================================================================
 
 TEST_F(PhysicsManagerTest, StepPhysics_EmitsEventsIntoQueue_ReadyForDispatch) {
-  // Set up player-enemy collision that will deal damage
+  // Set up player-enemy collision
   scene_.player.position_ = {100.0f, 100.0f};
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
-  scene_.enemy.attack_damage[0] = 10;
-  scene_.enemy.attack_cooldown[0] = -1.0f;
 
   bool handler_called = false;
-  event_manager_.Subscribe<PlayerDamagedEvent>(
-      [&](const PlayerDamagedEvent&, EventContext&) { handler_called = true; });
+  event_manager_.Subscribe<PlayerEnemyCollisionEvent>(
+      [&](const PlayerEnemyCollisionEvent&, EventContext&) {
+        handler_called = true;
+      });
 
   physics_manager_.StepPhysics(scene_, event_manager_);
 
@@ -253,7 +253,7 @@ TEST_F(PhysicsManagerTest, StepPhysics_EmitsEventsIntoQueue_ReadyForDispatch) {
 
 TEST_F(PhysicsManagerTest, EventManager_FlushClearsStaleEventsBeforeNewStep) {
   // Simulate a stale event surviving from a "previous step"
-  event_manager_.Emit(EnemyKilledEvent{99, 0, 0});
+  event_manager_.Emit(EnemyKilledEvent{99});
   ASSERT_EQ(event_manager_.GetEvents().size(), 1);
 
   // Flush (as StepGamePhysics does at start of each step)

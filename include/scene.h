@@ -41,6 +41,7 @@ struct Scene {
     player.stats_.exp_points = 0;
     player.stats_.exp_points_required.SetBaseValue(
         kPlayerInitialExpRequirement);
+    player.is_alive_ = true;
     player.position_ = Vector2D{kPlayerInitX, kPlayerInitY};
     player.prev_position_ = player.position_;
     player.last_horizontal_velocity_ = 0.0f;
@@ -59,7 +60,7 @@ struct Scene {
     std::fill(enemy.inv_mass.begin(), enemy.inv_mass.end(), kEnemyInvMass);
     std::fill(enemy.attack_cooldown.begin(), enemy.attack_cooldown.end(), 0.0f);
     std::fill(enemy.attack_damage.begin(), enemy.attack_damage.end(), 1);
-    RespawnEnemy(enemy, player);
+    SpawnAllEnemies(enemy, player);
     SetupEnemyRayCasterPattern(enemy.ray_caster);
 
     // Add slight variation to each enemy to make it more interesting.

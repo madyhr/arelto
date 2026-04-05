@@ -84,6 +84,7 @@ class Player {
   BaseProjectileSpell* GetSpell(SpellId id);
   const BaseProjectileSpell* GetSpell(SpellId id) const;
   void TakeDamage(int damage);
+  void TakeHealing(int healing);
 };
 
 class ExpGem {

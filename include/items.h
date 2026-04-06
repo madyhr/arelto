@@ -1,10 +1,13 @@
 #ifndef RL2_ITEMS_H_
 #define RL2_ITEMS_H_
 
+#include <functional>
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 #include "entity.h"
 #include "event_manager.h"
 #include "scene.h"
@@ -13,66 +16,57 @@
 
 namespace arelto {
 
-// -----------------------------------------------------------------------------
-// ItemTriggerEffect — base class for items that react to in-game events
-// -----------------------------------------------------------------------------
+class ItemManager;
 
+// Class for items whose effect trigger on events.
 class ItemTriggerEffect {
  public:
-  virtual ~ItemTriggerEffect() {
-    for (auto& unsubscribe : unsubscribers_) {
-      unsubscribe();
-    }
-  }
+  virtual ~ItemTriggerEffect() = default;
   ItemTriggerEffect() = default;
   ItemTriggerEffect(const ItemTriggerEffect&) = delete;
   ItemTriggerEffect& operator=(const ItemTriggerEffect&) = delete;
   ItemTriggerEffect(ItemTriggerEffect&&) = default;
   ItemTriggerEffect& operator=(ItemTriggerEffect&&) = default;
 
-  // Called once when the item is picked up.
-  virtual void RegisterHandlers(EventManager& event_manager) = 0;
-
- protected:
-  // Subscribes handler and captures the unsubscription so the destructor can clean up automatically.
-  template <typename T>
-  void Track(EventManager& event_manager,
-             std::function<void(const T&, EventContext&)> handler) {
-    SubscriptionId id = event_manager.Subscribe<T>(std::move(handler));
-    unsubscribers_.push_back(
-        [&event_manager, id]() { event_manager.Unsubscribe<T>(id); });
-  }
-
- private:
-  std::vector<std::function<void()>> unsubscribers_;
+  // Child classes override only the events they trigger on. Defaults are no-ops
+  // so that adding a new event trigger here does not force every existing item to
+  // implement it.
+  virtual void OnEnemyKilled(const EnemyKilledEvent&, EventContext&) {}
 };
 
 // Heal the player for heal_amount HP each time an enemy is killed.
 class HealOnKillEffect : public ItemTriggerEffect {
  public:
   explicit HealOnKillEffect(int heal_amount) : heal_amount_(heal_amount) {}
-  void RegisterHandlers(EventManager& event_manager) override {
-    Track<EnemyKilledEvent>(event_manager, [this](const EnemyKilledEvent&,
-                                                  EventContext& event_context) {
-      event_context.scene.player.stats_.health += heal_amount_;
-    });
+  void OnEnemyKilled(const EnemyKilledEvent&,
+                     EventContext& event_context) override {
+    event_context.scene.player.TakeHealing(heal_amount_);
   }
 
  private:
   int heal_amount_;
 };
 
-// -----------------------------------------------------------------------------
+enum ItemId : int { elia_armor_plate = 0, damodei_claw, count };
+enum class ItemUpgradeType : int { armor = 0, movement_speed, count };
 
-enum ItemId : int { elia_armor_plate = 0, count };
-enum class ItemUpgradeType : int { armor = 0, count };
+struct ItemStatSpec {
+  ItemUpgradeType stat_type;
+  ModifierType modifier_type;
+  float value;
+  std::string description;
+};
+
+struct ItemTriggerSpec {
+  std::string description;
+  std::function<std::unique_ptr<ItemTriggerEffect>()> make_effect;
+};
 
 struct Item {
   ItemId id;
   std::string name;
-  ItemUpgradeType upgrade_type;
-  ModifierType modifier_type;
-  float value;
+  std::vector<ItemStatSpec> stat_specs;
+  std::vector<ItemTriggerSpec> trigger_specs;
 };
 
 class ItemArchive {
@@ -90,72 +84,96 @@ class ItemArchive {
   void LoadItems() {
     archive_.resize(ItemId::count);
     archive_[ItemId::elia_armor_plate] = {
-        ItemId::elia_armor_plate, "Skewer-safe Armorplate of Elia",
-        ItemUpgradeType::armor, ModifierType::flat, 1.0f};
+        ItemId::elia_armor_plate,
+        "Skewer-safe Armorplate of Elia",
+        {ItemStatSpec{ItemUpgradeType::armor, ModifierType::flat, 1.0f,
+                      "Increase Armor"},
+         ItemStatSpec{ItemUpgradeType::movement_speed,
+                      ModifierType::percent_mult, -0.05f, "Slow Movement"}},
+        {}};
+    archive_[ItemId::damodei_claw] = {
+        ItemId::damodei_claw,
+        "Claw of Damodei",
+        {},
+        {ItemTriggerSpec{"Heal 5 HP on kill", []() {
+                           return std::make_unique<HealOnKillEffect>(5);
+                         }}}};
   }
 };
 
-class ItemStatUpgrade : public Upgrade {
+// A single stat change to apply to the player on pickup.
+// NOTE: `value_range` stores both the pre- and post-pickup values
+// so the UI can show a before/after.
+struct ItemStatModifier {
+  ItemUpgradeType stat_type;
+  ModifierType modifier_type;
+  float raw_value;
+  ValueRange value_range;
+  std::string description;
+};
+
+// A single event-triggered effect along with the text the item card should
+// render for it.
+struct ItemTriggerModifier {
+  std::string description;
+  std::unique_ptr<ItemTriggerEffect> effect;
+};
+
+// An item-based upgrade that can carry any combination of stat modifiers and
+// event-triggered modifiers.
+// Implementation notes:
+// 1. `ItemUpgrade` 's always go through the two-argument `Apply()` overload
+// because they may need to register event-triggered effects with the
+// ItemManager. The single-argument override exists only to satisfy the
+// Upgrade base class interface and should never be called on an ItemUpgrade.
+
+class ItemUpgrade : public Upgrade {
  public:
-  ItemStatUpgrade(ItemId item_id, std::string item_name, ItemUpgradeType type,
-                  ModifierType modifier_type, ValueRange value_range)
+  ItemUpgrade(ItemId item_id, std::string name,
+              std::vector<ItemStatModifier> stat_modifiers,
+              std::vector<ItemTriggerModifier> trigger_modifiers)
       : item_id_(item_id),
-        item_name_(std::move(item_name)),
-        type_(type),
-        modifier_type_(modifier_type),
-        current_value_(value_range.current),
-        updated_value_(value_range.updated) {}
+        name_(std::move(name)),
+        stat_modifiers_(std::move(stat_modifiers)),
+        trigger_modifiers_(std::move(trigger_modifiers)) {}
 
-  void Apply(Player& player) override {
-    Stat* stat_to_upgrade;
+  void Apply(Player&) override {}
 
-    switch (type_) {
-      case arelto::ItemUpgradeType::armor:
-        stat_to_upgrade = &player.stats_.armor;
-        break;
-      default:
-        break;
+  // Applies every stat modifier to the player and transfers ownership of every
+  // trigger effect to `item_manager`.
+  void Apply(Player& player, ItemManager& item_manager);
+
+  int GetItemID() const { return static_cast<int>(item_id_); }
+  std::string GetName() const override { return name_; }
+
+  // Returns the descriptions and values of the item upgrade's stat modifiers and trigger modifiers.
+  // This is used for the UI system to display the upgrade's effects on the item selection card.
+  std::vector<UpgradeDisplayRow> GetDisplayRows() const override {
+    std::vector<UpgradeDisplayRow> rows;
+    rows.reserve(stat_modifiers_.size() + trigger_modifiers_.size());
+    for (const ItemStatModifier& stat_modifier : stat_modifiers_) {
+      rows.push_back(
+          UpgradeDisplayRow{stat_modifier.description,
+                            FormatValue(stat_modifier.value_range.current),
+                            FormatValue(stat_modifier.value_range.updated)});
     }
-
-    float modifier_value = updated_value_ - current_value_;
-
-    Modifier mod = Modifier{modifier_value, modifier_type_, nullptr};
-    stat_to_upgrade->AddModifier(mod);
-
-    return;
-  }
-
-  std::string GetDescription() const override {
-    switch (type_) {
-      case ItemUpgradeType::armor:
-        return "Increase Armor";
-      default:
-        return "Unknown Upgrade";
+    for (const ItemTriggerModifier& trigger_modifier : trigger_modifiers_) {
+      rows.push_back(UpgradeDisplayRow{trigger_modifier.description, "", ""});
     }
-  }
-
-  ItemUpgradeType GetType() const { return type_; }
-  ModifierType GetModifierType() const { return modifier_type_; }
-  ItemId GetItemID() const { return item_id_; }
-  std::string GetName() const override { return item_name_; }
-  std::string GetOldValueString() const override {
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(2) << current_value_;
-    return ss.str();
-  }
-  std::string GetNewValueString() const override {
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(2) << updated_value_;
-    return ss.str();
+    return rows;
   }
 
  private:
+  static std::string FormatValue(float value) {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2) << value;
+    return ss.str();
+  }
+
   ItemId item_id_;
-  std::string item_name_;
-  ItemUpgradeType type_;
-  ModifierType modifier_type_;
-  float current_value_;
-  float updated_value_;
+  std::string name_;
+  std::vector<ItemStatModifier> stat_modifiers_;
+  std::vector<ItemTriggerModifier> trigger_modifiers_;
 };
 
 }  // namespace arelto

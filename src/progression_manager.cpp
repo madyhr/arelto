@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "abilities.h"
 #include "constants/progression_manager.h"
+#include "item_manager.h"
 #include "items.h"
 #include "types.h"
 
@@ -74,25 +75,52 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
       spell_id, spell_name, type, ValueRange{current_value, new_value});
 }
 
+namespace {
+
+const Stat* ResolveStatConst(const Player& player, ItemUpgradeType stat_type) {
+  switch (stat_type) {
+    case ItemUpgradeType::armor:
+      return &player.stats_.armor;
+    case ItemUpgradeType::movement_speed:
+      return &player.stats_.movement_speed;
+    case ItemUpgradeType::count:
+      return nullptr;
+  }
+  return nullptr;
+}
+
+}  // namespace
+
 std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(
     const Scene& scene) {
   ItemId item_id = static_cast<ItemId>(std::rand() % ItemId::count);
-  Item item = scene.item_archive->GetItem(item_id);
+  const Item& item = scene.item_archive->GetItem(item_id);
 
-  float current_value = 0.0f;
-  switch (item.upgrade_type) {
-    case ItemUpgradeType::armor:
-      current_value = scene.player.stats_.armor.GetValue();
-      break;
-    default:
-      break;
+  std::vector<ItemStatModifier> stat_modifiers;
+  stat_modifiers.reserve(item.stat_specs.size());
+  for (const ItemStatSpec& stat_spec : item.stat_specs) {
+    const Stat* stat = ResolveStatConst(scene.player, stat_spec.stat_type);
+    if (stat == nullptr) {
+      continue;
+    }
+    float current_value = stat->GetValue();
+    float updated_value =
+        stat->GetModifiedValue(stat_spec.value, stat_spec.modifier_type);
+    stat_modifiers.push_back(ItemStatModifier{
+        stat_spec.stat_type, stat_spec.modifier_type, stat_spec.value,
+        ValueRange{current_value, updated_value}, stat_spec.description});
   }
 
-  float updated_value = current_value + item.value;
+  std::vector<ItemTriggerModifier> trigger_modifiers;
+  trigger_modifiers.reserve(item.trigger_specs.size());
+  for (const ItemTriggerSpec& trigger_spec : item.trigger_specs) {
+    trigger_modifiers.push_back(ItemTriggerModifier{
+        trigger_spec.description, trigger_spec.make_effect()});
+  }
 
-  return std::make_unique<ItemStatUpgrade>(
-      item_id, item.name, item.upgrade_type, item.modifier_type,
-      ValueRange{current_value, updated_value});
+  return std::make_unique<ItemUpgrade>(item_id, item.name,
+                                       std::move(stat_modifiers),
+                                       std::move(trigger_modifiers));
 }
 
 void ProgressionManager::ApplyLevelUpUpgrade(Scene& scene, int option_index) {
@@ -126,11 +154,17 @@ bool ProgressionManager::ApplyUpgrade(Player& player,
   return true;
 }
 
-void ProgressionManager::ApplyItemUpgrade(Scene& scene, int option_index) {
-  bool upgrade = ApplyUpgrade(scene.player, scene.item_options, option_index);
-  if (!upgrade) {
+void ProgressionManager::ApplyItemUpgrade(Scene& scene,
+                                          ItemManager& item_manager,
+                                          int option_index) {
+  if (option_index < 0 ||
+      static_cast<size_t>(option_index) >= scene.item_options.size()) {
     return;
   }
+
+  ItemUpgrade& item_upgrade =
+      static_cast<ItemUpgrade&>(*scene.item_options[option_index]);
+  item_upgrade.Apply(scene.player, item_manager);
 }
 
 }  // namespace arelto

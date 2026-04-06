@@ -76,7 +76,7 @@ TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_CreatesValidOptions) {
 
   for (const auto& option : scene_.level_up_options) {
     ASSERT_NE(option, nullptr);
-    EXPECT_FALSE(option->GetDescription().empty());
+    EXPECT_FALSE(option->GetDisplayRows().empty());
     EXPECT_FALSE(option->GetName().empty());
 
     auto* spell_upgrade = dynamic_cast<SpellStatUpgrade*>(option.get());

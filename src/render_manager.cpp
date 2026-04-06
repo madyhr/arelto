@@ -132,6 +132,8 @@ bool RenderManager::Initialize(bool is_headless) {
       TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeHuge);
   resources_.item_textures.push_back(IMG_LoadTexture(
       resources_.renderer, "assets/textures/elia_skewersafe_armorplate.png"));
+  resources_.item_textures.push_back(IMG_LoadTexture(
+      resources_.renderer, "assets/textures/damodei_claw.png"));
 
   if (resources_.ui_resources.ui_font_medium == nullptr ||
       resources_.ui_resources.ui_font_large == nullptr ||

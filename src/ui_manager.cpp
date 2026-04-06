@@ -441,27 +441,40 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   name_label->SetWrapWidth(kLevelUpCardWidth - 2 * kLevelUpNameOffsetX);
   card->AddChild(name_label);
 
-  auto desc_label = std::make_shared<UILabel>();
-  desc_label->SetId(card_id + "_desc");
-  desc_label->SetPosition(kLevelUpDescOffsetX, kLevelUpDescOffsetY);
-  desc_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpDescOffsetX, 25);
-  desc_label->SetText(upgrade.GetDescription());
-  desc_label->SetFont(resources_->ui_font_medium);
-  desc_label->SetColor({180, 180, 180, 255});
-  desc_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpDescOffsetX);
-  card->AddChild(desc_label);
+  std::vector<UpgradeDisplayRow> display_rows = upgrade.GetDisplayRows();
+  for (size_t row_index = 0; row_index < display_rows.size(); ++row_index) {
+    const UpgradeDisplayRow& row = display_rows[row_index];
+    int row_desc_y =
+        kLevelUpDescOffsetY + static_cast<int>(row_index) * kLevelUpRowStride;
+    int row_stats_y =
+        kLevelUpStatsOffsetY + static_cast<int>(row_index) * kLevelUpRowStride;
 
-  std::string stats_str =
-      upgrade.GetOldValueString() + " -> " + upgrade.GetNewValueString();
-  auto stats_label = std::make_shared<UILabel>();
-  stats_label->SetId(card_id + "_stats");
-  stats_label->SetPosition(kLevelUpStatsOffsetX, kLevelUpStatsOffsetY);
-  stats_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX, 25);
-  stats_label->SetText(stats_str);
-  stats_label->SetFont(resources_->ui_font_medium);
-  stats_label->SetColor({0, 255, 0, 255});
-  stats_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX);
-  card->AddChild(stats_label);
+    auto desc_label = std::make_shared<UILabel>();
+    desc_label->SetId(card_id + "_desc_" + std::to_string(row_index));
+    desc_label->SetPosition(kLevelUpDescOffsetX,
+                            static_cast<float>(row_desc_y));
+    desc_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpDescOffsetX, 25);
+    desc_label->SetText(row.description);
+    desc_label->SetFont(resources_->ui_font_medium);
+    desc_label->SetColor({180, 180, 180, 255});
+    desc_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpDescOffsetX);
+    card->AddChild(desc_label);
+
+    if (row.old_value.empty() && row.new_value.empty()) {
+      continue;
+    }
+    std::string stats_str = row.old_value + " -> " + row.new_value;
+    auto stats_label = std::make_shared<UILabel>();
+    stats_label->SetId(card_id + "_stats_" + std::to_string(row_index));
+    stats_label->SetPosition(kLevelUpStatsOffsetX,
+                             static_cast<float>(row_stats_y));
+    stats_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX, 25);
+    stats_label->SetText(stats_str);
+    stats_label->SetFont(resources_->ui_font_medium);
+    stats_label->SetColor({0, 255, 0, 255});
+    stats_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX);
+    card->AddChild(stats_label);
+  }
 
   std::string btn_id = "select_button_" + std::to_string(index);
   auto select_btn = std::make_shared<UIButton>();
@@ -862,7 +875,7 @@ void UIManager::BuildItemMenu(const UpgradeOptions& options) {
 
   for (size_t i = 0; i < options.size(); ++i) {
     BuildItemCard(card_row.get(), static_cast<int>(i),
-                  static_cast<ItemStatUpgrade&>(*options[i]));
+                  static_cast<ItemUpgrade&>(*options[i]));
   }
 
   overlay->AddChild(card_row);
@@ -871,7 +884,7 @@ void UIManager::BuildItemMenu(const UpgradeOptions& options) {
 }
 
 void UIManager::BuildItemCard(UIWidget* parent, int index,
-                              const ItemStatUpgrade& upgrade) {
+                              const ItemUpgrade& upgrade) {
   std::string card_id = "item_card_" + std::to_string(index);
 
   auto card = std::make_shared<Panel>();
@@ -904,27 +917,40 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
   name_label->SetWrapWidth(kItemCardWidth - 2 * kItemCardNameOffsetX);
   card->AddChild(name_label);
 
-  auto desc_label = std::make_shared<UILabel>();
-  desc_label->SetId(card_id + "_desc");
-  desc_label->SetPosition(kItemCardDescOffsetX, kItemCardDescOffsetY);
-  desc_label->SetSize(kItemCardWidth - 2 * kItemCardDescOffsetX, 25);
-  desc_label->SetText(upgrade.GetDescription());
-  desc_label->SetFont(resources_->ui_font_medium);
-  desc_label->SetColor({180, 180, 180, 255});
-  desc_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardDescOffsetX);
-  card->AddChild(desc_label);
+  std::vector<UpgradeDisplayRow> display_rows = upgrade.GetDisplayRows();
+  for (size_t row_index = 0; row_index < display_rows.size(); ++row_index) {
+    const UpgradeDisplayRow& row = display_rows[row_index];
+    int row_desc_y =
+        kItemCardDescOffsetY + static_cast<int>(row_index) * kItemCardRowStride;
+    int row_stats_y = kItemCardStatsOffsetY +
+                      static_cast<int>(row_index) * kItemCardRowStride;
 
-  std::string stats_str =
-      upgrade.GetOldValueString() + " -> " + upgrade.GetNewValueString();
-  auto stats_label = std::make_shared<UILabel>();
-  stats_label->SetId(card_id + "_stats");
-  stats_label->SetPosition(kItemCardStatsOffsetX, kItemCardStatsOffsetY);
-  stats_label->SetSize(kItemCardWidth - 2 * kItemCardStatsOffsetX, 25);
-  stats_label->SetText(stats_str);
-  stats_label->SetFont(resources_->ui_font_medium);
-  stats_label->SetColor({0, 255, 0, 255});
-  stats_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardStatsOffsetX);
-  card->AddChild(stats_label);
+    auto desc_label = std::make_shared<UILabel>();
+    desc_label->SetId(card_id + "_desc_" + std::to_string(row_index));
+    desc_label->SetPosition(kItemCardDescOffsetX,
+                            static_cast<float>(row_desc_y));
+    desc_label->SetSize(kItemCardWidth - 2 * kItemCardDescOffsetX, 25);
+    desc_label->SetText(row.description);
+    desc_label->SetFont(resources_->ui_font_medium);
+    desc_label->SetColor({180, 180, 180, 255});
+    desc_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardDescOffsetX);
+    card->AddChild(desc_label);
+
+    if (row.old_value.empty() && row.new_value.empty()) {
+      continue;
+    }
+    std::string stats_str = row.old_value + " -> " + row.new_value;
+    auto stats_label = std::make_shared<UILabel>();
+    stats_label->SetId(card_id + "_stats_" + std::to_string(row_index));
+    stats_label->SetPosition(kItemCardStatsOffsetX,
+                             static_cast<float>(row_stats_y));
+    stats_label->SetSize(kItemCardWidth - 2 * kItemCardStatsOffsetX, 25);
+    stats_label->SetText(stats_str);
+    stats_label->SetFont(resources_->ui_font_medium);
+    stats_label->SetColor({0, 255, 0, 255});
+    stats_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardStatsOffsetX);
+    card->AddChild(stats_label);
+  }
 
   std::string btn_id = "select_button_" + std::to_string(index);
   auto select_btn = std::make_shared<UIButton>();

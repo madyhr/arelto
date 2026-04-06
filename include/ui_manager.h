@@ -79,8 +79,7 @@ class UIManager {
   void BuildQuitConfirmMenu();
   void BuildLevelUpCard(UIWidget* parent, int index,
                         const SpellStatUpgrade& upgrade);
-  void BuildItemCard(UIWidget* parent, int index,
-                     const ItemStatUpgrade& upgrade);
+  void BuildItemCard(UIWidget* parent, int index, const ItemUpgrade& upgrade);
 };
 
 }  // namespace arelto

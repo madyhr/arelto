@@ -208,6 +208,40 @@ class Stat {
       return cached_value_;
     }
 
+    cached_value_ = ComputeValue();
+    is_dirty_ = false;
+
+    return cached_value_;
+  };
+
+  // Returns what GetValue() would return if an additional modifier were applied,
+  // without actually modifying the stat.
+  float GetModifiedValue(float modifier_value,
+                         ModifierType modifier_type) const {
+    Modifier extra_modifier{modifier_value, modifier_type, nullptr};
+    return ComputeValue(&extra_modifier);
+  }
+
+  int GetValueCeil() const { return static_cast<int>(std::ceil(GetValue())); }
+  int GetValueFloor() const { return static_cast<int>(std::floor(GetValue())); }
+
+  void SetBaseValue(float value) {
+    base_value_ = value;
+    is_dirty_ = true;
+  }
+
+  float GetBaseValue() { return base_value_; }
+
+  void AddModifier(const Modifier& mod) {
+    modifiers_.push_back(mod);
+    is_dirty_ = true;
+  }
+
+ private:
+  // Computes the value of the stat based on the base value and all modifiers,
+  // The `extra_modifier` optional argument is used for simulating the effect
+  // of a potential modifier without actually adding it to the stat.
+  float ComputeValue(const Modifier* extra_modifier = nullptr) const {
     float flat_sum = 0;
     float percent_add_sum = 0;
     float percent_mult_prod = 1.0f;
@@ -226,29 +260,24 @@ class Stat {
       }
     };
 
-    cached_value_ = ((base_value_ + flat_sum) * (1.0f + percent_add_sum) *
-                     percent_mult_prod);
-    is_dirty_ = false;
+    if (extra_modifier != nullptr) {
+      switch (extra_modifier->type) {
+        case ModifierType::flat:
+          flat_sum += extra_modifier->value;
+          break;
+        case ModifierType::percent_add:
+          percent_add_sum += extra_modifier->value;
+          break;
+        case ModifierType::percent_mult:
+          percent_mult_prod *= (1.0f + extra_modifier->value);
+          break;
+      }
+    }
 
-    return cached_value_;
-  };
-
-  int GetValueCeil() const { return static_cast<int>(std::ceil(GetValue())); }
-  int GetValueFloor() const { return static_cast<int>(std::floor(GetValue())); }
-
-  void SetBaseValue(float value) {
-    base_value_ = value;
-    is_dirty_ = true;
+    return (base_value_ + flat_sum) * (1.0f + percent_add_sum) *
+           percent_mult_prod;
   }
 
-  float GetBaseValue() { return base_value_; }
-
-  void AddModifier(const Modifier& mod) {
-    modifiers_.push_back(mod);
-    is_dirty_ = true;
-  }
-
- private:
   mutable float base_value_;
   std::vector<Modifier> modifiers_;
   mutable float cached_value_;

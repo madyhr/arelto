@@ -4,7 +4,6 @@
 #include <gtest/gtest.h>
 
 #include "event_manager.h"
-#include "items.h"
 #include "scene.h"
 #include "test_helpers.h"
 
@@ -282,48 +281,6 @@ TEST_F(EventManagerTest,
 
   EXPECT_FALSE(called_a);
   EXPECT_TRUE(called_b);
-}
-
-// =============================================================================
-// Item Trigger System Tests
-// =============================================================================
-
-TEST_F(EventManagerTest, HealOnKillEffect_HealsPlayerOnEnemyKilled) {
-  int initial_health = scene_.player.stats_.health;
-  HealOnKillEffect effect(5);
-  effect.RegisterHandlers(event_manager_);
-
-  event_manager_.Emit(EnemyKilledEvent{0});
-  auto event_context = MakeEventContext();
-  event_manager_.Dispatch(event_context);
-
-  EXPECT_EQ(scene_.player.stats_.health, initial_health + 5);
-}
-
-TEST_F(EventManagerTest, HealOnKillEffect_NoHeal_OnOtherEvents) {
-  int initial_health = scene_.player.stats_.health;
-  HealOnKillEffect effect(5);
-  effect.RegisterHandlers(event_manager_);
-
-  event_manager_.Emit(PlayerDamagedEvent{0, 10});
-  auto event_context = MakeEventContext();
-  event_manager_.Dispatch(event_context);
-
-  EXPECT_EQ(scene_.player.stats_.health, initial_health);
-}
-
-TEST_F(EventManagerTest, MultipleHealOnKillEffects_BothFire) {
-  int initial_health = scene_.player.stats_.health;
-  HealOnKillEffect effect_a(3);
-  HealOnKillEffect effect_b(7);
-  effect_a.RegisterHandlers(event_manager_);
-  effect_b.RegisterHandlers(event_manager_);
-
-  event_manager_.Emit(EnemyKilledEvent{0});
-  auto event_context = MakeEventContext();
-  event_manager_.Dispatch(event_context);
-
-  EXPECT_EQ(scene_.player.stats_.health, initial_health + 3 + 7);
 }
 
 }  // namespace

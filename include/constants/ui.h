@@ -6,8 +6,8 @@
 #include "constants/game.h"
 namespace arelto {
 // Colors
-constexpr SDL_Color negative_red = SDL_Color{76, 201, 118, 255};
-constexpr SDL_Color positive_green = SDL_Color{235, 87, 87, 255};
+constexpr SDL_Color positive_green = SDL_Color{76, 201, 118, 255};
+constexpr SDL_Color negative_red = SDL_Color{235, 87, 87, 255};
 
 // Layout constants — internal padding / spacing for widget tree.
 constexpr int kHudPadding = 50;  // Distance from screen edges

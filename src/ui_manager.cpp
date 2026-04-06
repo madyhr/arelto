@@ -471,7 +471,8 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
     stats_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX, 25);
     stats_label->SetText(stats_str);
     stats_label->SetFont(resources_->ui_font_medium);
-    stats_label->SetColor({0, 255, 0, 255});
+    // NOTE: The assumption here is that all stat upgrades are positive (e.g. "Damage: 10 -> 12").
+    stats_label->SetColor(positive_green);
     stats_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX);
     card->AddChild(stats_label);
   }

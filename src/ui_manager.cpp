@@ -940,6 +940,8 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
       continue;
     }
     std::string stats_str = row.old_value + " -> " + row.new_value;
+    SDL_Color stats_color =
+        row.new_value > row.old_value ? positive_green : negative_red;
     auto stats_label = std::make_shared<UILabel>();
     stats_label->SetId(card_id + "_stats_" + std::to_string(row_index));
     stats_label->SetPosition(kItemCardStatsOffsetX,
@@ -947,7 +949,7 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
     stats_label->SetSize(kItemCardWidth - 2 * kItemCardStatsOffsetX, 25);
     stats_label->SetText(stats_str);
     stats_label->SetFont(resources_->ui_font_medium);
-    stats_label->SetColor({0, 255, 0, 255});
+    stats_label->SetColor(stats_color);
     stats_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardStatsOffsetX);
     card->AddChild(stats_label);
   }

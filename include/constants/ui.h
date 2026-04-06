@@ -2,8 +2,12 @@
 #ifndef RL2_CONSTANTS_UI_H_
 #define RL2_CONSTANTS_UI_H_
 
+#include <SDL_pixels.h>
 #include "constants/game.h"
 namespace arelto {
+// Colors
+constexpr SDL_Color negative_red = SDL_Color{76, 201, 118, 255};
+constexpr SDL_Color positive_green = SDL_Color{235, 87, 87, 255};
 
 // Layout constants — internal padding / spacing for widget tree.
 constexpr int kHudPadding = 50;  // Distance from screen edges
@@ -149,8 +153,8 @@ constexpr int kCheckmarkSpriteHeight = 164;
 
 // Item selection menu card
 constexpr int kItemIconSize = 300;
-constexpr int kItemCardWidth = 600;
-constexpr int kItemCardHeight = 900;
+constexpr int kItemCardWidth = 650;
+constexpr int kItemCardHeight = 1000;
 constexpr int kItemCardGap = 150;
 constexpr int kItemCardIconOffsetY = 160;
 constexpr int kItemCardIconSize = 80;
@@ -160,8 +164,8 @@ constexpr int kItemCardDescOffsetY = 600;
 constexpr int kItemCardDescOffsetX = 70;
 constexpr int kItemCardStatsOffsetY = 648;
 constexpr int kItemCardStatsOffsetX = 70;
-constexpr int kItemCardRowStride = 55;
-constexpr int kItemCardButtonOffsetY = 720;  // from card top
+constexpr int kItemCardRowStride = 100;
+constexpr int kItemCardButtonOffsetY = 800;  // from card top
 constexpr int kItemCardButtonWidth = 200;
 constexpr int kItemCardButtonHeight = 50;
 

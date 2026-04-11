@@ -2,6 +2,7 @@
 #ifndef RL2_SCENE_H_
 #define RL2_SCENE_H_
 
+#include <vector>
 #include "constants/enemy.h"
 #include "constants/player.h"
 #include "entity.h"
@@ -14,6 +15,8 @@ namespace arelto {
 
 // forward declaration to avoid circular dependency with items.h
 class ItemArchive;
+enum ItemId : int;
+enum class ItemUpgradeType : int;
 
 struct Scene {
 
@@ -26,7 +29,6 @@ struct Scene {
   UpgradeOptions level_up_options;
   UpgradeOptions item_options;
   ItemArchive* item_archive;
-
   void Reset() {
 
     // Player
@@ -82,6 +84,7 @@ struct Scene {
     projectiles.ResetAllProjectiles();
     exp_gem.ResetAllExpGems();
     chest.ResetAllChests();
+    player.inventory_.clear();
   };
 };
 

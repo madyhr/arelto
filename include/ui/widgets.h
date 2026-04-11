@@ -2,6 +2,7 @@
 #ifndef RL2_UI_WIDGETS_H_
 #define RL2_UI_WIDGETS_H_
 
+#include "items.h"
 #include "ui/widget.h"
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
@@ -255,6 +256,29 @@ class Spacer : public UIWidget {
 public:
   Spacer(int width, int height);
   WidgetType GetWidgetType() const override;
+};
+
+// UIInventoryItem: displays an item icon together with a multiplier label
+// accounting for how many copies of that item the player posseses.
+class UIInventoryItem : public UIWidget {
+public:
+  UIInventoryItem() = default;
+
+  void SetItemId(ItemId item_id);
+  ItemId GetItemId() const;
+
+  void SetItemCount(int count);
+  int GetItemCount() const;
+
+  void SetItemTexture(SDL_Texture *texture);
+  SDL_Texture *GetItemTexture() const;
+
+  WidgetType GetWidgetType() const override;
+
+private:
+  ItemId item_id_;
+  int item_count_ = 1;
+  SDL_Texture *texture_ = nullptr;
 };
 
 } // namespace arelto

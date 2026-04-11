@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "types.h"
 
 namespace arelto {
 
@@ -33,6 +34,7 @@ enum class WidgetType {
   ProgressBar,
   Checkbox,
   Spacer,
+  InventoryItem,
 };
 
 class UIWidget {

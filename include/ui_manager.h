@@ -22,6 +22,7 @@ struct UIResources {
   SDL_Texture* timer_hourglass_texture = nullptr;
   SDL_Texture* game_over_texture = nullptr;
   SDL_Texture* start_screen_texture = nullptr;
+  TTF_Font* ui_font_small = nullptr;
   TTF_Font* ui_font_medium = nullptr;
   TTF_Font* ui_font_large = nullptr;
   TTF_Font* ui_font_huge = nullptr;
@@ -52,6 +53,8 @@ class UIManager {
   void BuildChestOpeningScreen();
   void BuildItemMenu(const UpgradeOptions& options);
   void UpdateItemMenu();
+  void BuildItemInventory();
+  void UpdateItemInventory(const Scene& scene);
 
   UIWidget* GetRootWidget();
   UIWidget* GetSettingsRoot();
@@ -80,6 +83,8 @@ class UIManager {
   void BuildLevelUpCard(UIWidget* parent, int index,
                         const SpellStatUpgrade& upgrade);
   void BuildItemCard(UIWidget* parent, int index, const ItemUpgrade& upgrade);
+  void BuildInventoryItem(UIWidget* parent, int index,
+                          const InventoryItem& inv_item);
 };
 
 }  // namespace arelto

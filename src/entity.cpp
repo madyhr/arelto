@@ -196,6 +196,16 @@ void Player::TakeHealing(int healing) {
   stats_.health = std::min(max_health, stats_.health + raw_healing);
 };
 
+void Player::AddToInventory(ItemId item_id) {
+  for (auto& item : inventory_) {
+    if (item.item_id == item_id) {
+      item.count++;
+      return;
+    }
+  }
+  inventory_.emplace_back(item_id, 1);
+}
+
 void ExpGem::AddExpGem(ExpGemData gem) {
   rarity_.push_back(gem.rarity);
   position_.push_back(gem.position);

@@ -1,8 +1,6 @@
 // src/items.cpp
 #include "items.h"
-
 #include <utility>
-
 #include "item_manager.h"
 
 namespace arelto {
@@ -30,7 +28,7 @@ void ItemUpgrade::Apply(Player& player, ItemManager& item_manager) {
       continue;
     }
     Modifier modifier{stat_modifier.raw_value, stat_modifier.modifier_type,
-                       nullptr};
+                      nullptr};
     stat_to_upgrade->AddModifier(modifier);
   }
 

@@ -165,6 +165,7 @@ void ProgressionManager::ApplyItemUpgrade(Scene& scene,
   ItemUpgrade& item_upgrade =
       static_cast<ItemUpgrade&>(*scene.item_options[option_index]);
   item_upgrade.Apply(scene.player, item_manager);
+  scene.player.AddToInventory(item_upgrade.GetItemID());
 }
 
 }  // namespace arelto

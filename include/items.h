@@ -143,7 +143,7 @@ class ItemUpgrade : public Upgrade {
   // trigger effect to `item_manager`.
   void Apply(Player& player, ItemManager& item_manager);
 
-  int GetItemID() const { return static_cast<int>(item_id_); }
+  ItemId GetItemID() const { return item_id_; }
   std::string GetName() const override { return name_; }
 
   // Returns the descriptions and values of the item upgrade's stat modifiers and trigger modifiers.

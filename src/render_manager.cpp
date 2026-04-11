@@ -124,6 +124,8 @@ bool RenderManager::Initialize(bool is_headless) {
       resources_.renderer, "assets/fonts/font_outlined_sprite_sheet.png");
   resources_.ui_resources.timer_hourglass_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/hourglass.png");
+  resources_.ui_resources.ui_font_small =
+      TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeMedium);
   resources_.ui_resources.ui_font_medium =
       TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeMedium);
   resources_.ui_resources.ui_font_large =
@@ -132,10 +134,11 @@ bool RenderManager::Initialize(bool is_headless) {
       TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeHuge);
   resources_.item_textures.push_back(IMG_LoadTexture(
       resources_.renderer, "assets/textures/elia_skewersafe_armorplate.png"));
-  resources_.item_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/damodei_claw.png"));
+  resources_.item_textures.push_back(
+      IMG_LoadTexture(resources_.renderer, "assets/textures/damodei_claw.png"));
 
-  if (resources_.ui_resources.ui_font_medium == nullptr ||
+  if (resources_.ui_resources.ui_font_small == nullptr ||
+      resources_.ui_resources.ui_font_medium == nullptr ||
       resources_.ui_resources.ui_font_large == nullptr ||
       resources_.ui_resources.ui_font_huge == nullptr) {
     std::cerr << "TTF font could not be loaded: " << TTF_GetError() << '\n';
@@ -974,6 +977,21 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       break;
     }
 
+    case WidgetType::InventoryItem: {
+      auto* inv_item = static_cast<UIInventoryItem*>(widget);
+      if (inv_item->GetItemTexture()) {
+        SDL_Rect dest_rect = bounds;
+        // Center icon within left portion (kInventoryIconSize width)
+        dest_rect.x += (kInventoryIconSize - kInventoryIconSize) / 2;
+        dest_rect.y += (bounds.h - kInventoryIconSize) / 2;
+        dest_rect.w = kInventoryIconSize;
+        dest_rect.h = kInventoryIconSize;
+        SDL_RenderCopy(resources_.renderer, inv_item->GetItemTexture(), nullptr,
+                       &dest_rect);
+      }
+      break;
+    }
+
     default:
       break;
   }
@@ -1090,6 +1108,11 @@ void RenderManager::Shutdown() {
   }
 
   IMG_Quit();
+
+  if (resources_.ui_resources.ui_font_small) {
+    TTF_CloseFont(resources_.ui_resources.ui_font_small);
+    resources_.ui_resources.ui_font_small = nullptr;
+  }
 
   if (resources_.ui_resources.ui_font_medium) {
     TTF_CloseFont(resources_.ui_resources.ui_font_medium);

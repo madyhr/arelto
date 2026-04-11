@@ -1,6 +1,7 @@
 // src/ui/widgets.cpp
 #include "ui/widgets.h"
 #include <algorithm>
+#include "items.h"
 
 namespace arelto {
 
@@ -367,6 +368,35 @@ Spacer::Spacer(int width, int height) {
 
 WidgetType Spacer::GetWidgetType() const {
   return WidgetType::Spacer;
+}
+
+// =============================================================================
+// UIInventoryItem
+// =============================================================================
+
+void UIInventoryItem::SetItemId(ItemId item_id) {
+  item_id_ = item_id;
+}
+ItemId UIInventoryItem::GetItemId() const {
+  return item_id_;
+}
+
+void UIInventoryItem::SetItemCount(int count) {
+  item_count_ = count;
+}
+int UIInventoryItem::GetItemCount() const {
+  return item_count_;
+}
+
+void UIInventoryItem::SetItemTexture(SDL_Texture* texture) {
+  texture_ = texture;
+}
+SDL_Texture* UIInventoryItem::GetItemTexture() const {
+  return texture_;
+}
+
+WidgetType UIInventoryItem::GetWidgetType() const {
+  return WidgetType::InventoryItem;
 }
 
 }  // namespace arelto

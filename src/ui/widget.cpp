@@ -1,6 +1,7 @@
 // src/ui/widget.cpp
 #include "ui/widget.h"
 #include <algorithm>
+#include "types.h"
 
 namespace arelto {
 

@@ -25,6 +25,7 @@ constexpr int kMenuButtonGap = 20;
 constexpr int kMenuBottomPadding = 60;
 
 // Font sizes
+constexpr int kFontSizeSmall = 14;
 constexpr int kFontSizeMedium = 26;
 constexpr int kFontSizeLarge = 40;
 constexpr int kFontSizeHuge = 72;
@@ -168,6 +169,17 @@ constexpr int kItemCardRowStride = 100;
 constexpr int kItemCardButtonOffsetY = 800;  // from card top
 constexpr int kItemCardButtonWidth = 200;
 constexpr int kItemCardButtonHeight = 50;
+
+// Item inventory bar
+constexpr int kInventoryBarY = 50;
+constexpr int kInventoryIconSize = 60;
+constexpr int kInventoryWidgetHeight = 60;
+constexpr int kInventoryLabelWidth = 20;
+constexpr int kInventoryItemGap = 15;
+constexpr int kInventoryMultiplierSize = 16;
+constexpr int kInventoryMultiplierMargin = 0;
+constexpr int kInventoryContainerPadding = 20;
+constexpr int kInventoryBackgroundAlpha = 64;
 
 }  // namespace arelto
 

@@ -57,6 +57,7 @@ bool Game::Initialize() {
   scene_.item_archive = &item_archive_;
 
   RegisterGameStateHandlers();
+  item_manager_.Initialize(event_manager_);
   entity_manager_.Initialize(event_manager_);
 
   if (!(Game::InitializeCamera())) {
@@ -212,6 +213,7 @@ void Game::RenderGame(float alpha) {
 
 void Game::ResetGame() {
   scene_.Reset();
+  item_manager_.RemoveAllItems();
   time_ = 0.0f;
   accumulator_step_ = 0.0f;
   is_mouse_left_active_ = false;
@@ -702,7 +704,7 @@ void Game::ProcessItemSelectionInput(const SDL_Event& e) {
       std::string btn_id = "select_button_" + std::to_string(i);
 
       if (IsMouseOverWidget(ui.GetItemMenuRoot(), btn_id, mouse_x, mouse_y)) {
-        progression_manager_.ApplyItemUpgrade(scene_, i);
+        progression_manager_.ApplyItemUpgrade(scene_, item_manager_, i);
         UIWidget* menu = ui.GetItemMenuRoot();
         if (menu) {
           menu->SetVisible(false);

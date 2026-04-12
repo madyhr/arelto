@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "entity.h"
+#include "item_manager.h"
 #include "scene.h"
 #include "upgrades.h"
 
@@ -17,7 +18,8 @@ class ProgressionManager {
   void GenerateLevelUpOptions(Scene& scene);
   void GenerateItemOptions(Scene& scene);
   void ApplyLevelUpUpgrade(Scene& scene, int option_index);
-  void ApplyItemUpgrade(Scene& scene, int option_index);
+  void ApplyItemUpgrade(Scene& scene, ItemManager& item_manager,
+                        int option_index);
 
  private:
   std::unique_ptr<Upgrade> GenerateRandomSpellUpgrade(const Player& player);

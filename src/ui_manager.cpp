@@ -29,6 +29,7 @@ void UIManager::SetupUI(const UIResources& resources) {
   BuildGameOverScreen();
   BuildQuitConfirmMenu();
   BuildChestOpeningScreen();
+  BuildItemInventory();
 
   root_widget_->ComputeLayout(0, 0, kWindowWidth, kWindowHeight);
 }
@@ -50,7 +51,7 @@ UIWidget* UIManager::GetItemMenuRoot() {
 }
 
 // =============================================================================
-// BuildHUD — Health Bar, Exp Bar, Level Indicator, Timer
+// BuildHUD: Health Bar, Exp Bar, Level Indicator, Timer
 // =============================================================================
 
 void UIManager::BuildHUD() {
@@ -377,7 +378,7 @@ void UIManager::BuildSettingsMenu() {
 }
 
 // =============================================================================
-// BuildLevelUpMenu — dynamically create card widgets from upgrade options
+// BuildLevelUpMenu: dynamically create card widgets from upgrade options
 // =============================================================================
 
 void UIManager::BuildLevelUpMenu(const UpgradeOptions& options) {
@@ -441,27 +442,41 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   name_label->SetWrapWidth(kLevelUpCardWidth - 2 * kLevelUpNameOffsetX);
   card->AddChild(name_label);
 
-  auto desc_label = std::make_shared<UILabel>();
-  desc_label->SetId(card_id + "_desc");
-  desc_label->SetPosition(kLevelUpDescOffsetX, kLevelUpDescOffsetY);
-  desc_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpDescOffsetX, 25);
-  desc_label->SetText(upgrade.GetDescription());
-  desc_label->SetFont(resources_->ui_font_medium);
-  desc_label->SetColor({180, 180, 180, 255});
-  desc_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpDescOffsetX);
-  card->AddChild(desc_label);
+  std::vector<UpgradeDisplayRow> display_rows = upgrade.GetDisplayRows();
+  for (size_t row_index = 0; row_index < display_rows.size(); ++row_index) {
+    const UpgradeDisplayRow& row = display_rows[row_index];
+    int row_desc_y =
+        kLevelUpDescOffsetY + static_cast<int>(row_index) * kLevelUpRowStride;
+    int row_stats_y =
+        kLevelUpStatsOffsetY + static_cast<int>(row_index) * kLevelUpRowStride;
 
-  std::string stats_str =
-      upgrade.GetOldValueString() + " -> " + upgrade.GetNewValueString();
-  auto stats_label = std::make_shared<UILabel>();
-  stats_label->SetId(card_id + "_stats");
-  stats_label->SetPosition(kLevelUpStatsOffsetX, kLevelUpStatsOffsetY);
-  stats_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX, 25);
-  stats_label->SetText(stats_str);
-  stats_label->SetFont(resources_->ui_font_medium);
-  stats_label->SetColor({0, 255, 0, 255});
-  stats_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX);
-  card->AddChild(stats_label);
+    auto desc_label = std::make_shared<UILabel>();
+    desc_label->SetId(card_id + "_desc_" + std::to_string(row_index));
+    desc_label->SetPosition(kLevelUpDescOffsetX,
+                            static_cast<float>(row_desc_y));
+    desc_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpDescOffsetX, 25);
+    desc_label->SetText(row.description);
+    desc_label->SetFont(resources_->ui_font_medium);
+    desc_label->SetColor({180, 180, 180, 255});
+    desc_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpDescOffsetX);
+    card->AddChild(desc_label);
+
+    if (row.old_value.empty() && row.new_value.empty()) {
+      continue;
+    }
+    std::string stats_str = row.old_value + " -> " + row.new_value;
+    auto stats_label = std::make_shared<UILabel>();
+    stats_label->SetId(card_id + "_stats_" + std::to_string(row_index));
+    stats_label->SetPosition(kLevelUpStatsOffsetX,
+                             static_cast<float>(row_stats_y));
+    stats_label->SetSize(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX, 25);
+    stats_label->SetText(stats_str);
+    stats_label->SetFont(resources_->ui_font_medium);
+    // NOTE: The assumption here is that all stat upgrades are positive (e.g. "Damage: 10 -> 12").
+    stats_label->SetColor(positive_green);
+    stats_label->SetCenterWidth(kLevelUpCardWidth - 2 * kLevelUpStatsOffsetX);
+    card->AddChild(stats_label);
+  }
 
   std::string btn_id = "select_button_" + std::to_string(index);
   auto select_btn = std::make_shared<UIButton>();
@@ -505,7 +520,7 @@ void UIManager::UpdateLevelUpMenu() {
 }
 
 // =============================================================================
-// Update — refresh dynamic widget state from Scene data
+// Update: refresh dynamic widget state from Scene data
 // =============================================================================
 
 void UIManager::Update(const Scene& scene, float time) {
@@ -549,10 +564,12 @@ void UIManager::Update(const Scene& scene, float time) {
   if (timer_text) {
     timer_text->SetText(std::to_string(static_cast<int>(time)));
   }
+
+  UpdateItemInventory(scene);
 }
 
 // =============================================================================
-// UpdateSettingsMenu — volume slider + mute button text + debug checkboxes
+// UpdateSettingsMenu: volume slider + mute button text + debug checkboxes
 // =============================================================================
 
 void UIManager::UpdateSettingsMenu(float volume, bool is_muted,
@@ -840,7 +857,7 @@ UIWidget* UIManager::GetChestOpeningRoot() {
 }
 
 // =============================================================================
-// BuildItemMenu — dynamically create card widgets from item options
+// BuildItemMenu: dynamically create card widgets from item options
 // =============================================================================
 
 void UIManager::BuildItemMenu(const UpgradeOptions& options) {
@@ -862,7 +879,7 @@ void UIManager::BuildItemMenu(const UpgradeOptions& options) {
 
   for (size_t i = 0; i < options.size(); ++i) {
     BuildItemCard(card_row.get(), static_cast<int>(i),
-                  static_cast<ItemStatUpgrade&>(*options[i]));
+                  static_cast<ItemUpgrade&>(*options[i]));
   }
 
   overlay->AddChild(card_row);
@@ -871,7 +888,7 @@ void UIManager::BuildItemMenu(const UpgradeOptions& options) {
 }
 
 void UIManager::BuildItemCard(UIWidget* parent, int index,
-                              const ItemStatUpgrade& upgrade) {
+                              const ItemUpgrade& upgrade) {
   std::string card_id = "item_card_" + std::to_string(index);
 
   auto card = std::make_shared<Panel>();
@@ -880,7 +897,7 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
   card->SetBackground(resources_->level_up_option_card_texture);
   card->SetBackgroundSrcRect({0, 0, 0, 0});  // full texture
 
-  int item_id = upgrade.GetItemID();
+  int item_id = static_cast<int>(upgrade.GetItemID());
   if (item_id >= 0 &&
       item_id < static_cast<int>(resources_->item_textures.size())) {
     auto icon = std::make_shared<UIImage>();
@@ -904,27 +921,42 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
   name_label->SetWrapWidth(kItemCardWidth - 2 * kItemCardNameOffsetX);
   card->AddChild(name_label);
 
-  auto desc_label = std::make_shared<UILabel>();
-  desc_label->SetId(card_id + "_desc");
-  desc_label->SetPosition(kItemCardDescOffsetX, kItemCardDescOffsetY);
-  desc_label->SetSize(kItemCardWidth - 2 * kItemCardDescOffsetX, 25);
-  desc_label->SetText(upgrade.GetDescription());
-  desc_label->SetFont(resources_->ui_font_medium);
-  desc_label->SetColor({180, 180, 180, 255});
-  desc_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardDescOffsetX);
-  card->AddChild(desc_label);
+  std::vector<UpgradeDisplayRow> display_rows = upgrade.GetDisplayRows();
+  for (size_t row_index = 0; row_index < display_rows.size(); ++row_index) {
+    const UpgradeDisplayRow& row = display_rows[row_index];
+    int row_desc_y =
+        kItemCardDescOffsetY + static_cast<int>(row_index) * kItemCardRowStride;
+    int row_stats_y = kItemCardStatsOffsetY +
+                      static_cast<int>(row_index) * kItemCardRowStride;
 
-  std::string stats_str =
-      upgrade.GetOldValueString() + " -> " + upgrade.GetNewValueString();
-  auto stats_label = std::make_shared<UILabel>();
-  stats_label->SetId(card_id + "_stats");
-  stats_label->SetPosition(kItemCardStatsOffsetX, kItemCardStatsOffsetY);
-  stats_label->SetSize(kItemCardWidth - 2 * kItemCardStatsOffsetX, 25);
-  stats_label->SetText(stats_str);
-  stats_label->SetFont(resources_->ui_font_medium);
-  stats_label->SetColor({0, 255, 0, 255});
-  stats_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardStatsOffsetX);
-  card->AddChild(stats_label);
+    auto desc_label = std::make_shared<UILabel>();
+    desc_label->SetId(card_id + "_desc_" + std::to_string(row_index));
+    desc_label->SetPosition(kItemCardDescOffsetX,
+                            static_cast<float>(row_desc_y));
+    desc_label->SetSize(kItemCardWidth - 2 * kItemCardDescOffsetX, 25);
+    desc_label->SetText(row.description);
+    desc_label->SetFont(resources_->ui_font_medium);
+    desc_label->SetColor({180, 180, 180, 255});
+    desc_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardDescOffsetX);
+    card->AddChild(desc_label);
+
+    if (row.old_value.empty() && row.new_value.empty()) {
+      continue;
+    }
+    std::string stats_str = row.old_value + " -> " + row.new_value;
+    SDL_Color stats_color =
+        row.new_value > row.old_value ? positive_green : negative_red;
+    auto stats_label = std::make_shared<UILabel>();
+    stats_label->SetId(card_id + "_stats_" + std::to_string(row_index));
+    stats_label->SetPosition(kItemCardStatsOffsetX,
+                             static_cast<float>(row_stats_y));
+    stats_label->SetSize(kItemCardWidth - 2 * kItemCardStatsOffsetX, 25);
+    stats_label->SetText(stats_str);
+    stats_label->SetFont(resources_->ui_font_medium);
+    stats_label->SetColor(stats_color);
+    stats_label->SetCenterWidth(kItemCardWidth - 2 * kItemCardStatsOffsetX);
+    card->AddChild(stats_label);
+  }
 
   std::string btn_id = "select_button_" + std::to_string(index);
   auto select_btn = std::make_shared<UIButton>();
@@ -967,4 +999,118 @@ void UIManager::UpdateItemMenu() {
   update_hover(item_menu);
 }
 
+// =============================================================================
+// BuildItemInventory: creates the inventory bar container
+// =============================================================================
+
+void UIManager::BuildItemInventory() {
+  auto inventory_container = std::make_shared<Panel>();
+  inventory_container->SetId("inventory_container");
+  inventory_container->SetAnchor(AnchorType::TopCenter);
+  inventory_container->SetPosition(0, static_cast<float>(kInventoryBarY));
+  inventory_container->SetBackgroundColor(
+      WithOpacity(kColorBlack, kInventoryBackgroundAlpha));
+  inventory_container->SetPadding(kInventoryContainerPadding);
+  inventory_container->SetVisible(false);
+
+  auto inventory_bar = std::make_shared<HBox>();
+  inventory_bar->SetId("inventory_bar");
+  inventory_bar->SetSize(0, kInventoryWidgetHeight);
+  inventory_bar->SetSpacing(kInventoryItemGap);
+
+  inventory_container->AddChild(inventory_bar);
+  root_widget_->AddChild(inventory_container);
+}
+
+// =============================================================================
+// BuildInventoryItem: creates a single inventory item widget
+// ===========================================================================
+
+void UIManager::BuildInventoryItem(UIWidget* parent, int index,
+                                   const InventoryItem& inventory_item) {
+  std::string item_id = "inventory_item_" + std::to_string(index);
+
+  auto inventory_item_widget = std::make_shared<UIInventoryItem>();
+  inventory_item_widget->SetId(item_id);
+  int widget_width = kInventoryIconSize + kInventoryLabelWidth;
+  inventory_item_widget->SetSize(static_cast<float>(widget_width),
+                                 kInventoryWidgetHeight);
+  inventory_item_widget->SetItemId(inventory_item.item_id);
+  inventory_item_widget->SetItemCount(inventory_item.count);
+
+  int item_texture_idx = static_cast<int>(inventory_item.item_id);
+  if (item_texture_idx >= 0 &&
+      item_texture_idx < static_cast<int>(resources_->item_textures.size())) {
+    inventory_item_widget->SetItemTexture(
+        resources_->item_textures[item_texture_idx]);
+  }
+
+  // Add multiplier label to the right of the icon
+  auto multiplier_label = std::make_shared<UILabel>();
+  multiplier_label->SetId(item_id + "_multiplier");
+  std::string multiplier_text = "x" + std::to_string(inventory_item.count);
+  multiplier_label->SetText(multiplier_text);
+  multiplier_label->SetFont(resources_->ui_font_small);
+  multiplier_label->SetColor({255, 255, 255, 255});
+  int label_x = kInventoryIconSize + kInventoryMultiplierMargin;
+  int label_y = (kInventoryWidgetHeight - kInventoryMultiplierSize) / 2;
+  multiplier_label->SetPosition(static_cast<float>(label_x),
+                                static_cast<float>(label_y));
+  multiplier_label->SetSize(kInventoryLabelWidth, kInventoryMultiplierSize);
+  inventory_item_widget->AddChild(multiplier_label);
+
+  parent->AddChild(inventory_item_widget);
+}
+
+// =============================================================================
+// UpdateItemInventory: updates inventory bar with current items
+// ===========================================================================
+
+void UIManager::UpdateItemInventory(const Scene& scene) {
+  auto* inventory_bar = root_widget_->FindWidgetAs<HBox>("inventory_bar");
+  if (!inventory_bar) {
+    return;
+  }
+
+  int index = 0;
+  for (const auto& inventory_item : scene.player.inventory_) {
+    std::string item_id = "inventory_item_" + std::to_string(index);
+    auto inventory_item_widget =
+        inventory_bar->FindWidgetAs<UIInventoryItem>(item_id);
+    if (!inventory_item_widget) {
+      BuildInventoryItem(inventory_bar, index, inventory_item);
+    } else {
+      inventory_item_widget->SetItemCount(inventory_item.count);
+      auto label =
+          inventory_item_widget->FindWidgetAs<UILabel>(item_id + "_multiplier");
+      if (label) {
+        label->SetText("x" + std::to_string(inventory_item.count));
+      }
+    }
+    index++;
+  }
+
+  while (inventory_bar->GetChildren().size() > static_cast<size_t>(index)) {
+    std::string child_id = inventory_bar->GetChildren().back()->GetId();
+    inventory_bar->RemoveChild(child_id);
+  }
+
+  int num_items = static_cast<int>(scene.player.inventory_.size());
+  int widget_width = kInventoryIconSize + kInventoryLabelWidth;
+  int bar_width = num_items * widget_width +
+                  (num_items > 0 ? (num_items - 1) * kInventoryItemGap : 0);
+  inventory_bar->SetSize(static_cast<float>(bar_width), kInventoryWidgetHeight);
+
+  int container_width = bar_width + 2 * kInventoryContainerPadding;
+  int container_height =
+      kInventoryWidgetHeight + 2 * kInventoryContainerPadding;
+  auto* container = root_widget_->FindWidgetAs<Panel>("inventory_container");
+  if (container) {
+    container->SetSize(static_cast<float>(container_width),
+                       static_cast<float>(container_height));
+    container->SetVisible(num_items > 0);
+  }
+
+  root_widget_->ComputeLayout(0, 0, kWindowWidth, kWindowHeight);
+}
 }  // namespace arelto

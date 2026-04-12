@@ -61,6 +61,14 @@ struct Enemy {
   EntityType entity_type = EntityType::enemy;
 };
 
+enum ItemId : int;
+
+struct InventoryItem {
+  ItemId item_id;
+  int count;
+  InventoryItem(ItemId id, int count) : item_id(id), count(count) {}
+};
+
 class Player {
  public:
   EntityType entity_type_ = EntityType::player;
@@ -84,6 +92,9 @@ class Player {
   BaseProjectileSpell* GetSpell(SpellId id);
   const BaseProjectileSpell* GetSpell(SpellId id) const;
   void TakeDamage(int damage);
+  void TakeHealing(int healing);
+  void AddToInventory(ItemId item_id);
+  std::vector<InventoryItem> inventory_;
 };
 
 class ExpGem {

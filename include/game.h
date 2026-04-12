@@ -13,6 +13,7 @@
 #include "audio_manager.h"
 #include "entity_manager.h"
 #include "event_manager.h"
+#include "item_manager.h"
 #include "items.h"
 #include "observation_manager.h"
 #include "physics_manager.h"
@@ -61,6 +62,7 @@ class Game {
   std::vector<GameState> pending_transitions_;
   ItemArchive item_archive_;
   EventManager event_manager_;
+  ItemManager item_manager_;
 
   static volatile std::sig_atomic_t stop_request_;
   bool InitializeCamera();

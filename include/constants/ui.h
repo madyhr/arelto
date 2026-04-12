@@ -2,8 +2,12 @@
 #ifndef RL2_CONSTANTS_UI_H_
 #define RL2_CONSTANTS_UI_H_
 
+#include <SDL_pixels.h>
 #include "constants/game.h"
 namespace arelto {
+// Colors
+constexpr SDL_Color positive_green = SDL_Color{76, 201, 118, 255};
+constexpr SDL_Color negative_red = SDL_Color{235, 87, 87, 255};
 
 // Layout constants — internal padding / spacing for widget tree.
 constexpr int kHudPadding = 50;  // Distance from screen edges
@@ -21,6 +25,7 @@ constexpr int kMenuButtonGap = 20;
 constexpr int kMenuBottomPadding = 60;
 
 // Font sizes
+constexpr int kFontSizeSmall = 14;
 constexpr int kFontSizeMedium = 26;
 constexpr int kFontSizeLarge = 40;
 constexpr int kFontSizeHuge = 72;
@@ -94,6 +99,7 @@ constexpr int kLevelUpDescOffsetY = 300;
 constexpr int kLevelUpDescOffsetX = 70;
 constexpr int kLevelUpStatsOffsetY = 350;
 constexpr int kLevelUpStatsOffsetX = 70;
+constexpr int kLevelUpRowStride = 55;
 constexpr int kLevelUpButtonOffsetY = 440;  // from card top
 constexpr int kLevelUpButtonWidth = 200;
 constexpr int kLevelUpButtonHeight = 50;
@@ -148,8 +154,8 @@ constexpr int kCheckmarkSpriteHeight = 164;
 
 // Item selection menu card
 constexpr int kItemIconSize = 300;
-constexpr int kItemCardWidth = 600;
-constexpr int kItemCardHeight = 900;
+constexpr int kItemCardWidth = 650;
+constexpr int kItemCardHeight = 1000;
 constexpr int kItemCardGap = 150;
 constexpr int kItemCardIconOffsetY = 160;
 constexpr int kItemCardIconSize = 80;
@@ -159,9 +165,21 @@ constexpr int kItemCardDescOffsetY = 600;
 constexpr int kItemCardDescOffsetX = 70;
 constexpr int kItemCardStatsOffsetY = 648;
 constexpr int kItemCardStatsOffsetX = 70;
-constexpr int kItemCardButtonOffsetY = 720;  // from card top
+constexpr int kItemCardRowStride = 100;
+constexpr int kItemCardButtonOffsetY = 800;  // from card top
 constexpr int kItemCardButtonWidth = 200;
 constexpr int kItemCardButtonHeight = 50;
+
+// Item inventory bar
+constexpr int kInventoryBarY = 50;
+constexpr int kInventoryIconSize = 60;
+constexpr int kInventoryWidgetHeight = 60;
+constexpr int kInventoryLabelWidth = 20;
+constexpr int kInventoryItemGap = 15;
+constexpr int kInventoryMultiplierSize = 16;
+constexpr int kInventoryMultiplierMargin = 0;
+constexpr int kInventoryContainerPadding = 20;
+constexpr int kInventoryBackgroundAlpha = 64;
 
 }  // namespace arelto
 

@@ -97,10 +97,14 @@ inline bool operator!=(const Vector2D& lhs, const Vector2D& rhs) {
   return !(lhs == rhs);
 }
 
-inline Vector2D LerpVector2D(const Vector2D& start, const Vector2D& end,
-                             const float& alpha) {
+inline Vector2D Lerp(const Vector2D& start, const Vector2D& end,
+                     const float& alpha) {
   return start * (1 - alpha) + end * alpha;
 };
+
+inline Vector2D Round(Vector2D v) {
+  return {std::nearbyint(v.x), std::nearbyint(v.y)};
+}
 
 enum class EntityType : int {
   None = 0,

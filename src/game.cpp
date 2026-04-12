@@ -73,9 +73,7 @@ bool Game::Initialize() {
 bool Game::InitializeCamera() {
   Vector2D player_centroid =
       GetCentroid(scene_.player.position_, scene_.player.stats_.sprite_size);
-  render_manager_.camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
-  render_manager_.camera_.position_.y =
-      player_centroid.y - 0.5f * kWindowHeight;
+  render_manager_.camera_.UpdatePosition(player_centroid);
 
   return true;
 };
@@ -729,6 +727,11 @@ void Game::CachePreviousState() {
   size_t num_proj = scene_.projectiles.GetNumProjectiles();
   for (size_t i = 0; i < num_proj; ++i) {
     scene_.projectiles.prev_position_[i] = scene_.projectiles.position_[i];
+  }
+
+  size_t num_gems = scene_.exp_gem.GetNumExpGems();
+  for (size_t i = 0; i < num_gems; ++i) {
+    scene_.exp_gem.prev_position_[i] = scene_.exp_gem.position_[i];
   }
 
   size_t num_chests = scene_.chest.GetNumChests();

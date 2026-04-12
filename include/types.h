@@ -343,6 +343,23 @@ class Camera {
   Vector2D position_;
   Vector2D prev_position_;
   Vector2D render_position_;
+  void UpdatePosition(const Vector2D& player_centroid) {
+    position_.x = player_centroid.x - 0.5f * kWindowWidth;
+    position_.y = player_centroid.y - 0.5f * kWindowHeight;
+
+    if (position_.x < 0) {
+      position_.x = 0.0f;
+    };
+    if (position_.y < 0) {
+      position_.y = 0.0f;
+    };
+    if (position_.x > (kMapWidth - kWindowWidth)) {
+      position_.x = kMapWidth - kWindowWidth;
+    }
+    if (position_.y > (kMapHeight - kWindowHeight)) {
+      position_.y = kMapHeight - kWindowHeight;
+    }
+  };
 };
 
 inline auto WorldToGrid(auto pos) {

@@ -188,8 +188,7 @@ bool RenderManager::Initialize(bool is_headless) {
 bool RenderManager::InitializeCamera(const Player& player) {
   Vector2D player_centroid =
       GetCentroid(player.position_, player.stats_.sprite_size);
-  camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
-  camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
+  camera_.UpdatePosition(player_centroid);
 
   return true;
 };
@@ -216,7 +215,9 @@ void RenderManager::Render(const Scene& scene, float alpha,
     }
   } else {
 
-    UpdateCameraPosition(scene.player);
+    Vector2D player_centroid =
+        GetCentroid(scene.player.position_, scene.player.stats_.sprite_size);
+    camera_.UpdatePosition(player_centroid);
 
     camera_.render_position_ =
         LerpVector2D(camera_.prev_position_, camera_.position_, alpha);
@@ -267,26 +268,6 @@ void RenderManager::Render(const Scene& scene, float alpha,
   }
 
   SDL_RenderPresent(resources_.renderer);
-};
-
-void RenderManager::UpdateCameraPosition(const Player& player) {
-  Vector2D player_centroid =
-      arelto::GetCentroid(player.position_, player.stats_.sprite_size);
-  camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
-  camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
-
-  if (camera_.position_.x < 0) {
-    camera_.position_.x = 0.0f;
-  };
-  if (camera_.position_.y < 0) {
-    camera_.position_.y = 0.0f;
-  };
-  if (camera_.position_.x > (kMapWidth - kWindowWidth)) {
-    camera_.position_.x = kMapWidth - kWindowWidth;
-  }
-  if (camera_.position_.y > (kMapHeight - kWindowHeight)) {
-    camera_.position_.y = kMapHeight - kWindowHeight;
-  }
 };
 
 void RenderManager::RenderTiledMap() {

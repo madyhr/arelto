@@ -71,7 +71,6 @@ class RenderManager {
 
   void SetRenderColor(SDL_Renderer* renderer, const SDL_Color& color);
   bool InitializeCamera(const Player& player);
-  void UpdateCameraPosition(const Player& player);
   void RenderTiledMap();
   void RenderPlayer(const Player& player, float alpha);
   int SetupEnemyGeometry(const Enemy& enemy, float alpha);

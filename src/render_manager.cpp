@@ -188,8 +188,7 @@ bool RenderManager::Initialize(bool is_headless) {
 bool RenderManager::InitializeCamera(const Player& player) {
   Vector2D player_centroid =
       GetCentroid(player.position_, player.stats_.sprite_size);
-  camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
-  camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
+  camera_.UpdatePosition(player_centroid);
 
   return true;
 };
@@ -216,10 +215,12 @@ void RenderManager::Render(const Scene& scene, float alpha,
     }
   } else {
 
-    UpdateCameraPosition(scene.player);
+    Vector2D player_centroid =
+        GetCentroid(scene.player.position_, scene.player.stats_.sprite_size);
+    camera_.UpdatePosition(player_centroid);
 
     camera_.render_position_ =
-        LerpVector2D(camera_.prev_position_, camera_.position_, alpha);
+        Lerp(camera_.prev_position_, camera_.position_, alpha);
     RenderTiledMap();
     RenderPlayer(scene.player, alpha);
 
@@ -269,25 +270,11 @@ void RenderManager::Render(const Scene& scene, float alpha,
   SDL_RenderPresent(resources_.renderer);
 };
 
-void RenderManager::UpdateCameraPosition(const Player& player) {
-  Vector2D player_centroid =
-      arelto::GetCentroid(player.position_, player.stats_.sprite_size);
-  camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
-  camera_.position_.y = player_centroid.y - 0.5f * kWindowHeight;
-
-  if (camera_.position_.x < 0) {
-    camera_.position_.x = 0.0f;
-  };
-  if (camera_.position_.y < 0) {
-    camera_.position_.y = 0.0f;
-  };
-  if (camera_.position_.x > (kMapWidth - kWindowWidth)) {
-    camera_.position_.x = kMapWidth - kWindowWidth;
-  }
-  if (camera_.position_.y > (kMapHeight - kWindowHeight)) {
-    camera_.position_.y = kMapHeight - kWindowHeight;
-  }
-};
+Vector2D RenderManager::WorldToScreen(Vector2D world_pos) const {
+  // Rounding is added to ensure that textures that use UV coordinates for rendering
+  // from a sprite sheet, the sprite does not flicker due to sub-pixel rendering.
+  return Round(world_pos - camera_.render_position_);
+}
 
 void RenderManager::RenderTiledMap() {
   int top_left_tile_x =
@@ -319,11 +306,11 @@ void RenderManager::RenderTiledMap() {
 };
 
 void RenderManager::RenderPlayer(const Player& player, float alpha) {
-  Vector2D player_render_pos =
-      LerpVector2D(player.prev_position_, player.position_, alpha);
+  Vector2D render_pos = Lerp(player.prev_position_, player.position_, alpha);
+  Vector2D screen_pos = WorldToScreen(render_pos);
+  float x = screen_pos.x;
+  float y = screen_pos.y;
 
-  float x = player_render_pos.x - camera_.render_position_.x;
-  float y = player_render_pos.y - camera_.render_position_.y;
   float w = static_cast<float>(player.stats_.sprite_size.width);
   float h = static_cast<float>(player.stats_.sprite_size.height);
 
@@ -400,11 +387,11 @@ int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
       continue;
     }
 
-    Vector2D render_enemy_pos =
-        LerpVector2D(enemy.prev_position[i], enemy.position[i], alpha);
-
-    float x = render_enemy_pos.x - camera_.render_position_.x;
-    float y = render_enemy_pos.y - camera_.render_position_.y;
+    Vector2D render_pos =
+        Lerp(enemy.prev_position[i], enemy.position[i], alpha);
+    Vector2D screen_pos = WorldToScreen(render_pos);
+    float x = screen_pos.x;
+    float y = screen_pos.y;
 
     uint16_t time_offset = i * 127;
     uint16_t frame_idx =
@@ -489,11 +476,11 @@ void RenderManager::SetupProjectileGeometry(const Projectiles& projectiles,
       continue;
     }
 
-    Vector2D proj_render_pos = LerpVector2D(projectiles.prev_position_[i],
-                                            projectiles.position_[i], alpha);
-
-    float x = proj_render_pos.x - camera_.render_position_.x;
-    float y = proj_render_pos.y - camera_.render_position_.y;
+    Vector2D render_pos =
+        Lerp(projectiles.prev_position_[i], projectiles.position_[i], alpha);
+    Vector2D screen_pos = WorldToScreen(render_pos);
+    float x = screen_pos.x;
+    float y = screen_pos.y;
 
     int texture_id = projectiles.proj_type_[i];
 
@@ -581,11 +568,11 @@ void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
       continue;
     }
 
-    Vector2D gem_render_pos =
-        LerpVector2D(exp_gem.prev_position_[i], exp_gem.position_[i], alpha);
-
-    float x = gem_render_pos.x - camera_.render_position_.x;
-    float y = gem_render_pos.y - camera_.render_position_.y;
+    Vector2D render_pos =
+        Lerp(exp_gem.prev_position_[i], exp_gem.position_[i], alpha);
+    Vector2D screen_pos = WorldToScreen(render_pos);
+    float x = screen_pos.x;
+    float y = screen_pos.y;
 
     int texture_id = exp_gem.rarity_[i];
 
@@ -668,10 +655,13 @@ void RenderManager::SetupChestGeometry(const Chest& chest, float alpha) {
         chest.position_[i].y > cull_bottom) {
       continue;
     }
-    Vector2D chest_render_pos =
-        LerpVector2D(chest.prev_position_[i], chest.position_[i], alpha);
-    float x = chest_render_pos.x - camera_.render_position_.x;
-    float y = chest_render_pos.y - camera_.render_position_.y;
+
+    Vector2D render_pos =
+        Lerp(chest.prev_position_[i], chest.position_[i], alpha);
+    Vector2D screen_pos = WorldToScreen(render_pos);
+    float x = screen_pos.x;
+    float y = screen_pos.y;
+
     SDL_Color c = {255, 255, 255, 255};
     SDL_Vertex vertices[kChestVertices] = {
         {{x, y}, c, {u_left, v_top}},
@@ -800,7 +790,7 @@ void RenderManager::RenderDebugRayCaster(const Enemy& enemy, float alpha) {
     }
 
     Vector2D enemy_pos_world =
-        LerpVector2D(enemy.prev_position[i], enemy.position[i], alpha);
+        Lerp(enemy.prev_position[i], enemy.position[i], alpha);
 
     Vector2D center_world = enemy_pos_world + enemy.collider[i].offset;
 

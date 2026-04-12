@@ -97,10 +97,14 @@ inline bool operator!=(const Vector2D& lhs, const Vector2D& rhs) {
   return !(lhs == rhs);
 }
 
-inline Vector2D LerpVector2D(const Vector2D& start, const Vector2D& end,
-                             const float& alpha) {
+inline Vector2D Lerp(const Vector2D& start, const Vector2D& end,
+                     const float& alpha) {
   return start * (1 - alpha) + end * alpha;
 };
+
+inline Vector2D Round(Vector2D v) {
+  return {std::nearbyint(v.x), std::nearbyint(v.y)};
+}
 
 enum class EntityType : int {
   None = 0,
@@ -343,6 +347,23 @@ class Camera {
   Vector2D position_;
   Vector2D prev_position_;
   Vector2D render_position_;
+  void UpdatePosition(const Vector2D& player_centroid) {
+    position_.x = player_centroid.x - 0.5f * kWindowWidth;
+    position_.y = player_centroid.y - 0.5f * kWindowHeight;
+
+    if (position_.x < 0) {
+      position_.x = 0.0f;
+    };
+    if (position_.y < 0) {
+      position_.y = 0.0f;
+    };
+    if (position_.x > (kMapWidth - kWindowWidth)) {
+      position_.x = kMapWidth - kWindowWidth;
+    }
+    if (position_.y > (kMapHeight - kWindowHeight)) {
+      position_.y = kMapHeight - kWindowHeight;
+    }
+  };
 };
 
 inline auto WorldToGrid(auto pos) {

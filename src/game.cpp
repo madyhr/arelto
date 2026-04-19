@@ -57,10 +57,6 @@ bool Game::Initialize() {
     return false;
   }
 
-  if (!(Game::InitializeCamera())) {
-    return false;
-  }
-
   // The render manager (and thereby the UI manager) are initialized last to
   // ensure that all other handlers are called before the UI handlers are
   // dispatched to update the UI. This ensure that the UI is always up to date.
@@ -72,6 +68,10 @@ bool Game::Initialize() {
   EventContext event_context{event_manager_, scene_};
   event_manager_.DispatchImmediate(SceneResetEvent{}, event_context);
   scene_.item_archive = &item_archive_;
+
+  if (!(Game::InitializeCamera())) {
+    return false;
+  }
 
   time_ = static_cast<float>(SDL_GetTicks64()) / 1000.0f;
   SetGameState(is_running);

@@ -17,7 +17,9 @@ class EventManagerTest : public ::testing::Test {
   Scene scene_;
   EventManager event_manager_;
 
-  EventContext MakeEventContext() { return EventContext{scene_}; }
+  EventContext MakeEventContext() {
+    return testing::MakeEventContext(scene_, event_manager_);
+  }
 };
 
 // =============================================================================

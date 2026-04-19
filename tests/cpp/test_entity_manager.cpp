@@ -120,7 +120,7 @@ TEST_F(EntityManagerTest,
 
   // Emit the kill event and dispatch it so OnEnemyKilled queues the respawn
   event_manager_.Emit(EnemyKilledEvent{enemy_idx});
-  EventContext event_context{scene_};
+  EventContext event_context = testing::MakeEventContext(scene_, event_manager_);
   event_manager_.Dispatch(event_context);
 
   entity_manager_.ProcessPendingSpawns(scene_);

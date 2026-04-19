@@ -4,6 +4,7 @@
 #include <functional>
 #include <iomanip>
 #include <memory>
+#include <numbers>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -41,6 +42,7 @@ class HealOnKillEffect : public ItemTriggerEffect {
   void OnEnemyKilled(const EnemyKilledEvent&,
                      EventContext& event_context) override {
     event_context.scene.player.TakeHealing(heal_amount_);
+    event_context.event_manager.Emit(PlayerHealedEvent{heal_amount_});
   }
 
  private:

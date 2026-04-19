@@ -14,6 +14,7 @@
 #include "constants/game.h"
 #include "constants/progression_manager.h"
 #include "entity.h"
+#include "event_manager.h"
 #include "physics_manager.h"
 #include "render_manager.h"
 #include "types.h"
@@ -37,9 +38,12 @@ bool Game::Initialize() {
   std::signal(SIGTERM, SignalHandler);
   game_status_.is_headless = false;
 
-  if (!(render_manager_.Initialize(game_status_.is_headless))) {
-    return false;
-  }
+  // NOTE: Initialization order matters.
+  // E.g.: Entity event subscribers should be initialized before the UI event
+  // subscribers as the UI would otherwise always be 1 step behind.
+  RegisterGameStateHandlers();
+  entity_manager_.Initialize(event_manager_);
+  item_manager_.Initialize(event_manager_);
 
   if (!(physics_manager_.Initialize())) {
     return false;
@@ -53,12 +57,17 @@ bool Game::Initialize() {
     return false;
   }
 
-  scene_.Reset();
-  scene_.item_archive = &item_archive_;
+  // The render manager (and thereby the UI manager) are initialized last to
+  // ensure that all other handlers are called before the UI handlers are
+  // dispatched to update the UI. This ensure that the UI is always up to date.
+  if (!(render_manager_.Initialize(game_status_.is_headless, event_manager_))) {
+    return false;
+  }
 
-  RegisterGameStateHandlers();
-  item_manager_.Initialize(event_manager_);
-  entity_manager_.Initialize(event_manager_);
+  scene_.Reset();
+  EventContext event_context{event_manager_, scene_};
+  event_manager_.DispatchImmediate(SceneResetEvent{}, event_context);
+  scene_.item_archive = &item_archive_;
 
   if (!(Game::InitializeCamera())) {
     return false;
@@ -104,7 +113,7 @@ void Game::StepGamePhysics() {
 
   physics_manager_.StepPhysics(scene_, event_manager_);
 
-  EventContext event_context{scene_};
+  EventContext event_context{event_manager_, scene_};
   event_manager_.Dispatch(event_context);
 
   entity_manager_.Cleanup(scene_);
@@ -211,6 +220,8 @@ void Game::RenderGame(float alpha) {
 
 void Game::ResetGame() {
   scene_.Reset();
+  EventContext event_context{event_manager_, scene_};
+  event_manager_.DispatchImmediate(SceneResetEvent{}, event_context);
   item_manager_.RemoveAllItems();
   time_ = 0.0f;
   accumulator_step_ = 0.0f;
@@ -662,6 +673,8 @@ void Game::ProcessLevelUpInput(const SDL_Event& e) {
 
       if (IsMouseOverWidget(ui.GetLevelUpRoot(), btn_id, mouse_x, mouse_y)) {
         progression_manager_.ApplyLevelUpUpgrade(scene_, i);
+        EventContext event_context{event_manager_, scene_};
+        event_manager_.DispatchImmediate(PlayerLevelUpEvent{}, event_context);
         UIWidget* menu = ui.GetLevelUpRoot();
         if (menu) {
           menu->SetVisible(false);
@@ -707,6 +720,9 @@ void Game::ProcessItemSelectionInput(const SDL_Event& e) {
         if (menu) {
           menu->SetVisible(false);
         }
+        EventContext event_context{event_manager_, scene_};
+        event_manager_.DispatchImmediate(PlayerClaimedItemEvent{},
+                                         event_context);
         ResolveCurrentGameStateTransition();
         return;
       }

@@ -31,7 +31,7 @@ RenderManager::~RenderManager() {
   Shutdown();
 };
 
-bool RenderManager::Initialize(bool is_headless) {
+bool RenderManager::Initialize(bool is_headless, EventManager& event_manager) {
 
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     std::cerr << "SDL could not initialize! SDL Error: " << SDL_GetError()
@@ -178,7 +178,7 @@ bool RenderManager::Initialize(bool is_headless) {
   resources_.ui_resources.item_textures = resources_.item_textures;
   resources_.ui_resources.chest_texture = resources_.chest_texture;
 
-  ui_manager_.SetupUI(resources_.ui_resources);
+  ui_manager_.SetupUI(resources_.ui_resources, event_manager);
 
   resources_.map_layout = {0, 0, kMapWidth, kMapHeight};
 
@@ -241,7 +241,7 @@ void RenderManager::Render(const Scene& scene, float alpha,
       RenderDebugRayCaster(scene.enemy, alpha);
     }
 
-    RenderUI(scene, time);
+    RenderUI(time);
     if (game_state == is_gameover) {
       UIWidget* game_over_screen = ui_manager_.GetGameOverScreenRoot();
       if (game_over_screen) {
@@ -838,8 +838,8 @@ void RenderManager::RenderDebugRayCaster(const Enemy& enemy, float alpha) {
 
   SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
 }
-void RenderManager::RenderUI(const Scene& scene, float time) {
-  ui_manager_.Update(scene, time);
+void RenderManager::RenderUI(float time) {
+  ui_manager_.UpdateTimer(time);
   RenderUITree(ui_manager_.GetRootWidget());
 }
 

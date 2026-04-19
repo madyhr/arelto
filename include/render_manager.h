@@ -9,6 +9,7 @@
 #include "constants/game.h"
 #include "constants/map.h"
 #include "entity.h"
+#include "event_manager.h"
 #include "map.h"
 #include "scene.h"
 #include "types.h"
@@ -48,7 +49,7 @@ class RenderManager {
   RenderManager();
   ~RenderManager();
 
-  bool Initialize(bool is_headless);
+  bool Initialize(bool is_headless, EventManager& event_manager);
   void Shutdown();
 
   void Render(const Scene& scene, float alpha, const GameStatus& game_status,
@@ -87,7 +88,7 @@ class RenderManager {
   void RenderDebugRayCaster(const Enemy& enemy, float alpha);
 
   // Widget tree UI rendering
-  void RenderUI(const Scene& scene, float time);
+  void RenderUI(float time);
   void RenderUITree(UIWidget* root);
   void RenderWidgetRecursive(UIWidget* widget);
 

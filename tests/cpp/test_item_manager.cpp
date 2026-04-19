@@ -28,7 +28,9 @@ class ItemManagerTest : public ::testing::Test {
 
   static constexpr int kHealingHeadroom = 50;
 
-  EventContext MakeEventContext() { return EventContext{scene_}; }
+  EventContext MakeEventContext() {
+    return testing::MakeEventContext(scene_, event_manager_);
+  }
 
   void EmitEnemyKilledAndDispatch() {
     event_manager_.Emit(EnemyKilledEvent{0});
@@ -54,11 +56,37 @@ TEST_F(ItemManagerTest, HealOnKillEffect_HealsPlayerOnEnemyKilled) {
   EXPECT_EQ(scene_.player.stats_.health, initial_health + 5);
 }
 
+TEST_F(ItemManagerTest, HealOnKillEffect_EmitsPlayerHealedEventAfterHealing) {
+  int observed_health = 0;
+  int observed_healing = 0;
+  item_manager_.AddItem(std::make_unique<HealOnKillEffect>(5));
+
+  event_manager_.Subscribe<PlayerHealedEvent>(
+      [&](const PlayerHealedEvent& event, EventContext& context) {
+        observed_healing = event.healing;
+        observed_health = context.scene.player.stats_.health;
+      });
+
+  EmitEnemyKilledAndDispatch();
+
+  EXPECT_EQ(observed_healing, 5);
+  EXPECT_EQ(observed_health, scene_.player.stats_.health);
+
+  bool found_player_healed_event = false;
+  for (const auto& event : event_manager_.GetEvents()) {
+    if (std::holds_alternative<PlayerHealedEvent>(event)) {
+      EXPECT_EQ(std::get<PlayerHealedEvent>(event).healing, 5);
+      found_player_healed_event = true;
+    }
+  }
+  EXPECT_TRUE(found_player_healed_event);
+}
+
 TEST_F(ItemManagerTest, HealOnKillEffect_NoHeal_OnOtherEvents) {
   int initial_health = scene_.player.stats_.health;
   item_manager_.AddItem(std::make_unique<HealOnKillEffect>(5));
 
-  event_manager_.Emit(PlayerDamagedEvent{0, 10});
+  event_manager_.Emit(ChestOpenedEvent{0});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 

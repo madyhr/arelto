@@ -679,6 +679,7 @@ TEST_F(UIManagerEntityManagerIntegrationTest,
   EXPECT_FLOAT_EQ(health_bar->GetPercent(), 0.75f);
   EXPECT_EQ(health_text->GetText(), "75/100");
 
+  scene_.player.TakeHealing(10);
   event_manager_.DispatchImmediate(PlayerHealedEvent{10}, event_context);
 
   EXPECT_EQ(scene_.player.stats_.health, 85);

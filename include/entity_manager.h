@@ -32,7 +32,6 @@ class EntityManager {
   void OnPlayerChestCollision(const PlayerChestCollisionEvent& event,
                               EventContext& context);
   void OnPlayerDamaged(const PlayerDamagedEvent& event, EventContext& context);
-  void OnPlayerHealed(const PlayerHealedEvent& event, EventContext& context);
   void OnPlayerEnemyCollision(const PlayerEnemyCollisionEvent& event,
                               EventContext& context);
   void OnEnemyDamaged(const EnemyDamagedEvent& event, EventContext& context);

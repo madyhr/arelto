@@ -41,8 +41,8 @@ class HealOnKillEffect : public ItemTriggerEffect {
   explicit HealOnKillEffect(int heal_amount) : heal_amount_(heal_amount) {}
   void OnEnemyKilled(const EnemyKilledEvent&,
                      EventContext& event_context) override {
-    event_context.event_manager.DispatchImmediate(
-        PlayerHealedEvent{heal_amount_}, event_context);
+    event_context.scene.player.TakeHealing(heal_amount_);
+    event_context.event_manager.Emit(PlayerHealedEvent{heal_amount_});
   }
 
  private:

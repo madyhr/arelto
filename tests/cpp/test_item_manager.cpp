@@ -7,7 +7,6 @@
 #include <utility>
 #include <vector>
 
-#include "entity_manager.h"
 #include "event_manager.h"
 #include "item_manager.h"
 #include "items.h"
@@ -21,7 +20,6 @@ class ItemManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     scene_ = testing::CreateTestScene();
-    entity_manager_.Initialize(event_manager_);
     item_manager_.Initialize(event_manager_);
     // Drop the player below max HP so TakeHealing is observable. TakeHealing
     // clamps to max_health, so a fully-healed player cannot be healed further.
@@ -42,7 +40,6 @@ class ItemManagerTest : public ::testing::Test {
 
   Scene scene_;
   EventManager event_manager_;
-  EntityManager entity_manager_;
   ItemManager item_manager_;
 };
 
@@ -57,6 +54,32 @@ TEST_F(ItemManagerTest, HealOnKillEffect_HealsPlayerOnEnemyKilled) {
   EmitEnemyKilledAndDispatch();
 
   EXPECT_EQ(scene_.player.stats_.health, initial_health + 5);
+}
+
+TEST_F(ItemManagerTest, HealOnKillEffect_EmitsPlayerHealedEventAfterHealing) {
+  int observed_health = 0;
+  int observed_healing = 0;
+  item_manager_.AddItem(std::make_unique<HealOnKillEffect>(5));
+
+  event_manager_.Subscribe<PlayerHealedEvent>(
+      [&](const PlayerHealedEvent& event, EventContext& context) {
+        observed_healing = event.healing;
+        observed_health = context.scene.player.stats_.health;
+      });
+
+  EmitEnemyKilledAndDispatch();
+
+  EXPECT_EQ(observed_healing, 5);
+  EXPECT_EQ(observed_health, scene_.player.stats_.health);
+
+  bool found_player_healed_event = false;
+  for (const auto& event : event_manager_.GetEvents()) {
+    if (std::holds_alternative<PlayerHealedEvent>(event)) {
+      EXPECT_EQ(std::get<PlayerHealedEvent>(event).healing, 5);
+      found_player_healed_event = true;
+    }
+  }
+  EXPECT_TRUE(found_player_healed_event);
 }
 
 TEST_F(ItemManagerTest, HealOnKillEffect_NoHeal_OnOtherEvents) {

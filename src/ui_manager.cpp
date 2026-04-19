@@ -6,6 +6,8 @@
 #include "constants/progression_manager.h"
 #include "constants/projectile.h"
 #include "constants/ui.h"
+#include "entity.h"
+#include "event_manager.h"
 #include "scene.h"
 #include "ui/containers.h"
 #include "ui/widget.h"
@@ -13,7 +15,8 @@
 
 namespace arelto {
 
-void UIManager::SetupUI(const UIResources& resources) {
+void UIManager::SetupUI(const UIResources& resources,
+                        EventManager& event_manager) {
   resources_ = &resources;
 
   // The root widget is a full-screen invisible Panel (the "canvas").
@@ -30,6 +33,8 @@ void UIManager::SetupUI(const UIResources& resources) {
   BuildQuitConfirmMenu();
   BuildChestOpeningScreen();
   BuildItemInventory();
+
+  SetupUIEventSubscriptions(event_manager);
 
   root_widget_->ComputeLayout(0, 0, kWindowWidth, kWindowHeight);
 }
@@ -518,59 +523,104 @@ void UIManager::UpdateLevelUpMenu() {
   };
   update_hover(level_up);
 }
+// ======================================================================================
+// Event subscriptions: Add subscriptions to game events that should trigger UI updates.
+// ======================================================================================
 
-// =============================================================================
-// Update: refresh dynamic widget state from Scene data
-// =============================================================================
+void UIManager::SetupUIEventSubscriptions(EventManager& event_manager) {
+  event_manager.Subscribe<SceneResetEvent>([this](const SceneResetEvent&,
+                                                  EventContext& event_context) {
+    UpdateExpBar(
+        event_context.scene.player.stats_.exp_points,
+        event_context.scene.player.stats_.exp_points_required.GetValueCeil());
+    auto* level_text = GetWidget<UILabel>("level_text");
+    if (level_text) {
+      level_text->SetText(
+          std::to_string(event_context.scene.player.stats_.level));
+    }
+    UpdateHealthBar(
+        event_context.scene.player.stats_.health,
+        event_context.scene.player.stats_.max_health.GetValueCeil());
+    UpdateItemInventory(event_context.scene.player.inventory_);
+  });
+  event_manager.Subscribe<ExpGemCollectedEvent>(
+      [this](const ExpGemCollectedEvent&, EventContext& event_context) {
+        UpdateExpBar(event_context.scene.player.stats_.exp_points,
+                     event_context.scene.player.stats_.exp_points_required
+                         .GetValueCeil());
+      });
 
-void UIManager::Update(const Scene& scene, float time) {
-  auto* health_bar = GetWidget<UIProgressBar>("health_bar");
-  if (health_bar) {
-    int current_hp = scene.player.stats_.health;
-    float max_hp = scene.player.stats_.max_health.GetValue();
-    float percent = static_cast<float>(current_hp) / max_hp;
-    health_bar->SetPercent(percent);
+  event_manager.Subscribe<PlayerLevelUpEvent>([this](
+                                                  const PlayerLevelUpEvent&,
+                                                  EventContext& event_context) {
+    UpdateExpBar(
+        event_context.scene.player.stats_.exp_points,
+        event_context.scene.player.stats_.exp_points_required.GetValueCeil());
+
+    auto* level_text = GetWidget<UILabel>("level_text");
+    if (level_text) {
+      level_text->SetText(
+          std::to_string(event_context.scene.player.stats_.level));
+    }
+  });
+
+  event_manager.Subscribe<PlayerDamagedEvent>(
+      [this](const PlayerDamagedEvent&, EventContext& event_context) {
+        UpdateHealthBar(
+            event_context.scene.player.stats_.health,
+            event_context.scene.player.stats_.max_health.GetValueCeil());
+      });
+
+  event_manager.Subscribe<PlayerHealedEvent>(
+      [this](const PlayerHealedEvent&, EventContext& event_context) {
+        UpdateHealthBar(
+            event_context.scene.player.stats_.health,
+            event_context.scene.player.stats_.max_health.GetValueCeil());
+      });
+
+  event_manager.Subscribe<PlayerClaimedItemEvent>(
+      [this](const PlayerClaimedItemEvent&, EventContext& event_context) {
+        UpdateItemInventory(event_context.scene.player.inventory_);
+      });
+}
+
+void UIManager::UpdateTimer(float time) {
+  auto* timer_text = GetWidget<UILabel>("timer_text");
+  if (timer_text) {
+    timer_text->SetText(std::to_string(static_cast<int>(time)));
   }
+}
 
-  auto* health_text = GetWidget<UILabel>("health_text");
-  if (health_text) {
-    health_text->SetText(std::to_string(scene.player.stats_.health) + "/" +
-                         std::to_string(static_cast<int>(
-                             scene.player.stats_.max_health.GetValue())));
-  }
-
+void UIManager::UpdateExpBar(int current_exp_points, int exp_points_required) {
   auto* exp_bar = GetWidget<UIProgressBar>("exp_bar");
   if (exp_bar) {
-    int current_exp = scene.player.stats_.exp_points;
-    float max_exp = static_cast<float>(
-        scene.player.stats_.exp_points_required.GetValueCeil());
-    float percent = static_cast<float>(current_exp) / max_exp;
+    float max_exp = static_cast<float>(exp_points_required);
+    float percent = static_cast<float>(current_exp_points) / max_exp;
     exp_bar->SetPercent(percent);
   }
 
   auto* exp_text = GetWidget<UILabel>("exp_text");
   if (exp_text) {
-    exp_text->SetText(
-        std::to_string(scene.player.stats_.exp_points) + "/" +
-        std::to_string(scene.player.stats_.exp_points_required.GetValueCeil()));
+    exp_text->SetText(std::to_string(current_exp_points) + "/" +
+                      std::to_string(exp_points_required));
+  }
+};
+
+void UIManager::UpdateHealthBar(int current_health_points,
+                                int max_health_points) {
+  auto* health_bar = GetWidget<UIProgressBar>("health_bar");
+  if (health_bar) {
+    float max_hp = static_cast<float>(max_health_points);
+    float percent = static_cast<float>(current_health_points) / max_hp;
+    health_bar->SetPercent(percent);
   }
 
-  auto* level_text = GetWidget<UILabel>("level_text");
-  if (level_text) {
-    level_text->SetText(std::to_string(scene.player.stats_.level));
+  auto* health_text = GetWidget<UILabel>("health_text");
+  if (health_text) {
+    health_text->SetText(std::to_string(current_health_points) + "/" +
+                         std::to_string(max_health_points));
   }
-
-  auto* timer_text = GetWidget<UILabel>("timer_text");
-  if (timer_text) {
-    timer_text->SetText(std::to_string(static_cast<int>(time)));
-  }
-
-  UpdateItemInventory(scene);
 }
-
-// =============================================================================
-// UpdateSettingsMenu: volume slider + mute button text + debug checkboxes
-// =============================================================================
 
 void UIManager::UpdateSettingsMenu(float volume, bool is_muted,
                                    const GameStatus& game_status) {
@@ -1066,14 +1116,14 @@ void UIManager::BuildInventoryItem(UIWidget* parent, int index,
 // UpdateItemInventory: updates inventory bar with current items
 // ===========================================================================
 
-void UIManager::UpdateItemInventory(const Scene& scene) {
+void UIManager::UpdateItemInventory(const Inventory& inventory) {
   auto* inventory_bar = root_widget_->FindWidgetAs<HBox>("inventory_bar");
   if (!inventory_bar) {
     return;
   }
 
   int index = 0;
-  for (const auto& inventory_item : scene.player.inventory_) {
+  for (const auto& inventory_item : inventory) {
     std::string item_id = "inventory_item_" + std::to_string(index);
     auto inventory_item_widget =
         inventory_bar->FindWidgetAs<UIInventoryItem>(item_id);
@@ -1095,7 +1145,7 @@ void UIManager::UpdateItemInventory(const Scene& scene) {
     inventory_bar->RemoveChild(child_id);
   }
 
-  int num_items = static_cast<int>(scene.player.inventory_.size());
+  int num_items = static_cast<int>(inventory.size());
   int widget_width = kInventoryIconSize + kInventoryLabelWidth;
   int bar_width = num_items * widget_width +
                   (num_items > 0 ? (num_items - 1) * kInventoryItemGap : 0);

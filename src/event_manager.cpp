@@ -32,6 +32,26 @@ void EventManager::Dispatch(EventContext& event_context) {
   }
 }
 
+// Performs an immediate dispatch of the input event to all its subscribers.
+// Implementation notes:
+// 1. In contrast to `Dispatch` it does not iterate over the `events_` vector, but it only
+// dispatches the input event. This means that if `DispatchImmediate` is called with an
+// event that emits another event, then this other event is added to `events_` and is not
+// immediately dispatched like its parent event.
+void EventManager::DispatchImmediate(GameEvent event,
+                                     EventContext& event_context) {
+  std::visit(
+      [&](auto typed_event) {
+        // We want to get the clean base type of the unwrapped event to use it for the handler lookup.
+        using T = std::decay_t<decltype(typed_event)>;
+        for (auto& [subscription_id, handler] :
+             std::get<HandlerList<T>>(handlers_)) {
+          handler(typed_event, event_context);
+        }
+      },
+      event);
+}
+
 void EventManager::Flush() {
   events_.clear();
 }

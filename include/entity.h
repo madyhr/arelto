@@ -69,6 +69,8 @@ struct InventoryItem {
   InventoryItem(ItemId id, int count) : item_id(id), count(count) {}
 };
 
+using Inventory = std::vector<InventoryItem>;
+
 class Player {
  public:
   EntityType entity_type_ = EntityType::player;
@@ -94,7 +96,7 @@ class Player {
   void TakeDamage(int damage);
   void TakeHealing(int healing);
   void AddToInventory(ItemId item_id);
-  std::vector<InventoryItem> inventory_;
+  Inventory inventory_;
 };
 
 class ExpGem {

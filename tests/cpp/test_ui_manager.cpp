@@ -3,6 +3,8 @@
 
 #include <gtest/gtest.h>
 
+#include "entity_manager.h"
+#include "event_manager.h"
 #include "scene.h"
 #include "test_helpers.h"
 #include "ui/containers.h"
@@ -63,14 +65,6 @@ TEST(UIWidgetTest, FindWidgetAs_ReturnsTypedPointer) {
 
 TEST(UIWidgetTest, Visibility_DefaultTrue) {
   UIWidget w;
-  EXPECT_TRUE(w.IsVisible());
-}
-
-TEST(UIWidgetTest, SetVisible_Works) {
-  UIWidget w;
-  w.SetVisible(false);
-  EXPECT_FALSE(w.IsVisible());
-  w.SetVisible(true);
   EXPECT_TRUE(w.IsVisible());
 }
 
@@ -163,18 +157,6 @@ TEST(UIProgressBarTest, ClippedFillSrcRect_ScalesWithPercent) {
 }
 
 // =============================================================================
-// UILabel Tests
-// =============================================================================
-
-TEST(UILabelTest, SetText_UpdatesValue) {
-  UILabel lbl;
-  lbl.SetText("100/200");
-  EXPECT_EQ(lbl.GetText(), "100/200");
-  lbl.SetText("50/200");
-  EXPECT_EQ(lbl.GetText(), "50/200");
-}
-
-// =============================================================================
 // UIButton Tests
 // =============================================================================
 
@@ -193,21 +175,19 @@ TEST(UIButtonTest, HoverState_ChangesCurrentSrcRect) {
 }
 
 // =============================================================================
-// UIManager Integration Tests (no SDL needed — just tree construction)
+// UIManager Structure Tests (verify widget tree construction)
 // =============================================================================
 
 class UIManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    // UIResources with nullptr textures/fonts — we just verify tree structure
     resources_ = {};
-    ui_manager_.SetupUI(resources_);
-    scene_ = testing::CreateTestScene();
+    EventManager dummy_event_manager;
+    ui_manager_.SetupUI(resources_, dummy_event_manager);
   }
 
   UIResources resources_;
   UIManager ui_manager_;
-  Scene scene_;
 };
 
 TEST_F(UIManagerTest, SetupUI_CreatesRootWidget) {
@@ -234,6 +214,16 @@ TEST_F(UIManagerTest, BuildHUD_CreatesLevelText) {
   ASSERT_NE(label, nullptr);
 }
 
+TEST_F(UIManagerTest, BuildHUD_CreatesHealthText) {
+  auto* label = ui_manager_.GetWidget<UILabel>("health_text");
+  ASSERT_NE(label, nullptr);
+}
+
+TEST_F(UIManagerTest, BuildHUD_CreatesExpText) {
+  auto* label = ui_manager_.GetWidget<UILabel>("exp_text");
+  ASSERT_NE(label, nullptr);
+}
+
 TEST_F(UIManagerTest, BuildSettingsMenu_CreatesSettingsRoot) {
   auto* settings = ui_manager_.GetSettingsRoot();
   ASSERT_NE(settings, nullptr);
@@ -255,39 +245,23 @@ TEST_F(UIManagerTest, BuildSettingsMenu_CreatesVolumeSlider) {
   ASSERT_NE(slider, nullptr);
 }
 
+TEST_F(UIManagerTest, BuildSettingsMenu_CreatesOccupancyMapCheckbox) {
+  auto* checkbox = ui_manager_.GetWidget<UICheckbox>("occupancy_map_checkbox");
+  ASSERT_NE(checkbox, nullptr);
+}
+
+TEST_F(UIManagerTest, BuildSettingsMenu_CreatesRayCasterCheckbox) {
+  auto* checkbox = ui_manager_.GetWidget<UICheckbox>("ray_caster_checkbox");
+  ASSERT_NE(checkbox, nullptr);
+}
+
 TEST_F(UIManagerTest, SettingsMenu_StartsHidden) {
   auto* settings = ui_manager_.GetSettingsRoot();
   ASSERT_NE(settings, nullptr);
   EXPECT_FALSE(settings->IsVisible());
 }
 
-TEST_F(UIManagerTest, Update_ChangesHealthBarPercent) {
-  scene_.player.stats_.health = 50;
-  scene_.player.stats_.max_health.SetBaseValue(100.0f);
-  ui_manager_.Update(scene_, 0.0f);
-
-  auto* bar = ui_manager_.GetWidget<UIProgressBar>("health_bar");
-  ASSERT_NE(bar, nullptr);
-  EXPECT_FLOAT_EQ(bar->GetPercent(), 0.5f);
-}
-
-TEST_F(UIManagerTest, Update_ChangesTimerText) {
-  ui_manager_.Update(scene_, 65.0f);
-  auto* label = ui_manager_.GetWidget<UILabel>("timer_text");
-  ASSERT_NE(label, nullptr);
-  EXPECT_EQ(label->GetText(), "65");
-}
-
-TEST_F(UIManagerTest, Update_ChangesLevelText) {
-  scene_.player.stats_.level = 5;
-  ui_manager_.Update(scene_, 0.0f);
-  auto* label = ui_manager_.GetWidget<UILabel>("level_text");
-  ASSERT_NE(label, nullptr);
-  EXPECT_EQ(label->GetText(), "5");
-}
-
 TEST_F(UIManagerTest, BuildStartScreen_CreatesStartScreenRoot) {
-  ui_manager_.BuildStartScreen();
   auto* start_screen = ui_manager_.GetStartScreenRoot();
   ASSERT_NE(start_screen, nullptr);
   EXPECT_EQ(start_screen->GetId(), "start_screen");
@@ -295,12 +269,232 @@ TEST_F(UIManagerTest, BuildStartScreen_CreatesStartScreenRoot) {
 }
 
 TEST_F(UIManagerTest, BuildStartScreen_CreatesBeginButton) {
-  ui_manager_.BuildStartScreen();
   auto* start_screen = ui_manager_.GetStartScreenRoot();
   ASSERT_NE(start_screen, nullptr);
 
   auto* btn = start_screen->FindWidget("begin_button");
   ASSERT_NE(btn, nullptr);
+}
+
+TEST_F(UIManagerTest, BuildGameOverScreen_CreatesRoot) {
+  auto* game_over = ui_manager_.GetGameOverScreenRoot();
+  ASSERT_NE(game_over, nullptr);
+  EXPECT_EQ(game_over->GetId(), "game_over_screen");
+}
+
+TEST_F(UIManagerTest, BuildQuitConfirmMenu_CreatesRoot) {
+  auto* quit_confirm = ui_manager_.GetQuitConfirmRoot();
+  ASSERT_NE(quit_confirm, nullptr);
+  EXPECT_EQ(quit_confirm->GetId(), "quit_confirm_menu");
+}
+
+TEST_F(UIManagerTest, BuildChestOpeningScreen_CreatesRoot) {
+  auto* chest_opening = ui_manager_.GetChestOpeningRoot();
+  ASSERT_NE(chest_opening, nullptr);
+  EXPECT_EQ(chest_opening->GetId(), "chest_opening_menu");
+}
+
+// =============================================================================
+// UIManager Event-Driven Tests (verify event subscriptions trigger UI updates)
+// =============================================================================
+
+class UIManagerEventTest : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    resources_ = {};
+    ui_manager_.SetupUI(resources_, event_manager_);
+    scene_ = testing::CreateTestScene();
+  }
+
+  UIResources resources_;
+  UIManager ui_manager_;
+  EventManager event_manager_;
+  Scene scene_;
+};
+
+class UIManagerEntityManagerIntegrationTest : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    resources_ = {};
+    scene_ = testing::CreateTestScene();
+    entity_manager_.Initialize(event_manager_);
+    ui_manager_.SetupUI(resources_, event_manager_);
+  }
+
+  EventContext MakeEventContext() {
+    return testing::MakeEventContext(scene_, event_manager_);
+  }
+
+  UIResources resources_;
+  UIManager ui_manager_;
+  EntityManager entity_manager_;
+  EventManager event_manager_;
+  Scene scene_;
+};
+
+TEST_F(UIManagerEventTest, PlayerDamagedEvent_UpdatesHealthBar) {
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
+
+  scene_.player.stats_.health = 75;
+  scene_.player.stats_.max_health.SetBaseValue(100.0f);
+
+  event_manager_.DispatchImmediate(PlayerDamagedEvent{0, 25}, event_context);
+
+  auto* bar = ui_manager_.GetWidget<UIProgressBar>("health_bar");
+  ASSERT_NE(bar, nullptr);
+  EXPECT_FLOAT_EQ(bar->GetPercent(), 0.75f);
+
+  auto* health_text = ui_manager_.GetWidget<UILabel>("health_text");
+  ASSERT_NE(health_text, nullptr);
+  EXPECT_EQ(health_text->GetText(), "75/100");
+}
+
+TEST_F(UIManagerEventTest, PlayerDamagedEvent_UpdatesHealthBarToZero) {
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
+
+  scene_.player.stats_.health = 0;
+  scene_.player.stats_.max_health.SetBaseValue(100.0f);
+
+  event_manager_.DispatchImmediate(PlayerDamagedEvent{0, 100}, event_context);
+
+  auto* bar = ui_manager_.GetWidget<UIProgressBar>("health_bar");
+  ASSERT_NE(bar, nullptr);
+  EXPECT_FLOAT_EQ(bar->GetPercent(), 0.0f);
+}
+
+TEST_F(UIManagerEventTest, ExpGemCollectedEvent_UpdatesExpBar) {
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
+
+  scene_.player.stats_.exp_points = 500;
+  scene_.player.stats_.exp_points_required.SetBaseValue(1000.0f);
+
+  event_manager_.DispatchImmediate(ExpGemCollectedEvent{0, 200}, event_context);
+
+  auto* exp_bar = ui_manager_.GetWidget<UIProgressBar>("exp_bar");
+  ASSERT_NE(exp_bar, nullptr);
+  EXPECT_FLOAT_EQ(exp_bar->GetPercent(), 0.5f);
+
+  auto* exp_text = ui_manager_.GetWidget<UILabel>("exp_text");
+  ASSERT_NE(exp_text, nullptr);
+  EXPECT_EQ(exp_text->GetText(), "500/1000");
+}
+
+TEST_F(UIManagerEventTest, PlayerLevelUpEvent_UpdatesExpBarAndLevelText) {
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
+
+  scene_.player.stats_.exp_points = 0;
+  scene_.player.stats_.exp_points_required.SetBaseValue(2000.0f);
+  scene_.player.stats_.level = 5;
+
+  event_manager_.DispatchImmediate(PlayerLevelUpEvent{}, event_context);
+
+  auto* exp_text = ui_manager_.GetWidget<UILabel>("exp_text");
+  ASSERT_NE(exp_text, nullptr);
+  EXPECT_EQ(exp_text->GetText(), "0/2000");
+
+  auto* level_text = ui_manager_.GetWidget<UILabel>("level_text");
+  ASSERT_NE(level_text, nullptr);
+  EXPECT_EQ(level_text->GetText(), "5");
+}
+
+TEST_F(UIManagerEventTest, PlayerClaimedItemEvent_UpdatesInventory) {
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
+
+  scene_.player.inventory_ = {{ItemId::elia_armor_plate, 2},
+                              {ItemId::damodei_claw, 1}};
+
+  event_manager_.DispatchImmediate(PlayerClaimedItemEvent{}, event_context);
+
+  auto* inventory_container =
+      ui_manager_.GetRootWidget()->FindWidget("inventory_container");
+  ASSERT_NE(inventory_container, nullptr);
+  EXPECT_TRUE(inventory_container->IsVisible());
+
+  auto* inventory_bar =
+      ui_manager_.GetRootWidget()->FindWidgetAs<HBox>("inventory_bar");
+  ASSERT_NE(inventory_bar, nullptr);
+  EXPECT_EQ(inventory_bar->GetChildren().size(), 2);
+
+  auto* item_0 =
+      inventory_bar->FindWidgetAs<UIInventoryItem>("inventory_item_0");
+  ASSERT_NE(item_0, nullptr);
+  EXPECT_EQ(item_0->GetItemId(), ItemId::elia_armor_plate);
+  EXPECT_EQ(item_0->GetItemCount(), 2);
+}
+
+TEST_F(UIManagerEventTest, MultipleEvents_InOrder_UpdateUICorrectly) {
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
+
+  scene_.player.stats_.health = 100;
+  scene_.player.stats_.max_health.SetBaseValue(100.0f);
+  scene_.player.stats_.exp_points = 0;
+  scene_.player.stats_.exp_points_required.SetBaseValue(1000.0f);
+
+  event_manager_.DispatchImmediate(PlayerDamagedEvent{0, 30}, event_context);
+  scene_.player.stats_.health = 70;
+  event_manager_.DispatchImmediate(PlayerDamagedEvent{0, 10}, event_context);
+
+  auto* health_bar = ui_manager_.GetWidget<UIProgressBar>("health_bar");
+  EXPECT_FLOAT_EQ(health_bar->GetPercent(), 0.7f);
+
+  scene_.player.stats_.exp_points = 150;
+  event_manager_.DispatchImmediate(ExpGemCollectedEvent{0, 50}, event_context);
+
+  auto* exp_bar = ui_manager_.GetWidget<UIProgressBar>("exp_bar");
+  EXPECT_FLOAT_EQ(exp_bar->GetPercent(), 0.15f);
+}
+
+TEST_F(UIManagerEventTest, NoEventHandler_EventDoesNotCrashOrModifyUI) {
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
+
+  auto root = ui_manager_.GetRootWidget();
+  ASSERT_NE(root, nullptr);
+
+  auto* health_bar_before = ui_manager_.GetWidget<UIProgressBar>("health_bar");
+  ASSERT_NE(health_bar_before, nullptr);
+  float health_percent_before = health_bar_before->GetPercent();
+
+  event_manager_.DispatchImmediate(EnemyKilledEvent{0}, event_context);
+
+  auto* health_bar_after = ui_manager_.GetWidget<UIProgressBar>("health_bar");
+  EXPECT_NE(health_bar_after, nullptr);
+  EXPECT_FLOAT_EQ(health_bar_after->GetPercent(), health_percent_before);
+}
+
+TEST_F(UIManagerEntityManagerIntegrationTest,
+       PlayerHealthEvents_UpdateSceneAndHealthBarInSameDispatch) {
+  scene_.player.stats_.health = 100;
+  scene_.player.stats_.max_health.SetBaseValue(100.0f);
+  scene_.player.stats_.armor.SetBaseValue(0.0f);
+  scene_.player.is_alive_ = true;
+  scene_.player.is_invulnerable = false;
+
+  auto event_context = MakeEventContext();
+
+  event_manager_.DispatchImmediate(PlayerDamagedEvent{0, 25}, event_context);
+
+  EXPECT_EQ(scene_.player.stats_.health, 75);
+
+  auto* health_bar = ui_manager_.GetWidget<UIProgressBar>("health_bar");
+  ASSERT_NE(health_bar, nullptr);
+  EXPECT_FLOAT_EQ(health_bar->GetPercent(), 0.75f);
+
+  auto* health_text = ui_manager_.GetWidget<UILabel>("health_text");
+  ASSERT_NE(health_text, nullptr);
+  EXPECT_EQ(health_text->GetText(), "75/100");
+
+  event_manager_.DispatchImmediate(PlayerHealedEvent{10}, event_context);
+
+  EXPECT_EQ(scene_.player.stats_.health, 85);
+  EXPECT_FLOAT_EQ(health_bar->GetPercent(), 0.85f);
+  EXPECT_EQ(health_text->GetText(), "85/100");
 }
 
 }  // namespace

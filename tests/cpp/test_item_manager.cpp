@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "entity_manager.h"
 #include "event_manager.h"
 #include "item_manager.h"
 #include "items.h"
@@ -20,6 +21,7 @@ class ItemManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     scene_ = testing::CreateTestScene();
+    entity_manager_.Initialize(event_manager_);
     item_manager_.Initialize(event_manager_);
     // Drop the player below max HP so TakeHealing is observable. TakeHealing
     // clamps to max_health, so a fully-healed player cannot be healed further.
@@ -28,7 +30,9 @@ class ItemManagerTest : public ::testing::Test {
 
   static constexpr int kHealingHeadroom = 50;
 
-  EventContext MakeEventContext() { return EventContext{scene_}; }
+  EventContext MakeEventContext() {
+    return testing::MakeEventContext(scene_, event_manager_);
+  }
 
   void EmitEnemyKilledAndDispatch() {
     event_manager_.Emit(EnemyKilledEvent{0});
@@ -38,6 +42,7 @@ class ItemManagerTest : public ::testing::Test {
 
   Scene scene_;
   EventManager event_manager_;
+  EntityManager entity_manager_;
   ItemManager item_manager_;
 };
 
@@ -58,7 +63,7 @@ TEST_F(ItemManagerTest, HealOnKillEffect_NoHeal_OnOtherEvents) {
   int initial_health = scene_.player.stats_.health;
   item_manager_.AddItem(std::make_unique<HealOnKillEffect>(5));
 
-  event_manager_.Emit(PlayerDamagedEvent{0, 10});
+  event_manager_.Emit(ChestOpenedEvent{0});
   auto event_context = MakeEventContext();
   event_manager_.Dispatch(event_context);
 

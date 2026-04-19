@@ -37,6 +37,11 @@ void EntityManager::Initialize(EventManager& event_manager) {
         OnPlayerDamaged(event, event_context);
       });
 
+  event_manager.Subscribe<PlayerHealedEvent>(
+      [this](const PlayerHealedEvent& event, EventContext& event_context) {
+        OnPlayerHealed(event, event_context);
+      });
+
   event_manager.Subscribe<PlayerEnemyCollisionEvent>(
       [this](const PlayerEnemyCollisionEvent& event,
              EventContext& event_context) {
@@ -113,6 +118,11 @@ void EntityManager::OnPlayerDamaged(const PlayerDamagedEvent& event,
     context.scene.player.is_alive_ = false;
     event_manager_->Emit(PlayerDeadEvent{});
   }
+}
+
+void EntityManager::OnPlayerHealed(const PlayerHealedEvent& event,
+                                   EventContext& context) {
+  context.scene.player.TakeHealing(event.healing);
 }
 
 void EntityManager::OnPlayerEnemyCollision(

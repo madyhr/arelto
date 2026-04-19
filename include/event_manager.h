@@ -10,7 +10,9 @@
 
 namespace arelto {
 
-struct Scene;  // forward declaration for EventContext
+// forward declarations for EventContext
+struct Scene;
+struct EventManager;
 
 using SubscriptionId = int;
 
@@ -29,6 +31,9 @@ struct PlayerDamagedEvent {
   int enemy_idx;
   int damage;
 };
+struct PlayerHealedEvent {
+  int healing;
+};
 struct ExpGemCollectedEvent {
   int gem_idx;
   int exp_value;
@@ -40,6 +45,8 @@ struct ChestOpenedEvent {
   int chest_idx;
 };
 struct PlayerDeadEvent {};
+struct PlayerLevelUpEvent {};
+struct PlayerClaimedItemEvent {};
 struct PlayerExpGemCollisionEvent {
   int gem_idx;
 };
@@ -53,16 +60,18 @@ struct EnemyProjectileCollisionEvent {
   int enemy_idx;
   int proj_idx;
 };
+struct SceneResetEvent {};
 
-using GameEvent =
-    std::variant<EnemyKilledEvent, EnemyDamagedEvent, PlayerDamagedEvent,
-                 ExpGemCollectedEvent, ProjectileDestroyedEvent,
-                 ChestOpenedEvent, PlayerDeadEvent, PlayerExpGemCollisionEvent,
-                 PlayerChestCollisionEvent, PlayerEnemyCollisionEvent,
-                 EnemyProjectileCollisionEvent>;
+using GameEvent = std::variant<
+    EnemyKilledEvent, EnemyDamagedEvent, PlayerDamagedEvent, PlayerHealedEvent,
+    ExpGemCollectedEvent, ProjectileDestroyedEvent, ChestOpenedEvent,
+    PlayerDeadEvent, PlayerLevelUpEvent, PlayerExpGemCollisionEvent,
+    PlayerChestCollisionEvent, PlayerClaimedItemEvent,
+    PlayerEnemyCollisionEvent, EnemyProjectileCollisionEvent, SceneResetEvent>;
 
 // The context that is passed to every handler during a Dispatch call.
 struct EventContext {
+  EventManager& event_manager;
   Scene& scene;
 };
 
@@ -98,6 +107,7 @@ class EventManager {
   }
 
   void Dispatch(EventContext& event_context);
+  void DispatchImmediate(GameEvent event, EventContext& event_context);
   void Flush();
 
   const std::vector<GameEvent>& GetEvents() const;
@@ -115,14 +125,16 @@ class EventManager {
   std::vector<GameEvent> events_;
   int next_subscription_id_ = 0;
 
-  std::tuple<HandlerList<EnemyKilledEvent>, HandlerList<EnemyDamagedEvent>,
-             HandlerList<PlayerDamagedEvent>, HandlerList<ExpGemCollectedEvent>,
-             HandlerList<ProjectileDestroyedEvent>,
-             HandlerList<ChestOpenedEvent>, HandlerList<PlayerDeadEvent>,
-             HandlerList<PlayerExpGemCollisionEvent>,
-             HandlerList<PlayerChestCollisionEvent>,
-             HandlerList<PlayerEnemyCollisionEvent>,
-             HandlerList<EnemyProjectileCollisionEvent>>
+  std::tuple<
+      HandlerList<EnemyKilledEvent>, HandlerList<EnemyDamagedEvent>,
+      HandlerList<PlayerDamagedEvent>, HandlerList<PlayerHealedEvent>,
+      HandlerList<ExpGemCollectedEvent>, HandlerList<ProjectileDestroyedEvent>,
+      HandlerList<ChestOpenedEvent>, HandlerList<PlayerDeadEvent>,
+      HandlerList<PlayerLevelUpEvent>, HandlerList<PlayerClaimedItemEvent>,
+      HandlerList<PlayerExpGemCollisionEvent>,
+      HandlerList<PlayerChestCollisionEvent>,
+      HandlerList<PlayerEnemyCollisionEvent>,
+      HandlerList<EnemyProjectileCollisionEvent>, HandlerList<SceneResetEvent>>
       handlers_;
 };
 

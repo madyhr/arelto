@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include "entity.h"
+#include "event_manager.h"
 #include "scene.h"
 #include "types.h"
 
@@ -18,6 +19,13 @@ inline Scene CreateTestScene() {
   Scene scene;
   scene.Reset();
   return scene;
+}
+
+// Build an EventContext for tests. Centralized so future EventContext field
+// additions only require updating this helper.
+inline EventContext MakeEventContext(Scene& scene,
+                                     EventManager& event_manager) {
+  return EventContext{event_manager, scene};
 }
 
 // Deactivate all enemies

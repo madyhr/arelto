@@ -113,7 +113,7 @@ TEST_F(CollisionManagerTest,
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // Damage is applied during event dispatch
-  EventContext event_context{scene_};
+  EventContext event_context = testing::MakeEventContext(scene_, event_manager_);
   event_manager_.Dispatch(event_context);
 
   // Player should have taken damage
@@ -132,7 +132,7 @@ TEST_F(CollisionManagerTest,
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
-  EventContext event_context{scene_};
+  EventContext event_context = testing::MakeEventContext(scene_, event_manager_);
   event_manager_.Dispatch(event_context);
 
   // Player should NOT have taken damage (enemy on cooldown)
@@ -214,7 +214,7 @@ TEST_F(CollisionManagerTest, PlayerEnemyCollision_EmitsPlayerDamagedEvent) {
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // PlayerDamagedEvent is emitted by the entity manager handler during dispatch
-  EventContext event_context{scene_};
+  EventContext event_context = testing::MakeEventContext(scene_, event_manager_);
   event_manager_.Dispatch(event_context);
 
   auto& events = event_manager_.GetEvents();
@@ -239,7 +239,7 @@ TEST_F(CollisionManagerTest,
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
-  EventContext event_context{scene_};
+  EventContext event_context = testing::MakeEventContext(scene_, event_manager_);
   event_manager_.Dispatch(event_context);
 
   for (const auto& e : event_manager_.GetEvents()) {

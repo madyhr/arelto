@@ -7,8 +7,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "event_manager.h"
 #include "items.h"
-#include "scene.h"
 #include "ui/widget.h"
 #include "upgrades.h"
 
@@ -40,8 +40,7 @@ struct UIResources {
 
 class UIManager {
  public:
-  void SetupUI(const UIResources& resources);
-  void Update(const Scene& scene, float time);
+  void SetupUI(const UIResources& resources, EventManager& event_manager);
   void UpdateSettingsMenu(float volume, bool is_muted,
                           const GameStatus& game_status);
   void BuildLevelUpMenu(const UpgradeOptions& options);
@@ -54,7 +53,7 @@ class UIManager {
   void BuildItemMenu(const UpgradeOptions& options);
   void UpdateItemMenu();
   void BuildItemInventory();
-  void UpdateItemInventory(const Scene& scene);
+  void UpdateTimer(float time);
 
   UIWidget* GetRootWidget();
   UIWidget* GetSettingsRoot();
@@ -78,6 +77,10 @@ class UIManager {
   const UIResources* resources_ = nullptr;
 
   void BuildHUD();
+  void UpdateExpBar(int current_exp_points, int exp_points_required);
+  void UpdateHealthBar(int health_points, int max_health_points);
+  void UpdateItemInventory(const Inventory& inventory);
+  void SetupUIEventSubscriptions(EventManager& event_manager);
   void BuildSettingsMenu();
   void BuildQuitConfirmMenu();
   void BuildLevelUpCard(UIWidget* parent, int index,

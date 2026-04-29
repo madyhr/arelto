@@ -18,26 +18,26 @@ void ExpectColorEq(const SDL_Color& actual, const SDL_Color& expected) {
 
 TEST(UIConfigYamlTest, UIFontConfigDecodePartialYamlKeepsExistingValues) {
   UIFontConfig config;
-  config.kFontSizeSmall = 1;
-  config.kFontSizeMedium = 2;
-  config.kFontSizeLarge = 3;
-  config.kFontSizeHuge = 4;
+  config.font_size_small = 1;
+  config.font_size_medium = 2;
+  config.font_size_large = 3;
+  config.font_size_huge = 4;
 
-  const YAML::Node node = YAML::Load("kFontSizeSmall: 18\n");
+  const YAML::Node node = YAML::Load("font_size_small: 18\n");
 
   ASSERT_TRUE(YAML::convert<UIFontConfig>::decode(node, config));
-  EXPECT_EQ(config.kFontSizeSmall, 18);
-  EXPECT_EQ(config.kFontSizeMedium, 2);
+  EXPECT_EQ(config.font_size_small, 18);
+  EXPECT_EQ(config.font_size_medium, 2);
 }
 
 TEST(UIConfigYamlTest, UIFontConfigDecodeInvalidFieldKeepsExistingValue) {
   UIFontConfig config;
-  config.kFontSizeMedium = 26;
+  config.font_size_medium = 26;
 
-  const YAML::Node node = YAML::Load("kFontSizeMedium: invalid\n");
+  const YAML::Node node = YAML::Load("font_size_medium: invalid\n");
 
   ASSERT_TRUE(YAML::convert<UIFontConfig>::decode(node, config));
-  EXPECT_EQ(config.kFontSizeMedium, 26);
+  EXPECT_EQ(config.font_size_medium, 26);
 }
 
 TEST(UIConfigYamlTest, UIFontConfigDecodeNonMapReturnsFalse) {

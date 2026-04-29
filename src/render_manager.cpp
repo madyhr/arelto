@@ -162,13 +162,13 @@ bool RenderManager::Initialize(bool is_headless, EventManager& event_manager) {
   resources_.ui_resources.timer_hourglass_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/hourglass.png");
   resources_.ui_resources.ui_font_small = TTF_OpenFont(
-      "assets/fonts/november/novem___.ttf", ui_config_.fonts.kFontSizeSmall);
+      "assets/fonts/november/novem___.ttf", ui_config_.fonts.font_size_small);
   resources_.ui_resources.ui_font_medium = TTF_OpenFont(
-      "assets/fonts/november/novem___.ttf", ui_config_.fonts.kFontSizeMedium);
+      "assets/fonts/november/novem___.ttf", ui_config_.fonts.font_size_medium);
   resources_.ui_resources.ui_font_large = TTF_OpenFont(
-      "assets/fonts/november/novem___.ttf", ui_config_.fonts.kFontSizeLarge);
+      "assets/fonts/november/novem___.ttf", ui_config_.fonts.font_size_large);
   resources_.ui_resources.ui_font_huge = TTF_OpenFont(
-      "assets/fonts/november/novem___.ttf", ui_config_.fonts.kFontSizeHuge);
+      "assets/fonts/november/novem___.ttf", ui_config_.fonts.font_size_huge);
   resources_.item_textures.push_back(IMG_LoadTexture(
       resources_.renderer, "assets/textures/elia_skewersafe_armorplate.png"));
   resources_.item_textures.push_back(
@@ -1009,7 +1009,7 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       if (inv_item->GetItemTexture()) {
         SDL_Rect dest_rect = bounds;
         // Center icon within the item widget's icon region.
-        int icon_size = ui_config_.inventory.kInventoryIconSize;
+        int icon_size = ui_config_.inventory.inventory_icon_size;
         dest_rect.y += (bounds.h - icon_size) / 2;
         dest_rect.w = icon_size;
         dest_rect.h = icon_size;

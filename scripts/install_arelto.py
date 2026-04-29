@@ -265,8 +265,10 @@ def check_system_dependencies(console):
                 "Ensure SDL2 development libraries are installed.\n"
                 "Suggested commands:\n"
                 "  [cyan]Ubuntu/Debian:[/cyan] sudo apt install "
-                "libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev\n"
-                "  [cyan]Arch:[/cyan] sudo pacman -S sdl2 sdl2_image sdl2_ttf sdl2_mixer"
+                "libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev "
+                "libyaml-cpp-dev\n"
+                "  [cyan]Arch:[/cyan] sudo pacman -S sdl2 sdl2_image sdl2_ttf "
+                "sdl2_mixer yaml-cpp"
             )
             console.print(msg)
 

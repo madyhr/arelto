@@ -39,13 +39,13 @@ Before installing, ensure you have the following system dependencies installed a
 sudo apt update
 sudo apt install cmake build-essential python3-dev
 sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev
-sudo apt install libomp-dev
+sudo apt install libomp-dev libyaml-cpp-dev
 ```
 
 #### Arch
 
 ```bash
-sudo pacman -S cmake base-devel python sdl2 sdl2_image sdl2_ttf sdl2_mixer
+sudo pacman -S cmake base-devel python sdl2 sdl2_image sdl2_ttf sdl2_mixer yaml-cpp
 ```
 
 ### Windows (WSL2)

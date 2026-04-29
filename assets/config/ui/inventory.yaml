@@ -1,0 +1,9 @@
+kInventoryBarY: 50
+kInventoryIconSize: 60
+kInventoryWidgetHeight: 60
+kInventoryLabelWidth: 20
+kInventoryItemGap: 15
+kInventoryMultiplierSize: 16
+kInventoryMultiplierMargin: 0
+kInventoryContainerPadding: 20
+kInventoryBackgroundAlpha: 64

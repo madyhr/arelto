@@ -1,0 +1,11 @@
+positive_green:
+  r: 76
+  g: 201
+  b: 118
+  a: 255
+
+negative_red:
+  r: 235
+  g: 87
+  b: 87
+  a: 255

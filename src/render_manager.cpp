@@ -7,6 +7,8 @@
 #include <SDL_render.h>
 #include <algorithm>
 #include <iostream>
+// Required for YAML::convert<> methods used by GetStruct<>.
+#include "config/ui_config_yaml.h"  // IWYU pragma: keep
 #include "constants/chest.h"
 #include "constants/enemy.h"
 #include "constants/exp_gem.h"
@@ -16,7 +18,6 @@
 #include "constants/projectile.h"
 #include "constants/ray_caster.h"
 #include "constants/render.h"
-#include "constants/ui.h"
 #include "entity.h"
 #include "scene.h"
 #include "types.h"
@@ -26,10 +27,44 @@
 
 namespace arelto {
 
+namespace {
+
+template <typename T>
+void LoadConfigSectionOrDefault(ConfigManager& config_manager,
+                                const std::string& config_key,
+                                const std::string& config_path,
+                                T& config_section) {
+  if (!config_manager.LoadFile(config_key, config_path)) {
+    return;
+  }
+
+  config_section = config_manager.GetStruct<T>(config_key, "", config_section);
+}
+
+}  // namespace
+
 RenderManager::RenderManager() {};
 RenderManager::~RenderManager() {
   Shutdown();
 };
+
+void RenderManager::LoadUIConfig() {
+  ui_config_ = MakeDefaultUIConfig();
+
+  LoadConfigSectionOrDefault(config_manager_, "ui.colors",
+                             "assets/config/ui/colors.yaml", ui_config_.colors);
+  LoadConfigSectionOrDefault(config_manager_, "ui.fonts",
+                             "assets/config/ui/fonts.yaml", ui_config_.fonts);
+  LoadConfigSectionOrDefault(config_manager_, "ui.hud",
+                             "assets/config/ui/hud.yaml", ui_config_.hud);
+  LoadConfigSectionOrDefault(config_manager_, "ui.menus",
+                             "assets/config/ui/menus.yaml", ui_config_.menus);
+  LoadConfigSectionOrDefault(config_manager_, "ui.cards",
+                             "assets/config/ui/cards.yaml", ui_config_.cards);
+  LoadConfigSectionOrDefault(config_manager_, "ui.inventory",
+                             "assets/config/ui/inventory.yaml",
+                             ui_config_.inventory);
+}
 
 bool RenderManager::Initialize(bool is_headless, EventManager& event_manager) {
 
@@ -71,6 +106,8 @@ bool RenderManager::Initialize(bool is_headless, EventManager& event_manager) {
     std::cerr << "SDL_ttf could not be initialized: " << TTF_GetError() << '\n';
     return false;
   }
+
+  LoadUIConfig();
 
   resources_.tile_manager.SetupTileMap();
   resources_.tile_manager.SetupTiles();
@@ -124,14 +161,14 @@ bool RenderManager::Initialize(bool is_headless, EventManager& event_manager) {
       resources_.renderer, "assets/fonts/font_outlined_sprite_sheet.png");
   resources_.ui_resources.timer_hourglass_texture =
       IMG_LoadTexture(resources_.renderer, "assets/textures/hourglass.png");
-  resources_.ui_resources.ui_font_small =
-      TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeMedium);
-  resources_.ui_resources.ui_font_medium =
-      TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeMedium);
-  resources_.ui_resources.ui_font_large =
-      TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeLarge);
-  resources_.ui_resources.ui_font_huge =
-      TTF_OpenFont("assets/fonts/november/novem___.ttf", kFontSizeHuge);
+  resources_.ui_resources.ui_font_small = TTF_OpenFont(
+      "assets/fonts/november/novem___.ttf", ui_config_.fonts.kFontSizeSmall);
+  resources_.ui_resources.ui_font_medium = TTF_OpenFont(
+      "assets/fonts/november/novem___.ttf", ui_config_.fonts.kFontSizeMedium);
+  resources_.ui_resources.ui_font_large = TTF_OpenFont(
+      "assets/fonts/november/novem___.ttf", ui_config_.fonts.kFontSizeLarge);
+  resources_.ui_resources.ui_font_huge = TTF_OpenFont(
+      "assets/fonts/november/novem___.ttf", ui_config_.fonts.kFontSizeHuge);
   resources_.item_textures.push_back(IMG_LoadTexture(
       resources_.renderer, "assets/textures/elia_skewersafe_armorplate.png"));
   resources_.item_textures.push_back(
@@ -178,7 +215,7 @@ bool RenderManager::Initialize(bool is_headless, EventManager& event_manager) {
   resources_.ui_resources.item_textures = resources_.item_textures;
   resources_.ui_resources.chest_texture = resources_.chest_texture;
 
-  ui_manager_.SetupUI(resources_.ui_resources, event_manager);
+  ui_manager_.SetupUI(resources_.ui_resources, ui_config_, event_manager);
 
   resources_.map_layout = {0, 0, kMapWidth, kMapHeight};
 
@@ -971,11 +1008,11 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       auto* inv_item = static_cast<UIInventoryItem*>(widget);
       if (inv_item->GetItemTexture()) {
         SDL_Rect dest_rect = bounds;
-        // Center icon within left portion (kInventoryIconSize width)
-        dest_rect.x += (kInventoryIconSize - kInventoryIconSize) / 2;
-        dest_rect.y += (bounds.h - kInventoryIconSize) / 2;
-        dest_rect.w = kInventoryIconSize;
-        dest_rect.h = kInventoryIconSize;
+        // Center icon within the item widget's icon region.
+        int icon_size = ui_config_.inventory.kInventoryIconSize;
+        dest_rect.y += (bounds.h - icon_size) / 2;
+        dest_rect.w = icon_size;
+        dest_rect.h = icon_size;
         SDL_RenderCopy(resources_.renderer, inv_item->GetItemTexture(), nullptr,
                        &dest_rect);
       }

@@ -1,0 +1,42 @@
+kMenuContentPadding: 100
+kMenuItemSpacing: 25
+kMenuButtonGap: 20
+kMenuBottomPadding: 60
+
+kGenericButtonTextureWidth: 300
+kGenericButtonTextureHeight: 160
+
+kBeginButtonTextureWidth: 638
+kBeginButtonTextureHeight: 540
+kBeginButtonWidth: 450
+kBeginButtonHeight: 175
+
+kSettingsMenuWidth: 450
+kSettingsMenuHeight: 750
+kSettingsMenuBackgroundSpriteWidth: 900
+kSettingsMenuBackgroundSpriteHeight: 1000
+kSettingsMenuButtonWidth: 150
+kSettingsMenuButtonHeight: 50
+kSettingsMenuVolumeSliderWidth: 300
+kSettingsMenuVolumeSliderHeight: 30
+kVolumeSliderFillOffsetX: 15
+kVolumeSliderFillOffsetY: 5
+kVolumeSliderFillWidth: 275
+kVolumeSliderFillHeight: 20
+
+kQuitMenuWidth: 550
+kQuitMenuHeight: 300
+
+kSliderContainerSpriteOffsetX: 0
+kSliderContainerSpriteOffsetY: 0
+kSliderContainerSpriteWidth: 882
+kSliderContainerSpriteHeight: 48
+kSliderBarSpriteOffsetX: 0
+kSliderBarSpriteOffsetY: 48
+kSliderBarSpriteWidth: 806
+kSliderBarSpriteHeight: 29
+
+kCheckboxSpriteWidth: 263
+kCheckboxSpriteHeight: 526
+kCheckmarkSpriteWidth: 193
+kCheckmarkSpriteHeight: 164

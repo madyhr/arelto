@@ -5,6 +5,8 @@
 #include <SDL2/SDL_ttf.h>
 #include <map>
 #include <string>
+#include "config/config_manager.h"
+#include "config/ui_config.h"
 #include "constants/enemy.h"
 #include "constants/game.h"
 #include "constants/map.h"
@@ -69,8 +71,11 @@ class RenderManager {
  private:
   RenderResources resources_;
   UIManager ui_manager_;
+  ConfigManager config_manager_;
+  UIConfig ui_config_ = MakeDefaultUIConfig();
 
   Vector2D WorldToScreen(Vector2D world_pos) const;
+  void LoadUIConfig();
   void SetRenderColor(SDL_Renderer* renderer, const SDL_Color& color);
   bool InitializeCamera(const Player& player);
   void RenderTiledMap();

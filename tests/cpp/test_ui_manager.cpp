@@ -10,7 +10,6 @@
 
 #include "abilities.h"
 #include "constants/chest.h"
-#include "constants/ui.h"
 #include "entity_manager.h"
 #include "event_manager.h"
 #include "items.h"
@@ -101,7 +100,7 @@ class UIManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     scene_ = testing::CreateTestScene();
-    ui_manager_.SetupUI(resources_, event_manager_);
+    ui_manager_.SetupUI(resources_, config_, event_manager_);
   }
 
   EventContext MakeEventContext() {
@@ -109,6 +108,7 @@ class UIManagerTest : public ::testing::Test {
   }
 
   UIResources resources_;
+  UIConfig config_ = MakeDefaultUIConfig();
   UIManager ui_manager_;
   EventManager event_manager_;
   Scene scene_;
@@ -636,7 +636,7 @@ TEST_F(UIManagerTest, BuildItemMenu_UsesNegativeColorForDecreasingStatRow) {
 
   EXPECT_EQ(description->GetText(), "Slow Movement");
   EXPECT_EQ(stats->GetText(), "1.00 -> 0.95");
-  ExpectColorEq(stats->GetColor(), negative_red);
+  ExpectColorEq(stats->GetColor(), MakeDefaultUIConfig().colors.negative_red);
 }
 
 class UIManagerEntityManagerIntegrationTest : public ::testing::Test {
@@ -644,7 +644,7 @@ class UIManagerEntityManagerIntegrationTest : public ::testing::Test {
   void SetUp() override {
     scene_ = testing::CreateTestScene();
     entity_manager_.Initialize(event_manager_);
-    ui_manager_.SetupUI(resources_, event_manager_);
+    ui_manager_.SetupUI(resources_, config_, event_manager_);
   }
 
   EventContext MakeEventContext() {
@@ -652,6 +652,7 @@ class UIManagerEntityManagerIntegrationTest : public ::testing::Test {
   }
 
   UIResources resources_;
+  UIConfig config_ = MakeDefaultUIConfig();
   UIManager ui_manager_;
   EntityManager entity_manager_;
   EventManager event_manager_;

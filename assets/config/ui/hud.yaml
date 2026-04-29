@@ -1,0 +1,57 @@
+kHudPadding: 50
+kHudBarSpacing: 8
+kBarTextOffsetX: 50
+kBarTextOffsetY: 0
+kLevelGroupOffsetY: 55
+kTimerTextGap: 10
+kLevelTextGap: -2
+
+kDigitSpriteWidth: 30
+kDigitSpriteHeight: 50
+
+kHealthBarContainerSpriteOffsetX: 0
+kHealthBarContainerSpriteOffsetY: 0
+kHealthBarContainerSpriteWidth: 404
+kHealthBarContainerSpriteHeight: 92
+kHealthBarRelOffsetX: 80.0
+kHealthBarRelOffsetY: 32.0
+kHealthBarSpriteOffsetX: 0
+kHealthBarSpriteOffsetY: 128
+kHealthBarSpriteWidth: 299
+kHealthBarSpriteHeight: 28
+kHealthBarTextRelOffsetX: 100
+kHealthBarTextRelOffsetY: 32
+kHealthBarTextCharWidth: 20
+kHealthBarTextCharHeight: 25
+
+kTimerHourglassSpriteWidth: 50
+kTimerHourglassSpriteHeight: 72
+kTimerTextCharWidth: 50
+kTimerTextCharHeight: 72
+
+kGameOverSpriteWidth: 610
+kGameOverSpriteHeight: 88
+
+kExpBarContainerSpriteOffsetX: 0
+kExpBarContainerSpriteOffsetY: 0
+kExpBarContainerSpriteWidth: 404
+kExpBarContainerSpriteHeight: 92
+kExpBarRelOffsetX: 80.0
+kExpBarRelOffsetY: 30.0
+kExpBarSpriteOffsetX: 0
+kExpBarSpriteOffsetY: 128
+kExpBarSpriteWidth: 299
+kExpBarSpriteHeight: 28
+kExpBarTextRelOffsetX: 100
+kExpBarTextRelOffsetY: 32
+kExpBarTextCharWidth: 20
+kExpBarTextCharHeight: 25
+
+kLevelIconSpriteOffsetX: 0
+kLevelIconSpriteOffsetY: 0
+kLevelIconSpriteWidth: 70
+kLevelIconSpriteHeight: 74
+kLevelTextCharWidth: 50
+kLevelTextCharHeight: 72
+kLevelUpIconMargin: -10
+kLevelUpTextMargin: -10

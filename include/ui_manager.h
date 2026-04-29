@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "config/ui_config.h"
 #include "event_manager.h"
 #include "items.h"
 #include "ui/widget.h"
@@ -40,7 +41,8 @@ struct UIResources {
 
 class UIManager {
  public:
-  void SetupUI(const UIResources& resources, EventManager& event_manager);
+  void SetupUI(const UIResources& resources, const UIConfig& config,
+               EventManager& event_manager);
   void UpdateSettingsMenu(float volume, bool is_muted,
                           const GameStatus& game_status);
   void BuildLevelUpMenu(const UpgradeOptions& options);
@@ -75,6 +77,7 @@ class UIManager {
  private:
   std::shared_ptr<UIWidget> root_widget_;
   const UIResources* resources_ = nullptr;
+  UIConfig ui_config_ = MakeDefaultUIConfig();
 
   void BuildHUD();
   void UpdateExpBar(int current_exp_points, int exp_points_required);

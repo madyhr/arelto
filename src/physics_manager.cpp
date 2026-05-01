@@ -52,8 +52,8 @@ void PhysicsManager::UpdateEnemyState(Enemy& enemy) {
         enemy.last_horizontal_velocity[i] = enemy.velocity[i].x;
       }
 
-      if (enemy.attack_cooldown[i] >= 0.0f) {
-        enemy.attack_cooldown[i] -= physics_dt_;
+      if (enemy.attack_cooldown_timer[i] >= 0.0f) {
+        enemy.attack_cooldown_timer[i] -= physics_dt_;
       }
 
       enemy.damage_dealt_sim_step[i] = 0;

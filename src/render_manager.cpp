@@ -27,22 +27,6 @@
 
 namespace arelto {
 
-namespace {
-
-template <typename T>
-void LoadConfigSectionOrDefault(ConfigManager& config_manager,
-                                const std::string& config_key,
-                                const std::string& config_path,
-                                T& config_section) {
-  if (!config_manager.LoadFile(config_key, config_path)) {
-    return;
-  }
-
-  config_section = config_manager.GetStruct<T>(config_key, "", config_section);
-}
-
-}  // namespace
-
 RenderManager::RenderManager() {};
 RenderManager::~RenderManager() {
   Shutdown();
@@ -51,19 +35,18 @@ RenderManager::~RenderManager() {
 void RenderManager::LoadUIConfig() {
   ui_config_ = MakeDefaultUIConfig();
 
-  LoadConfigSectionOrDefault(config_manager_, "ui.colors",
-                             "assets/config/ui/colors.yaml", ui_config_.colors);
-  LoadConfigSectionOrDefault(config_manager_, "ui.fonts",
-                             "assets/config/ui/fonts.yaml", ui_config_.fonts);
-  LoadConfigSectionOrDefault(config_manager_, "ui.hud",
-                             "assets/config/ui/hud.yaml", ui_config_.hud);
-  LoadConfigSectionOrDefault(config_manager_, "ui.menus",
-                             "assets/config/ui/menus.yaml", ui_config_.menus);
-  LoadConfigSectionOrDefault(config_manager_, "ui.cards",
-                             "assets/config/ui/cards.yaml", ui_config_.cards);
-  LoadConfigSectionOrDefault(config_manager_, "ui.inventory",
-                             "assets/config/ui/inventory.yaml",
-                             ui_config_.inventory);
+  config_manager_.LoadConfigSectionOrDefault(
+      "ui.colors", "assets/config/ui/colors.yaml", ui_config_.colors);
+  config_manager_.LoadConfigSectionOrDefault(
+      "ui.fonts", "assets/config/ui/fonts.yaml", ui_config_.fonts);
+  config_manager_.LoadConfigSectionOrDefault(
+      "ui.hud", "assets/config/ui/hud.yaml", ui_config_.hud);
+  config_manager_.LoadConfigSectionOrDefault(
+      "ui.menus", "assets/config/ui/menus.yaml", ui_config_.menus);
+  config_manager_.LoadConfigSectionOrDefault(
+      "ui.cards", "assets/config/ui/cards.yaml", ui_config_.cards);
+  config_manager_.LoadConfigSectionOrDefault(
+      "ui.inventory", "assets/config/ui/inventory.yaml", ui_config_.inventory);
 }
 
 bool RenderManager::Initialize(bool is_headless, EventManager& event_manager) {

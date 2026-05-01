@@ -1,0 +1,7 @@
+max_health_points: 10
+attack_damage: 5
+attack_cooldown_s: 0.1
+movement_speed: 40.0
+width: 42
+height: 50
+inv_mass: 0.1

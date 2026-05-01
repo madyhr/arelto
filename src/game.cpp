@@ -64,7 +64,7 @@ bool Game::Initialize() {
     return false;
   }
 
-  scene_.Reset();
+  scene_.Reset(entity_manager_.entity_config_);
   EventContext event_context{event_manager_, scene_};
   event_manager_.DispatchImmediate(SceneResetEvent{}, event_context);
   scene_.item_archive = &item_archive_;
@@ -219,7 +219,7 @@ void Game::RenderGame(float alpha) {
 };
 
 void Game::ResetGame() {
-  scene_.Reset();
+  scene_.Reset(entity_manager_.entity_config_);
   EventContext event_context{event_manager_, scene_};
   event_manager_.DispatchImmediate(SceneResetEvent{}, event_context);
   item_manager_.RemoveAllItems();

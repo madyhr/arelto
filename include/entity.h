@@ -41,6 +41,7 @@ struct Enemy {
   std::array<Vector2D, kNumEnemies> prev_position;
   std::array<Vector2D, kNumEnemies> velocity;
   std::array<Vector2D, kNumEnemies> prev_velocity;
+  std::array<int, kNumEnemies> max_health_points;
   std::array<int, kNumEnemies> health_points;
   std::array<float, kNumEnemies> movement_speed;
   std::array<Size2D, kNumEnemies> sprite_size;
@@ -48,7 +49,8 @@ struct Enemy {
   std::array<float, kNumEnemies> inv_mass;
   std::array<float, kNumEnemies> last_horizontal_velocity;
   std::array<int, kNumEnemies> attack_damage;
-  std::array<float, kNumEnemies> attack_cooldown;
+  std::array<float, kNumEnemies> attack_cooldown_s;
+  std::array<float, kNumEnemies> attack_cooldown_timer;
   std::array<int, kNumEnemies> damage_dealt_sim_step;
   // this is used for RL training and signifies the end of an episode if true.
   std::array<bool, kNumEnemies> is_done;

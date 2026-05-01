@@ -2,6 +2,8 @@
 #define RL2_ENTITY_MANAGER_H_
 
 #include <vector>
+#include "config/config_manager.h"
+#include "config/entity_config.h"
 #include "event_manager.h"
 #include "scene.h"
 
@@ -15,28 +17,31 @@ class EntityManager {
   void Initialize(EventManager& event_manager);
   void Cleanup(Scene& scene);
   void ProcessPendingSpawns(Scene& scene);
+  EntityConfig entity_config_ = MakeDefaultEntityConfig();
 
  private:
   EventManager* event_manager_ = nullptr;
+  ConfigManager config_manager_;
   std::vector<ExpGemData> pending_exp_gem_spawns_;
   std::vector<ChestData> pending_chest_spawns_;
   std::vector<int> pending_enemy_respawns_;
 
+  void LoadEntityConfig();
   void ResolveProjectileDestruction(Scene& scene);
   void ResolveExpGemDestruction(Scene& scene);
   void ResolveChestDestruction(Scene& scene);
 
   void OnEnemyKilled(const EnemyKilledEvent& event, EventContext& context);
   void OnPlayerExpGemCollision(const PlayerExpGemCollisionEvent& event,
-                               EventContext& context);
+                                EventContext& context);
   void OnPlayerChestCollision(const PlayerChestCollisionEvent& event,
-                              EventContext& context);
+                               EventContext& context);
   void OnPlayerDamaged(const PlayerDamagedEvent& event, EventContext& context);
   void OnPlayerEnemyCollision(const PlayerEnemyCollisionEvent& event,
-                              EventContext& context);
+                               EventContext& context);
   void OnEnemyDamaged(const EnemyDamagedEvent& event, EventContext& context);
   void OnEnemyProjectileCollision(const EnemyProjectileCollisionEvent& event,
-                                  EventContext& context);
+                                   EventContext& context);
 };
 
 }  // namespace arelto

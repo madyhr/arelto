@@ -107,13 +107,15 @@ TEST_F(CollisionManagerTest,
   scene_.player.stats_.health = 100;
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
-  scene_.enemy.attack_cooldown[0] = -1.0f;  // Ready to attack
+  scene_.enemy.attack_cooldown_s[0] = 1.0f;
+  scene_.enemy.attack_cooldown_timer[0] = -1.0f;  // Ready to attack
   scene_.enemy.attack_damage[0] = 10;
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // Damage is applied during event dispatch
-  EventContext event_context = testing::MakeEventContext(scene_, event_manager_);
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
   event_manager_.Dispatch(event_context);
 
   // Player should have taken damage
@@ -127,12 +129,14 @@ TEST_F(CollisionManagerTest,
   scene_.player.stats_.health = 100;
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
-  scene_.enemy.attack_cooldown[0] = 1.0f;  // On cooldown
+  scene_.enemy.attack_cooldown_s[0] = 1.0f;
+  scene_.enemy.attack_cooldown_timer[0] = 1.0f;  // On cooldown
   scene_.enemy.attack_damage[0] = 10;
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
-  EventContext event_context = testing::MakeEventContext(scene_, event_manager_);
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
   event_manager_.Dispatch(event_context);
 
   // Player should NOT have taken damage (enemy on cooldown)
@@ -209,12 +213,14 @@ TEST_F(CollisionManagerTest, PlayerEnemyCollision_EmitsPlayerDamagedEvent) {
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
   scene_.enemy.attack_damage[0] = 20;
-  scene_.enemy.attack_cooldown[0] = -1.0f;
+  scene_.enemy.attack_cooldown_s[0] = 1.0f;
+  scene_.enemy.attack_cooldown_timer[0] = -1.0f;
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
   // PlayerDamagedEvent is emitted by the entity manager handler during dispatch
-  EventContext event_context = testing::MakeEventContext(scene_, event_manager_);
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
   event_manager_.Dispatch(event_context);
 
   auto& events = event_manager_.GetEvents();
@@ -235,11 +241,13 @@ TEST_F(CollisionManagerTest,
   scene_.player.position_ = {100.0f, 100.0f};
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
-  scene_.enemy.attack_cooldown[0] = 1.0f;  // not ready
+  scene_.enemy.attack_cooldown_s[0] = 1.0f;
+  scene_.enemy.attack_cooldown_timer[0] = 1.0f;  // not ready
 
   collision_manager_.HandleCollisionsSAP(scene_, event_manager_);
 
-  EventContext event_context = testing::MakeEventContext(scene_, event_manager_);
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
   event_manager_.Dispatch(event_context);
 
   for (const auto& e : event_manager_.GetEvents()) {

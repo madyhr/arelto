@@ -3,6 +3,7 @@
 #define RL2_SCENE_H_
 
 #include <vector>
+#include "config/entity_config.h"
 #include "constants/enemy.h"
 #include "constants/player.h"
 #include "entity.h"
@@ -29,7 +30,7 @@ struct Scene {
   UpgradeOptions level_up_options;
   UpgradeOptions item_options;
   ItemArchive* item_archive;
-  void Reset() {
+  void Reset(const EntityConfig& entity_config) {
 
     // Player
     player.collider_ =
@@ -54,16 +55,23 @@ struct Scene {
     // Enemies
     std::fill(enemy.is_alive.begin(), enemy.is_alive.end(), false);
     std::fill(enemy.is_done.begin(), enemy.is_done.end(), false);
+    std::fill(enemy.max_health_points.begin(), enemy.max_health_points.end(),
+              entity_config.enemy.max_health_points);
     std::fill(enemy.movement_speed.begin(), enemy.movement_speed.end(),
-              kEnemySpeed);
+              entity_config.enemy.movement_speed);
     std::fill(enemy.collider.begin(), enemy.collider.end(),
               Collider{{kEnemyColliderOffsetX, kEnemyColliderOffsetY},
                        {kEnemyColliderWidth, kEnemyColliderHeight}});
     std::fill(enemy.sprite_size.begin(), enemy.sprite_size.end(),
-              Size2D{kEnemySpriteWidth, kEnemySpriteHeight});
-    std::fill(enemy.inv_mass.begin(), enemy.inv_mass.end(), kEnemyInvMass);
-    std::fill(enemy.attack_cooldown.begin(), enemy.attack_cooldown.end(), 0.0f);
-    std::fill(enemy.attack_damage.begin(), enemy.attack_damage.end(), 1);
+              Size2D{entity_config.enemy.width, entity_config.enemy.height});
+    std::fill(enemy.inv_mass.begin(), enemy.inv_mass.end(),
+              entity_config.enemy.inv_mass);
+    std::fill(enemy.attack_cooldown_s.begin(), enemy.attack_cooldown_s.end(),
+              entity_config.enemy.attack_cooldown_s);
+    std::fill(enemy.attack_cooldown_timer.begin(),
+              enemy.attack_cooldown_timer.end(), 0.0f);
+    std::fill(enemy.attack_damage.begin(), enemy.attack_damage.end(),
+              entity_config.enemy.attack_damage);
     SpawnAllEnemies(enemy, player);
     SetupEnemyRayCasterPattern(enemy.ray_caster);
 

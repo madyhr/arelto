@@ -1,7 +1,7 @@
 // src/entity_manager.cpp
 #include "entity_manager.h"
+#include "config/entity_config_yaml.h"  // IWYU pragma: keep
 #include "constants/chest.h"
-#include "constants/enemy.h"
 #include "constants/exp_gem.h"
 #include "event_manager.h"
 #include "random.h"
@@ -12,7 +12,14 @@ namespace arelto {
 EntityManager::EntityManager() {}
 EntityManager::~EntityManager() {}
 
+void EntityManager::LoadEntityConfig() {
+  entity_config_ = MakeDefaultEntityConfig();
+  config_manager_.LoadConfigSectionOrDefault(
+      "entity.enemy", "assets/config/entity/enemy.yaml", entity_config_.enemy);
+}
+
 void EntityManager::Initialize(EventManager& event_manager) {
+  LoadEntityConfig();
   event_manager_ = &event_manager;
 
   event_manager.Subscribe<EnemyKilledEvent>(
@@ -118,10 +125,11 @@ void EntityManager::OnPlayerDamaged(const PlayerDamagedEvent& event,
 void EntityManager::OnPlayerEnemyCollision(
     const PlayerEnemyCollisionEvent& event, EventContext& context) {
   int idx = event.enemy_idx;
-  if (context.scene.enemy.attack_cooldown[idx] < 0.0f) {
+  if (context.scene.enemy.attack_cooldown_timer[idx] < 0.0f) {
     int attack_damage = context.scene.enemy.attack_damage[idx];
     context.scene.enemy.damage_dealt_sim_step[idx] += attack_damage;
-    context.scene.enemy.attack_cooldown[idx] = kEnemyAttackCooldown;
+    context.scene.enemy.attack_cooldown_timer[idx] =
+        context.scene.enemy.attack_cooldown_s[idx];
     event_manager_->Emit(PlayerDamagedEvent{idx, attack_damage});
   }
 }

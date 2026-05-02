@@ -36,12 +36,14 @@ using UpgradeOptions = std::vector<std::unique_ptr<Upgrade>>;
 class SpellStatUpgrade : public Upgrade {
  public:
   SpellStatUpgrade(SpellId spell_id, std::string spell_name,
-                   SpellUpgradeType type, ValueRange value_range)
+                    SpellUpgradeType type, ValueRange value_range,
+                    Size2D sprite_size = {})
       : spell_id_(spell_id),
         spell_name_(std::move(spell_name)),
         type_(type),
         current_value_(value_range.current),
-        updated_value_(value_range.updated) {}
+        updated_value_(value_range.updated),
+        sprite_size_(sprite_size) {}
 
   void Apply(Player& player) override {
     BaseProjectileSpell* spell = player.GetSpell(spell_id_);
@@ -56,6 +58,7 @@ class SpellStatUpgrade : public Upgrade {
 
   SpellUpgradeType GetType() const { return type_; }
   SpellId GetSpellID() const { return spell_id_; }
+  Size2D GetSpriteSize() const { return sprite_size_; }
 
   std::string GetName() const override { return spell_name_; }
 
@@ -93,6 +96,7 @@ class SpellStatUpgrade : public Upgrade {
   SpellUpgradeType type_;
   float current_value_;
   float updated_value_;
+  Size2D sprite_size_;
 };
 
 }  // namespace arelto

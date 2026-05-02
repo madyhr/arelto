@@ -7,12 +7,14 @@
 #include <vector>
 #include "abilities.h"
 #include "constants/enemy.h"
-#include "constants/player.h"
 #include "constants/projectile.h"
 #include "ray_caster.h"
 #include "types.h"
 
 namespace arelto {
+
+// forward declaration to avoid circular dependency
+class SpellManager;
 
 class Projectiles {
  public:
@@ -88,9 +90,11 @@ class Player {
   float exp_required_scale_ = 1.1f;
   AABB hitbox_aabb_;
   float last_horizontal_velocity_;
-  SpellStats<kNumPlayerSpells> spell_stats_;
-  Fireball fireball_;
-  Frostbolt frostbolt_;
+  SpellStats spell_stats_;
+  SpellManager* spell_manager_ = nullptr;
+  void SetSpellManager(SpellManager* spell_manager) {
+    spell_manager_ = spell_manager;
+  };
   void UpdateAllSpellStats();
   std::optional<ProjectileData> CastProjectileSpell(BaseProjectileSpell& spell,
                                                     float time,

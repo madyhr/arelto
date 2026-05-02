@@ -25,19 +25,19 @@ namespace {
 UpgradeOptions MakeSpellUpgradeOptions() {
   UpgradeOptions options;
   options.push_back(std::make_unique<SpellStatUpgrade>(
-      FireballId, "Fireball", SpellUpgradeType::damage,
-      ValueRange{10.0f, 12.0f}));
+      0, "Fireball", SpellUpgradeType::damage, ValueRange{10.0f, 12.0f},
+      Size2D{60, 60}));
   options.push_back(std::make_unique<SpellStatUpgrade>(
-      FrostboltId, "Frostbolt", SpellUpgradeType::cooldown,
-      ValueRange{1.50f, 1.00f}));
+      1, "Frostbolt", SpellUpgradeType::cooldown, ValueRange{1.50f, 1.00f},
+      Size2D{100, 100}));
   return options;
 }
 
 UpgradeOptions MakeSingleSpellUpgradeOption() {
   UpgradeOptions options;
   options.push_back(std::make_unique<SpellStatUpgrade>(
-      FireballId, "Fireball", SpellUpgradeType::damage,
-      ValueRange{10.0f, 12.0f}));
+      0, "Fireball", SpellUpgradeType::damage, ValueRange{10.0f, 12.0f},
+      Size2D{60, 60}));
   return options;
 }
 

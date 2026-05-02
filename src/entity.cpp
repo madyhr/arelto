@@ -4,6 +4,7 @@
 #include "constants/enemy.h"
 #include "constants/map.h"
 #include "random.h"
+#include "spell_manager.h"
 #include "types.h"
 
 namespace arelto {
@@ -134,10 +135,13 @@ void Projectiles::ResetAllProjectiles() {
 };
 
 void Player::UpdateAllSpellStats() {
-  fireball_.SetTimeOfLastUse(-1.0f);
-  frostbolt_.SetTimeOfLastUse(-1.0f);
-  spell_stats_.SetProjectileSpellStats(fireball_);
-  spell_stats_.SetProjectileSpellStats(frostbolt_);
+  if (!spell_manager_) {
+    return;
+  }
+  for (const auto& spell : spell_manager_->GetAllSpells()) {
+    spell->SetTimeOfLastUse(-1.0f);
+    spell_stats_.SetProjectileSpellStats(*spell);
+  }
 };
 
 std::optional<ProjectileData> Player::CastProjectileSpell(
@@ -162,25 +166,17 @@ std::optional<ProjectileData> Player::CastProjectileSpell(
 };
 
 BaseProjectileSpell* Player::GetSpell(SpellId id) {
-  switch (id) {
-    case SpellId::FireballId:
-      return &fireball_;
-    case SpellId::FrostboltId:
-      return &frostbolt_;
-    default:
-      return nullptr;
+  if (!spell_manager_) {
+    return nullptr;
   }
+  return spell_manager_->GetSpell(id);
 }
 
 const BaseProjectileSpell* Player::GetSpell(SpellId id) const {
-  switch (id) {
-    case SpellId::FireballId:
-      return &fireball_;
-    case SpellId::FrostboltId:
-      return &frostbolt_;
-    default:
-      return nullptr;
+  if (!spell_manager_) {
+    return nullptr;
   }
+  return spell_manager_->GetSpell(id);
 }
 
 void Player::TakeDamage(int damage) {

@@ -4,7 +4,6 @@
 #include <string>
 #include "constants/chest.h"
 #include "constants/progression_manager.h"
-#include "constants/projectile.h"
 #include "entity.h"
 #include "event_manager.h"
 #include "scene.h"
@@ -504,7 +503,8 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
     icon->SetSize(ui_config_.cards.level_up_icon_size,
                   ui_config_.cards.level_up_icon_size);
     icon->SetTexture(resources_->projectile_textures[spell_id]);
-    icon->SetSrcRect({0, 0, kFireballSpriteWidth, kFireballSpriteHeight});
+    icon->SetSrcRect({0, 0, static_cast<int>(upgrade.GetSpriteSize().width),
+                      static_cast<int>(upgrade.GetSpriteSize().height)});
     card->AddChild(icon);
   }
 

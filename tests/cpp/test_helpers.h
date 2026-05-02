@@ -9,6 +9,7 @@
 #include "entity.h"
 #include "event_manager.h"
 #include "scene.h"
+#include "spell_manager.h"
 #include "types.h"
 
 namespace arelto {
@@ -16,7 +17,13 @@ namespace testing {
 
 // Create a Scene with predictable initial state
 inline Scene CreateTestScene() {
+  static SpellManager spell_manager;
+  if (!spell_manager.GetSpellCount()) {
+    spell_manager.Initialize();
+  }
   Scene scene;
+  scene.player.SetSpellManager(&spell_manager);
+  scene.player.spell_stats_.Resize(spell_manager.GetSpellCount());
   scene.Reset(MakeDefaultEntityConfig());
   return scene;
 }

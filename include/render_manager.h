@@ -11,6 +11,7 @@
 #include "constants/game.h"
 #include "constants/map.h"
 #include "entity.h"
+#include "spell_manager.h"
 #include "event_manager.h"
 #include "map.h"
 #include "scene.h"
@@ -51,7 +52,8 @@ class RenderManager {
   RenderManager();
   ~RenderManager();
 
-  bool Initialize(bool is_headless, EventManager& event_manager);
+  bool Initialize(bool is_headless, EventManager& event_manager,
+                      const std::vector<std::string>& texture_paths);
   void Shutdown();
 
   void Render(const Scene& scene, float alpha, const GameStatus& game_status,

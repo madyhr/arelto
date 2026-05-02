@@ -44,6 +44,7 @@ bool Game::Initialize() {
   RegisterGameStateHandlers();
   entity_manager_.Initialize(event_manager_);
   item_manager_.Initialize(event_manager_);
+  spell_manager_.Initialize();
 
   if (!(physics_manager_.Initialize())) {
     return false;
@@ -60,10 +61,13 @@ bool Game::Initialize() {
   // The render manager (and thereby the UI manager) are initialized last to
   // ensure that all other handlers are called before the UI handlers are
   // dispatched to update the UI. This ensure that the UI is always up to date.
-  if (!(render_manager_.Initialize(game_status_.is_headless, event_manager_))) {
+  if (!(render_manager_.Initialize(game_status_.is_headless, event_manager_,
+                                   spell_manager_.GetTexturePaths()))) {
     return false;
   }
 
+  scene_.player.SetSpellManager(&spell_manager_);
+  scene_.player.spell_stats_.Resize(spell_manager_.GetSpellCount());
   scene_.Reset(entity_manager_.entity_config_);
   EventContext event_context{event_manager_, scene_};
   event_manager_.DispatchImmediate(SceneResetEvent{}, event_context);
@@ -519,19 +523,23 @@ void Game::ProcessPlayerInput() {
     scene_.player.velocity_.x += 1.0f;
   }
   if (is_mouse_left_active_) {
-    std::optional<ProjectileData> fireball = scene_.player.CastProjectileSpell(
-        scene_.player.fireball_, time_, cursor_position_);
-
-    if (fireball.has_value()) {
-      scene_.projectiles.AddProjectile(*fireball);
+    auto* spell = scene_.player.GetSpell(0);
+    if (spell) {
+      std::optional<ProjectileData> proj =
+          scene_.player.CastProjectileSpell(*spell, time_, cursor_position_);
+      if (proj.has_value()) {
+        scene_.projectiles.AddProjectile(*proj);
+      }
     }
   }
   if (is_mouse_right_active_) {
-    std::optional<ProjectileData> frostbolt = scene_.player.CastProjectileSpell(
-        scene_.player.frostbolt_, time_, cursor_position_);
-
-    if (frostbolt.has_value()) {
-      scene_.projectiles.AddProjectile(*frostbolt);
+    auto* spell = scene_.player.GetSpell(1);
+    if (spell) {
+      std::optional<ProjectileData> proj =
+          scene_.player.CastProjectileSpell(*spell, time_, cursor_position_);
+      if (proj.has_value()) {
+        scene_.projectiles.AddProjectile(*proj);
+      }
     }
   }
 }

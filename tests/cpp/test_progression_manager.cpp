@@ -152,7 +152,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
 
   // Manually create a deterministic upgrade option
   // We avoid using GenerateLevelUpOptions to remove RNG.
-  SpellId target_spell = SpellId::FireballId;
+  SpellId target_spell = 0;
   std::string spell_name = "Fireball";
   float initial_damage =
       static_cast<float>(scene_.player.spell_stats_.damage[target_spell]);

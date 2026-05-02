@@ -49,7 +49,8 @@ void RenderManager::LoadUIConfig() {
       "ui.inventory", "assets/config/ui/inventory.yaml", ui_config_.inventory);
 }
 
-bool RenderManager::Initialize(bool is_headless, EventManager& event_manager) {
+bool RenderManager::Initialize(bool is_headless, EventManager& event_manager,
+                               const std::vector<std::string>& texture_paths) {
 
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     std::cerr << "SDL could not initialize! SDL Error: " << SDL_GetError()
@@ -102,10 +103,10 @@ bool RenderManager::Initialize(bool is_headless, EventManager& event_manager) {
       resources_.renderer, "assets/textures/wizard_sprite_sheet_with_idle.png");
   resources_.enemy_texture = IMG_LoadTexture(
       resources_.renderer, "assets/textures/tentacle_being_sprite_sheet.png");
-  resources_.projectile_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/fireball_sprite_sheet.png"));
-  resources_.projectile_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/frostbolt_sprite_sheet.png"));
+  for (const auto& path : texture_paths) {
+    resources_.projectile_textures.push_back(
+        IMG_LoadTexture(resources_.renderer, path.c_str()));
+  }
   resources_.gem_textures.push_back(IMG_LoadTexture(
       resources_.renderer, "assets/textures/exp_gem_common.png"));
   resources_.gem_textures.push_back(

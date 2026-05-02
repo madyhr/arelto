@@ -191,13 +191,27 @@ struct Collider {
   Size2D size;
 };
 
-// Creates a centered collider from the given size that uses the
-// game-wide collider margin for more satisfying collision detection.
-inline Collider CreateCenteredCollider(Size2D size) {
+// Shrink the input dimension by the input margin for more satisfying
+// collision detection.
+inline uint32_t ShrinkColliderDimension(uint32_t dimension, uint32_t margin) {
+  if (dimension == 0) {
+    return 0;
+  }
+  // We return 1 in this case to avoid uint32_t underflow and to ensure that
+  // the collider dimension is non-zero unless explicitly set to 0.
+  if (margin >= dimension) {
+    return 1;
+  }
+  return dimension - margin;
+}
+
+inline Collider CreateCenteredCollider(
+    Size2D size,
+    uint32_t margin = static_cast<uint32_t>(kSpriteColliderMargin)) {
   return Collider{{0.5f * static_cast<float>(size.width),
                    0.5f * static_cast<float>(size.height)},
-                  {size.width - kSpriteColliderMargin,
-                   size.height - kSpriteColliderMargin}};
+                  {ShrinkColliderDimension(size.width, margin),
+                   ShrinkColliderDimension(size.height, margin)}};
 }
 
 enum class ModifierType { flat = 0, percent_add, percent_mult };

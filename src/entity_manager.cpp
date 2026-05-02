@@ -1,7 +1,6 @@
 // src/entity_manager.cpp
 #include "entity_manager.h"
 #include "config/entity_config_yaml.h"  // IWYU pragma: keep
-#include "constants/chest.h"
 #include "event_manager.h"
 #include "random.h"
 #include "types.h"
@@ -22,8 +21,7 @@ void EntityManager::LoadEntityConfig() {
       "entity.exp_gem", "assets/config/entity/exp_gem.yaml",
       entity_config_.exp_gem);
   config_manager_.LoadConfigSectionOrDefault(
-      "entity.chest", "assets/config/entity/chest.yaml",
-      entity_config_.chest);
+      "entity.chest", "assets/config/entity/chest.yaml", entity_config_.chest);
 }
 
 void EntityManager::Initialize(EventManager& event_manager) {
@@ -83,9 +81,8 @@ void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
   float chest_roll = static_cast<float>(GenerateRandomInt(0, 99)) / 100.0f;
   bool chest_will_spawn = chest_roll < entity_config_.chest.spawn_chance;
 
-  float spawn_offset = chest_will_spawn
-                           ? entity_config_.chest.gem_min_separation * 0.5f
-                           : 0.0f;
+  float spawn_offset =
+      chest_will_spawn ? entity_config_.chest.gem_min_separation * 0.5f : 0.0f;
   Vector2D gem_position = {centroid.x - spawn_offset, centroid.y};
 
   Rarity random_rarity = static_cast<Rarity>(GenerateRandomInt(0, 3));

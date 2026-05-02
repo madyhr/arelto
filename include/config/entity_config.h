@@ -1,7 +1,9 @@
 #ifndef RL2_CONFIG_ENTITY_CONFIG_H_
 #define RL2_CONFIG_ENTITY_CONFIG_H_
 
+#include <array>
 #include <cstdint>
+#include "types.h"
 namespace arelto {
 
 struct PlayerConfig {
@@ -27,9 +29,32 @@ struct EnemyConfig {
   float inv_mass = 0.1f;
 };
 
+struct ExpGemRarityConfig {
+  int exp_value = 1;
+  uint32_t width = 25;
+  uint32_t height = 33;
+};
+
+inline std::array<ExpGemRarityConfig, Rarity::Count>
+MakeDefaultExpGemRarities() {
+  std::array<ExpGemRarityConfig, Rarity::Count> rarities{};
+  rarities[Rarity::common] = {1, 25, 33};
+  rarities[Rarity::rare] = {2, 30, 40};
+  rarities[Rarity::epic] = {4, 35, 45};
+  rarities[Rarity::legendary] = {8, 45, 60};
+  return rarities;
+}
+
+struct ExpGemConfig {
+  float inv_mass = 1.0f;
+  std::array<ExpGemRarityConfig, Rarity::Count> rarities =
+      MakeDefaultExpGemRarities();
+};
+
 struct EntityConfig {
   PlayerConfig player;
   EnemyConfig enemy;
+  ExpGemConfig exp_gem;
 };
 
 EntityConfig MakeDefaultEntityConfig();

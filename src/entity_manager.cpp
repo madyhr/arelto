@@ -2,7 +2,6 @@
 #include "entity_manager.h"
 #include "config/entity_config_yaml.h"  // IWYU pragma: keep
 #include "constants/chest.h"
-#include "constants/exp_gem.h"
 #include "event_manager.h"
 #include "random.h"
 #include "types.h"
@@ -14,11 +13,14 @@ EntityManager::~EntityManager() {}
 
 void EntityManager::LoadEntityConfig() {
   entity_config_ = MakeDefaultEntityConfig();
-  config_manager_.LoadConfigSectionOrDefault(
-      "entity.player", "assets/config/entity/player.yaml",
-      entity_config_.player);
+  config_manager_.LoadConfigSectionOrDefault("entity.player",
+                                             "assets/config/entity/player.yaml",
+                                             entity_config_.player);
   config_manager_.LoadConfigSectionOrDefault(
       "entity.enemy", "assets/config/entity/enemy.yaml", entity_config_.enemy);
+  config_manager_.LoadConfigSectionOrDefault(
+      "entity.exp_gem", "assets/config/entity/exp_gem.yaml",
+      entity_config_.exp_gem);
 }
 
 void EntityManager::Initialize(EventManager& event_manager) {
@@ -82,10 +84,13 @@ void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
   Vector2D gem_position = {centroid.x - spawn_offset, centroid.y};
 
   Rarity random_rarity = static_cast<Rarity>(GenerateRandomInt(0, 3));
+  const ExpGemRarityConfig& gem_config =
+      entity_config_.exp_gem.rarities[random_rarity];
+  const Size2D gem_sprite_size = {gem_config.width, gem_config.height};
   pending_exp_gem_spawns_.push_back({random_rarity, gem_position, gem_position,
-                                     kExpGemCollider[random_rarity],
-                                     kExpGemInvMass,
-                                     kExpGemSpriteSize[random_rarity]});
+                                     CreateCenteredCollider(gem_sprite_size),
+                                     entity_config_.exp_gem.inv_mass,
+                                     gem_sprite_size});
 
   if (chest_will_spawn) {
     Vector2D chest_position = {centroid.x + spawn_offset, centroid.y};
@@ -99,7 +104,8 @@ void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
 
 void EntityManager::OnPlayerExpGemCollision(
     const PlayerExpGemCollisionEvent& event, EventContext& context) {
-  int exp_value = kExpGemValues[context.scene.exp_gem.rarity_[event.gem_idx]];
+  const Rarity rarity = context.scene.exp_gem.rarity_[event.gem_idx];
+  int exp_value = entity_config_.exp_gem.rarities[rarity].exp_value;
   context.scene.player.stats_.exp_points += exp_value;
   context.scene.exp_gem.to_be_destroyed_.insert(event.gem_idx);
   event_manager_->Emit(ExpGemCollectedEvent{event.gem_idx, exp_value});

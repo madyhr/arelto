@@ -89,11 +89,87 @@ struct convert<arelto::EnemyConfig> {
 };
 
 template <>
+struct convert<arelto::ExpGemRarityConfig> {
+  static Node encode(const arelto::ExpGemRarityConfig& rhs) {
+    Node node;
+    node["exp_value"] = rhs.exp_value;
+    node["width"] = rhs.width;
+    node["height"] = rhs.height;
+    return node;
+  }
+
+  static bool decode(const Node& node, arelto::ExpGemRarityConfig& rhs) {
+    if (!node.IsMap()) {
+      return false;
+    }
+
+    constexpr const char* kOwner = "entity.exp_gem.rarity";
+
+    DecodeMember(node, "exp_value", rhs, &arelto::ExpGemRarityConfig::exp_value,
+                 kOwner);
+    DecodeMember(node, "width", rhs, &arelto::ExpGemRarityConfig::width,
+                 kOwner);
+    DecodeMember(node, "height", rhs, &arelto::ExpGemRarityConfig::height,
+                 kOwner);
+    return true;
+  }
+};
+
+template <>
+struct convert<arelto::ExpGemConfig> {
+  static Node encode(const arelto::ExpGemConfig& rhs) {
+    Node node;
+    node["inv_mass"] = rhs.inv_mass;
+    node["rarities"]["common"] = rhs.rarities[arelto::Rarity::common];
+    node["rarities"]["rare"] = rhs.rarities[arelto::Rarity::rare];
+    node["rarities"]["epic"] = rhs.rarities[arelto::Rarity::epic];
+    node["rarities"]["legendary"] = rhs.rarities[arelto::Rarity::legendary];
+    return node;
+  }
+
+  static bool decode(const Node& node, arelto::ExpGemConfig& rhs) {
+    if (!node.IsMap()) {
+      return false;
+    }
+
+    constexpr const char* kOwner = "entity.exp_gem";
+
+    DecodeMember(node, "inv_mass", rhs, &arelto::ExpGemConfig::inv_mass,
+                 kOwner);
+
+    const Node rarities = node["rarities"];
+    if (!rarities) {
+      return true;
+    }
+    if (!rarities.IsMap()) {
+      return false;
+    }
+
+    return DecodeRarity(rarities, "common", arelto::Rarity::common, rhs) &&
+           DecodeRarity(rarities, "rare", arelto::Rarity::rare, rhs) &&
+           DecodeRarity(rarities, "epic", arelto::Rarity::epic, rhs) &&
+           DecodeRarity(rarities, "legendary", arelto::Rarity::legendary, rhs);
+  }
+
+ private:
+  static bool DecodeRarity(const Node& rarities, const char* key,
+                           arelto::Rarity rarity, arelto::ExpGemConfig& rhs) {
+    const Node rarity_node = rarities[key];
+    if (!rarity_node) {
+      return true;
+    }
+    return convert<arelto::ExpGemRarityConfig>::decode(rarity_node,
+                                                       rhs.rarities[rarity]);
+  }
+};
+
+template <>
 struct convert<arelto::EntityConfig> {
   static Node encode(const arelto::EntityConfig& rhs) {
     Node node;
     node["player"] = rhs.player;
     node["enemy"] = rhs.enemy;
+    node["exp_gem"] = rhs.exp_gem;
     return node;
   }
 
@@ -106,6 +182,7 @@ struct convert<arelto::EntityConfig> {
 
     DecodeMember(node, "player", rhs, &arelto::EntityConfig::player, kOwner);
     DecodeMember(node, "enemy", rhs, &arelto::EntityConfig::enemy, kOwner);
+    DecodeMember(node, "exp_gem", rhs, &arelto::EntityConfig::exp_gem, kOwner);
     return true;
   }
 };

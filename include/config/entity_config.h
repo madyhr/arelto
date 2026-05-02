@@ -51,10 +51,19 @@ struct ExpGemConfig {
       MakeDefaultExpGemRarities();
 };
 
+struct ChestConfig {
+  float spawn_chance = 0.99f;
+  float gem_min_separation = 50.0f;
+  uint32_t width = 70;
+  uint32_t height = 55;
+  float inv_mass = 1.0f;
+};
+
 struct EntityConfig {
   PlayerConfig player;
   EnemyConfig enemy;
   ExpGemConfig exp_gem;
+  ChestConfig chest;
 };
 
 EntityConfig MakeDefaultEntityConfig();

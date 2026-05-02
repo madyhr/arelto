@@ -164,12 +164,44 @@ struct convert<arelto::ExpGemConfig> {
 };
 
 template <>
+struct convert<arelto::ChestConfig> {
+  static Node encode(const arelto::ChestConfig& rhs) {
+    Node node;
+    node["spawn_chance"] = rhs.spawn_chance;
+    node["gem_min_separation"] = rhs.gem_min_separation;
+    node["width"] = rhs.width;
+    node["height"] = rhs.height;
+    node["inv_mass"] = rhs.inv_mass;
+    return node;
+  }
+
+  static bool decode(const Node& node, arelto::ChestConfig& rhs) {
+    if (!node.IsMap()) {
+      return false;
+    }
+
+    constexpr const char* kOwner = "entity.chest";
+
+    DecodeMember(node, "spawn_chance", rhs,
+                 &arelto::ChestConfig::spawn_chance, kOwner);
+    DecodeMember(node, "gem_min_separation", rhs,
+                 &arelto::ChestConfig::gem_min_separation, kOwner);
+    DecodeMember(node, "width", rhs, &arelto::ChestConfig::width, kOwner);
+    DecodeMember(node, "height", rhs, &arelto::ChestConfig::height, kOwner);
+    DecodeMember(node, "inv_mass", rhs, &arelto::ChestConfig::inv_mass,
+                 kOwner);
+    return true;
+  }
+};
+
+template <>
 struct convert<arelto::EntityConfig> {
   static Node encode(const arelto::EntityConfig& rhs) {
     Node node;
     node["player"] = rhs.player;
     node["enemy"] = rhs.enemy;
     node["exp_gem"] = rhs.exp_gem;
+    node["chest"] = rhs.chest;
     return node;
   }
 
@@ -183,6 +215,7 @@ struct convert<arelto::EntityConfig> {
     DecodeMember(node, "player", rhs, &arelto::EntityConfig::player, kOwner);
     DecodeMember(node, "enemy", rhs, &arelto::EntityConfig::enemy, kOwner);
     DecodeMember(node, "exp_gem", rhs, &arelto::EntityConfig::exp_gem, kOwner);
+    DecodeMember(node, "chest", rhs, &arelto::EntityConfig::chest, kOwner);
     return true;
   }
 };

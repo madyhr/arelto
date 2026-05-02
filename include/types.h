@@ -6,6 +6,7 @@
 #include <numbers>
 #include <vector>
 #include "constants/map.h"
+#include "constants/render.h"
 #include "utils.h"
 
 namespace arelto {
@@ -189,6 +190,15 @@ struct Collider {
   Vector2D offset;
   Size2D size;
 };
+
+// Creates a centered collider from the given size that uses the
+// game-wide collider margin for more satisfying collision detection.
+inline Collider CreateCenteredCollider(Size2D size) {
+  return Collider{{0.5f * static_cast<float>(size.width),
+                   0.5f * static_cast<float>(size.height)},
+                  {size.width - kSpriteColliderMargin,
+                   size.height - kSpriteColliderMargin}};
+}
 
 enum class ModifierType { flat = 0, percent_add, percent_mult };
 

@@ -2,7 +2,6 @@
 #ifndef RL2_SCENE_H_
 #define RL2_SCENE_H_
 
-#include <vector>
 #include "config/entity_config.h"
 #include "constants/enemy.h"
 #include "constants/player.h"
@@ -60,8 +59,8 @@ struct Scene {
     std::fill(enemy.movement_speed.begin(), enemy.movement_speed.end(),
               entity_config.enemy.movement_speed);
     std::fill(enemy.collider.begin(), enemy.collider.end(),
-              Collider{{kEnemyColliderOffsetX, kEnemyColliderOffsetY},
-                       {kEnemyColliderWidth, kEnemyColliderHeight}});
+              CreateCenteredCollider(
+                  {entity_config.enemy.width, entity_config.enemy.height}));
     std::fill(enemy.sprite_size.begin(), enemy.sprite_size.end(),
               Size2D{entity_config.enemy.width, entity_config.enemy.height});
     std::fill(enemy.inv_mass.begin(), enemy.inv_mass.end(),

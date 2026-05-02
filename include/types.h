@@ -206,8 +206,7 @@ inline uint32_t ShrinkColliderDimension(uint32_t dimension, uint32_t margin) {
 }
 
 inline Collider CreateCenteredCollider(
-    Size2D size,
-    uint32_t margin = static_cast<uint32_t>(kSpriteColliderMargin)) {
+    Size2D size, uint32_t margin = kSpriteColliderMargin) {
   return Collider{{0.5f * static_cast<float>(size.width),
                    0.5f * static_cast<float>(size.height)},
                   {ShrinkColliderDimension(size.width, margin),

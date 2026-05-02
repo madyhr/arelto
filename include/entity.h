@@ -84,6 +84,8 @@ class Player {
   Collider collider_;
   bool is_invulnerable;
   float invulnerable_timer;
+  float invulnerable_window_s_ = 0.1f;
+  float exp_required_scale_ = 1.1f;
   AABB hitbox_aabb_;
   float last_horizontal_velocity_;
   SpellStats<kNumPlayerSpells> spell_stats_;

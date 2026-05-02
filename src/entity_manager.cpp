@@ -15,6 +15,9 @@ EntityManager::~EntityManager() {}
 void EntityManager::LoadEntityConfig() {
   entity_config_ = MakeDefaultEntityConfig();
   config_manager_.LoadConfigSectionOrDefault(
+      "entity.player", "assets/config/entity/player.yaml",
+      entity_config_.player);
+  config_manager_.LoadConfigSectionOrDefault(
       "entity.enemy", "assets/config/entity/enemy.yaml", entity_config_.enemy);
 }
 

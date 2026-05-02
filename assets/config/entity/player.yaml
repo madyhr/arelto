@@ -1,0 +1,10 @@
+max_health_points: 100
+spawn_x: 5000.0
+spawn_y: 5000.0
+movement_speed: 200.0
+width: 60
+height: 75
+inv_mass: 0.01
+initial_exp_requirement: 10
+exp_required_scale: 1.1
+invulnerable_window_s: 0.1

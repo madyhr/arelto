@@ -3,7 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include "constants/enemy.h"
 #include "entity_manager.h"
 #include "event_manager.h"
 #include "scene.h"

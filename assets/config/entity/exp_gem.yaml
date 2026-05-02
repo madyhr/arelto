@@ -1,0 +1,18 @@
+inv_mass: 1.0
+rarities:
+  common:
+    exp_value: 1
+    width: 25
+    height: 33
+  rare:
+    exp_value: 2
+    width: 30
+    height: 40
+  epic:
+    exp_value: 4
+    width: 35
+    height: 45
+  legendary:
+    exp_value: 8
+    width: 45
+    height: 60

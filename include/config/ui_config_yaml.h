@@ -2,6 +2,7 @@
 #define RL2_CONFIG_UI_CONFIG_YAML_H_
 
 #include <iostream>
+#include "config/config_decoding.h"
 #include "config/ui_config.h"
 #include "ui_config.h"
 #include "yaml-cpp/yaml.h"
@@ -29,46 +30,27 @@ inline void DecodeColorChannel(const YAML::Node& node, const char* key,
   }
 }
 
-template <typename T>
-void DecodeField(const YAML::Node& node, const char* key, T& out,
-                 const char* owner) {
-  const YAML::Node field = node[key];
-  if (!field) {
-    return;
+template <>
+struct FieldDecoder<SDL_Color> {
+  static void Decode(const YAML::Node& node, const char* key, SDL_Color& out,
+                     const char* owner) {
+    const YAML::Node field = node[key];
+    if (!field) {
+      return;
+    }
+
+    if (!field.IsMap()) {
+      std::cerr << "Invalid UI config value for " << owner << "." << key << ": "
+                << "expected map\n";
+      return;
+    }
+
+    DecodeColorChannel(field, "r", out.r, owner);
+    DecodeColorChannel(field, "g", out.g, owner);
+    DecodeColorChannel(field, "b", out.b, owner);
+    DecodeColorChannel(field, "a", out.a, owner);
   }
-
-  try {
-    out = field.as<T>();
-  } catch (const YAML::Exception& e) {
-    std::cerr << "Invalid UI config value for " << owner << "." << key << ": "
-              << e.what() << '\n';
-  }
-}
-
-inline void DecodeField(const YAML::Node& node, const char* key, SDL_Color& out,
-                        const char* owner) {
-  const YAML::Node field = node[key];
-  if (!field) {
-    return;
-  }
-
-  if (!field.IsMap()) {
-    std::cerr << "Invalid UI config value for " << owner << "." << key << ": "
-              << "expected map\n";
-    return;
-  }
-
-  DecodeColorChannel(field, "r", out.r, owner);
-  DecodeColorChannel(field, "g", out.g, owner);
-  DecodeColorChannel(field, "b", out.b, owner);
-  DecodeColorChannel(field, "a", out.a, owner);
-}
-
-template <typename StructType, typename MemberType>
-void DecodeMember(const YAML::Node& node, const char* key, StructType& out,
-                  MemberType StructType::* member, const char* owner) {
-  DecodeField(node, key, out.*member, owner);
-}
+};
 
 }  // namespace arelto::config::detail
 

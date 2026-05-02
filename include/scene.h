@@ -2,9 +2,8 @@
 #ifndef RL2_SCENE_H_
 #define RL2_SCENE_H_
 
-#include <vector>
+#include "config/entity_config.h"
 #include "constants/enemy.h"
-#include "constants/player.h"
 #include "entity.h"
 #include "random.h"
 #include "ray_caster.h"
@@ -29,41 +28,54 @@ struct Scene {
   UpgradeOptions level_up_options;
   UpgradeOptions item_options;
   ItemArchive* item_archive;
-  void Reset() {
+  void Reset(const EntityConfig& entity_config) {
 
     // Player
+    const PlayerConfig& player_config = entity_config.player;
     player.collider_ =
-        Collider{{kPlayerColliderOffsetX, kPlayerColliderOffsetY},
-                 {kPlayerColliderWidth, kPlayerColliderHeight}};
-    player.stats_.sprite_size = Size2D{kPlayerSpriteWidth, kPlayerSpriteHeight};
-    player.stats_.max_health.SetBaseValue(kPlayerInitMaxHealth);
+        CreateCenteredCollider({player_config.width, player_config.height});
+    player.stats_.sprite_size =
+        Size2D{player_config.width, player_config.height};
+    player.stats_.max_health.SetBaseValue(player_config.max_health_points);
     player.stats_.health =
         static_cast<int>(player.stats_.max_health.GetValue());
-    player.stats_.inv_mass.SetBaseValue(kPlayerInvMass);
-    player.stats_.movement_speed.SetBaseValue(kPlayerSpeed);
+    player.stats_.inv_mass.SetBaseValue(player_config.inv_mass);
+    player.stats_.movement_speed.SetBaseValue(player_config.movement_speed);
     player.stats_.level = 0;
     player.stats_.exp_points = 0;
     player.stats_.exp_points_required.SetBaseValue(
-        kPlayerInitialExpRequirement);
+        player_config.initial_exp_requirement);
+    player.exp_required_scale_ = player_config.exp_required_scale;
+    player.invulnerable_window_s_ = player_config.invulnerable_window_s;
+    player.is_invulnerable = false;
+    player.invulnerable_timer = 0.0f;
     player.is_alive_ = true;
-    player.position_ = Vector2D{kPlayerInitX, kPlayerInitY};
+    player.position_ = Vector2D{player_config.spawn_x, player_config.spawn_y};
     player.prev_position_ = player.position_;
     player.last_horizontal_velocity_ = 0.0f;
     player.UpdateAllSpellStats();
 
     // Enemies
+    const EnemyConfig& enemy_config = entity_config.enemy;
     std::fill(enemy.is_alive.begin(), enemy.is_alive.end(), false);
     std::fill(enemy.is_done.begin(), enemy.is_done.end(), false);
+    std::fill(enemy.max_health_points.begin(), enemy.max_health_points.end(),
+              enemy_config.max_health_points);
     std::fill(enemy.movement_speed.begin(), enemy.movement_speed.end(),
-              kEnemySpeed);
+              enemy_config.movement_speed);
     std::fill(enemy.collider.begin(), enemy.collider.end(),
-              Collider{{kEnemyColliderOffsetX, kEnemyColliderOffsetY},
-                       {kEnemyColliderWidth, kEnemyColliderHeight}});
+              CreateCenteredCollider(
+                  {enemy_config.width, entity_config.enemy.height}));
     std::fill(enemy.sprite_size.begin(), enemy.sprite_size.end(),
-              Size2D{kEnemySpriteWidth, kEnemySpriteHeight});
-    std::fill(enemy.inv_mass.begin(), enemy.inv_mass.end(), kEnemyInvMass);
-    std::fill(enemy.attack_cooldown.begin(), enemy.attack_cooldown.end(), 0.0f);
-    std::fill(enemy.attack_damage.begin(), enemy.attack_damage.end(), 1);
+              Size2D{enemy_config.width, entity_config.enemy.height});
+    std::fill(enemy.inv_mass.begin(), enemy.inv_mass.end(),
+              enemy_config.inv_mass);
+    std::fill(enemy.attack_cooldown_s.begin(), enemy.attack_cooldown_s.end(),
+              enemy_config.attack_cooldown_s);
+    std::fill(enemy.attack_cooldown_timer.begin(),
+              enemy.attack_cooldown_timer.end(), 0.0f);
+    std::fill(enemy.attack_damage.begin(), enemy.attack_damage.end(),
+              enemy_config.attack_damage);
     SpawnAllEnemies(enemy, player);
     SetupEnemyRayCasterPattern(enemy.ray_caster);
 

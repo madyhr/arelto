@@ -17,7 +17,7 @@ namespace testing {
 // Create a Scene with predictable initial state
 inline Scene CreateTestScene() {
   Scene scene;
-  scene.Reset();
+  scene.Reset(MakeDefaultEntityConfig());
   return scene;
 }
 

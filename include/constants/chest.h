@@ -2,12 +2,7 @@
 #ifndef RL2_CONSTANTS_CHEST_H_
 #define RL2_CONSTANTS_CHEST_H_
 
-#include "render.h"
-#include "types.h"
-
 namespace arelto {
-
-constexpr float kChestSpawnChance = 0.99f;
 
 constexpr int kChestSpriteSheetCols = 4;
 constexpr int kChestSpriteSheetRows = 3;
@@ -15,21 +10,6 @@ constexpr int kChestNumSpriteCells =
     kChestSpriteSheetCols * kChestSpriteSheetRows;
 constexpr int kChestSpriteCellWidth = 275;
 constexpr int kChestSpriteCellHeight = 200;
-
-constexpr int kChestSpriteWidth = 70;
-constexpr int kChestSpriteHeight = 55;
-constexpr int kChestColliderWidth =
-    kChestSpriteWidth - kSpriteColliderMargin / 2;
-constexpr int kChestColliderHeight =
-    kChestSpriteHeight - kSpriteColliderMargin / 2;
-
-constexpr float kChestInvMass = 1.0f;
-
-constexpr float kGemChestMinSeparation = 50.0f;
-constexpr Size2D kChestSpriteSize = {kChestSpriteWidth, kChestSpriteHeight};
-constexpr Collider kChestCollider = {
-    {0.5f * kChestSpriteWidth, 0.5f * kChestSpriteHeight},
-    {kChestColliderWidth, kChestColliderHeight}};
 
 constexpr int kChestVertices = 6;
 

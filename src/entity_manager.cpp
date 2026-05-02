@@ -1,8 +1,6 @@
 // src/entity_manager.cpp
 #include "entity_manager.h"
-#include "constants/chest.h"
-#include "constants/enemy.h"
-#include "constants/exp_gem.h"
+#include "config/entity_config_yaml.h"  // IWYU pragma: keep
 #include "event_manager.h"
 #include "random.h"
 #include "types.h"
@@ -12,7 +10,22 @@ namespace arelto {
 EntityManager::EntityManager() {}
 EntityManager::~EntityManager() {}
 
+void EntityManager::LoadEntityConfig() {
+  entity_config_ = MakeDefaultEntityConfig();
+  config_manager_.LoadConfigSectionOrDefault("entity.player",
+                                             "assets/config/entity/player.yaml",
+                                             entity_config_.player);
+  config_manager_.LoadConfigSectionOrDefault(
+      "entity.enemy", "assets/config/entity/enemy.yaml", entity_config_.enemy);
+  config_manager_.LoadConfigSectionOrDefault(
+      "entity.exp_gem", "assets/config/entity/exp_gem.yaml",
+      entity_config_.exp_gem);
+  config_manager_.LoadConfigSectionOrDefault(
+      "entity.chest", "assets/config/entity/chest.yaml", entity_config_.chest);
+}
+
 void EntityManager::Initialize(EventManager& event_manager) {
+  LoadEntityConfig();
   event_manager_ = &event_manager;
 
   event_manager.Subscribe<EnemyKilledEvent>(
@@ -66,22 +79,29 @@ void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
                   context.scene.enemy.collider[event.enemy_idx].size);
 
   float chest_roll = static_cast<float>(GenerateRandomInt(0, 99)) / 100.0f;
-  bool chest_will_spawn = chest_roll < kChestSpawnChance;
+  bool chest_will_spawn = chest_roll < entity_config_.chest.spawn_chance;
 
-  float spawn_offset = chest_will_spawn ? kGemChestMinSeparation * 0.5f : 0.0f;
+  float spawn_offset =
+      chest_will_spawn ? entity_config_.chest.gem_min_separation * 0.5f : 0.0f;
   Vector2D gem_position = {centroid.x - spawn_offset, centroid.y};
 
   Rarity random_rarity = static_cast<Rarity>(GenerateRandomInt(0, 3));
+  const ExpGemRarityConfig& gem_config =
+      entity_config_.exp_gem.rarities[random_rarity];
+  const Size2D gem_sprite_size = {gem_config.width, gem_config.height};
   pending_exp_gem_spawns_.push_back({random_rarity, gem_position, gem_position,
-                                     kExpGemCollider[random_rarity],
-                                     kExpGemInvMass,
-                                     kExpGemSpriteSize[random_rarity]});
+                                     CreateCenteredCollider(gem_sprite_size),
+                                     entity_config_.exp_gem.inv_mass,
+                                     gem_sprite_size});
 
   if (chest_will_spawn) {
     Vector2D chest_position = {centroid.x + spawn_offset, centroid.y};
+    const Size2D chest_sprite_size = {entity_config_.chest.width,
+                                      entity_config_.chest.height};
     pending_chest_spawns_.push_back({chest_position, chest_position,
-                                     kChestCollider, kChestInvMass,
-                                     kChestSpriteSize});
+                                     CreateCenteredCollider(chest_sprite_size),
+                                     entity_config_.chest.inv_mass,
+                                     chest_sprite_size});
   }
 
   pending_enemy_respawns_.push_back(event.enemy_idx);
@@ -89,7 +109,8 @@ void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
 
 void EntityManager::OnPlayerExpGemCollision(
     const PlayerExpGemCollisionEvent& event, EventContext& context) {
-  int exp_value = kExpGemValues[context.scene.exp_gem.rarity_[event.gem_idx]];
+  const Rarity rarity = context.scene.exp_gem.rarity_[event.gem_idx];
+  int exp_value = entity_config_.exp_gem.rarities[rarity].exp_value;
   context.scene.player.stats_.exp_points += exp_value;
   context.scene.exp_gem.to_be_destroyed_.insert(event.gem_idx);
   event_manager_->Emit(ExpGemCollectedEvent{event.gem_idx, exp_value});
@@ -118,10 +139,11 @@ void EntityManager::OnPlayerDamaged(const PlayerDamagedEvent& event,
 void EntityManager::OnPlayerEnemyCollision(
     const PlayerEnemyCollisionEvent& event, EventContext& context) {
   int idx = event.enemy_idx;
-  if (context.scene.enemy.attack_cooldown[idx] < 0.0f) {
+  if (context.scene.enemy.attack_cooldown_timer[idx] < 0.0f) {
     int attack_damage = context.scene.enemy.attack_damage[idx];
     context.scene.enemy.damage_dealt_sim_step[idx] += attack_damage;
-    context.scene.enemy.attack_cooldown[idx] = kEnemyAttackCooldown;
+    context.scene.enemy.attack_cooldown_timer[idx] =
+        context.scene.enemy.attack_cooldown_s[idx];
     event_manager_->Emit(PlayerDamagedEvent{idx, attack_damage});
   }
 }

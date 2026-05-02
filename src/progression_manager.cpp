@@ -135,7 +135,7 @@ void ProgressionManager::ApplyLevelUpUpgrade(Scene& scene, int option_index) {
       scene.player.stats_.exp_points_required.GetValueCeil();
   scene.player.stats_.exp_points_required.SetBaseValue(
       scene.player.stats_.exp_points_required.GetValue() *
-      kPlayerExpRequiredScale);
+      scene.player.exp_required_scale_);
 }
 
 bool ProgressionManager::ApplyUpgrade(Player& player,

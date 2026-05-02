@@ -107,12 +107,13 @@ TEST_F(PhysicsManagerTest, StepPhysics_EnemyVelocityNormalized) {
 
 TEST_F(PhysicsManagerTest, StepPhysics_EnemyAttackCooldownDecreases) {
   scene_.enemy.is_alive[0] = true;
-  scene_.enemy.attack_cooldown[0] = 1.0f;
+  scene_.enemy.attack_cooldown_s[0] = 1.0f;
+  scene_.enemy.attack_cooldown_timer[0] = 1.0f;
 
   physics_manager_.StepPhysics(scene_, event_manager_);
 
   // Cooldown should have decreased
-  EXPECT_LT(scene_.enemy.attack_cooldown[0], 1.0f);
+  EXPECT_LT(scene_.enemy.attack_cooldown_timer[0], 1.0f);
 }
 
 TEST_F(PhysicsManagerTest, StepPhysics_EnemyDamageDealtResets) {
@@ -246,7 +247,8 @@ TEST_F(PhysicsManagerTest, StepPhysics_EmitsEventsIntoQueue_ReadyForDispatch) {
   physics_manager_.StepPhysics(scene_, event_manager_);
 
   // Events are in the queue so calling Dispatch should fire the handler
-  EventContext event_context = testing::MakeEventContext(scene_, event_manager_);
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
   event_manager_.Dispatch(event_context);
   EXPECT_TRUE(handler_called);
 }
@@ -264,7 +266,8 @@ TEST_F(PhysicsManagerTest, EventManager_FlushClearsStaleEventsBeforeNewStep) {
   scene_.player.position_ = {100.0f, 100.0f};
   scene_.enemy.position[0] = {100.0f, 100.0f};
   scene_.enemy.is_alive[0] = true;
-  scene_.enemy.attack_cooldown[0] = -1.0f;
+  scene_.enemy.attack_cooldown_s[0] = 1.0f;
+  scene_.enemy.attack_cooldown_timer[0] = -1.0f;
 
   physics_manager_.StepPhysics(scene_, event_manager_);
 

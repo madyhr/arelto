@@ -1,0 +1,5 @@
+spawn_chance: 0.99
+gem_min_separation: 50.0
+width: 70
+height: 55
+inv_mass: 1.0

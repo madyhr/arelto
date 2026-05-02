@@ -56,6 +56,16 @@ class ConfigManager {
     return value;
   }
 
+  template <typename T>
+  void LoadConfigSectionOrDefault(const std::string& config_key,
+                                  const std::string& config_path,
+                                  T& config_section) {
+    if (!LoadFile(config_key, config_path)) {
+      return;
+    }
+    config_section = GetStruct<T>(config_key, "", config_section);
+  }
+
  private:
   std::unordered_map<std::string, YAML::Node> configs_;
 

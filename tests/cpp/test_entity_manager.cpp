@@ -3,7 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include "constants/enemy.h"
 #include "entity_manager.h"
 #include "event_manager.h"
 #include "scene.h"
@@ -120,14 +119,16 @@ TEST_F(EntityManagerTest,
 
   // Emit the kill event and dispatch it so OnEnemyKilled queues the respawn
   event_manager_.Emit(EnemyKilledEvent{enemy_idx});
-  EventContext event_context = testing::MakeEventContext(scene_, event_manager_);
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
   event_manager_.Dispatch(event_context);
 
   entity_manager_.ProcessPendingSpawns(scene_);
 
   EXPECT_TRUE(scene_.enemy.is_alive[enemy_idx]);
   EXPECT_FALSE(scene_.enemy.is_done[enemy_idx]);
-  EXPECT_EQ(scene_.enemy.health_points[enemy_idx], kEnemyHealth);
+  EXPECT_EQ(scene_.enemy.health_points[enemy_idx],
+            entity_manager_.entity_config_.enemy.max_health_points);
 }
 
 }  // namespace

@@ -38,8 +38,8 @@ AABB GetCollisionAABB(const Vector2D& centroid, const Size2D& size,
 };
 
 void RespawnEnemyAtIndex(Enemy& enemy, const Player& player, int idx) {
-  int max_x = kMapWidth - kEnemySpriteWidth;
-  int max_y = kMapHeight - kEnemySpriteHeight;
+  int max_x = kMapWidth - static_cast<int>(enemy.sprite_size[idx].width);
+  int max_y = kMapHeight - static_cast<int>(enemy.sprite_size[idx].height);
 
   Vector2D potential_pos;
   do {
@@ -51,7 +51,7 @@ void RespawnEnemyAtIndex(Enemy& enemy, const Player& player, int idx) {
   enemy.position[idx] = potential_pos;
   enemy.prev_position[idx] = potential_pos;
   enemy.prev_velocity[idx] = {0.0f, 0.0f};
-  enemy.health_points[idx] = kEnemyHealth;
+  enemy.health_points[idx] = enemy.max_health_points[idx];
   enemy.damage_dealt_sim_step[idx] = 0;
   enemy.is_alive[idx] = true;
   enemy.is_done[idx] = false;

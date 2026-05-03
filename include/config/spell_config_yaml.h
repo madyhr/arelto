@@ -18,7 +18,6 @@ struct convert<arelto::SpellConfig> {
     node["speed"] = rhs.speed;
     node["damage"] = rhs.damage;
     node["cooldown"] = rhs.cooldown;
-    node["texture_path"] = rhs.texture_path;
     return node;
   }
 
@@ -41,9 +40,7 @@ struct convert<arelto::SpellConfig> {
                  &arelto::SpellConfig::sprite_cell_height, kOwner);
     DecodeMember(node, "speed", rhs, &arelto::SpellConfig::speed, kOwner);
     DecodeMember(node, "damage", rhs, &arelto::SpellConfig::damage, kOwner);
-    DecodeMember(node, "cooldown", rhs, &arelto::SpellConfig::cooldown, kOwner);
-    DecodeMember(node, "texture_path", rhs, &arelto::SpellConfig::texture_path,
-                 kOwner);
+   DecodeMember(node, "cooldown", rhs, &arelto::SpellConfig::cooldown, kOwner);
 
     rhs.collider = CreateCenteredCollider({rhs.width, rhs.height});
 

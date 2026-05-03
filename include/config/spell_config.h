@@ -16,7 +16,6 @@ struct SpellConfig {
   float speed = 500.0f;
   int damage = 5;
   float cooldown = 1.0f;
-  std::string texture_path;
   Collider collider;
 };
 

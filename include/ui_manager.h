@@ -10,38 +10,15 @@
 #include "config/ui_config.h"
 #include "event_manager.h"
 #include "items.h"
+#include "render_resources.h"
 #include "ui/widget.h"
 #include "upgrades.h"
 
 namespace arelto {
 
-struct UIResources {
-  SDL_Texture* digit_font_texture = nullptr;
-  SDL_Texture* health_bar_texture = nullptr;
-  SDL_Texture* exp_bar_texture = nullptr;
-  SDL_Texture* level_indicator_texture = nullptr;
-  SDL_Texture* timer_hourglass_texture = nullptr;
-  SDL_Texture* game_over_texture = nullptr;
-  SDL_Texture* start_screen_texture = nullptr;
-  TTF_Font* ui_font_small = nullptr;
-  TTF_Font* ui_font_medium = nullptr;
-  TTF_Font* ui_font_large = nullptr;
-  TTF_Font* ui_font_huge = nullptr;
-  SDL_Texture* level_up_option_card_texture = nullptr;
-  SDL_Texture* button_texture = nullptr;
-  SDL_Texture* begin_button_texture = nullptr;
-  SDL_Texture* settings_menu_background_texture = nullptr;
-  SDL_Texture* slider_texture = nullptr;
-  SDL_Texture* checkbox_texture = nullptr;
-  SDL_Texture* checkmark_texture = nullptr;
-  SDL_Texture* chest_texture = nullptr;
-  std::vector<SDL_Texture*> projectile_textures;
-  std::vector<SDL_Texture*> item_textures;
-};
-
 class UIManager {
  public:
-  void SetupUI(const UIResources& resources, const UIConfig& config,
+  void SetupUI(const RenderResources& resources, const UIConfig& config,
                EventManager& event_manager);
   void UpdateSettingsMenu(float volume, bool is_muted,
                           const GameStatus& game_status);
@@ -76,7 +53,7 @@ class UIManager {
 
  private:
   std::shared_ptr<UIWidget> root_widget_;
-  const UIResources* resources_ = nullptr;
+  const RenderResources* resources_ = nullptr;
   UIConfig ui_config_ = MakeDefaultUIConfig();
 
   void BuildHUD();

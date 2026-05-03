@@ -1,4 +1,4 @@
-- name: "Fireball"
+- name: "fireball"
   width: 60
   height: 60
   sprite_cell_width: 60
@@ -6,8 +6,7 @@
   speed: 500.0
   damage: 5
   cooldown: 1.0
-  texture_path: "assets/textures/fireball_sprite_sheet.png"
-- name: "Frostbolt"
+- name: "frostbolt"
   width: 100
   height: 100
   sprite_cell_width: 60
@@ -15,4 +14,3 @@
   speed: 250.0
   damage: 10
   cooldown: 2.0
-  texture_path: "assets/textures/frostbolt_sprite_sheet.png"

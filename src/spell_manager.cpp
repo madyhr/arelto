@@ -23,7 +23,7 @@ void SpellManager::Initialize() {
   }
 
   spells_.clear();
-  texture_paths_.clear();
+  texture_ids_.clear();
 
   for (size_t i = 0; i < node.size(); ++i) {
     SpellConfig cfg;
@@ -41,7 +41,7 @@ void SpellManager::Initialize() {
     spell->SetSpriteCellSize({cfg.sprite_cell_width, cfg.sprite_cell_height});
     spell->SetCollider(cfg.collider);
     spells_.push_back(std::move(spell));
-    texture_paths_.push_back(cfg.texture_path);
+    texture_ids_.push_back(cfg.name);
   }
 }
 
@@ -68,8 +68,13 @@ size_t SpellManager::GetSpellCount() const {
   return spells_.size();
 }
 
-std::vector<std::string> SpellManager::GetTexturePaths() const {
-  return texture_paths_;
+SpellTextureMapping SpellManager::GetSpellTextureMapping() const {
+  SpellTextureMapping mapping;
+  mapping.reserve(texture_ids_.size());
+  for (size_t i = 0; i < texture_ids_.size(); ++i) {
+    mapping.emplace_back(static_cast<SpellId>(i), texture_ids_[i]);
+  }
+  return mapping;
 }
 
 std::vector<std::string> SpellManager::GetSpellNames() const {

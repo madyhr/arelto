@@ -1,7 +1,6 @@
 // include/abilities.h
 #ifndef RL2_ABILITIES_H_
 #define RL2_ABILITIES_H_
-#include <SDL2/SDL_render.h>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -11,6 +10,7 @@
 namespace arelto {
 
 using SpellId = int;
+using SpellTextureMapping = std::vector<std::pair<SpellId, std::string>>;
 
 class BaseSpell {
  private:

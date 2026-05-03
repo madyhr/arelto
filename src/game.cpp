@@ -4,8 +4,6 @@
 #include <SDL_keycode.h>
 #include <SDL_mixer.h>
 #include <SDL_mouse.h>
-#include <SDL_render.h>
-#include <SDL_surface.h>
 #include <algorithm>
 #include <csignal>
 #include <cstdio>
@@ -62,7 +60,7 @@ bool Game::Initialize() {
   // ensure that all other handlers are called before the UI handlers are
   // dispatched to update the UI. This ensure that the UI is always up to date.
   if (!(render_manager_.Initialize(game_status_.is_headless, event_manager_,
-                                   spell_manager_.GetTexturePaths()))) {
+                                   spell_manager_.GetSpellTextureMapping()))) {
     return false;
   }
 

@@ -10,6 +10,7 @@ namespace arelto {
 
 class SpellManager {
  public:
+  using SpellList = std::vector<std::unique_ptr<BaseProjectileSpell>>;
   SpellManager();
   ~SpellManager();
 
@@ -17,14 +18,14 @@ class SpellManager {
 
   BaseProjectileSpell* GetSpell(SpellId id);
   const BaseProjectileSpell* GetSpell(SpellId id) const;
-  const std::vector<std::unique_ptr<BaseProjectileSpell>>& GetAllSpells() const;
+  const SpellList& GetAllSpells() const;
   size_t GetSpellCount() const;
-  std::vector<std::string> GetTexturePaths() const;
   std::vector<std::string> GetSpellNames() const;
+  SpellTextureMapping GetSpellTextureMapping() const;
 
  private:
-  std::vector<std::unique_ptr<BaseProjectileSpell>> spells_;
-  std::vector<std::string> texture_paths_;
+  SpellList spells_;
+  std::vector<std::string> texture_ids_;
 };
 
 }  // namespace arelto

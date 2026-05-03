@@ -8,11 +8,11 @@
 #include <utility>
 #include <vector>
 
-#include "abilities.h"
 #include "constants/chest.h"
 #include "entity_manager.h"
 #include "event_manager.h"
 #include "items.h"
+#include "render_resources.h"
 #include "scene.h"
 #include "test_helpers.h"
 #include "ui/containers.h"
@@ -107,7 +107,7 @@ class UIManagerTest : public ::testing::Test {
     return testing::MakeEventContext(scene_, event_manager_);
   }
 
-  UIResources resources_;
+  RenderResources resources_;
   UIConfig config_ = MakeDefaultUIConfig();
   UIManager ui_manager_;
   EventManager event_manager_;
@@ -547,7 +547,7 @@ TEST_F(UIManagerTest, BuildLevelUpMenu_ReplacesExistingMenu) {
 
 TEST_F(UIManagerTest,
        BuildLevelUpMenu_RendersNameDescriptionStatsAndSelectButton) {
-  resources_.projectile_textures.resize(2, reinterpret_cast<SDL_Texture*>(0x1));
+  resources_.projectiles.resize(2, reinterpret_cast<SDL_Texture*>(0x1));
   ui_manager_.BuildLevelUpMenu(MakeSingleSpellUpgradeOption());
 
   auto* level_up_menu = ui_manager_.GetLevelUpRoot();
@@ -651,7 +651,7 @@ class UIManagerEntityManagerIntegrationTest : public ::testing::Test {
     return testing::MakeEventContext(scene_, event_manager_);
   }
 
-  UIResources resources_;
+  RenderResources resources_;
   UIConfig config_ = MakeDefaultUIConfig();
   UIManager ui_manager_;
   EntityManager entity_manager_;

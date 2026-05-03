@@ -36,4 +36,23 @@ void FrameStats::print_fps_running_average(float dt) {
   accumulated_time += dt;
 };
 
+std::string ToTitleCase(std::string text) {
+  bool capitalize_next = true;
+
+  for (char& c : text) {
+    unsigned char uc = static_cast<unsigned char>(c);
+
+    if (std::isspace(uc)) {
+      capitalize_next = true;
+    } else if (capitalize_next) {
+      c = static_cast<char>(std::toupper(uc));
+      capitalize_next = false;
+    } else {
+      c = static_cast<char>(std::tolower(uc));
+    }
+  }
+
+  return text;
+}
+
 }  // namespace arelto

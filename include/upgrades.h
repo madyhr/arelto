@@ -10,6 +10,7 @@
 #include "abilities.h"
 #include "entity.h"
 #include "types.h"
+#include "utils.h"
 
 namespace arelto {
 
@@ -36,10 +37,10 @@ using UpgradeOptions = std::vector<std::unique_ptr<Upgrade>>;
 class SpellStatUpgrade : public Upgrade {
  public:
   SpellStatUpgrade(SpellId spell_id, std::string spell_name,
-                    SpellUpgradeType type, ValueRange value_range,
-                    Size2D sprite_size = {})
+                   SpellUpgradeType type, ValueRange value_range,
+                   Size2D sprite_size = {})
       : spell_id_(spell_id),
-        spell_name_(std::move(spell_name)),
+        spell_name_(ToTitleCase(std::move(spell_name))),
         type_(type),
         current_value_(value_range.current),
         updated_value_(value_range.updated),

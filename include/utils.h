@@ -3,6 +3,7 @@
 #define RL2_UTILS_H_
 
 #include <array>
+#include <string>
 #include "constants/game.h"
 
 namespace arelto {
@@ -19,6 +20,7 @@ class FrameStats {
   void print_fps_running_average(float dt);
 };
 
+std::string ToTitleCase(std::string text);
 }  // namespace arelto
 
 #endif

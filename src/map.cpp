@@ -1,22 +1,10 @@
 // src/map.cpp
 #include "map.h"
-#include <SDL2/SDL.h>
-#include <SDL_render.h>
-#include <SDL_surface.h>
 #include <math.h>
 #include "constants/map.h"
 #include "random.h"
 
 namespace arelto {
-
-SDL_Texture* TileManager::GetTileTexture(const char* file,
-                                         SDL_Renderer* renderer) {
-  SDL_Surface* tile_map_surface = SDL_LoadBMP(file);
-  SDL_Texture* tile_texture =
-      SDL_CreateTextureFromSurface(renderer, tile_map_surface);
-  SDL_FreeSurface(tile_map_surface);
-  return tile_texture;
-};
 
 void TileManager::SetupTileMap() {
   for (int i = 0; i < kNumTilesX; ++i) {

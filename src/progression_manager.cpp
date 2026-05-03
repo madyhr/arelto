@@ -33,7 +33,12 @@ void ProgressionManager::GenerateItemOptions(Scene& scene) {
 
 std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
     const Player& player) {
-  SpellId spell_id = static_cast<SpellId>(std::rand() % kNumPlayerSpells);
+  size_t spell_count = player.spell_stats_.damage.size();
+  if (spell_count == 0) {
+    return nullptr;
+  }
+
+  SpellId spell_id = static_cast<SpellId>(std::rand() % spell_count);
   SpellUpgradeType type = static_cast<SpellUpgradeType>(
       std::rand() % static_cast<int>(SpellUpgradeType::count));
 
@@ -41,12 +46,14 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
   float new_value = 0.0f;
 
   std::string spell_name = "Unknown Spell";
+  Size2D sprite_size = {};
   const BaseProjectileSpell* spell = player.GetSpell(spell_id);
   if (spell) {
     spell_name = spell->GetName();
+    sprite_size = spell->GetSpriteCellSize();
   }
 
-  const SpellStats<kNumPlayerSpells>& stats = player.spell_stats_;
+  const SpellStats& stats = player.spell_stats_;
 
   switch (type) {
     case SpellUpgradeType::damage:
@@ -72,7 +79,8 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
   }
 
   return std::make_unique<SpellStatUpgrade>(
-      spell_id, spell_name, type, ValueRange{current_value, new_value});
+      spell_id, spell_name, type, ValueRange{current_value, new_value},
+      sprite_size);
 }
 
 namespace {

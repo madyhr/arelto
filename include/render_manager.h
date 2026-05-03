@@ -5,14 +5,16 @@
 #include <SDL2/SDL_ttf.h>
 #include <map>
 #include <string>
+#include <vector>
+#include "abilities.h"
 #include "config/config_manager.h"
 #include "config/ui_config.h"
 #include "constants/enemy.h"
-#include "constants/game.h"
 #include "constants/map.h"
 #include "entity.h"
 #include "event_manager.h"
 #include "map.h"
+#include "render_resources.h"
 #include "scene.h"
 #include "types.h"
 #include "ui/widget.h"
@@ -25,33 +27,14 @@ struct TextLayout {
   int wrap_width;
 };
 
-struct RenderResources {
-  SDL_Window* window = nullptr;
-  SDL_Renderer* renderer = nullptr;
-  SDL_Texture* map_texture = nullptr;
-  SDL_Texture* tile_texture = nullptr;
-  SDL_Texture* player_texture = nullptr;
-  SDL_Texture* enemy_texture = nullptr;
-  SDL_Vertex enemies_vertices_[kTotalEnemyVertices];
-  std::vector<SDL_Texture*> projectile_textures;
-  std::map<int, std::vector<SDL_Vertex>> projectile_vertices_grouped_;
-  std::vector<SDL_Texture*> gem_textures;
-  std::map<int, std::vector<SDL_Vertex>> gem_vertices_grouped_;
-  SDL_Texture* chest_texture = nullptr;
-  std::vector<SDL_Vertex> chest_vertices_;
-  std::vector<SDL_Texture*> item_textures;
-  SDL_Rect map_layout = {0, 0, kWindowWidth, kWindowHeight};
-  TileManager tile_manager;
-  UIResources ui_resources;
-};
-
 class RenderManager {
 
  public:
   RenderManager();
   ~RenderManager();
 
-  bool Initialize(bool is_headless, EventManager& event_manager);
+  bool Initialize(bool is_headless, EventManager& event_manager,
+                  const SpellTextureMapping& spell_texture_mapping);
   void Shutdown();
 
   void Render(const Scene& scene, float alpha, const GameStatus& game_status,
@@ -69,15 +52,32 @@ class RenderManager {
   Camera camera_;
 
  private:
+  // SDL resources
+  SDL_Window* window_ = nullptr;
+  SDL_Renderer* renderer_ = nullptr;
+
   RenderResources resources_;
+
+  TileManager tile_manager_;
   UIManager ui_manager_;
   ConfigManager config_manager_;
   UIConfig ui_config_ = MakeDefaultUIConfig();
 
+  // Per-frame vertex buffers
+  SDL_Vertex enemies_vertices_[kTotalEnemyVertices];
+  std::map<int, std::vector<SDL_Vertex>> projectile_vertices_grouped_;
+  std::map<int, std::vector<SDL_Vertex>> gem_vertices_grouped_;
+  std::vector<SDL_Vertex> chest_vertices_;
+
   Vector2D WorldToScreen(Vector2D world_pos) const;
   void LoadUIConfig();
+  bool LoadTextures(const YAML::Node& manifest,
+                    const SpellTextureMapping& spell_texture_mapping);
+  bool LoadFonts(const YAML::Node& manifest);
+  bool ValidateTextures();
+  SDL_Texture* LoadTexture(const std::string& section, const std::string& key,
+                           const YAML::Node& manifest);
   void SetRenderColor(SDL_Renderer* renderer, const SDL_Color& color);
-  bool InitializeCamera(const Player& player);
   void RenderTiledMap();
   void RenderPlayer(const Player& player, float alpha);
   int SetupEnemyGeometry(const Enemy& enemy, float alpha);

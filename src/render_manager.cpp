@@ -3,11 +3,9 @@
 #include <SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_timer.h>
-#include <SDL_rect.h>
-#include <SDL_render.h>
 #include <algorithm>
 #include <iostream>
-// Required for YAML::convert<> methods used by GetStruct<>.
+#include <map>
 #include "config/ui_config_yaml.h"  // IWYU pragma: keep
 #include "constants/chest.h"
 #include "constants/enemy.h"
@@ -23,14 +21,199 @@
 #include "types.h"
 #include "ui/containers.h"
 #include "ui/widgets.h"
-#include "ui_manager.h"
+#include "yaml-cpp/yaml.h"
 
 namespace arelto {
 
 RenderManager::RenderManager() {};
-RenderManager::~RenderManager() {
-  Shutdown();
-};
+RenderManager::~RenderManager() {};
+
+bool RenderManager::Initialize(
+    bool is_headless, EventManager& event_manager,
+    const SpellTextureMapping& spell_texture_mapping) {
+
+  if (is_headless) {
+    return true;
+  }
+
+  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    std::cerr << "SDL could not initialize! SDL Error: " << SDL_GetError()
+              << '\n';
+    return false;
+  }
+
+  window_ =
+      SDL_CreateWindow("RL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                       kWindowWidth, kWindowHeight, SDL_WINDOW_SHOWN);
+  if (!window_) {
+    std::cerr << "Window could not be created: " << SDL_GetError() << '\n';
+    return false;
+  }
+
+  renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
+  if (!renderer_) {
+    std::cerr << "Renderer could not be created: " << SDL_GetError() << '\n';
+    return false;
+  }
+
+  int img_flags = IMG_INIT_PNG;
+  if (!(IMG_Init(img_flags) & img_flags)) {
+    std::cerr << "SDL Images could not be initialized: " << SDL_GetError()
+              << '\n';
+    return false;
+  }
+
+  if (TTF_Init() == -1) {
+    std::cerr << "SDL_ttf could not be initialized: " << TTF_GetError() << '\n';
+    return false;
+  }
+
+  YAML::Node manifest;
+  try {
+    manifest = YAML::LoadFile("assets/config/textures.yaml");
+  } catch (const YAML::Exception& e) {
+    std::cerr << "Failed to load texture manifest: " << e.what() << '\n';
+    return false;
+  }
+
+  if (!LoadTextures(manifest, spell_texture_mapping))
+    return false;
+
+  if (!LoadFonts(manifest))
+    return false;
+
+  if (!ValidateTextures())
+    return false;
+
+  tile_manager_.SetupTileMap();
+  tile_manager_.SetupTiles();
+  tile_manager_.SetupTileSelector();
+
+  LoadUIConfig();
+
+  ui_manager_.SetupUI(resources_, ui_config_, event_manager);
+
+  return true;
+}
+
+SDL_Texture* RenderManager::LoadTexture(const std::string& section,
+                                        const std::string& key,
+                                        const YAML::Node& manifest) {
+  std::string full_key = section + "." + key;
+  if (!manifest[section] || !manifest[section][key]) {
+    std::cerr << "Missing texture in manifest: " << full_key << '\n';
+    return nullptr;
+  }
+  std::string path = manifest[section][key].as<std::string>();
+  SDL_Texture* tex = IMG_LoadTexture(renderer_, path.c_str());
+  if (!tex) {
+    std::cerr << "Failed to load texture: " << path << '\n';
+    return nullptr;
+  }
+  return tex;
+}
+
+bool RenderManager::LoadTextures(
+    const YAML::Node& manifest,
+    const SpellTextureMapping& spell_texture_mapping) {
+  resources_.tile = LoadTexture("game", "tile", manifest);
+  resources_.player = LoadTexture("game", "player", manifest);
+  resources_.enemy = LoadTexture("game", "enemy", manifest);
+
+  resources_.gems.push_back(LoadTexture("game", "gem_common", manifest));
+  resources_.gems.push_back(LoadTexture("game", "gem_rare", manifest));
+  resources_.gems.push_back(LoadTexture("game", "gem_epic", manifest));
+  resources_.gems.push_back(LoadTexture("game", "gem_legendary", manifest));
+
+  resources_.chest = LoadTexture("game", "chest", manifest);
+
+  resources_.items.push_back(LoadTexture("items", "elia_armor", manifest));
+  resources_.items.push_back(LoadTexture("items", "damodei_claw", manifest));
+
+  resources_.digit_font = LoadTexture("ui", "digit_font", manifest);
+  resources_.level_indicator = LoadTexture("ui", "level_indicator", manifest);
+  resources_.health_bar = LoadTexture("ui", "health_bar", manifest);
+  resources_.exp_bar = LoadTexture("ui", "exp_bar", manifest);
+  resources_.start_screen = LoadTexture("ui", "start_screen", manifest);
+  resources_.game_over = LoadTexture("ui", "game_over", manifest);
+  resources_.level_up_option_card =
+      LoadTexture("ui", "level_up_option", manifest);
+  resources_.button = LoadTexture("ui", "button", manifest);
+  resources_.begin_button = LoadTexture("ui", "begin_button", manifest);
+  resources_.settings_menu_background =
+      LoadTexture("ui", "settings_menu_background", manifest);
+  resources_.slider = LoadTexture("ui", "slider", manifest);
+  resources_.checkbox = LoadTexture("ui", "checkbox", manifest);
+  resources_.checkmark = LoadTexture("ui", "checkmark", manifest);
+  resources_.timer_hourglass = LoadTexture("ui", "hourglass", manifest);
+
+  // Spells stored in `resources_.projectiles` need to be loaded in 2 steps to
+  // correctly map the texture file path to the corresponding spell ID.
+  std::map<std::string, SDL_Texture*> spell_textures;
+  if (manifest["spells"]) {
+    for (auto entry : manifest["spells"]) {
+      SDL_Texture* tex =
+          LoadTexture("spells", entry.first.as<std::string>(), manifest);
+      spell_textures[entry.first.as<std::string>()] = tex;
+    }
+  }
+
+  for (const auto& [spell_id, texture_id] : spell_texture_mapping) {
+    SDL_Texture* tex = spell_textures[texture_id];
+    if (!tex) {
+      std::cerr << "Spell texture not found: " << texture_id << '\n';
+      return false;
+    }
+    resources_.projectiles.push_back(tex);
+  }
+
+  return true;
+}
+
+bool RenderManager::LoadFonts(const YAML::Node& manifest) {
+  if (!manifest["fonts"] || !manifest["fonts"]["november"]) {
+    std::cerr << "Missing font in manifest: fonts.november\n";
+    return false;
+  }
+
+  std::string font_path = manifest["fonts"]["november"].as<std::string>();
+  resources_.font_small =
+      TTF_OpenFont(font_path.c_str(), ui_config_.fonts.font_size_small);
+  resources_.font_medium =
+      TTF_OpenFont(font_path.c_str(), ui_config_.fonts.font_size_medium);
+  resources_.font_large =
+      TTF_OpenFont(font_path.c_str(), ui_config_.fonts.font_size_large);
+  resources_.font_huge =
+      TTF_OpenFont(font_path.c_str(), ui_config_.fonts.font_size_huge);
+
+  if (!resources_.font_small || !resources_.font_medium ||
+      !resources_.font_large || !resources_.font_huge) {
+    std::cerr << "TTF font could not be loaded: " << TTF_GetError() << '\n';
+    return false;
+  }
+
+  return true;
+}
+
+bool RenderManager::ValidateTextures() {
+  if (!resources_.tile || !resources_.player || !resources_.enemy ||
+      !resources_.health_bar || !resources_.level_indicator ||
+      !resources_.exp_bar || !resources_.timer_hourglass ||
+      !resources_.game_over || !resources_.start_screen ||
+      !resources_.level_up_option_card || !resources_.button ||
+      !resources_.begin_button || !resources_.settings_menu_background ||
+      !resources_.slider || !resources_.checkbox || !resources_.checkmark ||
+      !resources_.chest || !resources_.digit_font ||
+      std::any_of(resources_.gems.begin(), resources_.gems.end(),
+                  [](SDL_Texture* t) { return !t; }) ||
+      std::any_of(resources_.items.begin(), resources_.items.end(),
+                  [](SDL_Texture* t) { return !t; })) {
+    std::cerr << "One or more critical textures failed to load: "
+              << SDL_GetError() << '\n';
+    return false;
+  }
+  return true;
+}
 
 void RenderManager::LoadUIConfig() {
   ui_config_ = MakeDefaultUIConfig();
@@ -49,169 +232,94 @@ void RenderManager::LoadUIConfig() {
       "ui.inventory", "assets/config/ui/inventory.yaml", ui_config_.inventory);
 }
 
-bool RenderManager::Initialize(bool is_headless, EventManager& event_manager) {
+void RenderManager::Shutdown() {
+  // Destroy game textures
+  SDL_DestroyTexture(resources_.tile);
+  resources_.tile = nullptr;
+  SDL_DestroyTexture(resources_.player);
+  resources_.player = nullptr;
+  SDL_DestroyTexture(resources_.enemy);
+  resources_.enemy = nullptr;
+  SDL_DestroyTexture(resources_.chest);
+  resources_.chest = nullptr;
 
-  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    std::cerr << "SDL could not initialize! SDL Error: " << SDL_GetError()
-              << '\n';
-    return false;
+  for (auto* tex : resources_.projectiles) {
+    SDL_DestroyTexture(tex);
+  }
+  resources_.projectiles.clear();
+
+  for (auto* tex : resources_.gems) {
+    SDL_DestroyTexture(tex);
+  }
+  resources_.gems.clear();
+
+  for (auto* tex : resources_.items) {
+    SDL_DestroyTexture(tex);
+  }
+  resources_.items.clear();
+
+  // Destroy UI textures
+  SDL_DestroyTexture(resources_.digit_font);
+  resources_.digit_font = nullptr;
+  SDL_DestroyTexture(resources_.health_bar);
+  resources_.health_bar = nullptr;
+  SDL_DestroyTexture(resources_.exp_bar);
+  resources_.exp_bar = nullptr;
+  SDL_DestroyTexture(resources_.level_indicator);
+  resources_.level_indicator = nullptr;
+  SDL_DestroyTexture(resources_.timer_hourglass);
+  resources_.timer_hourglass = nullptr;
+  SDL_DestroyTexture(resources_.game_over);
+  resources_.game_over = nullptr;
+  SDL_DestroyTexture(resources_.start_screen);
+  resources_.start_screen = nullptr;
+  SDL_DestroyTexture(resources_.level_up_option_card);
+  resources_.level_up_option_card = nullptr;
+  SDL_DestroyTexture(resources_.button);
+  resources_.button = nullptr;
+  SDL_DestroyTexture(resources_.begin_button);
+  resources_.begin_button = nullptr;
+  SDL_DestroyTexture(resources_.settings_menu_background);
+  resources_.settings_menu_background = nullptr;
+  SDL_DestroyTexture(resources_.slider);
+  resources_.slider = nullptr;
+  SDL_DestroyTexture(resources_.checkbox);
+  resources_.checkbox = nullptr;
+  SDL_DestroyTexture(resources_.checkmark);
+  resources_.checkmark = nullptr;
+
+  // Destroy fonts
+  if (resources_.font_small) {
+    TTF_CloseFont(resources_.font_small);
+    resources_.font_small = nullptr;
+  }
+  if (resources_.font_medium) {
+    TTF_CloseFont(resources_.font_medium);
+    resources_.font_medium = nullptr;
+  }
+  if (resources_.font_large) {
+    TTF_CloseFont(resources_.font_large);
+    resources_.font_large = nullptr;
+  }
+  if (resources_.font_huge) {
+    TTF_CloseFont(resources_.font_huge);
+    resources_.font_huge = nullptr;
   }
 
-  if (is_headless) {
-    return true;
+  IMG_Quit();
+  TTF_Quit();
+
+  if (renderer_) {
+    SDL_DestroyRenderer(renderer_);
+    renderer_ = nullptr;
+  }
+  if (window_) {
+    SDL_DestroyWindow(window_);
+    window_ = nullptr;
   }
 
-  resources_.window =
-      SDL_CreateWindow("RL2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                       kWindowWidth, kWindowHeight, SDL_WINDOW_SHOWN);
-
-  if (resources_.window == nullptr) {
-    std::cerr << "Window could not be created: " << SDL_GetError() << '\n';
-    return false;
-  }
-
-  resources_.renderer =
-      SDL_CreateRenderer(resources_.window, -1, SDL_RENDERER_ACCELERATED);
-
-  if (resources_.renderer == nullptr) {
-    std::cerr << "Renderer could not be created: " << SDL_GetError() << '\n';
-    return false;
-  }
-
-  int img_flags = IMG_INIT_PNG;
-  if (!(IMG_Init(img_flags) & img_flags)) {
-    std::cerr << "SDL Images could not be initialized: " << SDL_GetError()
-              << '\n';
-    return false;
-  }
-
-  if (TTF_Init() == -1) {
-    std::cerr << "SDL_ttf could not be initialized: " << TTF_GetError() << '\n';
-    return false;
-  }
-
-  LoadUIConfig();
-
-  resources_.tile_manager.SetupTileMap();
-  resources_.tile_manager.SetupTiles();
-  resources_.tile_manager.SetupTileSelector();
-
-  resources_.tile_texture = resources_.tile_manager.GetTileTexture(
-      "assets/dungeon_floor_tiles_tall.bmp", resources_.renderer);
-  resources_.player_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/wizard_sprite_sheet_with_idle.png");
-  resources_.enemy_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/tentacle_being_sprite_sheet.png");
-  resources_.projectile_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/fireball_sprite_sheet.png"));
-  resources_.projectile_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/frostbolt_sprite_sheet.png"));
-  resources_.gem_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/exp_gem_common.png"));
-  resources_.gem_textures.push_back(
-      IMG_LoadTexture(resources_.renderer, "assets/textures/exp_gem_rare.png"));
-  resources_.gem_textures.push_back(
-      IMG_LoadTexture(resources_.renderer, "assets/textures/exp_gem_epic.png"));
-  resources_.gem_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/exp_gem_legendary.png"));
-  resources_.chest_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/chest_sprite_sheet.png");
-  resources_.ui_resources.level_indicator_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/ui/level_indicator.png");
-  resources_.ui_resources.health_bar_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/health_bar.png");
-  resources_.ui_resources.exp_bar_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/exp_bar.png");
-  resources_.ui_resources.start_screen_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/ui/start_screen.png");
-  resources_.ui_resources.game_over_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/game_over.png");
-  resources_.ui_resources.level_up_option_card_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/ui/level_up_option.png");
-  resources_.ui_resources.button_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/ui/button_texture.png");
-  resources_.ui_resources.begin_button_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/ui/begin_button_texture.png");
-  resources_.ui_resources.settings_menu_background_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/ui/settings_menu_background.png");
-  resources_.ui_resources.slider_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/textures/ui/slider_texture.png");
-  resources_.ui_resources.checkbox_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/checkbox.png");
-  resources_.ui_resources.checkmark_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/ui/checkmark.png");
-  resources_.ui_resources.digit_font_texture = IMG_LoadTexture(
-      resources_.renderer, "assets/fonts/font_outlined_sprite_sheet.png");
-  resources_.ui_resources.timer_hourglass_texture =
-      IMG_LoadTexture(resources_.renderer, "assets/textures/hourglass.png");
-  resources_.ui_resources.ui_font_small = TTF_OpenFont(
-      "assets/fonts/november/novem___.ttf", ui_config_.fonts.font_size_small);
-  resources_.ui_resources.ui_font_medium = TTF_OpenFont(
-      "assets/fonts/november/novem___.ttf", ui_config_.fonts.font_size_medium);
-  resources_.ui_resources.ui_font_large = TTF_OpenFont(
-      "assets/fonts/november/novem___.ttf", ui_config_.fonts.font_size_large);
-  resources_.ui_resources.ui_font_huge = TTF_OpenFont(
-      "assets/fonts/november/novem___.ttf", ui_config_.fonts.font_size_huge);
-  resources_.item_textures.push_back(IMG_LoadTexture(
-      resources_.renderer, "assets/textures/elia_skewersafe_armorplate.png"));
-  resources_.item_textures.push_back(
-      IMG_LoadTexture(resources_.renderer, "assets/textures/damodei_claw.png"));
-
-  if (resources_.ui_resources.ui_font_small == nullptr ||
-      resources_.ui_resources.ui_font_medium == nullptr ||
-      resources_.ui_resources.ui_font_large == nullptr ||
-      resources_.ui_resources.ui_font_huge == nullptr) {
-    std::cerr << "TTF font could not be loaded: " << TTF_GetError() << '\n';
-    return false;
-  }
-
-  if (resources_.tile_texture == nullptr ||
-      resources_.player_texture == nullptr ||
-      resources_.enemy_texture == nullptr ||
-      resources_.ui_resources.health_bar_texture == nullptr ||
-      resources_.ui_resources.level_indicator_texture == nullptr ||
-      resources_.ui_resources.exp_bar_texture == nullptr ||
-      resources_.ui_resources.timer_hourglass_texture == nullptr ||
-      resources_.ui_resources.game_over_texture == nullptr ||
-      resources_.ui_resources.start_screen_texture == nullptr ||
-      resources_.ui_resources.level_up_option_card_texture == nullptr ||
-      resources_.ui_resources.button_texture == nullptr ||
-      resources_.ui_resources.begin_button_texture == nullptr ||
-      resources_.ui_resources.settings_menu_background_texture == nullptr ||
-      resources_.ui_resources.slider_texture == nullptr ||
-      resources_.ui_resources.checkbox_texture == nullptr ||
-      resources_.ui_resources.checkmark_texture == nullptr ||
-      std::any_of(
-          resources_.projectile_textures.begin(),
-          resources_.projectile_textures.end(),
-          [](SDL_Texture* sdl_texture) { return sdl_texture == nullptr; }) ||
-      std::any_of(
-          resources_.item_textures.begin(), resources_.item_textures.end(),
-          [](SDL_Texture* sdl_texture) { return sdl_texture == nullptr; })) {
-    std::cerr << "One or more textures could not be loaded: " << SDL_GetError()
-              << '\n';
-    return false;
-  }
-
-  // Copy projectile textures into UI resources for level-up card icons
-  resources_.ui_resources.projectile_textures = resources_.projectile_textures;
-  resources_.ui_resources.item_textures = resources_.item_textures;
-  resources_.ui_resources.chest_texture = resources_.chest_texture;
-
-  ui_manager_.SetupUI(resources_.ui_resources, ui_config_, event_manager);
-
-  resources_.map_layout = {0, 0, kMapWidth, kMapHeight};
-
-  return true;
-};
-
-bool RenderManager::InitializeCamera(const Player& player) {
-  Vector2D player_centroid =
-      GetCentroid(player.position_, player.stats_.sprite_size);
-  camera_.UpdatePosition(player_centroid);
-
-  return true;
-};
+  SDL_Quit();
+}
 
 void RenderManager::SetRenderColor(SDL_Renderer* renderer,
                                    const SDL_Color& color) {
@@ -222,8 +330,8 @@ void RenderManager::Render(const Scene& scene, float alpha,
                            const GameStatus& game_status, float time,
                            GameState game_state) {
 
-  SetRenderColor(resources_.renderer, kColorBlack);
-  SDL_RenderClear(resources_.renderer);
+  SetRenderColor(renderer_, kColorBlack);
+  SDL_RenderClear(renderer_);
 
   if (game_state == in_start_screen) {
     ui_manager_.UpdateStartScreen();
@@ -287,12 +395,13 @@ void RenderManager::Render(const Scene& scene, float alpha,
     };
   }
 
-  SDL_RenderPresent(resources_.renderer);
+  SDL_RenderPresent(renderer_);
 };
 
 Vector2D RenderManager::WorldToScreen(Vector2D world_pos) const {
-  // Rounding is added to ensure that textures that use UV coordinates for rendering
-  // from a sprite sheet, the sprite does not flicker due to sub-pixel rendering.
+  // Rounding is added to ensure that for textures that use UV coordinates for
+  // rendering from a sprite sheet, the sprite does not flicker due to sub-pixel
+  // rendering.
   return Round(world_pos - camera_.render_position_);
 }
 
@@ -313,14 +422,12 @@ void RenderManager::RenderTiledMap() {
 
   for (int i = start_x; i < end_x; ++i) {
     for (int j = start_y; j < end_y; ++j) {
-      SDL_Rect render_rect = resources_.tile_manager.tiles_[i][j];
+      SDL_Rect render_rect = tile_manager_.tiles_[i][j];
       render_rect.x -= static_cast<int>(camera_.render_position_.x);
       render_rect.y -= static_cast<int>(camera_.render_position_.y);
-      int tile_id = resources_.tile_manager.tile_map_[i][j];
-      const SDL_Rect& source_rect =
-          resources_.tile_manager.select_tiles_[tile_id];
-      SDL_RenderCopy(resources_.renderer, resources_.tile_texture, &source_rect,
-                     &render_rect);
+      int tile_id = tile_manager_.tile_map_[i][j];
+      const SDL_Rect& source_rect = tile_manager_.select_tiles_[tile_id];
+      SDL_RenderCopy(renderer_, resources_.tile, &source_rect, &render_rect);
     }
   }
 };
@@ -344,8 +451,7 @@ void RenderManager::RenderPlayer(const Player& player, float alpha) {
   int src_y = is_standing_still ? 0 : kPlayerSpriteCellHeight;
 
   int texture_w, texture_h;
-  SDL_QueryTexture(resources_.player_texture, nullptr, nullptr, &texture_w,
-                   &texture_h);
+  SDL_QueryTexture(resources_.player, nullptr, nullptr, &texture_w, &texture_h);
 
   float u_left = static_cast<float>(src_x) / static_cast<float>(texture_w);
   float u_right = static_cast<float>(src_x + kPlayerSpriteCellWidth) /
@@ -368,8 +474,7 @@ void RenderManager::RenderPlayer(const Player& player, float alpha) {
                             {{x + w, y + h}, c, {vertex_right, v_bottom}},
                             {{x + w, y}, c, {vertex_right, v_top}}};
 
-  SDL_RenderGeometry(resources_.renderer, resources_.player_texture, vertices,
-                     6, nullptr, 0);
+  SDL_RenderGeometry(renderer_, resources_.player, vertices, 6, nullptr, 0);
 };
 
 int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
@@ -428,27 +533,25 @@ int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
     float vertex_left = is_facing_right ? u_left : u_right;
     float vertex_right = is_facing_right ? u_right : u_left;
 
-    // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
-    // 1. Top-Left
-    resources_.enemies_vertices_[current_vertex_idx + 0] = {
+    // Vertices for triangle 1 (top-left, bottom-left, bottom-right)
+    // top-left
+    enemies_vertices_[current_vertex_idx + 0] = {
         {x, y}, {255, 255, 255, 255}, {vertex_left, v_top}};
-    // 2. Bottom-Left
-    resources_.enemies_vertices_[current_vertex_idx + 1] = {
+    // bottom-left
+    enemies_vertices_[current_vertex_idx + 1] = {
         {x, y + h}, {255, 255, 255, 255}, {vertex_left, v_bottom}};
-    // 3. Bottom-Right
-    resources_.enemies_vertices_[current_vertex_idx + 2] = {
+    // bottom-right
+    enemies_vertices_[current_vertex_idx + 2] = {
         {x + w, y + h}, {255, 255, 255, 255}, {vertex_right, v_bottom}};
-    // --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
-    // 4. Top-Left (Repeat)
-    resources_.enemies_vertices_[current_vertex_idx + 3] =
-        resources_
-            .enemies_vertices_[current_vertex_idx + 0];  // Same as vertex 1
-    // 5. Bottom-Right (Repeat)
-    resources_.enemies_vertices_[current_vertex_idx + 4] =
-        resources_
-            .enemies_vertices_[current_vertex_idx + 2];  // Same as vertex 3
-    // 6. Top-Right
-    resources_.enemies_vertices_[current_vertex_idx + 5] = {
+    // Vertices for triangle 2 (top-left, bottom-right, top-right)
+    // top-left (copy)
+    enemies_vertices_[current_vertex_idx + 3] =
+        enemies_vertices_[current_vertex_idx + 0];
+    // bottom-right (copy)
+    enemies_vertices_[current_vertex_idx + 4] =
+        enemies_vertices_[current_vertex_idx + 2];
+    // top-right
+    enemies_vertices_[current_vertex_idx + 5] = {
         {x + w, y}, {255, 255, 255, 255}, {vertex_right, v_top}};
 
     current_vertex_idx += kEnemyVertices;
@@ -459,19 +562,18 @@ int RenderManager::SetupEnemyGeometry(const Enemy& enemy, float alpha) {
 void RenderManager::RenderEnemies(int num_vertices) {
   // We use the number of vertices calculated during the setup of the enemy
   // geometry to render the vertices.
-  SDL_RenderGeometry(resources_.renderer, resources_.enemy_texture,
-                     resources_.enemies_vertices_, num_vertices, nullptr, 0);
+  SDL_RenderGeometry(renderer_, resources_.enemy, enemies_vertices_,
+                     num_vertices, nullptr, 0);
 };
 
 void RenderManager::SetupProjectileGeometry(const Projectiles& projectiles,
                                             float alpha) {
-  resources_.projectile_vertices_grouped_.clear();
+  projectile_vertices_grouped_.clear();
   size_t num_projectiles = projectiles.GetNumProjectiles();
   if (num_projectiles == 0) {
     return;
   }
 
-  int current_vertex_idx = 0;
   float cell_uv_width = 1.0f / (float)kProjectileNumSpriteCells;
 
   float cull_left = camera_.render_position_.x;
@@ -521,49 +623,47 @@ void RenderManager::SetupProjectileGeometry(const Projectiles& projectiles,
 
     SDL_Vertex vertices[kProjectileVertices];
 
-    // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
-    // 1. Top-Left
+    // Vertices for triangle 1 (top-left, bottom-left, bottom-right)
+    // top-left
     vertices[0] = {{x, y}, {255, 255, 255, 255}, {vertex_left, v_top}};
-    // 2. Bottom-Left
+    // bottom-left
     vertices[1] = {{x, y + h}, {255, 255, 255, 255}, {vertex_left, v_bottom}};
-    // 3. Bottom-Right
+    // bottom_right
     vertices[2] = {
         {x + w, y + h}, {255, 255, 255, 255}, {vertex_right, v_bottom}};
-    // --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
-    // 4. Top-Left (Repeat)
-    vertices[3] = vertices[0];  // Same as vertex 1
-                                // 5. Bottom-Right (Repeat)
-    vertices[4] = vertices[2];  // Same as vertex 3
-    // 6. Top-Right
+    // Vertices for triangle 2 (top-left, bottom-right, top-right)
+    // top-left (copy)
+    vertices[3] = vertices[0];
+    // bottom-right (copy)
+    vertices[4] = vertices[2];
+    // top-right
     vertices[5] = {{x + w, y}, {255, 255, 255, 255}, {vertex_right, v_top}};
 
     for (int j = 0; j < kProjectileVertices; ++j) {
-      resources_.projectile_vertices_grouped_[texture_id].push_back(
-          vertices[j]);
+      projectile_vertices_grouped_[texture_id].push_back(vertices[j]);
     }
   }
 };
 
 void RenderManager::RenderProjectiles() {
-  for (const auto& pair : resources_.projectile_vertices_grouped_) {
+  for (const auto& pair : projectile_vertices_grouped_) {
     int texture_id = pair.first;
     const std::vector<SDL_Vertex>& vertices = pair.second;
-    if (texture_id >= 0 && texture_id < resources_.projectile_textures.size()) {
-      SDL_RenderGeometry(
-          resources_.renderer, resources_.projectile_textures[texture_id],
-          vertices.data(), static_cast<int>(vertices.size()), nullptr, 0);
+    if (texture_id >= 0 && texture_id < resources_.projectiles.size()) {
+      SDL_RenderGeometry(renderer_, resources_.projectiles[texture_id],
+                         vertices.data(), static_cast<int>(vertices.size()),
+                         nullptr, 0);
     };
   };
 };
 
 void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
-  resources_.gem_vertices_grouped_.clear();
+  gem_vertices_grouped_.clear();
   size_t num_gems = exp_gem.GetNumExpGems();
   if (num_gems == 0) {
     return;
   }
 
-  int current_vertex_idx = 0;
   float cell_uv_width = 1.0f;
 
   float cull_left = camera_.render_position_.x;
@@ -580,7 +680,7 @@ void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
     float w = static_cast<float>(exp_gem.sprite_size_[i].width);
     float h = static_cast<float>(exp_gem.sprite_size_[i].height);
 
-    // Skip setting up the projectile geometry if they are not in view.
+    // Skip setting up the exp gem geometry if they are not in view.
     if (exp_gem.position_[i].x + w < cull_left ||
         exp_gem.position_[i].x > cull_right ||
         exp_gem.position_[i].y + h < cull_top ||
@@ -596,63 +696,58 @@ void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
 
     int texture_id = exp_gem.rarity_[i];
 
-    int frame_idx = 0;
-
-    float u_left = static_cast<float>(frame_idx) * cell_uv_width;
-    float u_right = u_left + cell_uv_width;
+    float u_left = 0.0f;
+    float u_right = cell_uv_width;
     float v_top = kTexCoordTop;
     float v_bottom = kTexCoordBottom;
 
-    bool is_facing_right = true;
-
-    float vertex_left = is_facing_right ? u_left : u_right;
-    float vertex_right = is_facing_right ? u_right : u_left;
+    float vertex_left = u_left;
+    float vertex_right = u_right;
 
     SDL_Vertex vertices[kExpGemVertices];
 
-    // --- Vertices for Triangle 1 (Top-Left, Bottom-Left, Bottom-Right) ---
-    // 1. Top-Left
+    // Vertices for triangle 1 (top-left, bottom-left, bottom-right)
+    // top-left
     vertices[0] = {{x, y}, {255, 255, 255, 255}, {vertex_left, v_top}};
-    // 2. Bottom-Left
+    // bottom-left
     vertices[1] = {{x, y + h}, {255, 255, 255, 255}, {vertex_left, v_bottom}};
-    // 3. Bottom-Right
+    // bottom_right
     vertices[2] = {
         {x + w, y + h}, {255, 255, 255, 255}, {vertex_right, v_bottom}};
-    // --- Vertices for Triangle 2 (Top-Left, Bottom-Right, Top-Right) ---
-    // 4. Top-Left (Repeat)
-    vertices[3] = vertices[0];  // Same as vertex 1
-                                // 5. Bottom-Right (Repeat)
-    vertices[4] = vertices[2];  // Same as vertex 3
-    // 6. Top-Right
+    // Vertices for triangle 2 (top-left, bottom-right, top-right)
+    // top-left (copy)
+    vertices[3] = vertices[0];
+    // bottom-right (copy)
+    vertices[4] = vertices[2];
+    // top-right
     vertices[5] = {{x + w, y}, {255, 255, 255, 255}, {vertex_right, v_top}};
 
     for (int j = 0; j < kExpGemVertices; ++j) {
-      resources_.gem_vertices_grouped_[texture_id].push_back(vertices[j]);
+      gem_vertices_grouped_[texture_id].push_back(vertices[j]);
     }
   }
 };
 
 void RenderManager::RenderGem() {
-  for (const auto& pair : resources_.gem_vertices_grouped_) {
+  for (const auto& pair : gem_vertices_grouped_) {
     int texture_id = pair.first;
     const std::vector<SDL_Vertex>& vertices = pair.second;
-    if (texture_id >= 0 && texture_id < resources_.gem_textures.size()) {
-      SDL_RenderGeometry(resources_.renderer,
-                         resources_.gem_textures[texture_id], vertices.data(),
-                         static_cast<int>(vertices.size()), nullptr, 0);
+    if (texture_id >= 0 && texture_id < resources_.gems.size()) {
+      SDL_RenderGeometry(renderer_, resources_.gems[texture_id],
+                         vertices.data(), static_cast<int>(vertices.size()),
+                         nullptr, 0);
     };
   };
 };
 
 void RenderManager::SetupChestGeometry(const Chest& chest, float alpha) {
-  resources_.chest_vertices_.clear();
+  chest_vertices_.clear();
   size_t num_chests = chest.GetNumChests();
   if (num_chests == 0) {
     return;
   }
   int texture_w, texture_h;
-  SDL_QueryTexture(resources_.chest_texture, nullptr, nullptr, &texture_w,
-                   &texture_h);
+  SDL_QueryTexture(resources_.chest, nullptr, nullptr, &texture_w, &texture_h);
   float cell_uv_width = 1.0f / static_cast<float>(kChestSpriteSheetCols);
   float cell_uv_height = 1.0f / static_cast<float>(kChestSpriteSheetRows);
   // Frame 0 = top-left cell (closed chest)
@@ -691,19 +786,17 @@ void RenderManager::SetupChestGeometry(const Chest& chest, float alpha) {
         {{x + w, y + h}, c, {u_right, v_bottom}},
         {{x + w, y}, c, {u_right, v_top}}};
     for (int j = 0; j < kChestVertices; ++j) {
-      resources_.chest_vertices_.push_back(vertices[j]);
+      chest_vertices_.push_back(vertices[j]);
     }
   }
 }
 
 void RenderManager::RenderChests() {
-  if (resources_.chest_vertices_.empty()) {
+  if (chest_vertices_.empty()) {
     return;
   }
-  SDL_RenderGeometry(resources_.renderer, resources_.chest_texture,
-                     resources_.chest_vertices_.data(),
-                     static_cast<int>(resources_.chest_vertices_.size()),
-                     nullptr, 0);
+  SDL_RenderGeometry(renderer_, resources_.chest, chest_vertices_.data(),
+                     static_cast<int>(chest_vertices_.size()), nullptr, 0);
 }
 
 void RenderManager::RenderDebugWorldOccupancyMap(
@@ -711,8 +804,8 @@ void RenderManager::RenderDebugWorldOccupancyMap(
   // Get the original blend mode to be able to later restore it. The debug
   // visualization should blend textures, but regular rendering should not.
   SDL_BlendMode original_blend_mode;
-  SDL_GetRenderDrawBlendMode(resources_.renderer, &original_blend_mode);
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
+  SDL_GetRenderDrawBlendMode(renderer_, &original_blend_mode);
+  SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
 
   int grid_width_cells = kOccupancyMapWidth;
   int grid_height_cells = kOccupancyMapHeight;
@@ -747,7 +840,6 @@ void RenderManager::RenderDebugWorldOccupancyMap(
       uint16_t mask = occupancy_map.GetMask(i, j);
 
       if (mask != kMaskTypeNone) {
-        // Color coding based on type - now blending
         int r = 0, g = 0, b = 0, a = 0;
         int count = 0;
 
@@ -781,28 +873,28 @@ void RenderManager::RenderDebugWorldOccupancyMap(
         }
 
         if (count > 0) {
-          SDL_SetRenderDrawColor(resources_.renderer, r / count, g / count,
-                                 b / count, a / count);
+          SDL_SetRenderDrawColor(renderer_, r / count, g / count, b / count,
+                                 a / count);
         } else {
           // Fallback for types not handled explicitly above
-          SetRenderColor(resources_.renderer, WithOpacity(kColorGrey, 128));
+          SetRenderColor(renderer_, WithOpacity(kColorGrey, 128));
         }
         // The rectangles are rendered first so the grid cells are on top.
-        SDL_RenderFillRect(resources_.renderer, &render_rect);
+        SDL_RenderFillRect(renderer_, &render_rect);
       }
 
-      SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 50));
-      SDL_RenderDrawRect(resources_.renderer, &render_rect);
+      SetRenderColor(renderer_, WithOpacity(kColorBlack, 50));
+      SDL_RenderDrawRect(renderer_, &render_rect);
     }
   }
 
-  SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
+  SDL_SetRenderDrawBlendMode(renderer_, original_blend_mode);
 };
 
 void RenderManager::RenderDebugRayCaster(const Enemy& enemy, float alpha) {
   SDL_BlendMode original_blend_mode;
-  SDL_GetRenderDrawBlendMode(resources_.renderer, &original_blend_mode);
-  SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
+  SDL_GetRenderDrawBlendMode(renderer_, &original_blend_mode);
+  SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
 
   for (int i = 0; i < kNumEnemies; ++i) {
     if (!enemy.is_alive[i]) {
@@ -836,27 +928,27 @@ void RenderManager::RenderDebugRayCaster(const Enemy& enemy, float alpha) {
 
       switch (type) {
         case EntityType::player:
-          SetRenderColor(resources_.renderer, WithOpacity(kColorRed, 150));
+          SetRenderColor(renderer_, WithOpacity(kColorRed, 150));
           break;
         case EntityType::terrain:
-          SetRenderColor(resources_.renderer, WithOpacity(kColorGrey, 50));
+          SetRenderColor(renderer_, WithOpacity(kColorGrey, 50));
           break;
         case EntityType::enemy:
-          SetRenderColor(resources_.renderer, WithOpacity(kColorOrange, 150));
+          SetRenderColor(renderer_, WithOpacity(kColorOrange, 150));
           break;
         default:
-          SetRenderColor(resources_.renderer, WithOpacity(kColorBlack, 50));
+          SetRenderColor(renderer_, WithOpacity(kColorBlack, 50));
           break;
       }
 
-      SDL_RenderDrawLine(resources_.renderer, static_cast<int>(start_screen.x),
+      SDL_RenderDrawLine(renderer_, static_cast<int>(start_screen.x),
                          static_cast<int>(start_screen.y),
                          static_cast<int>(end_screen.x),
                          static_cast<int>(end_screen.y));
     }
   }
 
-  SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
+  SDL_SetRenderDrawBlendMode(renderer_, original_blend_mode);
 }
 void RenderManager::RenderUI(float time) {
   ui_manager_.UpdateTimer(time);
@@ -882,22 +974,21 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       auto* panel = static_cast<Panel*>(widget);
       if (panel->HasBackgroundColor()) {
         SDL_BlendMode original_blend_mode;
-        SDL_GetRenderDrawBlendMode(resources_.renderer, &original_blend_mode);
-        SDL_SetRenderDrawBlendMode(resources_.renderer, SDL_BLENDMODE_BLEND);
+        SDL_GetRenderDrawBlendMode(renderer_, &original_blend_mode);
+        SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
 
         SDL_Color color = panel->GetBackgroundColor();
-        SDL_SetRenderDrawColor(resources_.renderer, color.r, color.g, color.b,
-                               color.a);
-        SDL_RenderFillRect(resources_.renderer, &bounds);
+        SDL_SetRenderDrawColor(renderer_, color.r, color.g, color.b, color.a);
+        SDL_RenderFillRect(renderer_, &bounds);
 
-        SDL_SetRenderDrawBlendMode(resources_.renderer, original_blend_mode);
+        SDL_SetRenderDrawBlendMode(renderer_, original_blend_mode);
       }
 
       if (panel->GetBackgroundTexture()) {
         SDL_Rect src = panel->GetBackgroundSrcRect();
         SDL_Rect* src_ptr = (src.w > 0 && src.h > 0) ? &src : nullptr;
-        SDL_RenderCopy(resources_.renderer, panel->GetBackgroundTexture(),
-                       src_ptr, &bounds);
+        SDL_RenderCopy(renderer_, panel->GetBackgroundTexture(), src_ptr,
+                       &bounds);
       }
       break;
     }
@@ -907,8 +998,7 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       if (img->GetTexture()) {
         SDL_Rect src = img->GetSrcRect();
         SDL_Rect* src_ptr = (src.w > 0 && src.h > 0) ? &src : nullptr;
-        SDL_RenderCopy(resources_.renderer, img->GetTexture(), src_ptr,
-                       &bounds);
+        SDL_RenderCopy(renderer_, img->GetTexture(), src_ptr, &bounds);
       }
       break;
     }
@@ -917,8 +1007,7 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       auto* anim_img = static_cast<UIAnimation*>(widget);
       if (anim_img->GetTexture()) {
         SDL_Rect src = anim_img->GetCurrentSrcRect();
-        SDL_RenderCopy(resources_.renderer, anim_img->GetTexture(), &src,
-                       &bounds);
+        SDL_RenderCopy(renderer_, anim_img->GetTexture(), &src, &bounds);
       }
       break;
     }
@@ -945,13 +1034,11 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       auto* chk = static_cast<UICheckbox*>(widget);
       if (chk->GetBoxTexture()) {
         SDL_Rect src = chk->GetCurrentBoxSrcRect();
-        SDL_RenderCopy(resources_.renderer, chk->GetBoxTexture(), &src,
-                       &bounds);
+        SDL_RenderCopy(renderer_, chk->GetBoxTexture(), &src, &bounds);
       }
       if (chk->IsChecked() && chk->GetMarkTexture()) {
         SDL_Rect src = chk->GetMarkSrcRect();
-        SDL_RenderCopy(resources_.renderer, chk->GetMarkTexture(), &src,
-                       &bounds);
+        SDL_RenderCopy(renderer_, chk->GetMarkTexture(), &src, &bounds);
       }
       break;
     }
@@ -960,7 +1047,7 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       auto* btn = static_cast<UIButton*>(widget);
       if (btn->GetTexture()) {
         SDL_Rect src = btn->GetCurrentSrcRect();
-        SDL_RenderCopy(resources_.renderer, btn->GetTexture(), &src, &bounds);
+        SDL_RenderCopy(renderer_, btn->GetTexture(), &src, &bounds);
       }
       if (btn->GetLabelFont() && !btn->GetLabel().empty()) {
         RenderText(btn->GetLabel(), {bounds.x, bounds.y + (bounds.h - 26) / 2},
@@ -971,18 +1058,14 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
 
     case WidgetType::ProgressBar: {
       auto* bar = static_cast<UIProgressBar*>(widget);
-      // Draw container
       if (bar->GetContainerTexture()) {
         SDL_Rect src = bar->GetContainerSrcRect();
-        SDL_RenderCopy(resources_.renderer, bar->GetContainerTexture(), &src,
-                       &bounds);
+        SDL_RenderCopy(renderer_, bar->GetContainerTexture(), &src, &bounds);
       }
-      // Draw fill (clipped)
       if (bar->GetFillTexture()) {
         SDL_Rect fill_src = bar->GetClippedFillSrcRect();
         SDL_Rect fill_dst = bar->GetFillDestRect();
-        SDL_RenderCopy(resources_.renderer, bar->GetFillTexture(), &fill_src,
-                       &fill_dst);
+        SDL_RenderCopy(renderer_, bar->GetFillTexture(), &fill_src, &fill_dst);
       }
       break;
     }
@@ -991,12 +1074,11 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       auto* inv_item = static_cast<UIInventoryItem*>(widget);
       if (inv_item->GetItemTexture()) {
         SDL_Rect dest_rect = bounds;
-        // Center icon within the item widget's icon region.
         int icon_size = ui_config_.inventory.inventory_icon_size;
         dest_rect.y += (bounds.h - icon_size) / 2;
         dest_rect.w = icon_size;
         dest_rect.h = icon_size;
-        SDL_RenderCopy(resources_.renderer, inv_item->GetItemTexture(), nullptr,
+        SDL_RenderCopy(renderer_, inv_item->GetItemTexture(), nullptr,
                        &dest_rect);
       }
       break;
@@ -1006,7 +1088,6 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       break;
   }
 
-  // Recurse into children (Painter's Algorithm)
   for (auto& child : widget->GetChildren()) {
     RenderWidgetRecursive(child.get());
   }
@@ -1040,10 +1121,7 @@ void RenderManager::RenderDigitString(const std::string& text, int start_x,
     }
 
     SDL_Rect dest_rect = {current_x, start_y, char_width, char_height};
-
-    SDL_RenderCopy(resources_.renderer,
-                   resources_.ui_resources.digit_font_texture, &src_rect,
-                   &dest_rect);
+    SDL_RenderCopy(renderer_, resources_.digit_font, &src_rect, &dest_rect);
 
     current_x += char_width;
   };
@@ -1062,96 +1140,6 @@ void RenderManager::RenderSettingsMenuState() {
 void RenderManager::UpdateSettingsMenuState(float volume, bool is_muted,
                                             const GameStatus& game_status) {
   ui_manager_.UpdateSettingsMenu(volume, is_muted, game_status);
-}
-
-void RenderManager::Shutdown() {
-
-  if (resources_.player_texture) {
-    SDL_DestroyTexture(resources_.player_texture);
-    resources_.player_texture = nullptr;
-  }
-
-  if (resources_.enemy_texture) {
-    SDL_DestroyTexture(resources_.enemy_texture);
-    resources_.enemy_texture = nullptr;
-  }
-
-  if (resources_.ui_resources.digit_font_texture) {
-    SDL_DestroyTexture(resources_.ui_resources.digit_font_texture);
-    resources_.ui_resources.digit_font_texture = nullptr;
-  }
-
-  if (resources_.ui_resources.health_bar_texture) {
-    SDL_DestroyTexture(resources_.ui_resources.health_bar_texture);
-    resources_.ui_resources.health_bar_texture = nullptr;
-  }
-
-  if (resources_.ui_resources.timer_hourglass_texture) {
-    SDL_DestroyTexture(resources_.ui_resources.timer_hourglass_texture);
-    resources_.ui_resources.timer_hourglass_texture = nullptr;
-  }
-
-  if (resources_.ui_resources.level_up_option_card_texture) {
-    SDL_DestroyTexture(resources_.ui_resources.level_up_option_card_texture);
-    resources_.ui_resources.level_up_option_card_texture = nullptr;
-  }
-
-  if (resources_.ui_resources.button_texture) {
-    SDL_DestroyTexture(resources_.ui_resources.button_texture);
-    resources_.ui_resources.button_texture = nullptr;
-  }
-
-  if (resources_.ui_resources.begin_button_texture) {
-    SDL_DestroyTexture(resources_.ui_resources.begin_button_texture);
-    resources_.ui_resources.begin_button_texture = nullptr;
-  }
-
-  if (resources_.ui_resources.settings_menu_background_texture) {
-    SDL_DestroyTexture(
-        resources_.ui_resources.settings_menu_background_texture);
-    resources_.ui_resources.settings_menu_background_texture = nullptr;
-  }
-
-  if (resources_.ui_resources.slider_texture) {
-    SDL_DestroyTexture(resources_.ui_resources.slider_texture);
-    resources_.ui_resources.slider_texture = nullptr;
-  }
-
-  IMG_Quit();
-
-  if (resources_.ui_resources.ui_font_small) {
-    TTF_CloseFont(resources_.ui_resources.ui_font_small);
-    resources_.ui_resources.ui_font_small = nullptr;
-  }
-
-  if (resources_.ui_resources.ui_font_medium) {
-    TTF_CloseFont(resources_.ui_resources.ui_font_medium);
-    resources_.ui_resources.ui_font_medium = nullptr;
-  }
-
-  if (resources_.ui_resources.ui_font_large) {
-    TTF_CloseFont(resources_.ui_resources.ui_font_large);
-    resources_.ui_resources.ui_font_large = nullptr;
-  }
-
-  if (resources_.ui_resources.ui_font_huge) {
-    TTF_CloseFont(resources_.ui_resources.ui_font_huge);
-    resources_.ui_resources.ui_font_huge = nullptr;
-  }
-
-  TTF_Quit();
-
-  if (resources_.renderer) {
-    SDL_DestroyRenderer(resources_.renderer);
-    resources_.renderer = nullptr;
-  }
-
-  if (resources_.window) {
-    SDL_DestroyWindow(resources_.window);
-    resources_.window = nullptr;
-  }
-
-  SDL_Quit();
 }
 
 void RenderManager::RenderLevelUp() {
@@ -1189,8 +1177,8 @@ void RenderManager::RenderQuitConfirmMenu() {
 
 // Render a string of text at a specified location (x,y) with a given color
 // and font.
-// Optional: If you specify a positive center_width, then it will center-align
-// the text along that center_width.
+// Optional: If you specify a positive center_width in TextLayout, then it
+// will center-align the text along that center_width.
 void RenderManager::RenderText(const std::string& text, SDL_Point pos,
                                SDL_Color color, TTF_Font* font,
                                TextLayout layout) {
@@ -1204,8 +1192,7 @@ void RenderManager::RenderText(const std::string& text, SDL_Point pos,
   if (layout.wrap_width > 0) {
     TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_LEFT);
   }
-  SDL_Texture* texture =
-      SDL_CreateTextureFromSurface(resources_.renderer, surface);
+  SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer_, surface);
 
   int render_x = pos.x;
   if (layout.center_width > 0) {
@@ -1213,7 +1200,7 @@ void RenderManager::RenderText(const std::string& text, SDL_Point pos,
   }
 
   SDL_Rect dest = {render_x, pos.y, surface->w, surface->h};
-  SDL_RenderCopy(resources_.renderer, texture, nullptr, &dest);
+  SDL_RenderCopy(renderer_, texture, nullptr, &dest);
 
   SDL_DestroyTexture(texture);
   SDL_FreeSurface(surface);

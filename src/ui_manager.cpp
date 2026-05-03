@@ -4,7 +4,6 @@
 #include <string>
 #include "constants/chest.h"
 #include "constants/progression_manager.h"
-#include "constants/projectile.h"
 #include "entity.h"
 #include "event_manager.h"
 #include "scene.h"
@@ -14,8 +13,8 @@
 
 namespace arelto {
 
-void UIManager::SetupUI(const UIResources& resources, const UIConfig& config,
-                        EventManager& event_manager) {
+void UIManager::SetupUI(const RenderResources& resources,
+                        const UIConfig& config, EventManager& event_manager) {
   resources_ = &resources;
   ui_config_ = config;
 
@@ -77,7 +76,7 @@ void UIManager::BuildHUD() {
   timer_icon->SetId("timer_icon");
   timer_icon->SetSize(ui_config_.hud.timer_hourglass_sprite_width,
                       ui_config_.hud.timer_hourglass_sprite_height);
-  timer_icon->SetTexture(resources_->timer_hourglass_texture);
+  timer_icon->SetTexture(resources_->timer_hourglass);
   timer_icon->SetSrcRect({0, 0, ui_config_.hud.timer_hourglass_sprite_width,
                           ui_config_.hud.timer_hourglass_sprite_height});
   timer_row->AddChild(timer_icon);
@@ -103,7 +102,7 @@ void UIManager::BuildHUD() {
   level_icon->SetId("level_icon");
   level_icon->SetSize(ui_config_.hud.level_icon_sprite_width,
                       ui_config_.hud.level_icon_sprite_height);
-  level_icon->SetTexture(resources_->level_indicator_texture);
+  level_icon->SetTexture(resources_->level_indicator);
   level_icon->SetSrcRect({ui_config_.hud.level_icon_sprite_offset_x,
                           ui_config_.hud.level_icon_sprite_offset_y,
                           ui_config_.hud.level_icon_sprite_width,
@@ -141,13 +140,13 @@ void UIManager::BuildHUD() {
   health_bar->SetId("health_bar");
   health_bar->SetSize(ui_config_.hud.health_bar_container_sprite_width,
                       ui_config_.hud.health_bar_container_sprite_height);
-  health_bar->SetContainerTexture(resources_->health_bar_texture);
+  health_bar->SetContainerTexture(resources_->health_bar);
   health_bar->SetContainerSrcRect(
       {ui_config_.hud.health_bar_container_sprite_offset_x,
        ui_config_.hud.health_bar_container_sprite_offset_y,
        ui_config_.hud.health_bar_container_sprite_width,
        ui_config_.hud.health_bar_container_sprite_height});
-  health_bar->SetFillTexture(resources_->health_bar_texture);
+  health_bar->SetFillTexture(resources_->health_bar);
   health_bar->SetFillSrcRect({ui_config_.hud.health_bar_sprite_offset_x,
                               ui_config_.hud.health_bar_sprite_offset_y,
                               ui_config_.hud.health_bar_sprite_width,
@@ -177,13 +176,13 @@ void UIManager::BuildHUD() {
   exp_bar->SetId("exp_bar");
   exp_bar->SetSize(ui_config_.hud.exp_bar_container_sprite_width,
                    ui_config_.hud.exp_bar_container_sprite_height);
-  exp_bar->SetContainerTexture(resources_->exp_bar_texture);
+  exp_bar->SetContainerTexture(resources_->exp_bar);
   exp_bar->SetContainerSrcRect(
       {ui_config_.hud.exp_bar_container_sprite_offset_x,
        ui_config_.hud.exp_bar_container_sprite_offset_y,
        ui_config_.hud.exp_bar_container_sprite_width,
        ui_config_.hud.exp_bar_container_sprite_height});
-  exp_bar->SetFillTexture(resources_->exp_bar_texture);
+  exp_bar->SetFillTexture(resources_->exp_bar);
   exp_bar->SetFillSrcRect({ui_config_.hud.exp_bar_sprite_offset_x,
                            ui_config_.hud.exp_bar_sprite_offset_y,
                            ui_config_.hud.exp_bar_sprite_width,
@@ -230,7 +229,7 @@ void UIManager::BuildSettingsMenu() {
   menu->SetAnchor(AnchorType::Center);
   menu->SetSize(ui_config_.menus.settings_menu_width,
                 ui_config_.menus.settings_menu_height);
-  menu->SetBackground(resources_->settings_menu_background_texture);
+  menu->SetBackground(resources_->settings_menu_background);
   menu->SetBackgroundSrcRect(
       {0, 0, ui_config_.menus.settings_menu_background_sprite_width,
        ui_config_.menus.settings_menu_background_sprite_height});
@@ -251,7 +250,7 @@ void UIManager::BuildSettingsMenu() {
                      2 * ui_config_.menus.menu_content_padding,
                  100);
   title->SetText("SETTINGS");
-  title->SetFont(resources_->ui_font_huge);
+  title->SetFont(resources_->font_huge);
   title->SetCenterWidth(ui_config_.menus.settings_menu_width -
                         2 * ui_config_.menus.menu_content_padding);
   content->AddChild(title);
@@ -262,7 +261,7 @@ void UIManager::BuildSettingsMenu() {
                             2 * ui_config_.menus.menu_content_padding,
                         30);
   volume_label->SetText("MUSIC VOLUME");
-  volume_label->SetFont(resources_->ui_font_large);
+  volume_label->SetFont(resources_->font_large);
   volume_label->SetCenterWidth(ui_config_.menus.settings_menu_width -
                                2 * ui_config_.menus.menu_content_padding);
   content->AddChild(volume_label);
@@ -272,13 +271,13 @@ void UIManager::BuildSettingsMenu() {
   volume_slider->SetAnchor(AnchorType::TopCenter);
   volume_slider->SetSize(ui_config_.menus.settings_menu_volume_slider_width,
                          ui_config_.menus.settings_menu_volume_slider_height);
-  volume_slider->SetContainerTexture(resources_->slider_texture);
+  volume_slider->SetContainerTexture(resources_->slider);
   volume_slider->SetContainerSrcRect(
       {ui_config_.menus.slider_container_sprite_offset_x,
        ui_config_.menus.slider_container_sprite_offset_y,
        ui_config_.menus.slider_container_sprite_width,
        ui_config_.menus.slider_container_sprite_height});
-  volume_slider->SetFillTexture(resources_->slider_texture);
+  volume_slider->SetFillTexture(resources_->slider);
   volume_slider->SetFillSrcRect({ui_config_.menus.slider_bar_sprite_offset_x,
                                  ui_config_.menus.slider_bar_sprite_offset_y,
                                  ui_config_.menus.slider_bar_sprite_width,
@@ -301,14 +300,14 @@ void UIManager::BuildSettingsMenu() {
   auto mute_checkbox = std::make_shared<UICheckbox>();
   mute_checkbox->SetId("mute_checkbox");
   mute_checkbox->SetSize(30, 30);
-  mute_checkbox->SetBoxTexture(resources_->checkbox_texture);
+  mute_checkbox->SetBoxTexture(resources_->checkbox);
   mute_checkbox->SetBoxSrcRect({0, 0, ui_config_.menus.checkbox_sprite_width,
                                 ui_config_.menus.checkbox_sprite_height / 2});
   mute_checkbox->SetBoxHoverSrcRect(
       {0, ui_config_.menus.checkbox_sprite_height / 2,
        ui_config_.menus.checkbox_sprite_width,
        ui_config_.menus.checkbox_sprite_height / 2});
-  mute_checkbox->SetMarkTexture(resources_->checkmark_texture);
+  mute_checkbox->SetMarkTexture(resources_->checkmark);
   mute_checkbox->SetMarkSrcRect({0, 0, ui_config_.menus.checkmark_sprite_width,
                                  ui_config_.menus.checkmark_sprite_height});
   mute_row->AddChild(mute_checkbox);
@@ -317,7 +316,7 @@ void UIManager::BuildSettingsMenu() {
   mute_label->SetId("mute_label");
   mute_label->SetSize(300, 30);
   mute_label->SetText("Mute Music");
-  mute_label->SetFont(resources_->ui_font_medium);
+  mute_label->SetFont(resources_->font_medium);
   mute_row->AddChild(mute_label);
 
   content->AddChild(mute_row);
@@ -328,7 +327,7 @@ void UIManager::BuildSettingsMenu() {
                            2 * ui_config_.menus.menu_content_padding,
                        40);
   debug_label->SetText("DEBUG");
-  debug_label->SetFont(resources_->ui_font_large);
+  debug_label->SetFont(resources_->font_large);
   debug_label->SetCenterWidth(ui_config_.menus.settings_menu_width -
                               2 * ui_config_.menus.menu_content_padding);
   content->AddChild(debug_label);
@@ -344,7 +343,7 @@ void UIManager::BuildSettingsMenu() {
   auto occupancy_map_checkbox = std::make_shared<UICheckbox>();
   occupancy_map_checkbox->SetId("occupancy_map_checkbox");
   occupancy_map_checkbox->SetSize(30, 30);
-  occupancy_map_checkbox->SetBoxTexture(resources_->checkbox_texture);
+  occupancy_map_checkbox->SetBoxTexture(resources_->checkbox);
   occupancy_map_checkbox->SetBoxSrcRect(
       {0, 0, ui_config_.menus.checkbox_sprite_width,
        ui_config_.menus.checkbox_sprite_height / 2});
@@ -352,7 +351,7 @@ void UIManager::BuildSettingsMenu() {
       {0, ui_config_.menus.checkbox_sprite_height / 2,
        ui_config_.menus.checkbox_sprite_width,
        ui_config_.menus.checkbox_sprite_height / 2});
-  occupancy_map_checkbox->SetMarkTexture(resources_->checkmark_texture);
+  occupancy_map_checkbox->SetMarkTexture(resources_->checkmark);
   occupancy_map_checkbox->SetMarkSrcRect(
       {0, 0, ui_config_.menus.checkmark_sprite_width,
        ui_config_.menus.checkmark_sprite_height});
@@ -362,7 +361,7 @@ void UIManager::BuildSettingsMenu() {
   occupancy_map_label->SetId("occupancy_map_label");
   occupancy_map_label->SetSize(300, 30);
   occupancy_map_label->SetText("Show Occupancy Map");
-  occupancy_map_label->SetFont(resources_->ui_font_medium);
+  occupancy_map_label->SetFont(resources_->font_medium);
   occupancy_map_row->AddChild(occupancy_map_label);
 
   content->AddChild(occupancy_map_row);
@@ -378,7 +377,7 @@ void UIManager::BuildSettingsMenu() {
   auto ray_caster_checkbox = std::make_shared<UICheckbox>();
   ray_caster_checkbox->SetId("ray_caster_checkbox");
   ray_caster_checkbox->SetSize(30, 30);
-  ray_caster_checkbox->SetBoxTexture(resources_->checkbox_texture);
+  ray_caster_checkbox->SetBoxTexture(resources_->checkbox);
   ray_caster_checkbox->SetBoxSrcRect(
       {0, 0, ui_config_.menus.checkbox_sprite_width,
        ui_config_.menus.checkbox_sprite_height / 2});
@@ -386,7 +385,7 @@ void UIManager::BuildSettingsMenu() {
       {0, ui_config_.menus.checkbox_sprite_height / 2,
        ui_config_.menus.checkbox_sprite_width,
        ui_config_.menus.checkbox_sprite_height / 2});
-  ray_caster_checkbox->SetMarkTexture(resources_->checkmark_texture);
+  ray_caster_checkbox->SetMarkTexture(resources_->checkmark);
   ray_caster_checkbox->SetMarkSrcRect(
       {0, 0, ui_config_.menus.checkmark_sprite_width,
        ui_config_.menus.checkmark_sprite_height});
@@ -396,7 +395,7 @@ void UIManager::BuildSettingsMenu() {
   ray_caster_label->SetId("ray_caster_label");
   ray_caster_label->SetSize(300, 30);
   ray_caster_label->SetText("Show Ray Caster");
-  ray_caster_label->SetFont(resources_->ui_font_medium);
+  ray_caster_label->SetFont(resources_->font_medium);
   ray_caster_row->AddChild(ray_caster_label);
 
   content->AddChild(ray_caster_row);
@@ -416,7 +415,7 @@ void UIManager::BuildSettingsMenu() {
   resume_btn->SetId("resume_button");
   resume_btn->SetSize(ui_config_.menus.settings_menu_button_width,
                       ui_config_.menus.settings_menu_button_height);
-  resume_btn->SetTexture(resources_->button_texture);
+  resume_btn->SetTexture(resources_->button);
   resume_btn->SetNormalSrcRect(
       {0, 0, ui_config_.menus.generic_button_texture_width,
        ui_config_.menus.generic_button_texture_height / 2});
@@ -425,14 +424,14 @@ void UIManager::BuildSettingsMenu() {
        ui_config_.menus.generic_button_texture_width,
        ui_config_.menus.generic_button_texture_height / 2});
   resume_btn->SetLabel("RESUME");
-  resume_btn->SetLabelFont(resources_->ui_font_medium);
+  resume_btn->SetLabelFont(resources_->font_medium);
   button_row->AddChild(resume_btn);
 
   auto main_menu_btn = std::make_shared<UIButton>();
   main_menu_btn->SetId("main_menu_button");
   main_menu_btn->SetSize(ui_config_.menus.settings_menu_button_width,
                          ui_config_.menus.settings_menu_button_height);
-  main_menu_btn->SetTexture(resources_->button_texture);
+  main_menu_btn->SetTexture(resources_->button);
   main_menu_btn->SetNormalSrcRect(
       {0, 0, ui_config_.menus.generic_button_texture_width,
        ui_config_.menus.generic_button_texture_height / 2});
@@ -441,7 +440,7 @@ void UIManager::BuildSettingsMenu() {
        ui_config_.menus.generic_button_texture_width,
        ui_config_.menus.generic_button_texture_height / 2});
   main_menu_btn->SetLabel("MAIN MENU");
-  main_menu_btn->SetLabelFont(resources_->ui_font_medium);
+  main_menu_btn->SetLabelFont(resources_->font_medium);
   button_row->AddChild(main_menu_btn);
 
   menu->AddChild(button_row);
@@ -491,20 +490,21 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   card->SetId(card_id);
   card->SetSize(ui_config_.cards.level_up_card_width,
                 ui_config_.cards.level_up_card_height);
-  card->SetBackground(resources_->level_up_option_card_texture);
+  card->SetBackground(resources_->level_up_option_card);
   card->SetBackgroundSrcRect({0, 0, 0, 0});  // full texture
 
   int spell_id = upgrade.GetSpellID();
   if (spell_id >= 0 &&
-      spell_id < static_cast<int>(resources_->projectile_textures.size())) {
+      spell_id < static_cast<int>(resources_->projectiles.size())) {
     auto icon = std::make_shared<UIImage>();
     icon->SetId(card_id + "_icon");
     icon->SetAnchor(AnchorType::TopCenter);
     icon->SetPosition(0, ui_config_.cards.level_up_icon_offset_y);
     icon->SetSize(ui_config_.cards.level_up_icon_size,
                   ui_config_.cards.level_up_icon_size);
-    icon->SetTexture(resources_->projectile_textures[spell_id]);
-    icon->SetSrcRect({0, 0, kFireballSpriteWidth, kFireballSpriteHeight});
+    icon->SetTexture(resources_->projectiles[spell_id]);
+    icon->SetSrcRect({0, 0, static_cast<int>(upgrade.GetSpriteSize().width),
+                      static_cast<int>(upgrade.GetSpriteSize().height)});
     card->AddChild(icon);
   }
 
@@ -516,7 +516,7 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
                           2 * ui_config_.cards.level_up_name_offset_x,
                       96);
   name_label->SetText(upgrade.GetName());
-  name_label->SetFont(resources_->ui_font_large);
+  name_label->SetFont(resources_->font_large);
   name_label->SetColor({255, 255, 255, 255});
   name_label->SetCenterWidth(ui_config_.cards.level_up_card_width -
                              2 * ui_config_.cards.level_up_name_offset_x);
@@ -542,7 +542,7 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
                             2 * ui_config_.cards.level_up_desc_offset_x,
                         25);
     desc_label->SetText(row.description);
-    desc_label->SetFont(resources_->ui_font_medium);
+    desc_label->SetFont(resources_->font_medium);
     desc_label->SetColor({180, 180, 180, 255});
     desc_label->SetCenterWidth(ui_config_.cards.level_up_card_width -
                                2 * ui_config_.cards.level_up_desc_offset_x);
@@ -560,7 +560,7 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
                              2 * ui_config_.cards.level_up_stats_offset_x,
                          25);
     stats_label->SetText(stats_str);
-    stats_label->SetFont(resources_->ui_font_medium);
+    stats_label->SetFont(resources_->font_medium);
     // NOTE: The assumption here is that all stat upgrades are positive (e.g. "Damage: 10 -> 12").
     stats_label->SetColor(ui_config_.colors.positive_green);
     stats_label->SetCenterWidth(ui_config_.cards.level_up_card_width -
@@ -575,7 +575,7 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   select_btn->SetPosition(0, ui_config_.cards.level_up_button_offset_y);
   select_btn->SetSize(ui_config_.cards.level_up_button_width,
                       ui_config_.cards.level_up_button_height);
-  select_btn->SetTexture(resources_->button_texture);
+  select_btn->SetTexture(resources_->button);
   select_btn->SetNormalSrcRect(
       {0, 0, ui_config_.menus.generic_button_texture_width,
        ui_config_.menus.generic_button_texture_height / 2});
@@ -584,7 +584,7 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
        ui_config_.menus.generic_button_texture_width,
        ui_config_.menus.generic_button_texture_height / 2});
   select_btn->SetLabel("SELECT");
-  select_btn->SetLabelFont(resources_->ui_font_medium);
+  select_btn->SetLabelFont(resources_->font_medium);
   card->AddChild(select_btn);
 
   parent->AddChild(card);
@@ -764,7 +764,7 @@ void UIManager::BuildStartScreen() {
   auto start_screen = std::make_shared<Panel>();
   start_screen->SetId("start_screen");
   start_screen->SetSize(kWindowWidth, kWindowHeight);
-  start_screen->SetBackground(resources_->start_screen_texture);
+  start_screen->SetBackground(resources_->start_screen);
   start_screen->SetBackgroundSrcRect({0, 0, 0, 0});  // full texture
   start_screen->SetVisible(false);
 
@@ -777,7 +777,7 @@ void UIManager::BuildStartScreen() {
                          -static_cast<float>(ui_config_.menus.begin_button_y));
   begin_btn->SetSize(ui_config_.menus.begin_button_width,
                      ui_config_.menus.begin_button_height);
-  begin_btn->SetTexture(resources_->begin_button_texture);
+  begin_btn->SetTexture(resources_->begin_button);
   begin_btn->SetNormalSrcRect(
       {0, 0, ui_config_.menus.begin_button_texture_width,
        ui_config_.menus.begin_button_texture_height / 2});
@@ -837,7 +837,7 @@ void UIManager::BuildGameOverScreen() {
   game_over_image->SetAnchor(AnchorType::Center);
   game_over_image->SetSize(ui_config_.hud.game_over_sprite_width,
                            ui_config_.hud.game_over_sprite_height);
-  game_over_image->SetTexture(resources_->game_over_texture);
+  game_over_image->SetTexture(resources_->game_over);
   game_over_image->SetSrcRect({0, 0, ui_config_.hud.game_over_sprite_width,
                                ui_config_.hud.game_over_sprite_height});
 
@@ -867,7 +867,7 @@ void UIManager::BuildQuitConfirmMenu() {
   menu->SetAnchor(AnchorType::Center);
   menu->SetSize(ui_config_.menus.quit_menu_width,
                 ui_config_.menus.quit_menu_height);
-  menu->SetBackground(resources_->settings_menu_background_texture);
+  menu->SetBackground(resources_->settings_menu_background);
   menu->SetBackgroundSrcRect(
       {0, 0, ui_config_.menus.settings_menu_background_sprite_width,
        ui_config_.menus.settings_menu_background_sprite_height});
@@ -888,7 +888,7 @@ void UIManager::BuildQuitConfirmMenu() {
                      2 * ui_config_.menus.menu_content_padding,
                  100);
   title->SetText("QUIT GAME?");
-  title->SetFont(resources_->ui_font_huge);
+  title->SetFont(resources_->font_huge);
   title->SetCenterWidth(ui_config_.menus.quit_menu_width -
                         2 * ui_config_.menus.menu_content_padding);
   content->AddChild(title);
@@ -908,7 +908,7 @@ void UIManager::BuildQuitConfirmMenu() {
   yes_btn->SetId("quit_yes_button");
   yes_btn->SetSize(ui_config_.menus.settings_menu_button_width,
                    ui_config_.menus.settings_menu_button_height);
-  yes_btn->SetTexture(resources_->button_texture);
+  yes_btn->SetTexture(resources_->button);
   yes_btn->SetNormalSrcRect(
       {0, 0, ui_config_.menus.generic_button_texture_width,
        ui_config_.menus.generic_button_texture_height / 2});
@@ -917,14 +917,14 @@ void UIManager::BuildQuitConfirmMenu() {
        ui_config_.menus.generic_button_texture_width,
        ui_config_.menus.generic_button_texture_height / 2});
   yes_btn->SetLabel("YES");
-  yes_btn->SetLabelFont(resources_->ui_font_medium);
+  yes_btn->SetLabelFont(resources_->font_medium);
   button_row->AddChild(yes_btn);
 
   auto no_btn = std::make_shared<UIButton>();
   no_btn->SetId("quit_no_button");
   no_btn->SetSize(ui_config_.menus.settings_menu_button_width,
                   ui_config_.menus.settings_menu_button_height);
-  no_btn->SetTexture(resources_->button_texture);
+  no_btn->SetTexture(resources_->button);
   no_btn->SetNormalSrcRect(
       {0, 0, ui_config_.menus.generic_button_texture_width,
        ui_config_.menus.generic_button_texture_height / 2});
@@ -933,7 +933,7 @@ void UIManager::BuildQuitConfirmMenu() {
                            ui_config_.menus.generic_button_texture_width,
                            ui_config_.menus.generic_button_texture_height / 2});
   no_btn->SetLabel("NO");
-  no_btn->SetLabelFont(resources_->ui_font_medium);
+  no_btn->SetLabelFont(resources_->font_medium);
   button_row->AddChild(no_btn);
 
   menu->AddChild(button_row);
@@ -981,7 +981,7 @@ void UIManager::BuildChestOpeningScreen() {
   chest_animation->SetId("chest_animated_image");
   chest_animation->SetAnchor(AnchorType::Center);
   chest_animation->SetSize(kChestAnimationWidth, kChestAnimationHeight);
-  chest_animation->SetTexture(resources_->chest_texture);
+  chest_animation->SetTexture(resources_->chest);
   chest_animation->SetFrameDuration(kChestAnimationFrameDuration / 1000.0f);
   chest_animation->SetIsLoop(false);
   for (int frame_index = 0; frame_index < kChestTotalAnimFrames;
@@ -1050,19 +1050,18 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
   card->SetId(card_id);
   card->SetSize(ui_config_.cards.item_card_width,
                 ui_config_.cards.item_card_height);
-  card->SetBackground(resources_->level_up_option_card_texture);
+  card->SetBackground(resources_->level_up_option_card);
   card->SetBackgroundSrcRect({0, 0, 0, 0});  // full texture
 
   int item_id = static_cast<int>(upgrade.GetItemID());
-  if (item_id >= 0 &&
-      item_id < static_cast<int>(resources_->item_textures.size())) {
+  if (item_id >= 0 && item_id < static_cast<int>(resources_->items.size())) {
     auto icon = std::make_shared<UIImage>();
     icon->SetId(card_id + "_icon");
     icon->SetAnchor(AnchorType::TopCenter);
     icon->SetPosition(0, ui_config_.cards.item_card_icon_offset_y);
     icon->SetSize(ui_config_.cards.item_icon_size,
                   ui_config_.cards.item_icon_size);
-    icon->SetTexture(resources_->item_textures[item_id]);
+    icon->SetTexture(resources_->items[item_id]);
     icon->SetSrcRect({0, 0, 0, 0});
     card->AddChild(icon);
   }
@@ -1075,7 +1074,7 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
                           2 * ui_config_.cards.item_card_name_offset_x,
                       96);
   name_label->SetText(upgrade.GetName());
-  name_label->SetFont(resources_->ui_font_large);
+  name_label->SetFont(resources_->font_large);
   name_label->SetColor({255, 255, 255, 255});
   name_label->SetCenterWidth(ui_config_.cards.item_card_width -
                              2 * ui_config_.cards.item_card_name_offset_x);
@@ -1101,7 +1100,7 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
                             2 * ui_config_.cards.item_card_desc_offset_x,
                         25);
     desc_label->SetText(row.description);
-    desc_label->SetFont(resources_->ui_font_medium);
+    desc_label->SetFont(resources_->font_medium);
     desc_label->SetColor({180, 180, 180, 255});
     desc_label->SetCenterWidth(ui_config_.cards.item_card_width -
                                2 * ui_config_.cards.item_card_desc_offset_x);
@@ -1122,7 +1121,7 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
                              2 * ui_config_.cards.item_card_stats_offset_x,
                          25);
     stats_label->SetText(stats_str);
-    stats_label->SetFont(resources_->ui_font_medium);
+    stats_label->SetFont(resources_->font_medium);
     stats_label->SetColor(stats_color);
     stats_label->SetCenterWidth(ui_config_.cards.item_card_width -
                                 2 * ui_config_.cards.item_card_stats_offset_x);
@@ -1136,7 +1135,7 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
   select_btn->SetPosition(0, ui_config_.cards.item_card_button_offset_y);
   select_btn->SetSize(ui_config_.cards.item_card_button_width,
                       ui_config_.cards.item_card_button_height);
-  select_btn->SetTexture(resources_->button_texture);
+  select_btn->SetTexture(resources_->button);
   select_btn->SetNormalSrcRect(
       {0, 0, ui_config_.menus.generic_button_texture_width,
        ui_config_.menus.generic_button_texture_height / 2});
@@ -1145,7 +1144,7 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
        ui_config_.menus.generic_button_texture_width,
        ui_config_.menus.generic_button_texture_height / 2});
   select_btn->SetLabel("CLAIM");
-  select_btn->SetLabelFont(resources_->ui_font_medium);
+  select_btn->SetLabelFont(resources_->font_medium);
   card->AddChild(select_btn);
 
   parent->AddChild(card);
@@ -1217,9 +1216,8 @@ void UIManager::BuildInventoryItem(UIWidget* parent, int index,
 
   int item_texture_idx = static_cast<int>(inventory_item.item_id);
   if (item_texture_idx >= 0 &&
-      item_texture_idx < static_cast<int>(resources_->item_textures.size())) {
-    inventory_item_widget->SetItemTexture(
-        resources_->item_textures[item_texture_idx]);
+      item_texture_idx < static_cast<int>(resources_->items.size())) {
+    inventory_item_widget->SetItemTexture(resources_->items[item_texture_idx]);
   }
 
   // Add multiplier label to the right of the icon
@@ -1227,7 +1225,7 @@ void UIManager::BuildInventoryItem(UIWidget* parent, int index,
   multiplier_label->SetId(item_id + "_multiplier");
   std::string multiplier_text = "x" + std::to_string(inventory_item.count);
   multiplier_label->SetText(multiplier_text);
-  multiplier_label->SetFont(resources_->ui_font_medium);
+  multiplier_label->SetFont(resources_->font_medium);
   multiplier_label->SetColor({255, 255, 255, 255});
   int label_x = ui_config_.inventory.inventory_icon_size +
                 ui_config_.inventory.inventory_multiplier_margin;

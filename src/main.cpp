@@ -6,6 +6,7 @@ int main(int /*argc*/, char* /*args*/[]) {
 
   if (game.Initialize()) {
     game.RunGameLoop();
+    game.Shutdown();
   }
 
   return 0;

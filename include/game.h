@@ -21,6 +21,7 @@
 #include "render_manager.h"
 #include "reward_manager.h"
 #include "scene.h"
+#include "spell_manager.h"
 #include "types.h"
 
 namespace arelto {
@@ -50,6 +51,7 @@ class Game {
   PhysicsManager physics_manager_;
   EntityManager entity_manager_;
   ProgressionManager progression_manager_;
+  SpellManager spell_manager_;
   AudioManager audio_manager_;
   GameStatus game_status_;
   GameState game_state_;

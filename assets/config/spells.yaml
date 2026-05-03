@@ -1,0 +1,16 @@
+- name: "fireball"
+  width: 60
+  height: 60
+  sprite_cell_width: 60
+  sprite_cell_height: 60
+  speed: 500.0
+  damage: 5
+  cooldown: 1.0
+- name: "frostbolt"
+  width: 100
+  height: 100
+  sprite_cell_width: 60
+  sprite_cell_height: 60
+  speed: 250.0
+  damage: 10
+  cooldown: 2.0

@@ -202,6 +202,13 @@ void Player::AddToInventory(ItemId item_id) {
   inventory_.emplace_back(item_id, 1);
 }
 
+int Player::CalculateOutgoingDamage(int base_damage) {
+  float global_dmg_mod = stats_.global_damage_modifier.GetValue();
+  int total_damage = static_cast<int>(
+      std::round(static_cast<float>(base_damage) * global_dmg_mod));
+  return total_damage;
+}
+
 void ExpGem::AddExpGem(ExpGemData gem) {
   rarity_.push_back(gem.rarity);
   position_.push_back(gem.position);

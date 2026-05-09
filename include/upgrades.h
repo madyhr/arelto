@@ -21,6 +21,7 @@ struct UpgradeDisplayRow {
   std::string description;
   std::string old_value;
   std::string new_value;
+  bool is_improvement = true;
 };
 
 class Upgrade {

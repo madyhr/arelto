@@ -147,22 +147,21 @@ void Player::UpdateAllSpellStats() {
 std::optional<ProjectileData> Player::CastProjectileSpell(
     BaseProjectileSpell& spell, float time, Vector2D cursor_position) {
 
-  bool spell_is_ready = time >= spell.GetReadyTime();
-  if (spell_is_ready) {
-    Vector2D centroid = GetCentroid(position_, stats_.sprite_size);
-    Vector2D spell_direction = (cursor_position - centroid).Normalized();
-    ProjectileData projectile_spell = {static_cast<int>(entity_type_),
-                                       position_,
-                                       spell_direction,
-                                       spell.GetSpeed(),
-                                       spell.GetCollider(),
-                                       spell.GetSpriteSize(),
-                                       spell.GetInvMass(),
-                                       spell.GetId()};
-    spell.SetTimeOfLastUse(time);
-    return projectile_spell;
+  if (!(IsSpellReady(spell, time))) {
+    return std::nullopt;
   }
-  return std::nullopt;
+  Vector2D centroid = GetCentroid(position_, stats_.sprite_size);
+  Vector2D spell_direction = (cursor_position - centroid).Normalized();
+  ProjectileData projectile_spell = {static_cast<int>(entity_type_),
+                                     position_,
+                                     spell_direction,
+                                     spell.GetSpeed(),
+                                     spell.GetCollider(),
+                                     spell.GetSpriteSize(),
+                                     spell.GetInvMass(),
+                                     spell.GetId()};
+  spell.SetTimeOfLastUse(time);
+  return projectile_spell;
 };
 
 BaseProjectileSpell* Player::GetSpell(SpellId id) {
@@ -200,6 +199,20 @@ void Player::AddToInventory(ItemId item_id) {
     }
   }
   inventory_.emplace_back(item_id, 1);
+}
+
+int Player::CalculateOutgoingDamage(int base_damage) {
+  float global_dmg_mod = stats_.global_damage_modifier.GetValue();
+  int total_damage = static_cast<int>(
+      std::round(static_cast<float>(base_damage) * global_dmg_mod));
+  return total_damage;
+}
+
+bool Player::IsSpellReady(BaseSpell& spell, float time) {
+  float modified_cd =
+      spell.GetCooldown() * stats_.global_cooldown_modifier.GetValue();
+
+  return time >= (spell.GetTimeOfLastUse() + modified_cd);
 }
 
 void ExpGem::AddExpGem(ExpGemData gem) {

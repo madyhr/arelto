@@ -1110,7 +1110,7 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
       continue;
     }
     std::string stats_str = row.old_value + " -> " + row.new_value;
-    SDL_Color stats_color = row.new_value > row.old_value
+    SDL_Color stats_color = row.is_improvement
                                 ? ui_config_.colors.positive_green
                                 : ui_config_.colors.negative_red;
     auto stats_label = std::make_shared<UILabel>();

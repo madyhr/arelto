@@ -64,7 +64,7 @@ std::unique_ptr<Upgrade> MakeNegativeStatItemUpgrade() {
   std::vector<ItemStatModifier> stat_modifiers;
   stat_modifiers.push_back(ItemStatModifier{
       ItemUpgradeType::movement_speed, ModifierType::percent_mult, -0.05f,
-      ValueRange{1.0f, 0.95f}, "Slow Movement"});
+      ValueRange{1.0f, 0.95f}, "Slow Movement", true});
   return std::make_unique<ItemUpgrade>(
       ItemId::elia_armor_plate, "Skewer-safe Armorplate of Elia",
       std::move(stat_modifiers), std::vector<ItemTriggerModifier>{});

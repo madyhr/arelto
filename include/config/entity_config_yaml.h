@@ -22,6 +22,8 @@ struct convert<arelto::PlayerConfig> {
     node["initial_exp_requirement"] = rhs.initial_exp_requirement;
     node["exp_required_scale"] = rhs.exp_required_scale;
     node["invulnerable_window_s"] = rhs.invulnerable_window_s;
+    node["global_damage_modifier"] = rhs.global_damage_modifier;
+    node["global_cooldown_modifier"] = rhs.global_cooldown_modifier;
     return node;
   }
 
@@ -48,6 +50,10 @@ struct convert<arelto::PlayerConfig> {
                  &arelto::PlayerConfig::exp_required_scale, kOwner);
     DecodeMember(node, "invulnerable_window_s", rhs,
                  &arelto::PlayerConfig::invulnerable_window_s, kOwner);
+    DecodeMember(node, "global_damage_modifier", rhs,
+                 &arelto::PlayerConfig::global_damage_modifier, kOwner);
+    DecodeMember(node, "global_cooldown_modifier", rhs,
+                 &arelto::PlayerConfig::global_cooldown_modifier, kOwner);
     return true;
   }
 };
@@ -182,14 +188,13 @@ struct convert<arelto::ChestConfig> {
 
     constexpr const char* kOwner = "entity.chest";
 
-    DecodeMember(node, "spawn_chance", rhs,
-                 &arelto::ChestConfig::spawn_chance, kOwner);
+    DecodeMember(node, "spawn_chance", rhs, &arelto::ChestConfig::spawn_chance,
+                 kOwner);
     DecodeMember(node, "gem_min_separation", rhs,
                  &arelto::ChestConfig::gem_min_separation, kOwner);
     DecodeMember(node, "width", rhs, &arelto::ChestConfig::width, kOwner);
     DecodeMember(node, "height", rhs, &arelto::ChestConfig::height, kOwner);
-    DecodeMember(node, "inv_mass", rhs, &arelto::ChestConfig::inv_mass,
-                 kOwner);
+    DecodeMember(node, "inv_mass", rhs, &arelto::ChestConfig::inv_mass, kOwner);
     return true;
   }
 };

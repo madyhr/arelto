@@ -103,6 +103,8 @@ class Player {
   const BaseProjectileSpell* GetSpell(SpellId id) const;
   void TakeDamage(int damage);
   void TakeHealing(int healing);
+  int CalculateOutgoingDamage(int damage);
+  bool IsSpellReady(BaseSpell& spell, float time);
   void AddToInventory(ItemId item_id);
   Inventory inventory_;
 };

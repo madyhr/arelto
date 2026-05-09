@@ -26,7 +26,7 @@ class BaseSpell {
   float GetCooldown() { return cooldown_; };
   void SetCooldown(float cooldown) { cooldown_ = cooldown; };
   void SetTimeOfLastUse(float time) { time_of_last_use_ = time; };
-  float GetReadyTime() const { return cooldown_ + time_of_last_use_; };
+  float GetTimeOfLastUse() { return time_of_last_use_; };
 };
 
 class BaseProjectileSpell : public BaseSpell {

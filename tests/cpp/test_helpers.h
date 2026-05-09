@@ -42,7 +42,8 @@ inline void DeactivateAllEnemies(Enemy& enemy) {
 
 // Create a projectile at specific position
 inline ProjectileData CreateProjectileAt(float x, float y, float vx, float vy,
-                                         float speed = 100.0f) {
+                                         float speed = 100.0f,
+                                         int proj_type = 0) {
   ProjectileData proj;
   proj.owner_id = 0;
   proj.position = {x, y};
@@ -51,7 +52,7 @@ inline ProjectileData CreateProjectileAt(float x, float y, float vx, float vy,
   proj.collider = {{8.0f, 8.0f}, {16, 16}};
   proj.sprite_size = {16, 16};
   proj.inv_mass = 1.0f;
-  proj.proj_type = 0;
+  proj.proj_type = proj_type;
   return proj;
 }
 

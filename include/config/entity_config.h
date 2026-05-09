@@ -17,6 +17,7 @@ struct PlayerConfig {
   float initial_exp_requirement = 10.0f;
   float exp_required_scale = 1.1f;
   float invulnerable_window_s = 0.1f;
+  float global_damage_modifier = 1.0f;
 };
 
 struct EnemyConfig {

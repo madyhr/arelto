@@ -321,6 +321,7 @@ struct Stats {
   Size2D sprite_size;
   Stat inv_mass;
   Stat armor;
+  Stat global_damage_modifier;
 };
 
 struct ProjectileData {

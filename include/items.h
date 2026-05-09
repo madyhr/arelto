@@ -50,7 +50,12 @@ class HealOnKillEffect : public ItemTriggerEffect {
 };
 
 enum ItemId : int { elia_armor_plate = 0, damodei_claw, volmnih_boots, count };
-enum class ItemUpgradeType : int { armor = 0, movement_speed, count };
+enum class ItemUpgradeType : int {
+  armor = 0,
+  movement_speed,
+  global_damage_modifier,
+  count
+};
 
 struct ItemStatSpec {
   ItemUpgradeType stat_type;

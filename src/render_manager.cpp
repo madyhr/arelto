@@ -129,6 +129,7 @@ bool RenderManager::LoadTextures(
 
   resources_.items.push_back(LoadTexture("items", "elia_armor", manifest));
   resources_.items.push_back(LoadTexture("items", "damodei_claw", manifest));
+  resources_.items.push_back(LoadTexture("items", "volmnih_boots", manifest));
 
   resources_.digit_font = LoadTexture("ui", "digit_font", manifest);
   resources_.level_indicator = LoadTexture("ui", "level_indicator", manifest);

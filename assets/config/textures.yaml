@@ -28,6 +28,7 @@ items:
   elia_armor: "assets/textures/elia_skewersafe_armorplate.png"
   damodei_claw: "assets/textures/damodei_claw.png"
   volmnih_boots: "assets/textures/volmnih_boots.png"
+  sarto_button_bible: "assets/textures/sarto_button_bible.png"
 
 spells:
   fireball: "assets/textures/fireball_sprite_sheet.png"

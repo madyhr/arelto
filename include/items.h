@@ -4,7 +4,6 @@
 #include <functional>
 #include <iomanip>
 #include <memory>
-#include <numbers>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -49,7 +48,14 @@ class HealOnKillEffect : public ItemTriggerEffect {
   int heal_amount_;
 };
 
-enum ItemId : int { elia_armor_plate = 0, damodei_claw, volmnih_boots, count };
+enum ItemId : int {
+  elia_armor_plate = 0,
+  damodei_claw,
+  volmnih_boots,
+  sarto_button_bible,
+  count
+};
+
 enum class ItemUpgradeType : int {
   armor = 0,
   movement_speed,
@@ -125,6 +131,16 @@ class ItemArchive {
         {ItemStatSpec{ItemUpgradeType::movement_speed,
                       ModifierType::percent_mult, 0.1f,
                       "Increase Movement Speed"}},
+        {}};
+    archive_[ItemId::sarto_button_bible] = {
+        ItemId::sarto_button_bible,
+        "Bible of Sarto Button",
+        {ItemStatSpec{ItemUpgradeType::global_damage_modifier,
+                      ModifierType::percent_mult, -0.05f,
+                      "Decrease the damage of all spells."},
+         ItemStatSpec{ItemUpgradeType::global_cooldown_modifier,
+                      ModifierType::percent_mult, -0.1f,
+                      "Decrease the cooldown of all spells."}},
         {}};
   }
 };

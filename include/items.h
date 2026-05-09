@@ -49,7 +49,7 @@ class HealOnKillEffect : public ItemTriggerEffect {
   int heal_amount_;
 };
 
-enum ItemId : int { elia_armor_plate = 0, damodei_claw, count };
+enum ItemId : int { elia_armor_plate = 0, damodei_claw, volmnih_boots, count };
 enum class ItemUpgradeType : int { armor = 0, movement_speed, count };
 
 struct ItemStatSpec {
@@ -100,6 +100,13 @@ class ItemArchive {
         {ItemTriggerSpec{"Heal 5 HP on kill", []() {
                            return std::make_unique<HealOnKillEffect>(5);
                          }}}};
+    archive_[ItemId::volmnih_boots] = {
+        ItemId::volmnih_boots,
+        "Volmnih's Asynchronous Boots",
+        {ItemStatSpec{ItemUpgradeType::movement_speed,
+                      ModifierType::percent_mult, 0.1f,
+                      "Increase Movement Speed"}},
+        {}};
   }
 };
 

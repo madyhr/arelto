@@ -58,6 +58,19 @@ enum class ItemUpgradeType : int {
   count
 };
 
+inline bool IsHigherBetter(ItemUpgradeType type) {
+  switch (type) {
+    case ItemUpgradeType::armor:
+    case ItemUpgradeType::movement_speed:
+    case ItemUpgradeType::global_damage_modifier:
+      return true;
+    case ItemUpgradeType::global_cooldown_modifier:
+      return false;
+    default:
+      return true;
+  }
+}
+
 struct ItemStatSpec {
   ItemUpgradeType stat_type;
   ModifierType modifier_type;
@@ -125,6 +138,7 @@ struct ItemStatModifier {
   float raw_value;
   ValueRange value_range;
   std::string description;
+  bool is_higher_better;
 };
 
 // A single event-triggered effect along with the text the item card should
@@ -167,10 +181,15 @@ class ItemUpgrade : public Upgrade {
     std::vector<UpgradeDisplayRow> rows;
     rows.reserve(stat_modifiers_.size() + trigger_modifiers_.size());
     for (const ItemStatModifier& stat_modifier : stat_modifiers_) {
-      rows.push_back(
-          UpgradeDisplayRow{stat_modifier.description,
-                            FormatValue(stat_modifier.value_range.current),
-                            FormatValue(stat_modifier.value_range.updated)});
+      bool value_increased =
+          stat_modifier.value_range.updated > stat_modifier.value_range.current;
+      bool is_improvement =
+          (value_increased && stat_modifier.is_higher_better) ||
+          (!value_increased && !stat_modifier.is_higher_better);
+      rows.push_back(UpgradeDisplayRow{
+          stat_modifier.description,
+          FormatValue(stat_modifier.value_range.current),
+          FormatValue(stat_modifier.value_range.updated), is_improvement});
     }
     for (const ItemTriggerModifier& trigger_modifier : trigger_modifiers_) {
       rows.push_back(UpgradeDisplayRow{trigger_modifier.description, "", ""});

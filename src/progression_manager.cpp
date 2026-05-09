@@ -120,7 +120,8 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(
         stat->GetModifiedValue(stat_spec.value, stat_spec.modifier_type);
     stat_modifiers.push_back(ItemStatModifier{
         stat_spec.stat_type, stat_spec.modifier_type, stat_spec.value,
-        ValueRange{current_value, updated_value}, stat_spec.description});
+        ValueRange{current_value, updated_value}, stat_spec.description,
+        IsHigherBetter(stat_spec.stat_type)});
   }
 
   std::vector<ItemTriggerModifier> trigger_modifiers;

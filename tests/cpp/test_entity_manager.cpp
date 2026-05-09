@@ -131,5 +131,36 @@ TEST_F(EntityManagerTest,
             entity_manager_.entity_config_.enemy.max_health_points);
 }
 
+TEST_F(EntityManagerTest, PlayerGlobalDamageModifier_MultipleSpells) {
+  entity_manager_.Initialize(event_manager_);
+  // Place enemy and projectile overlapping
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+  scene_.enemy.health_points[0] = 100;
+  ProjectileData proj_a =
+      testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f, 100.0f, 0);
+  ProjectileData proj_b =
+      testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f, 100.0f, 1);
+
+  scene_.projectiles.AddProjectile(proj_a);
+  scene_.projectiles.AddProjectile(proj_b);
+
+  // Set the spell damage of each spell to different values that together should deal 150 damage.
+  scene_.player.spell_stats_.damage[0] = 100;
+  scene_.player.spell_stats_.damage[1] = 50;
+
+  // Set global damage modifier of the player to 50%
+  scene_.player.stats_.global_damage_modifier.SetBaseValue(0.5f);
+
+  event_manager_.Emit(EnemyProjectileCollisionEvent{0, 0});
+  event_manager_.Emit(EnemyProjectileCollisionEvent{0, 1});
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
+  event_manager_.Dispatch(event_context);
+
+  // Both projectiles deal less damage, i.e. 100 - (100*0.5 + 50*0.5) = 25
+  EXPECT_EQ(scene_.enemy.health_points[0], 25);
+}
+
 }  // namespace
 }  // namespace arelto

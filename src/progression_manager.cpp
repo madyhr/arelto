@@ -93,6 +93,8 @@ const Stat* ResolveStatConst(const Player& player, ItemUpgradeType stat_type) {
       return &player.stats_.movement_speed;
     case ItemUpgradeType::global_damage_modifier:
       return &player.stats_.global_damage_modifier;
+    case ItemUpgradeType::global_cooldown_modifier:
+      return &player.stats_.global_cooldown_modifier;
     case ItemUpgradeType::count:
       return nullptr;
   }

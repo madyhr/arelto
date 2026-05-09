@@ -23,6 +23,7 @@ struct convert<arelto::PlayerConfig> {
     node["exp_required_scale"] = rhs.exp_required_scale;
     node["invulnerable_window_s"] = rhs.invulnerable_window_s;
     node["global_damage_modifier"] = rhs.global_damage_modifier;
+    node["global_cooldown_modifier"] = rhs.global_cooldown_modifier;
     return node;
   }
 
@@ -51,6 +52,8 @@ struct convert<arelto::PlayerConfig> {
                  &arelto::PlayerConfig::invulnerable_window_s, kOwner);
     DecodeMember(node, "global_damage_modifier", rhs,
                  &arelto::PlayerConfig::global_damage_modifier, kOwner);
+    DecodeMember(node, "global_cooldown_modifier", rhs,
+                 &arelto::PlayerConfig::global_cooldown_modifier, kOwner);
     return true;
   }
 };

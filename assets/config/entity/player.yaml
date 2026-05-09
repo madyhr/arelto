@@ -9,3 +9,4 @@ initial_exp_requirement: 10
 exp_required_scale: 1.1
 invulnerable_window_s: 0.1
 global_damage_modifier: 1.0
+global_cooldown_modifier: 1.0

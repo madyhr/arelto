@@ -322,6 +322,7 @@ struct Stats {
   Stat inv_mass;
   Stat armor;
   Stat global_damage_modifier;
+  Stat global_cooldown_modifier;
 };
 
 struct ProjectileData {

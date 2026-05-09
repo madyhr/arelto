@@ -43,6 +43,8 @@ struct Scene {
     player.stats_.movement_speed.SetBaseValue(player_config.movement_speed);
     player.stats_.global_damage_modifier.SetBaseValue(
         player_config.global_damage_modifier);
+    player.stats_.global_cooldown_modifier.SetBaseValue(
+        player_config.global_cooldown_modifier);
     player.stats_.level = 0;
     player.stats_.exp_points = 0;
     player.stats_.exp_points_required.SetBaseValue(

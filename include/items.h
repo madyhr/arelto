@@ -54,6 +54,7 @@ enum class ItemUpgradeType : int {
   armor = 0,
   movement_speed,
   global_damage_modifier,
+  global_cooldown_modifier,
   count
 };
 

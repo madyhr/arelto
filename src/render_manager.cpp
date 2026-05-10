@@ -132,6 +132,7 @@ bool RenderManager::LoadTextures(
   resources_.items.push_back(LoadTexture("items", "volmnih_boots", manifest));
   resources_.items.push_back(
       LoadTexture("items", "sarto_button_bible", manifest));
+  resources_.items.push_back(LoadTexture("items", "aiayn_scale", manifest));
 
   resources_.digit_font = LoadTexture("ui", "digit_font", manifest);
   resources_.level_indicator = LoadTexture("ui", "level_indicator", manifest);

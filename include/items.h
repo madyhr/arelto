@@ -59,6 +59,7 @@ enum ItemId : int {
 enum class ItemUpgradeType : int {
   armor = 0,
   movement_speed,
+  max_health,
   global_damage_modifier,
   global_cooldown_modifier,
   count
@@ -68,6 +69,7 @@ inline bool IsHigherBetter(ItemUpgradeType type) {
   switch (type) {
     case ItemUpgradeType::armor:
     case ItemUpgradeType::movement_speed:
+    case ItemUpgradeType::max_health:
     case ItemUpgradeType::global_damage_modifier:
       return true;
     case ItemUpgradeType::global_cooldown_modifier:

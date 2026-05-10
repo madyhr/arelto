@@ -67,6 +67,9 @@ enum class ItemUpgradeType : int {
   count
 };
 
+const Stat* ResolveItemStat(const Player& player, ItemUpgradeType stat_type);
+Stat* ResolveItemStat(Player& player, ItemUpgradeType stat_type);
+
 inline bool IsHigherBetter(ItemUpgradeType type) {
   switch (type) {
     case ItemUpgradeType::armor:

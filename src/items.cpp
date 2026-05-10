@@ -5,9 +5,7 @@
 
 namespace arelto {
 
-namespace {
-
-Stat* ResolveStat(Player& player, ItemUpgradeType stat_type) {
+const Stat* ResolveItemStat(const Player& player, ItemUpgradeType stat_type) {
   switch (stat_type) {
     case ItemUpgradeType::armor:
       return &player.stats_.armor;
@@ -29,11 +27,14 @@ Stat* ResolveStat(Player& player, ItemUpgradeType stat_type) {
   return nullptr;
 }
 
-}  // namespace
+Stat* ResolveItemStat(Player& player, ItemUpgradeType stat_type) {
+  return const_cast<Stat*>(
+      ResolveItemStat(static_cast<const Player&>(player), stat_type));
+}
 
 void ItemUpgrade::Apply(Player& player, ItemManager& item_manager) {
   for (const ItemStatModifier& stat_modifier : stat_modifiers_) {
-    Stat* stat_to_upgrade = ResolveStat(player, stat_modifier.stat_type);
+    Stat* stat_to_upgrade = ResolveItemStat(player, stat_modifier.stat_type);
     if (stat_to_upgrade == nullptr) {
       continue;
     }

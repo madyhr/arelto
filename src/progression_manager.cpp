@@ -88,33 +88,6 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
       sprite_size);
 }
 
-namespace {
-
-// TODO: Unify with the non-const version currently defined in `items.cpp`.
-const Stat* ResolveStatConst(const Player& player, ItemUpgradeType stat_type) {
-  switch (stat_type) {
-    case ItemUpgradeType::armor:
-      return &player.stats_.armor;
-    case ItemUpgradeType::movement_speed:
-      return &player.stats_.movement_speed;
-    case ItemUpgradeType::max_health:
-      return &player.stats_.max_health;
-    case ItemUpgradeType::size:
-      // As player size is defined used class `StatSize`, the size is defined
-      // by only its `width_` property with class `Stat`.
-      return &player.stats_.size.width_;
-    case ItemUpgradeType::global_damage_modifier:
-      return &player.stats_.global_damage_modifier;
-    case ItemUpgradeType::global_cooldown_modifier:
-      return &player.stats_.global_cooldown_modifier;
-    case ItemUpgradeType::count:
-      return nullptr;
-  }
-  return nullptr;
-}
-
-}  // namespace
-
 std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(
     const Scene& scene) {
   ItemId item_id = static_cast<ItemId>(std::rand() % ItemId::count);
@@ -123,7 +96,7 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(
   std::vector<ItemStatModifier> stat_modifiers;
   stat_modifiers.reserve(item.stat_specs.size());
   for (const ItemStatSpec& stat_spec : item.stat_specs) {
-    const Stat* stat = ResolveStatConst(scene.player, stat_spec.stat_type);
+    const Stat* stat = ResolveItemStat(scene.player, stat_spec.stat_type);
     if (stat == nullptr) {
       continue;
     }

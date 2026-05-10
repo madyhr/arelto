@@ -19,13 +19,13 @@ struct UIFontConfig {
 };
 
 struct UIHudConfig {
-  int hud_padding = 50;
-  int hud_bar_spacing = 8;
-  int bar_text_offset_x = 50;
-  int bar_text_offset_y = 0;
-  int level_group_offset_y = 55;
-  int timer_text_gap = 10;
-  int level_text_gap = -2;
+  float hud_padding = 50.0f;
+  float hud_bar_spacing = 8.0f;
+  float bar_text_offset_x = 50.0f;
+  float bar_text_offset_y = 0.0f;
+  float level_group_offset_y = 55.0f;
+  float timer_text_gap = 10.0f;
+  float level_text_gap = -2.0f;
 
   int digit_sprite_width = 30;
   int digit_sprite_height = 50;
@@ -40,8 +40,8 @@ struct UIHudConfig {
   int health_bar_sprite_offset_y = 128;
   int health_bar_sprite_width = 299;
   int health_bar_sprite_height = 28;
-  int health_bar_text_rel_offset_x = 100;
-  int health_bar_text_rel_offset_y = 32;
+  float health_bar_text_rel_offset_x = 100.0f;
+  float health_bar_text_rel_offset_y = 32.0f;
   int health_bar_text_char_width = 20;
   int health_bar_text_char_height = 25;
 
@@ -63,8 +63,8 @@ struct UIHudConfig {
   int exp_bar_sprite_offset_y = 128;
   int exp_bar_sprite_width = 299;
   int exp_bar_sprite_height = 28;
-  int exp_bar_text_rel_offset_x = 100;
-  int exp_bar_text_rel_offset_y = 32;
+  float exp_bar_text_rel_offset_x = 100.0f;
+  float exp_bar_text_rel_offset_y = 32.0f;
   int exp_bar_text_char_width = 20;
   int exp_bar_text_char_height = 25;
 
@@ -74,40 +74,40 @@ struct UIHudConfig {
   int level_icon_sprite_height = 74;
   int level_text_char_width = 50;
   int level_text_char_height = 72;
-  int level_up_icon_margin = -10;
-  int level_up_text_margin = -10;
+  float level_up_icon_margin = -10.0f;
+  float level_up_text_margin = -10.0f;
 };
 
 struct UIMenuConfig {
-  int menu_content_padding = 100;
-  int menu_item_spacing = 25;
-  int menu_button_gap = 20;
-  int menu_bottom_padding = 60;
+  float menu_content_padding = 100.0f;
+  float menu_item_spacing = 25.0f;
+  float menu_button_gap = 20.0f;
+  float menu_bottom_padding = 60.0f;
 
   int generic_button_texture_width = 300;
   int generic_button_texture_height = 160;
 
   int begin_button_texture_width = 638;
   int begin_button_texture_height = 540;
-  int begin_button_width = 450;
-  int begin_button_height = 175;
-  int begin_button_y = 2 * (kWindowHeight - begin_button_height) / 7;
+  float begin_button_width = 450.0f;
+  float begin_button_height = 175.0f;
+  float begin_button_y = 2.0f * (kWindowHeight - begin_button_height) / 7.0f;
 
-  int settings_menu_width = 450;
-  int settings_menu_height = 750;
+  float settings_menu_width = 450.0f;
+  float settings_menu_height = 750.0f;
   int settings_menu_background_sprite_width = 900;
   int settings_menu_background_sprite_height = 1000;
-  int settings_menu_button_width = 150;
-  int settings_menu_button_height = 50;
-  int settings_menu_volume_slider_width = 300;
-  int settings_menu_volume_slider_height = 30;
-  int volume_slider_fill_offset_x = 15;
-  int volume_slider_fill_offset_y = 5;
+  float settings_menu_button_width = 150.0f;
+  float settings_menu_button_height = 50.0f;
+  float settings_menu_volume_slider_width = 300.0f;
+  float settings_menu_volume_slider_height = 30.0f;
+  float volume_slider_fill_offset_x = 15.0f;
+  float volume_slider_fill_offset_y = 5.0f;
   int volume_slider_fill_width = 275;
   int volume_slider_fill_height = 20;
 
-  int quit_menu_width = 550;
-  int quit_menu_height = 300;
+  float quit_menu_width = 550.0f;
+  float quit_menu_height = 300.0f;
 
   int slider_container_sprite_offset_x = 0;
   int slider_container_sprite_offset_y = 0;
@@ -125,49 +125,49 @@ struct UIMenuConfig {
 };
 
 struct UICardConfig {
-  int level_up_card_width = 400;
-  int level_up_card_height = 600;
-  int level_up_card_gap = 100;
-  int level_up_icon_offset_y = 120;
-  int level_up_icon_size = 80;
-  int level_up_name_offset_y = 220;
-  int level_up_name_offset_x = 70;
-  int level_up_desc_offset_y = 300;
-  int level_up_desc_offset_x = 70;
-  int level_up_stats_offset_y = 350;
-  int level_up_stats_offset_x = 70;
-  int level_up_row_stride = 55;
-  int level_up_button_offset_y = 440;
-  int level_up_button_width = 200;
-  int level_up_button_height = 50;
+  float level_up_card_width = 400.0f;
+  float level_up_card_height = 600.0f;
+  float level_up_card_gap = 100.0f;
+  float level_up_icon_offset_y = 120.0f;
+  float level_up_icon_size = 80.0f;
+  float level_up_name_offset_y = 220.0f;
+  float level_up_name_offset_x = 70.0f;
+  float level_up_desc_offset_y = 300.0f;
+  float level_up_desc_offset_x = 70.0f;
+  float level_up_stats_offset_y = 350.0f;
+  float level_up_stats_offset_x = 70.0f;
+  float level_up_row_stride = 55.0f;
+  float level_up_button_offset_y = 440.0f;
+  float level_up_button_width = 200.0f;
+  float level_up_button_height = 50.0f;
 
-  int item_icon_size = 300;
-  int item_card_width = 650;
-  int item_card_height = 1000;
-  int item_card_gap = 150;
-  int item_card_icon_offset_y = 160;
+  float item_icon_size = 300.0f;
+  float item_card_width = 650.0f;
+  float item_card_height = 1000.0f;
+  float item_card_gap = 150.0f;
+  float item_card_icon_offset_y = 160.0f;
   int item_card_icon_size = 80;
-  int item_card_name_offset_y = 475;
-  int item_card_name_offset_x = 100;
-  int item_card_desc_offset_y = 600;
-  int item_card_desc_offset_x = 70;
-  int item_card_stats_offset_y = 648;
-  int item_card_stats_offset_x = 70;
-  int item_card_row_stride = 100;
-  int item_card_button_offset_y = 800;
-  int item_card_button_width = 200;
-  int item_card_button_height = 50;
+  float item_card_name_offset_x = 100.0f;
+  float item_card_name_offset_y = 475.0f;
+  float item_card_desc_offset_x = 70.0f;
+  float item_card_desc_offset_y = 600.0f;
+  float item_card_stats_offset_x = 70.0f;
+  float item_card_stats_offset_y = 648.0f;
+  float item_card_row_stride = 100.0f;
+  float item_card_button_offset_y = 800.0f;
+  float item_card_button_width = 200.0f;
+  float item_card_button_height = 50.0f;
 };
 
 struct UIInventoryConfig {
-  int inventory_bar_y = 50;
-  int inventory_icon_size = 60;
-  int inventory_widget_height = 60;
-  int inventory_label_width = 20;
-  int inventory_item_gap = 15;
-  int inventory_multiplier_size = 16;
-  int inventory_multiplier_margin = 0;
-  int inventory_container_padding = 20;
+  float inventory_bar_y = 50.0f;
+  float inventory_icon_size = 60.0f;
+  float inventory_widget_height = 60.0f;
+  float inventory_label_width = 20.0f;
+  float inventory_item_gap = 15.0f;
+  float inventory_multiplier_size = 16.0f;
+  float inventory_multiplier_margin = 0.0f;
+  float inventory_container_padding = 20.0f;
   int inventory_background_alpha = 64;
 };
 

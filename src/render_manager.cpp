@@ -1055,7 +1055,8 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       }
       if (btn->GetLabelFont() && !btn->GetLabel().empty()) {
         RenderText(btn->GetLabel(), {bounds.x, bounds.y + (bounds.h - 26) / 2},
-                   {255, 255, 255, 255}, btn->GetLabelFont(), {bounds.w, 0});
+                   {255, 255, 255, 255}, btn->GetLabelFont(),
+                   {static_cast<float>(bounds.w), 0.0f});
       }
       break;
     }
@@ -1186,21 +1187,25 @@ void RenderManager::RenderQuitConfirmMenu() {
 void RenderManager::RenderText(const std::string& text, SDL_Point pos,
                                SDL_Color color, TTF_Font* font,
                                TextLayout layout) {
-  if (layout.wrap_width > 0) {
+  if (layout.wrap_width > 0.0f) {
     TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_CENTER);
   }
   SDL_Surface* surface =
-      layout.wrap_width > 0 ? TTF_RenderText_Blended_Wrapped(
-                                  font, text.c_str(), color, layout.wrap_width)
-                            : TTF_RenderText_Blended(font, text.c_str(), color);
-  if (layout.wrap_width > 0) {
+      layout.wrap_width > 0.0f
+          ? TTF_RenderText_Blended_Wrapped(
+                font, text.c_str(), color,
+                static_cast<Uint32>(layout.wrap_width))
+          : TTF_RenderText_Blended(font, text.c_str(), color);
+  if (layout.wrap_width > 0.0f) {
     TTF_SetFontWrappedAlign(font, TTF_WRAPPED_ALIGN_LEFT);
   }
   SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer_, surface);
 
   int render_x = pos.x;
-  if (layout.center_width > 0) {
-    render_x = pos.x + (layout.center_width - surface->w) / 2;
+  if (layout.center_width > 0.0f) {
+    render_x = pos.x + static_cast<int>((layout.center_width -
+                                         static_cast<float>(surface->w)) /
+                                        2.0f);
   }
 
   SDL_Rect dest = {render_x, pos.y, surface->w, surface->h};

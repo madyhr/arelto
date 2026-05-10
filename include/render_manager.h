@@ -23,8 +23,8 @@
 namespace arelto {
 
 struct TextLayout {
-  int center_width;
-  int wrap_width;
+  float center_width;
+  float wrap_width;
 };
 
 class RenderManager {
@@ -101,7 +101,7 @@ class RenderManager {
   void RenderDigitString(const std::string& text, int start_x, int start_y,
                          Size2D sprite_size, Size2D char_size);
   void RenderText(const std::string& text, SDL_Point pos, SDL_Color color,
-                  TTF_Font* font, TextLayout layout = {0, 0});
+                  TTF_Font* font, TextLayout layout = {0.0f, 0.0f});
 };
 
 }  // namespace arelto

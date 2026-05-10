@@ -13,6 +13,14 @@
 
 namespace arelto {
 
+namespace {
+
+constexpr float ToLayoutFloat(int value) {
+  return static_cast<float>(value);
+}
+
+}  // namespace
+
 void UIManager::SetupUI(const RenderResources& resources,
                         const UIConfig& config, EventManager& event_manager) {
   resources_ = &resources;
@@ -69,13 +77,15 @@ void UIManager::BuildHUD() {
 
   auto timer_row = std::make_shared<HBox>();
   timer_row->SetId("timer_row");
-  timer_row->SetSize(200, ui_config_.hud.timer_hourglass_sprite_height);
+  timer_row->SetSize(
+      200, ToLayoutFloat(ui_config_.hud.timer_hourglass_sprite_height));
   timer_row->SetSpacing(ui_config_.hud.timer_text_gap);
 
   auto timer_icon = std::make_shared<UIImage>();
   timer_icon->SetId("timer_icon");
-  timer_icon->SetSize(ui_config_.hud.timer_hourglass_sprite_width,
-                      ui_config_.hud.timer_hourglass_sprite_height);
+  timer_icon->SetSize(
+      ToLayoutFloat(ui_config_.hud.timer_hourglass_sprite_width),
+      ToLayoutFloat(ui_config_.hud.timer_hourglass_sprite_height));
   timer_icon->SetTexture(resources_->timer_hourglass);
   timer_icon->SetSrcRect({0, 0, ui_config_.hud.timer_hourglass_sprite_width,
                           ui_config_.hud.timer_hourglass_sprite_height});
@@ -83,8 +93,8 @@ void UIManager::BuildHUD() {
 
   auto timer_text = std::make_shared<UILabel>();
   timer_text->SetId("timer_text");
-  timer_text->SetSize(ui_config_.hud.timer_text_char_width * 3,
-                      ui_config_.hud.timer_text_char_height);
+  timer_text->SetSize(ToLayoutFloat(ui_config_.hud.timer_text_char_width * 3),
+                      ToLayoutFloat(ui_config_.hud.timer_text_char_height));
   timer_text->SetUseDigitFont(true);
   timer_text->SetDigitSpriteSize(ui_config_.hud.digit_sprite_width,
                                  ui_config_.hud.digit_sprite_height);
@@ -96,12 +106,13 @@ void UIManager::BuildHUD() {
 
   auto level_row = std::make_shared<HBox>();
   level_row->SetId("level_row");
-  level_row->SetSize(200, ui_config_.hud.level_icon_sprite_height);
+  level_row->SetSize(200,
+                     ToLayoutFloat(ui_config_.hud.level_icon_sprite_height));
 
   auto level_icon = std::make_shared<UIImage>();
   level_icon->SetId("level_icon");
-  level_icon->SetSize(ui_config_.hud.level_icon_sprite_width,
-                      ui_config_.hud.level_icon_sprite_height);
+  level_icon->SetSize(ToLayoutFloat(ui_config_.hud.level_icon_sprite_width),
+                      ToLayoutFloat(ui_config_.hud.level_icon_sprite_height));
   level_icon->SetTexture(resources_->level_indicator);
   level_icon->SetSrcRect({ui_config_.hud.level_icon_sprite_offset_x,
                           ui_config_.hud.level_icon_sprite_offset_y,
@@ -112,8 +123,8 @@ void UIManager::BuildHUD() {
 
   auto level_text = std::make_shared<UILabel>();
   level_text->SetId("level_text");
-  level_text->SetSize(ui_config_.hud.level_text_char_width * 3,
-                      ui_config_.hud.level_text_char_height);
+  level_text->SetSize(ToLayoutFloat(ui_config_.hud.level_text_char_width * 3),
+                      ToLayoutFloat(ui_config_.hud.level_text_char_height));
   level_text->SetUseDigitFont(true);
   level_text->SetDigitSpriteSize(ui_config_.hud.digit_sprite_width,
                                  ui_config_.hud.digit_sprite_height);
@@ -131,15 +142,17 @@ void UIManager::BuildHUD() {
   bottom_left->SetAnchor(AnchorType::BottomLeft);
   bottom_left->SetPosition(ui_config_.hud.hud_padding,
                            -ui_config_.hud.hud_padding);
-  bottom_left->SetSize(ui_config_.hud.health_bar_container_sprite_width,
-                       ui_config_.hud.health_bar_container_sprite_height * 2 +
-                           ui_config_.hud.hud_bar_spacing);
+  bottom_left->SetSize(
+      ToLayoutFloat(ui_config_.hud.health_bar_container_sprite_width),
+      ToLayoutFloat(ui_config_.hud.health_bar_container_sprite_height) * 2.0f +
+          ui_config_.hud.hud_bar_spacing);
   bottom_left->SetSpacing(ui_config_.hud.hud_bar_spacing);
 
   auto health_bar = std::make_shared<UIProgressBar>();
   health_bar->SetId("health_bar");
-  health_bar->SetSize(ui_config_.hud.health_bar_container_sprite_width,
-                      ui_config_.hud.health_bar_container_sprite_height);
+  health_bar->SetSize(
+      ToLayoutFloat(ui_config_.hud.health_bar_container_sprite_width),
+      ToLayoutFloat(ui_config_.hud.health_bar_container_sprite_height));
   health_bar->SetContainerTexture(resources_->health_bar);
   health_bar->SetContainerSrcRect(
       {ui_config_.hud.health_bar_container_sprite_offset_x,
@@ -161,8 +174,8 @@ void UIManager::BuildHUD() {
   health_text->SetId("health_text");
   health_text->SetPosition(ui_config_.hud.health_bar_text_rel_offset_x,
                            ui_config_.hud.health_bar_text_rel_offset_y);
-  health_text->SetSize(ui_config_.hud.digit_sprite_width,
-                       ui_config_.hud.digit_sprite_height);
+  health_text->SetSize(ToLayoutFloat(ui_config_.hud.digit_sprite_width),
+                       ToLayoutFloat(ui_config_.hud.digit_sprite_height));
   health_text->SetUseDigitFont(true);
   health_text->SetDigitSpriteSize(ui_config_.hud.digit_sprite_width,
                                   ui_config_.hud.digit_sprite_height);
@@ -174,8 +187,9 @@ void UIManager::BuildHUD() {
 
   auto exp_bar = std::make_shared<UIProgressBar>();
   exp_bar->SetId("exp_bar");
-  exp_bar->SetSize(ui_config_.hud.exp_bar_container_sprite_width,
-                   ui_config_.hud.exp_bar_container_sprite_height);
+  exp_bar->SetSize(
+      ToLayoutFloat(ui_config_.hud.exp_bar_container_sprite_width),
+      ToLayoutFloat(ui_config_.hud.exp_bar_container_sprite_height));
   exp_bar->SetContainerTexture(resources_->exp_bar);
   exp_bar->SetContainerSrcRect(
       {ui_config_.hud.exp_bar_container_sprite_offset_x,
@@ -197,8 +211,8 @@ void UIManager::BuildHUD() {
   exp_text->SetId("exp_text");
   exp_text->SetPosition(ui_config_.hud.exp_bar_text_rel_offset_x,
                         ui_config_.hud.exp_bar_text_rel_offset_y);
-  exp_text->SetSize(ui_config_.hud.digit_sprite_width,
-                    ui_config_.hud.digit_sprite_height);
+  exp_text->SetSize(ToLayoutFloat(ui_config_.hud.digit_sprite_width),
+                    ToLayoutFloat(ui_config_.hud.digit_sprite_height));
   exp_text->SetUseDigitFont(true);
   exp_text->SetDigitSpriteSize(ui_config_.hud.digit_sprite_width,
                                ui_config_.hud.digit_sprite_height);
@@ -465,11 +479,10 @@ void UIManager::BuildLevelUpMenu(const UpgradeOptions& options) {
   auto card_row = std::make_shared<HBox>();
   card_row->SetId("level_up_cards");
   card_row->SetAnchor(AnchorType::Center);
-  int total_width =
+  const float total_width =
       kNumSpellUpgradeOptions * ui_config_.cards.level_up_card_width +
       (kNumSpellUpgradeOptions - 1) * ui_config_.cards.level_up_card_gap;
-  card_row->SetSize(static_cast<float>(total_width),
-                    ui_config_.cards.level_up_card_height);
+  card_row->SetSize(total_width, ui_config_.cards.level_up_card_height);
   card_row->SetSpacing(ui_config_.cards.level_up_card_gap);
 
   for (size_t i = 0; i < options.size(); ++i) {
@@ -527,17 +540,17 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   std::vector<UpgradeDisplayRow> display_rows = upgrade.GetDisplayRows();
   for (size_t row_index = 0; row_index < display_rows.size(); ++row_index) {
     const UpgradeDisplayRow& row = display_rows[row_index];
-    int row_desc_y =
+    const float row_desc_y =
         ui_config_.cards.level_up_desc_offset_y +
-        static_cast<int>(row_index) * ui_config_.cards.level_up_row_stride;
-    int row_stats_y =
+        static_cast<float>(row_index) * ui_config_.cards.level_up_row_stride;
+    const float row_stats_y =
         ui_config_.cards.level_up_stats_offset_y +
-        static_cast<int>(row_index) * ui_config_.cards.level_up_row_stride;
+        static_cast<float>(row_index) * ui_config_.cards.level_up_row_stride;
 
     auto desc_label = std::make_shared<UILabel>();
     desc_label->SetId(card_id + "_desc_" + std::to_string(row_index));
     desc_label->SetPosition(ui_config_.cards.level_up_desc_offset_x,
-                            static_cast<float>(row_desc_y));
+                            row_desc_y);
     desc_label->SetSize(ui_config_.cards.level_up_card_width -
                             2 * ui_config_.cards.level_up_desc_offset_x,
                         25);
@@ -555,7 +568,7 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
     auto stats_label = std::make_shared<UILabel>();
     stats_label->SetId(card_id + "_stats_" + std::to_string(row_index));
     stats_label->SetPosition(ui_config_.cards.level_up_stats_offset_x,
-                             static_cast<float>(row_stats_y));
+                             row_stats_y);
     stats_label->SetSize(ui_config_.cards.level_up_card_width -
                              2 * ui_config_.cards.level_up_stats_offset_x,
                          25);
@@ -788,8 +801,7 @@ void UIManager::BuildStartScreen() {
   begin_btn->SetAnchor(AnchorType::BottomCenter);
   // A negative sign is used for the Y coordinate of the begin button as it is_muted
   // anchored to the bottom, so we want to displace it upwards (reduce Y).
-  begin_btn->SetPosition(0,
-                         -static_cast<float>(ui_config_.menus.begin_button_y));
+  begin_btn->SetPosition(0.0f, -ui_config_.menus.begin_button_y);
   begin_btn->SetSize(ui_config_.menus.begin_button_width,
                      ui_config_.menus.begin_button_height);
   begin_btn->SetTexture(resources_->begin_button);
@@ -850,8 +862,9 @@ void UIManager::BuildGameOverScreen() {
   auto game_over_image = std::make_shared<UIImage>();
   game_over_image->SetId("game_over_image");
   game_over_image->SetAnchor(AnchorType::Center);
-  game_over_image->SetSize(ui_config_.hud.game_over_sprite_width,
-                           ui_config_.hud.game_over_sprite_height);
+  game_over_image->SetSize(
+      ToLayoutFloat(ui_config_.hud.game_over_sprite_width),
+      ToLayoutFloat(ui_config_.hud.game_over_sprite_height));
   game_over_image->SetTexture(resources_->game_over);
   game_over_image->SetSrcRect({0, 0, ui_config_.hud.game_over_sprite_width,
                                ui_config_.hud.game_over_sprite_height});
@@ -1041,10 +1054,10 @@ void UIManager::BuildItemMenu(const UpgradeOptions& options) {
   auto card_row = std::make_shared<HBox>();
   card_row->SetId("item_cards");
   card_row->SetAnchor(AnchorType::Center);
-  int total_width = kNumItemOptions * ui_config_.cards.item_card_width +
-                    (kNumItemOptions - 1) * ui_config_.cards.item_card_gap;
-  card_row->SetSize(static_cast<float>(total_width),
-                    ui_config_.cards.item_card_height);
+  const float total_width =
+      kNumItemOptions * ui_config_.cards.item_card_width +
+      (kNumItemOptions - 1) * ui_config_.cards.item_card_gap;
+  card_row->SetSize(total_width, ui_config_.cards.item_card_height);
   card_row->SetSpacing(ui_config_.cards.item_card_gap);
 
   for (size_t i = 0; i < options.size(); ++i) {
@@ -1100,17 +1113,17 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
   std::vector<UpgradeDisplayRow> display_rows = upgrade.GetDisplayRows();
   for (size_t row_index = 0; row_index < display_rows.size(); ++row_index) {
     const UpgradeDisplayRow& row = display_rows[row_index];
-    int row_desc_y =
+    const float row_desc_y =
         ui_config_.cards.item_card_desc_offset_y +
-        static_cast<int>(row_index) * ui_config_.cards.item_card_row_stride;
-    int row_stats_y =
+        static_cast<float>(row_index) * ui_config_.cards.item_card_row_stride;
+    const float row_stats_y =
         ui_config_.cards.item_card_stats_offset_y +
-        static_cast<int>(row_index) * ui_config_.cards.item_card_row_stride;
+        static_cast<float>(row_index) * ui_config_.cards.item_card_row_stride;
 
     auto desc_label = std::make_shared<UILabel>();
     desc_label->SetId(card_id + "_desc_" + std::to_string(row_index));
     desc_label->SetPosition(ui_config_.cards.item_card_desc_offset_x,
-                            static_cast<float>(row_desc_y));
+                            row_desc_y);
     desc_label->SetSize(ui_config_.cards.item_card_width -
                             2 * ui_config_.cards.item_card_desc_offset_x,
                         25);
@@ -1131,7 +1144,7 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
     auto stats_label = std::make_shared<UILabel>();
     stats_label->SetId(card_id + "_stats_" + std::to_string(row_index));
     stats_label->SetPosition(ui_config_.cards.item_card_stats_offset_x,
-                             static_cast<float>(row_stats_y));
+                             row_stats_y);
     stats_label->SetSize(ui_config_.cards.item_card_width -
                              2 * ui_config_.cards.item_card_stats_offset_x,
                          25);
@@ -1195,8 +1208,7 @@ void UIManager::BuildItemInventory() {
   auto inventory_container = std::make_shared<Panel>();
   inventory_container->SetId("inventory_container");
   inventory_container->SetAnchor(AnchorType::TopCenter);
-  inventory_container->SetPosition(
-      0, static_cast<float>(ui_config_.inventory.inventory_bar_y));
+  inventory_container->SetPosition(0.0f, ui_config_.inventory.inventory_bar_y);
   inventory_container->SetBackgroundColor(WithOpacity(
       kColorBlack, ui_config_.inventory.inventory_background_alpha));
   inventory_container->SetPadding(
@@ -1222,9 +1234,9 @@ void UIManager::BuildInventoryItem(UIWidget* parent, int index,
 
   auto inventory_item_widget = std::make_shared<UIInventoryItem>();
   inventory_item_widget->SetId(item_id);
-  int widget_width = ui_config_.inventory.inventory_icon_size +
-                     ui_config_.inventory.inventory_label_width;
-  inventory_item_widget->SetSize(static_cast<float>(widget_width),
+  const float widget_width = ui_config_.inventory.inventory_icon_size +
+                             ui_config_.inventory.inventory_label_width;
+  inventory_item_widget->SetSize(widget_width,
                                  ui_config_.inventory.inventory_widget_height);
   inventory_item_widget->SetItemId(inventory_item.item_id);
   inventory_item_widget->SetItemCount(inventory_item.count);
@@ -1242,13 +1254,12 @@ void UIManager::BuildInventoryItem(UIWidget* parent, int index,
   multiplier_label->SetText(multiplier_text);
   multiplier_label->SetFont(resources_->font_medium);
   multiplier_label->SetColor({255, 255, 255, 255});
-  int label_x = ui_config_.inventory.inventory_icon_size +
-                ui_config_.inventory.inventory_multiplier_margin;
-  int label_y = (ui_config_.inventory.inventory_widget_height -
-                 ui_config_.inventory.inventory_multiplier_size) /
-                2;
-  multiplier_label->SetPosition(static_cast<float>(label_x),
-                                static_cast<float>(label_y));
+  const float label_x = ui_config_.inventory.inventory_icon_size +
+                        ui_config_.inventory.inventory_multiplier_margin;
+  const float label_y = (ui_config_.inventory.inventory_widget_height -
+                         ui_config_.inventory.inventory_multiplier_size) /
+                        2.0f;
+  multiplier_label->SetPosition(label_x, label_y);
   multiplier_label->SetSize(ui_config_.inventory.inventory_label_width,
                             ui_config_.inventory.inventory_multiplier_size);
   inventory_item_widget->AddChild(multiplier_label);
@@ -1290,23 +1301,25 @@ void UIManager::UpdateItemInventory(const Inventory& inventory) {
   }
 
   int num_items = static_cast<int>(inventory.size());
-  int widget_width = ui_config_.inventory.inventory_icon_size +
-                     ui_config_.inventory.inventory_label_width;
-  int bar_width =
-      num_items * widget_width +
-      (num_items > 0 ? (num_items - 1) * ui_config_.inventory.inventory_item_gap
-                     : 0);
-  inventory_bar->SetSize(static_cast<float>(bar_width),
+  const float widget_width = ui_config_.inventory.inventory_icon_size +
+                             ui_config_.inventory.inventory_label_width;
+  const float item_gaps = num_items > 0
+                              ? static_cast<float>(num_items - 1) *
+                                    ui_config_.inventory.inventory_item_gap
+                              : 0.0f;
+  const float bar_width =
+      static_cast<float>(num_items) * widget_width + item_gaps;
+  inventory_bar->SetSize(bar_width,
                          ui_config_.inventory.inventory_widget_height);
 
-  int container_width =
-      bar_width + 2 * ui_config_.inventory.inventory_container_padding;
-  int container_height = ui_config_.inventory.inventory_widget_height +
-                         2 * ui_config_.inventory.inventory_container_padding;
+  const float container_width =
+      bar_width + 2.0f * ui_config_.inventory.inventory_container_padding;
+  const float container_height =
+      ui_config_.inventory.inventory_widget_height +
+      2.0f * ui_config_.inventory.inventory_container_padding;
   auto* container = root_widget_->FindWidgetAs<Panel>("inventory_container");
   if (container) {
-    container->SetSize(static_cast<float>(container_width),
-                       static_cast<float>(container_height));
+    container->SetSize(container_width, container_height);
     container->SetVisible(num_items > 0);
   }
 

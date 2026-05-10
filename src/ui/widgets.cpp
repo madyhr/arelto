@@ -156,17 +156,17 @@ int UILabel::GetDigitSpriteHeight() const {
   return digit_sprite_height_;
 }
 
-void UILabel::SetCenterWidth(int width) {
+void UILabel::SetCenterWidth(float width) {
   center_width_ = width;
 }
-int UILabel::GetCenterWidth() const {
+float UILabel::GetCenterWidth() const {
   return center_width_;
 }
 
-void UILabel::SetWrapWidth(int width) {
+void UILabel::SetWrapWidth(float width) {
   wrap_width_ = width;
 }
-int UILabel::GetWrapWidth() const {
+float UILabel::GetWrapWidth() const {
   return wrap_width_;
 }
 
@@ -316,14 +316,14 @@ SDL_Rect UIProgressBar::GetFillSrcRect() const {
   return fill_src_rect_;
 }
 
-void UIProgressBar::SetFillOffset(int x, int y) {
+void UIProgressBar::SetFillOffset(float x, float y) {
   fill_offset_x_ = x;
   fill_offset_y_ = y;
 }
-int UIProgressBar::GetFillOffsetX() const {
+float UIProgressBar::GetFillOffsetX() const {
   return fill_offset_x_;
 }
-int UIProgressBar::GetFillOffsetY() const {
+float UIProgressBar::GetFillOffsetY() const {
   return fill_offset_y_;
 }
 
@@ -340,15 +340,15 @@ int UIProgressBar::GetMaxFillHeight() const {
 
 SDL_Rect UIProgressBar::GetClippedFillSrcRect() const {
   SDL_Rect clipped = fill_src_rect_;
-  clipped.w = static_cast<int>(fill_src_rect_.w * percent_);
+  clipped.w = static_cast<int>(static_cast<float>(fill_src_rect_.w) * percent_);
   return clipped;
 }
 
 SDL_Rect UIProgressBar::GetFillDestRect() const {
   SDL_Rect dest;
-  dest.x = computed_bounds_.x + fill_offset_x_;
-  dest.y = computed_bounds_.y + fill_offset_y_;
-  dest.w = static_cast<int>(max_fill_width_ * percent_);
+  dest.x = computed_bounds_.x + static_cast<int>(fill_offset_x_);
+  dest.y = computed_bounds_.y + static_cast<int>(fill_offset_y_);
+  dest.w = static_cast<int>(static_cast<float>(max_fill_width_) * percent_);
   dest.h = max_fill_height_;
   return dest;
 }

@@ -101,12 +101,12 @@ public:
   int GetDigitSpriteHeight() const;
 
   // If > 0, text is centered within this width.
-  void SetCenterWidth(int width);
-  int GetCenterWidth() const;
+  void SetCenterWidth(float width);
+  float GetCenterWidth() const;
 
   // If > 0, text wraps at this pixel width (multi-line).
-  void SetWrapWidth(int width);
-  int GetWrapWidth() const;
+  void SetWrapWidth(float width);
+  float GetWrapWidth() const;
 
   WidgetType GetWidgetType() const override;
 
@@ -119,8 +119,8 @@ private:
   int char_height_ = 0;
   int digit_sprite_width_ = 0;
   int digit_sprite_height_ = 0;
-  int center_width_ = 0;
-  int wrap_width_ = 0;
+  float center_width_ = 0;
+  float wrap_width_ = 0;
 };
 
 // UIButton: a texture with normal/hover states and an optional label + click
@@ -223,9 +223,9 @@ public:
   SDL_Rect GetFillSrcRect() const;
 
   // Fill offset relative to container
-  void SetFillOffset(int x, int y);
-  int GetFillOffsetX() const;
-  int GetFillOffsetY() const;
+  void SetFillOffset(float x, float y);
+  float GetFillOffsetX() const;
+  float GetFillOffsetY() const;
 
   // Max fill dimensions
   void SetMaxFillSize(int width, int height);
@@ -245,8 +245,8 @@ private:
   SDL_Rect container_src_rect_ = {0, 0, 0, 0};
   SDL_Texture *fill_texture_ = nullptr;
   SDL_Rect fill_src_rect_ = {0, 0, 0, 0};
-  int fill_offset_x_ = 0;
-  int fill_offset_y_ = 0;
+  float fill_offset_x_ = 0.0f;
+  float fill_offset_y_ = 0.0f;
   int max_fill_width_ = 0;
   int max_fill_height_ = 0;
 };

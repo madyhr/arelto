@@ -1,4 +1,4 @@
-spawn_chance: 0.99
+spawn_chance: 0.10
 gem_min_separation: 50.0
 width: 70
 height: 55

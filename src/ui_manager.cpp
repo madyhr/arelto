@@ -631,6 +631,21 @@ void UIManager::SetupUIEventSubscriptions(EventManager& event_manager) {
         event_context.scene.player.stats_.max_health.GetValueCeil());
     UpdateItemInventory(event_context.scene.player.inventory_);
   });
+  event_manager.Subscribe<PlayerStatChangeEvent>(
+      [this](const PlayerStatChangeEvent&, EventContext& event_context) {
+        UpdateExpBar(event_context.scene.player.stats_.exp_points,
+                     event_context.scene.player.stats_.exp_points_required
+                         .GetValueCeil());
+        auto* level_text = GetWidget<UILabel>("level_text");
+        if (level_text) {
+          level_text->SetText(
+              std::to_string(event_context.scene.player.stats_.level));
+        }
+        UpdateHealthBar(
+            event_context.scene.player.stats_.health,
+            event_context.scene.player.stats_.max_health.GetValueCeil());
+        UpdateItemInventory(event_context.scene.player.inventory_);
+      });
   event_manager.Subscribe<ExpGemCollectedEvent>(
       [this](const ExpGemCollectedEvent&, EventContext& event_context) {
         UpdateExpBar(event_context.scene.player.stats_.exp_points,

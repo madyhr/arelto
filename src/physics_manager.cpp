@@ -92,15 +92,15 @@ void PhysicsManager::HandlePlayerOOB(Player& player) {
   if (player.position_.y < 0) {
     player.position_.y = 0;
   }
-  if ((player.position_.x +
-       static_cast<float>(player.stats_.sprite_size.width)) > kMapWidth) {
+  if ((player.position_.x + static_cast<float>(player.stats_.size.GetWidth())) >
+      kMapWidth) {
     player.position_.x =
-        static_cast<float>(kMapWidth - player.stats_.sprite_size.width);
+        static_cast<float>(kMapWidth - player.stats_.size.GetWidth());
   }
   if ((player.position_.y +
-       static_cast<float>(player.stats_.sprite_size.height)) > kMapHeight) {
+       static_cast<float>(player.stats_.size.GetHeight())) > kMapHeight) {
     player.position_.y =
-        static_cast<float>(kMapHeight - player.stats_.sprite_size.height);
+        static_cast<float>(kMapHeight - player.stats_.size.GetHeight());
   }
 };
 

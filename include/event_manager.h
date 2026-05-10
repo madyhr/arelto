@@ -61,13 +61,16 @@ struct EnemyProjectileCollisionEvent {
   int proj_idx;
 };
 struct SceneResetEvent {};
+struct PlayerStatChangeEvent {};
 
-using GameEvent = std::variant<
-    EnemyKilledEvent, EnemyDamagedEvent, PlayerDamagedEvent, PlayerHealedEvent,
-    ExpGemCollectedEvent, ProjectileDestroyedEvent, ChestOpenedEvent,
-    PlayerDeadEvent, PlayerLevelUpEvent, PlayerExpGemCollisionEvent,
-    PlayerChestCollisionEvent, PlayerClaimedItemEvent,
-    PlayerEnemyCollisionEvent, EnemyProjectileCollisionEvent, SceneResetEvent>;
+using GameEvent =
+    std::variant<EnemyKilledEvent, EnemyDamagedEvent, PlayerDamagedEvent,
+                 PlayerHealedEvent, ExpGemCollectedEvent,
+                 ProjectileDestroyedEvent, ChestOpenedEvent, PlayerDeadEvent,
+                 PlayerLevelUpEvent, PlayerExpGemCollisionEvent,
+                 PlayerChestCollisionEvent, PlayerClaimedItemEvent,
+                 PlayerEnemyCollisionEvent, EnemyProjectileCollisionEvent,
+                 SceneResetEvent, PlayerStatChangeEvent>;
 
 // The context that is passed to every handler during a Dispatch call.
 struct EventContext {
@@ -134,7 +137,8 @@ class EventManager {
       HandlerList<PlayerExpGemCollisionEvent>,
       HandlerList<PlayerChestCollisionEvent>,
       HandlerList<PlayerEnemyCollisionEvent>,
-      HandlerList<EnemyProjectileCollisionEvent>, HandlerList<SceneResetEvent>>
+      HandlerList<EnemyProjectileCollisionEvent>, HandlerList<SceneResetEvent>,
+      HandlerList<PlayerStatChangeEvent>>
       handlers_;
 };
 

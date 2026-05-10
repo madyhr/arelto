@@ -29,6 +29,7 @@ items:
   damodei_claw: "assets/textures/damodei_claw.png"
   volmnih_boots: "assets/textures/volmnih_boots.png"
   sarto_button_bible: "assets/textures/sarto_button_bible.png"
+  aiayn_scale: "assets/textures/aiayn_scale.png"
 
 spells:
   fireball: "assets/textures/fireball_sprite_sheet.png"

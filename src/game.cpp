@@ -42,6 +42,7 @@ bool Game::Initialize() {
   RegisterGameStateHandlers();
   entity_manager_.Initialize(event_manager_);
   item_manager_.Initialize(event_manager_);
+  progression_manager_.Initialize(event_manager_);
   spell_manager_.Initialize();
 
   if (!(physics_manager_.Initialize())) {
@@ -83,7 +84,7 @@ bool Game::Initialize() {
 
 bool Game::InitializeCamera() {
   Vector2D player_centroid =
-      GetCentroid(scene_.player.position_, scene_.player.stats_.sprite_size);
+      GetCentroid(scene_.player.position_, scene_.player.stats_.size.GetSize());
   render_manager_.camera_.UpdatePosition(player_centroid);
 
   return true;

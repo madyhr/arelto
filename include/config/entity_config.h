@@ -13,6 +13,7 @@ struct PlayerConfig {
   float movement_speed = 200.0f;
   uint32_t width = 60;
   uint32_t height = 75;
+  float aspect_ratio = 1.25;
   float inv_mass = 0.01f;
   float initial_exp_requirement = 10.0f;
   float exp_required_scale = 1.1f;

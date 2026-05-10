@@ -2,6 +2,7 @@
 #ifndef RL2_SCENE_H_
 #define RL2_SCENE_H_
 
+#include <algorithm>
 #include "config/entity_config.h"
 #include "constants/enemy.h"
 #include "entity.h"
@@ -32,10 +33,8 @@ struct Scene {
 
     // Player
     const PlayerConfig& player_config = entity_config.player;
-    player.collider_ =
-        CreateCenteredCollider({player_config.width, player_config.height});
-    player.stats_.sprite_size =
-        Size2D{player_config.width, player_config.height};
+    player.stats_.size = StatsSize(player_config.aspect_ratio);
+    player.stats_.size.SetBaseWidth(static_cast<float>(player_config.width));
     player.stats_.max_health.SetBaseValue(player_config.max_health_points);
     player.stats_.health =
         static_cast<int>(player.stats_.max_health.GetValue());

@@ -34,5 +34,29 @@ TEST(TypesTest, CreateCenteredCollider_ZeroMarginUsesFullSpriteSize) {
   EXPECT_EQ(collider.size.height, 33);
 }
 
+TEST(TypesTest, StatsSize_ColliderTracksWidthModifiers) {
+  StatsSize size(1.25f);
+  size.SetBaseWidth(60.0f);
+
+  Collider before = size.GetCollider();
+
+  size.width_.AddModifier(Modifier{20.0f, ModifierType::flat, nullptr});
+
+  Collider after = size.GetCollider();
+
+  EXPECT_EQ(size.GetWidth(), 80);
+  EXPECT_EQ(size.GetHeight(), 100);
+
+  EXPECT_FLOAT_EQ(before.offset.x, 30.0f);
+  EXPECT_FLOAT_EQ(before.offset.y, 37.5f);
+  EXPECT_EQ(before.size.width, 30);
+  EXPECT_EQ(before.size.height, 45);
+
+  EXPECT_FLOAT_EQ(after.offset.x, 40.0f);
+  EXPECT_FLOAT_EQ(after.offset.y, 50.0f);
+  EXPECT_EQ(after.size.width, 50);
+  EXPECT_EQ(after.size.height, 70);
+}
+
 }  // namespace
 }  // namespace arelto

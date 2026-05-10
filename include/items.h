@@ -53,12 +53,15 @@ enum ItemId : int {
   damodei_claw,
   volmnih_boots,
   sarto_button_bible,
+  aiayn_scale,
   count
 };
 
 enum class ItemUpgradeType : int {
   armor = 0,
   movement_speed,
+  max_health,
+  size,
   global_damage_modifier,
   global_cooldown_modifier,
   count
@@ -68,8 +71,10 @@ inline bool IsHigherBetter(ItemUpgradeType type) {
   switch (type) {
     case ItemUpgradeType::armor:
     case ItemUpgradeType::movement_speed:
+    case ItemUpgradeType::max_health:
     case ItemUpgradeType::global_damage_modifier:
       return true;
+    case ItemUpgradeType::size:
     case ItemUpgradeType::global_cooldown_modifier:
       return false;
     default:
@@ -141,6 +146,14 @@ class ItemArchive {
          ItemStatSpec{ItemUpgradeType::global_cooldown_modifier,
                       ModifierType::percent_mult, -0.1f,
                       "Decrease the cooldown of all spells."}},
+        {}};
+    archive_[ItemId::aiayn_scale] = {
+        ItemId::aiayn_scale,
+        "Aiayn's Ever- Transforming Scale",
+        {ItemStatSpec{ItemUpgradeType::max_health, ModifierType::flat, 50.0f,
+                      "Increase Max Health Points"},
+         ItemStatSpec{ItemUpgradeType::size, ModifierType::percent_mult, 0.05f,
+                      "Increase Player Size"}},
         {}};
   }
 };

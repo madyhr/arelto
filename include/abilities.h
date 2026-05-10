@@ -34,16 +34,14 @@ class BaseProjectileSpell : public BaseSpell {
   Stat speed_;
   float inv_mass_ = 0.0f;
   Stat damage_;
-  Collider collider_;
-  Size2D sprite_size_;
+  StatsSize size_;
   Size2D sprite_cell_size_;
   std::string name_;
   float base_speed_ = 0.0f;
   float base_inv_mass_ = 0.0f;
   float base_damage_ = 0.0f;
   float base_cooldown_ = 1.0f;
-  Collider base_collider_;
-  Size2D base_sprite_size_;
+  float base_size_ = 0.0f;
 
  public:
   BaseProjectileSpell() = default;
@@ -54,10 +52,9 @@ class BaseProjectileSpell : public BaseSpell {
   void SetInvMass(float inv_mass) { inv_mass_ = inv_mass; };
   float GetDamage() { return damage_.GetValue(); };
   void SetDamage(float damage) { damage_.SetBaseValue(damage); };
-  Collider GetCollider() { return collider_; };
-  void SetCollider(Collider collider) { collider_ = collider; };
-  Size2D GetSpriteSize() const { return sprite_size_; };
-  void SetSpriteSize(Size2D size) { sprite_size_ = size; };
+  Collider GetCollider() { return size_.GetCollider(); };
+  Size2D GetSize() const { return size_.GetSize(); };
+  void SetSize(float width) { size_.SetBaseWidth(width); };
   Size2D GetSpriteCellSize() const { return sprite_cell_size_; };
   void SetSpriteCellSize(Size2D size) { sprite_cell_size_ = size; };
   std::string GetName() const { return name_; };
@@ -67,8 +64,7 @@ class BaseProjectileSpell : public BaseSpell {
     base_inv_mass_ = inv_mass_;
     base_damage_ = damage_.GetValue();
     base_cooldown_ = GetCooldown();
-    base_collider_ = collider_;
-    base_sprite_size_ = sprite_size_;
+    base_size_ = size_.width_.GetValue();
   }
 
   void ResetStatsToBase() {
@@ -76,8 +72,7 @@ class BaseProjectileSpell : public BaseSpell {
     SetInvMass(base_inv_mass_);
     SetDamage(base_damage_);
     SetCooldown(base_cooldown_);
-    SetCollider(base_collider_);
-    SetSpriteSize(base_sprite_size_);
+    SetSize(base_size_);
     SetTimeOfLastUse(-1.0f);
   }
 
@@ -93,18 +88,13 @@ class BaseProjectileSpell : public BaseSpell {
         SetCooldown(value);
         break;
       case SpellUpgradeType::size: {
-        float current_w = static_cast<float>(GetSpriteSize().width);
-        float current_h = static_cast<float>(GetSpriteSize().height);
+        float current_w = static_cast<float>(GetSize().width);
+        float current_h = static_cast<float>(GetSize().height);
         if (current_w > 0) {
           float ratio = current_h / current_w;
           float new_w = value;
           float new_h = new_w * ratio;
-          SetSpriteSize(
-              {static_cast<uint32_t>(new_w), static_cast<uint32_t>(new_h)});
-          SetCollider({{static_cast<float>(0.5f * new_w),
-                        static_cast<float>(0.5f * new_h)},
-                       {static_cast<uint32_t>(new_w * 0.8f),
-                        static_cast<uint32_t>(new_h * 0.8f)}});
+          SetSize(new_w);
         }
         break;
       }
@@ -136,7 +126,7 @@ struct SpellStats {
     cooldown[id] = spell.GetCooldown();
     speed[id] = spell.GetSpeed();
     collider[id] = spell.GetCollider();
-    sprite_size[id] = spell.GetSpriteSize();
+    sprite_size[id] = spell.GetSize();
     damage[id] = spell.GetDamage();
   };
 

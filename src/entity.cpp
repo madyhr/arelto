@@ -159,7 +159,7 @@ std::optional<ProjectileData> Player::CastProjectileSpell(
   }
   Vector2D player_centroid = GetCentroid(position_, stats_.size.GetSize());
   Vector2D spell_direction = (cursor_position - player_centroid).Normalized();
-  Size2D spell_size = spell.GetSpriteSize();
+  Size2D spell_size = spell.GetSize();
   Vector2D spell_position = player_centroid - (ToVector2D(spell_size) / 2.0f);
   ProjectileData projectile_spell = {static_cast<int>(entity_type_),
                                      spell_position,

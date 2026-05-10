@@ -14,7 +14,7 @@ struct convert<arelto::SpellConfig> {
     Node node;
     node["name"] = rhs.name;
     node["width"] = rhs.width;
-    node["height"] = rhs.height;
+    node["aspect_ratio"] = rhs.aspect_ratio;
     node["speed"] = rhs.speed;
     node["damage"] = rhs.damage;
     node["cooldown"] = rhs.cooldown;
@@ -33,16 +33,15 @@ struct convert<arelto::SpellConfig> {
 
     DecodeMember(node, "name", rhs, &arelto::SpellConfig::name, kOwner);
     DecodeMember(node, "width", rhs, &arelto::SpellConfig::width, kOwner);
-    DecodeMember(node, "height", rhs, &arelto::SpellConfig::height, kOwner);
+    DecodeMember(node, "aspect_ratio", rhs, &arelto::SpellConfig::aspect_ratio,
+                 kOwner);
     DecodeMember(node, "sprite_cell_width", rhs,
                  &arelto::SpellConfig::sprite_cell_width, kOwner);
     DecodeMember(node, "sprite_cell_height", rhs,
                  &arelto::SpellConfig::sprite_cell_height, kOwner);
     DecodeMember(node, "speed", rhs, &arelto::SpellConfig::speed, kOwner);
     DecodeMember(node, "damage", rhs, &arelto::SpellConfig::damage, kOwner);
-   DecodeMember(node, "cooldown", rhs, &arelto::SpellConfig::cooldown, kOwner);
-
-    rhs.collider = CreateCenteredCollider({rhs.width, rhs.height});
+    DecodeMember(node, "cooldown", rhs, &arelto::SpellConfig::cooldown, kOwner);
 
     return true;
   }

@@ -348,7 +348,7 @@ void RenderManager::Render(const Scene& scene, float alpha,
   } else {
 
     Vector2D player_centroid =
-        GetCentroid(scene.player.position_, scene.player.stats_.sprite_size);
+        GetCentroid(scene.player.position_, scene.player.stats_.size.GetSize());
     camera_.UpdatePosition(player_centroid);
 
     camera_.render_position_ =
@@ -442,8 +442,8 @@ void RenderManager::RenderPlayer(const Player& player, float alpha) {
   float x = screen_pos.x;
   float y = screen_pos.y;
 
-  float w = static_cast<float>(player.stats_.sprite_size.width);
-  float h = static_cast<float>(player.stats_.sprite_size.height);
+  float w = static_cast<float>(player.stats_.size.GetWidth());
+  float h = static_cast<float>(player.stats_.size.GetHeight());
 
   bool is_standing_still = player.velocity_.Norm() < 1e-3;
   bool is_facing_right = player.last_horizontal_velocity_ >= 0.0f;

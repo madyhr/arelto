@@ -2,6 +2,7 @@
 #ifndef RL2_TYPES_H_
 #define RL2_TYPES_H_
 #include <pybind11/attr.h>
+#include <cmath>
 #include <cstdint>
 #include <numbers>
 #include <vector>
@@ -305,10 +306,41 @@ class Stat {
            percent_mult_prod;
   }
 
-  mutable float base_value_;
+  mutable float base_value_ = 0.0f;
   std::vector<Modifier> modifiers_;
-  mutable float cached_value_;
-  mutable bool is_dirty_;
+  mutable float cached_value_ = 0.0f;
+  mutable bool is_dirty_ = true;
+};
+
+// A class that defines the size of an entity only by its `width`.
+// Accepts an `aspect_ratio` as an input argument if width and height differ.
+// Stores width as a `Stat` for easier modification of the size.
+class StatsSize {
+
+ public:
+  StatsSize() = default;
+  StatsSize(float aspect_ratio) : aspect_ratio_(aspect_ratio) {};
+
+  void SetBaseWidth(float width) { width_.SetBaseValue(width); }
+  uint32_t GetWidth() { return static_cast<uint32_t>(width_.GetValue()); };
+  uint32_t GetWidth() const {
+    return static_cast<uint32_t>(width_.GetValue());
+  };
+  uint32_t GetHeight() {
+    return static_cast<uint32_t>(width_.GetValue() * aspect_ratio_);
+  };
+  uint32_t GetHeight() const {
+    return static_cast<uint32_t>(width_.GetValue() * aspect_ratio_);
+  };
+  Size2D GetSize() { return Size2D{GetWidth(), GetHeight()}; }
+  Size2D GetSize() const { return Size2D{GetWidth(), GetHeight()}; }
+  Collider GetCollider() {
+    return CreateCenteredCollider(GetSize(), kSpriteColliderMargin);
+  };
+
+ private:
+  Stat width_;
+  float aspect_ratio_ = 1.0f;
 };
 
 struct Stats {
@@ -318,7 +350,7 @@ struct Stats {
   int health;
   Stat max_health;
   Stat movement_speed;
-  Size2D sprite_size;
+  StatsSize size;
   Stat inv_mass;
   Stat armor;
   Stat global_damage_modifier;

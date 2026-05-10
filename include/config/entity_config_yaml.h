@@ -18,6 +18,7 @@ struct convert<arelto::PlayerConfig> {
     node["movement_speed"] = rhs.movement_speed;
     node["width"] = rhs.width;
     node["height"] = rhs.height;
+    node["aspect_ratio"] = rhs.aspect_ratio;
     node["inv_mass"] = rhs.inv_mass;
     node["initial_exp_requirement"] = rhs.initial_exp_requirement;
     node["exp_required_scale"] = rhs.exp_required_scale;
@@ -42,6 +43,8 @@ struct convert<arelto::PlayerConfig> {
                  &arelto::PlayerConfig::movement_speed, kOwner);
     DecodeMember(node, "width", rhs, &arelto::PlayerConfig::width, kOwner);
     DecodeMember(node, "height", rhs, &arelto::PlayerConfig::height, kOwner);
+    DecodeMember(node, "aspect_ratio", rhs, &arelto::PlayerConfig::aspect_ratio,
+                 kOwner);
     DecodeMember(node, "inv_mass", rhs, &arelto::PlayerConfig::inv_mass,
                  kOwner);
     DecodeMember(node, "initial_exp_requirement", rhs,

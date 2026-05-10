@@ -84,7 +84,7 @@ bool Game::Initialize() {
 
 bool Game::InitializeCamera() {
   Vector2D player_centroid =
-      GetCentroid(scene_.player.position_, scene_.player.stats_.sprite_size);
+      GetCentroid(scene_.player.position_, scene_.player.stats_.size.GetSize());
   render_manager_.camera_.UpdatePosition(player_centroid);
 
   return true;

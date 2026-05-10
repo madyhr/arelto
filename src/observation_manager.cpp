@@ -129,7 +129,8 @@ void ObservationManager::UpdateWorldOccupancyMap(
     }
   };
 
-  MarkOccupancy(player.position_, player.collider_, player.entity_type_);
+  MarkOccupancy(player.position_, player.stats_.size.GetCollider(),
+                player.entity_type_);
 
   for (int i = 0; i < kNumEnemies; ++i) {
     if (enemy.is_alive[i]) {

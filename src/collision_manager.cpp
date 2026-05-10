@@ -24,9 +24,10 @@ void CollisionManager::HandleCollisionsSAP(Scene& scene,
 
   entity_aabb_.clear();
 
-  entity_aabb_.push_back(GetCollisionAABB(
-      scene.player.position_ + scene.player.collider_.offset,
-      scene.player.collider_.size, scene.player.entity_type_, 0));
+  Collider player_collider = scene.player.stats_.size.GetCollider();
+  entity_aabb_.push_back(
+      GetCollisionAABB(scene.player.position_ + player_collider.offset,
+                       player_collider.size, scene.player.entity_type_, 0));
 
   for (int i = 0; i < kNumEnemies; ++i) {
     if (!scene.enemy.is_alive[i]) {
@@ -205,11 +206,12 @@ void CollisionManager::ResolvePlayerEnemyCollision(
   bool a_is_player = cp.type_a == EntityType::player;
   int enemy_idx = a_is_player ? cp.index_b : cp.index_a;
 
-  Vector2D player_centroid = player.position_ + player.collider_.offset;
+  Collider player_collider = player.stats_.size.GetCollider();
+  Vector2D player_centroid = player.position_ + player_collider.offset;
   Vector2D enemy_centroid =
       enemy.position[enemy_idx] + enemy.collider[enemy_idx].offset;
 
-  AABB player_aabb = GetCollisionAABB(player_centroid, player.collider_.size);
+  AABB player_aabb = GetCollisionAABB(player_centroid, player_collider.size);
   AABB enemy_aabb =
       GetCollisionAABB(enemy_centroid, enemy.collider[enemy_idx].size);
 

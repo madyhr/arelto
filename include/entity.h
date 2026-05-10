@@ -83,7 +83,6 @@ class Player {
   Vector2D position_;
   Vector2D prev_position_;
   Vector2D velocity_;
-  Collider collider_;
   bool is_invulnerable;
   float invulnerable_timer;
   float invulnerable_window_s_ = 0.1f;

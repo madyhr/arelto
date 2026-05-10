@@ -168,13 +168,13 @@ TEST_F(PhysicsManagerTest, StepPhysics_PlayerClampsToMapBounds) {
   // Right Bound
   scene_.player.position_ = {static_cast<float>(kMapWidth) + 100.0f, 100.0f};
   physics_manager_.StepPhysics(scene_, event_manager_);
-  EXPECT_LE(scene_.player.position_.x + scene_.player.stats_.sprite_size.width,
+  EXPECT_LE(scene_.player.position_.x + scene_.player.stats_.size.GetWidth(),
             static_cast<float>(kMapWidth));
 
   // Bottom Bound
   scene_.player.position_ = {100.0f, static_cast<float>(kMapHeight) + 100.0f};
   physics_manager_.StepPhysics(scene_, event_manager_);
-  EXPECT_LE(scene_.player.position_.y + scene_.player.stats_.sprite_size.height,
+  EXPECT_LE(scene_.player.position_.y + scene_.player.stats_.size.GetHeight(),
             static_cast<float>(kMapHeight));
 }
 

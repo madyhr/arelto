@@ -37,7 +37,7 @@ void SpellManager::Initialize() {
     spell->SetCooldown(cfg.cooldown);
     spell->SetSpeed(cfg.speed);
     spell->SetDamage(cfg.damage);
-    spell->SetSize(cfg.width);
+    spell->SetWidth(cfg.width);
     spell->SetSpriteCellSize({cfg.sprite_cell_width, cfg.sprite_cell_height});
     spell->CaptureBaseStats();
     spells_.push_back(std::move(spell));

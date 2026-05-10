@@ -154,13 +154,12 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
   // We avoid using GenerateLevelUpOptions to remove RNG.
   SpellId target_spell = 0;
   std::string spell_name = "Fireball";
-  float initial_damage =
-      static_cast<float>(scene_.player.spell_stats_.damage[target_spell]);
+  float initial_damage = scene_.player.spell_stats_.damage[target_spell];
   float new_damage = initial_damage + 10.0f;
 
-  auto upgrade = std::make_unique<SpellStatUpgrade>(target_spell, spell_name,
-                                                    SpellUpgradeType::damage,
-                                                    ValueRange{initial_damage, new_damage});
+  auto upgrade = std::make_unique<SpellStatUpgrade>(
+      target_spell, spell_name, SpellUpgradeType::damage,
+      ValueRange{initial_damage, new_damage});
 
   scene_.level_up_options.clear();
   scene_.level_up_options.push_back(std::move(upgrade));
@@ -169,8 +168,7 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
   progression_manager_.ApplyLevelUpUpgrade(scene_, 0);
 
   // Verify
-  float actual_damage =
-      static_cast<float>(scene_.player.spell_stats_.damage[target_spell]);
+  float actual_damage = scene_.player.spell_stats_.damage[target_spell];
   EXPECT_GT(actual_damage, initial_damage);
   EXPECT_FLOAT_EQ(actual_damage, new_damage);
 }

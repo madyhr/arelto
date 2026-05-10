@@ -210,10 +210,9 @@ void Player::AddToInventory(ItemId item_id) {
   inventory_.emplace_back(item_id, 1);
 }
 
-int Player::CalculateOutgoingDamage(int base_damage) {
+int Player::CalculateOutgoingDamage(float damage) {
   float global_dmg_mod = stats_.global_damage_modifier.GetValue();
-  int total_damage = static_cast<int>(
-      std::round(static_cast<float>(base_damage) * global_dmg_mod));
+  int total_damage = static_cast<int>(std::round(damage * global_dmg_mod));
   return total_damage;
 }
 

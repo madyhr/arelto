@@ -31,16 +31,16 @@ class BaseSpell {
 
 class BaseProjectileSpell : public BaseSpell {
  private:
-  float speed_ = 0.0f;
+  Stat speed_;
   float inv_mass_ = 0.0f;
-  int damage_ = 0;
+  Stat damage_;
   Collider collider_;
   Size2D sprite_size_;
   Size2D sprite_cell_size_;
   std::string name_;
   float base_speed_ = 0.0f;
   float base_inv_mass_ = 0.0f;
-  int base_damage_ = 0;
+  float base_damage_ = 0.0f;
   float base_cooldown_ = 1.0f;
   Collider base_collider_;
   Size2D base_sprite_size_;
@@ -48,12 +48,12 @@ class BaseProjectileSpell : public BaseSpell {
  public:
   BaseProjectileSpell() = default;
   explicit BaseProjectileSpell(std::string name) : name_(std::move(name)) {};
-  float GetSpeed() { return speed_; };
-  void SetSpeed(float speed) { speed_ = speed; };
+  float GetSpeed() { return speed_.GetValue(); };
+  void SetSpeed(float speed) { speed_.SetBaseValue(speed); };
   float GetInvMass() { return inv_mass_; };
   void SetInvMass(float inv_mass) { inv_mass_ = inv_mass; };
-  int GetDamage() { return damage_; };
-  void SetDamage(int damage) { damage_ = damage; };
+  float GetDamage() { return damage_.GetValue(); };
+  void SetDamage(float damage) { damage_.SetBaseValue(damage); };
   Collider GetCollider() { return collider_; };
   void SetCollider(Collider collider) { collider_ = collider; };
   Size2D GetSpriteSize() const { return sprite_size_; };
@@ -63,9 +63,9 @@ class BaseProjectileSpell : public BaseSpell {
   std::string GetName() const { return name_; };
 
   void CaptureBaseStats() {
-    base_speed_ = speed_;
+    base_speed_ = speed_.GetValue();
     base_inv_mass_ = inv_mass_;
-    base_damage_ = damage_;
+    base_damage_ = damage_.GetValue();
     base_cooldown_ = GetCooldown();
     base_collider_ = collider_;
     base_sprite_size_ = sprite_size_;
@@ -84,7 +84,7 @@ class BaseProjectileSpell : public BaseSpell {
   virtual void ModifyStat(SpellUpgradeType type, float value) {
     switch (type) {
       case SpellUpgradeType::damage:
-        SetDamage(static_cast<int>(value));
+        SetDamage(value);
         break;
       case SpellUpgradeType::speed:
         SetSpeed(value);
@@ -120,7 +120,7 @@ struct SpellStats {
   std::vector<float> speed;
   std::vector<Collider> collider;
   std::vector<Size2D> sprite_size;
-  std::vector<int> damage;
+  std::vector<float> damage;
 
   void Resize(size_t n) {
     cooldown.resize(n);

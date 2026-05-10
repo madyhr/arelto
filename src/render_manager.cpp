@@ -1079,7 +1079,8 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       auto* inv_item = static_cast<UIInventoryItem*>(widget);
       if (inv_item->GetItemTexture()) {
         SDL_Rect dest_rect = bounds;
-        int icon_size = ui_config_.inventory.inventory_icon_size;
+        int icon_size =
+            static_cast<int>(ui_config_.inventory.inventory_icon_size);
         dest_rect.y += (bounds.h - icon_size) / 2;
         dest_rect.w = icon_size;
         dest_rect.h = icon_size;

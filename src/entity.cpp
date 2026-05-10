@@ -147,7 +147,7 @@ void Player::UpdateAllSpellStats() {
 std::optional<ProjectileData> Player::CastProjectileSpell(
     BaseProjectileSpell& spell, float time, Vector2D cursor_position) {
 
-  if (!(IsSpellReady(spell, time))) {
+  if (!IsSpellReady(spell, time)) {
     return std::nullopt;
   }
   Vector2D player_centroid = GetCentroid(position_, stats_.size.GetSize());

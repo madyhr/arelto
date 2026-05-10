@@ -16,4 +16,8 @@ float GenerateRandomFloat(float min_val, float max_val) {
   return distrib(s_generator);
 };
 
+int SampleFromDiscreteDist(std::vector<float> weights) {
+  std::discrete_distribution<int> dist(weights.begin(), weights.end());
+  return dist(s_generator);
+};
 }  // namespace arelto

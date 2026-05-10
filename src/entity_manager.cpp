@@ -71,6 +71,18 @@ void EntityManager::Initialize(EventManager& event_manager) {
 // ---------------------------------------------------------------------------
 // Event Handlers
 // ---------------------------------------------------------------------------
+namespace {
+
+Rarity SampleRandomExpGemRarity(const EntityConfig& entity_config) {
+  std::vector<float> weights;
+  weights.reserve(Rarity::Count);
+  for (int i = 0; i < Rarity::Count; ++i) {
+    weights.push_back(entity_config.exp_gem.rarities[i].spawn_weighting);
+  }
+
+  return static_cast<Rarity>(SampleFromDiscreteDist(weights));
+};
+}  //namespace
 
 void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
                                   EventContext& context) {
@@ -85,7 +97,7 @@ void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
       chest_will_spawn ? entity_config_.chest.gem_min_separation * 0.5f : 0.0f;
   Vector2D gem_position = {centroid.x - spawn_offset, centroid.y};
 
-  Rarity random_rarity = static_cast<Rarity>(GenerateRandomInt(0, 3));
+  Rarity random_rarity = SampleRandomExpGemRarity(entity_config_);
   const ExpGemRarityConfig& gem_config =
       entity_config_.exp_gem.rarities[random_rarity];
   const Size2D gem_sprite_size = {gem_config.width, gem_config.height};

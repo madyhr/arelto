@@ -104,6 +104,7 @@ struct convert<arelto::ExpGemRarityConfig> {
     node["exp_value"] = rhs.exp_value;
     node["width"] = rhs.width;
     node["height"] = rhs.height;
+    node["spawn_weighting"] = rhs.spawn_weighting;
     return node;
   }
 
@@ -120,6 +121,8 @@ struct convert<arelto::ExpGemRarityConfig> {
                  kOwner);
     DecodeMember(node, "height", rhs, &arelto::ExpGemRarityConfig::height,
                  kOwner);
+    DecodeMember(node, "spawn_weighting", rhs,
+                 &arelto::ExpGemRarityConfig::spawn_weighting, kOwner);
     return true;
   }
 };

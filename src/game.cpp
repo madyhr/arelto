@@ -42,6 +42,7 @@ bool Game::Initialize() {
   RegisterGameStateHandlers();
   entity_manager_.Initialize(event_manager_);
   item_manager_.Initialize(event_manager_);
+  progression_manager_.Initialize(event_manager_);
   spell_manager_.Initialize();
 
   if (!(physics_manager_.Initialize())) {

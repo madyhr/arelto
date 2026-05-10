@@ -14,6 +14,8 @@ class ProgressionManager {
   ProgressionManager();
   ~ProgressionManager();
 
+  EventManager* event_manager_ = nullptr;
+  void Initialize(EventManager& event_manager);
   bool CheckLevelUp(const Player& player);
   void GenerateLevelUpOptions(Scene& scene);
   void GenerateItemOptions(Scene& scene);

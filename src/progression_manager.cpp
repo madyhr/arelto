@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "abilities.h"
 #include "constants/progression_manager.h"
+#include "event_manager.h"
 #include "item_manager.h"
 #include "items.h"
 #include "types.h"
@@ -11,6 +12,10 @@ namespace arelto {
 
 ProgressionManager::ProgressionManager() {}
 ProgressionManager::~ProgressionManager() {}
+
+void ProgressionManager::Initialize(EventManager& event_manager) {
+  event_manager_ = &event_manager;
+}
 
 bool ProgressionManager::CheckLevelUp(const Player& player) {
   return player.stats_.exp_points >=
@@ -178,6 +183,8 @@ void ProgressionManager::ApplyItemUpgrade(Scene& scene,
   ItemUpgrade& item_upgrade =
       static_cast<ItemUpgrade&>(*scene.item_options[option_index]);
   item_upgrade.Apply(scene.player, item_manager);
+  EventContext event_context{*event_manager_, scene};
+  event_manager_->DispatchImmediate(PlayerStatChangeEvent{}, event_context);
   scene.player.AddToInventory(item_upgrade.GetItemID());
 }
 

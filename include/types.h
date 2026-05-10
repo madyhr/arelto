@@ -185,6 +185,10 @@ struct Size2D {
   uint32_t height;
 };
 
+inline Vector2D ToVector2D(const Size2D& size) {
+  return {static_cast<float>(size.width), static_cast<float>(size.height)};
+}
+
 // The offset is defined as the offset from a reference position to the center
 // of the Collider.
 struct Collider {

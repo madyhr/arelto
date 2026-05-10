@@ -150,14 +150,16 @@ std::optional<ProjectileData> Player::CastProjectileSpell(
   if (!(IsSpellReady(spell, time))) {
     return std::nullopt;
   }
-  Vector2D centroid = GetCentroid(position_, stats_.size.GetSize());
-  Vector2D spell_direction = (cursor_position - centroid).Normalized();
+  Vector2D player_centroid = GetCentroid(position_, stats_.size.GetSize());
+  Vector2D spell_direction = (cursor_position - player_centroid).Normalized();
+  Size2D spell_size = spell.GetSpriteSize();
+  Vector2D spell_position = player_centroid - (ToVector2D(spell_size) / 2.0f);
   ProjectileData projectile_spell = {static_cast<int>(entity_type_),
-                                     position_,
+                                     spell_position,
                                      spell_direction,
                                      spell.GetSpeed(),
                                      spell.GetCollider(),
-                                     spell.GetSpriteSize(),
+                                     spell_size,
                                      spell.GetInvMass(),
                                      spell.GetId()};
   spell.SetTimeOfLastUse(time);

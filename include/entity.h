@@ -95,6 +95,7 @@ class Player {
     spell_manager_ = spell_manager;
   };
   void UpdateAllSpellStats();
+  void ResetSpellsToBase();
   std::optional<ProjectileData> CastProjectileSpell(BaseProjectileSpell& spell,
                                                     float time,
                                                     Vector2D cursor_position);

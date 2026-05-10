@@ -35,19 +35,28 @@ struct Scene {
     const PlayerConfig& player_config = entity_config.player;
     player.stats_.size = StatsSize(player_config.aspect_ratio);
     player.stats_.size.SetBaseWidth(static_cast<float>(player_config.width));
+    player.stats_.size.width_.ClearModifiers();
     player.stats_.max_health.SetBaseValue(player_config.max_health_points);
+    player.stats_.max_health.ClearModifiers();
     player.stats_.health =
         static_cast<int>(player.stats_.max_health.GetValue());
     player.stats_.inv_mass.SetBaseValue(player_config.inv_mass);
+    player.stats_.inv_mass.ClearModifiers();
     player.stats_.movement_speed.SetBaseValue(player_config.movement_speed);
+    player.stats_.movement_speed.ClearModifiers();
+    player.stats_.armor.SetBaseValue(0.0f);
+    player.stats_.armor.ClearModifiers();
     player.stats_.global_damage_modifier.SetBaseValue(
         player_config.global_damage_modifier);
+    player.stats_.global_damage_modifier.ClearModifiers();
     player.stats_.global_cooldown_modifier.SetBaseValue(
         player_config.global_cooldown_modifier);
+    player.stats_.global_cooldown_modifier.ClearModifiers();
     player.stats_.level = 0;
     player.stats_.exp_points = 0;
     player.stats_.exp_points_required.SetBaseValue(
         player_config.initial_exp_requirement);
+    player.stats_.exp_points_required.ClearModifiers();
     player.exp_required_scale_ = player_config.exp_required_scale;
     player.invulnerable_window_s_ = player_config.invulnerable_window_s;
     player.is_invulnerable = false;
@@ -56,6 +65,7 @@ struct Scene {
     player.position_ = Vector2D{player_config.spawn_x, player_config.spawn_y};
     player.prev_position_ = player.position_;
     player.last_horizontal_velocity_ = 0.0f;
+    player.ResetSpellsToBase();
     player.UpdateAllSpellStats();
 
     // Enemies
@@ -100,6 +110,8 @@ struct Scene {
     exp_gem.ResetAllExpGems();
     chest.ResetAllChests();
     player.inventory_.clear();
+    level_up_options.clear();
+    item_options.clear();
   };
 };
 

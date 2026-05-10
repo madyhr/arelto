@@ -144,6 +144,13 @@ void Player::UpdateAllSpellStats() {
   }
 };
 
+void Player::ResetSpellsToBase() {
+  if (!spell_manager_) {
+    return;
+  }
+  spell_manager_->ResetSpellStats();
+}
+
 std::optional<ProjectileData> Player::CastProjectileSpell(
     BaseProjectileSpell& spell, float time, Vector2D cursor_position) {
 

@@ -38,6 +38,12 @@ class BaseProjectileSpell : public BaseSpell {
   Size2D sprite_size_;
   Size2D sprite_cell_size_;
   std::string name_;
+  float base_speed_ = 0.0f;
+  float base_inv_mass_ = 0.0f;
+  int base_damage_ = 0;
+  float base_cooldown_ = 1.0f;
+  Collider base_collider_;
+  Size2D base_sprite_size_;
 
  public:
   BaseProjectileSpell() = default;
@@ -55,6 +61,25 @@ class BaseProjectileSpell : public BaseSpell {
   Size2D GetSpriteCellSize() const { return sprite_cell_size_; };
   void SetSpriteCellSize(Size2D size) { sprite_cell_size_ = size; };
   std::string GetName() const { return name_; };
+
+  void CaptureBaseStats() {
+    base_speed_ = speed_;
+    base_inv_mass_ = inv_mass_;
+    base_damage_ = damage_;
+    base_cooldown_ = GetCooldown();
+    base_collider_ = collider_;
+    base_sprite_size_ = sprite_size_;
+  }
+
+  void ResetStatsToBase() {
+    SetSpeed(base_speed_);
+    SetInvMass(base_inv_mass_);
+    SetDamage(base_damage_);
+    SetCooldown(base_cooldown_);
+    SetCollider(base_collider_);
+    SetSpriteSize(base_sprite_size_);
+    SetTimeOfLastUse(-1.0f);
+  }
 
   virtual void ModifyStat(SpellUpgradeType type, float value) {
     switch (type) {

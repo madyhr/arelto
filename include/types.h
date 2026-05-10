@@ -269,6 +269,11 @@ class Stat {
     is_dirty_ = true;
   }
 
+  void ClearModifiers() {
+    modifiers_.clear();
+    is_dirty_ = true;
+  }
+
  private:
   // Computes the value of the stat based on the base value and all modifiers,
   // The `extra_modifier` optional argument is used for simulating the effect

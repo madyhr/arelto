@@ -1,7 +1,6 @@
 // include/abilities.h
 #ifndef RL2_ABILITIES_H_
 #define RL2_ABILITIES_H_
-#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
@@ -15,7 +14,7 @@ using SpellTextureMapping = std::vector<std::pair<SpellId, std::string>>;
 class BaseSpell {
  private:
   SpellId id_ = -1;
-  float cooldown_ = 1.0f;
+  Stat cooldown_;
   float time_of_last_use_ = -1.0f;
 
  public:
@@ -23,8 +22,8 @@ class BaseSpell {
   virtual ~BaseSpell() = default;
   SpellId GetId() { return id_; };
   void SetId(SpellId id) { id_ = id; };
-  float GetCooldown() { return cooldown_; };
-  void SetCooldown(float cooldown) { cooldown_ = cooldown; };
+  float GetCooldown() { return cooldown_.GetValue(); };
+  void SetCooldown(float cooldown) { cooldown_.SetBaseValue(cooldown); };
   void SetTimeOfLastUse(float time) { time_of_last_use_ = time; };
   float GetTimeOfLastUse() { return time_of_last_use_; };
 };

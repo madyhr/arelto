@@ -61,6 +61,7 @@ enum class ItemUpgradeType : int {
   armor = 0,
   movement_speed,
   max_health,
+  size,
   global_damage_modifier,
   global_cooldown_modifier,
   count
@@ -73,6 +74,7 @@ inline bool IsHigherBetter(ItemUpgradeType type) {
     case ItemUpgradeType::max_health:
     case ItemUpgradeType::global_damage_modifier:
       return true;
+    case ItemUpgradeType::size:
     case ItemUpgradeType::global_cooldown_modifier:
       return false;
     default:
@@ -149,7 +151,9 @@ class ItemArchive {
         ItemId::aiayn_scale,
         "Aiayn's Ever- Transforming Scale",
         {ItemStatSpec{ItemUpgradeType::max_health, ModifierType::flat, 50.0f,
-                      "Increase Max Health Points"}},
+                      "Increase Max Health Points"},
+         ItemStatSpec{ItemUpgradeType::size, ModifierType::percent_mult, 0.05f,
+                      "Increase Player Size"}},
         {}};
   }
 };

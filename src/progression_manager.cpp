@@ -90,6 +90,7 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
 
 namespace {
 
+// TODO: Unify with the non-const version currently defined in `items.cpp`.
 const Stat* ResolveStatConst(const Player& player, ItemUpgradeType stat_type) {
   switch (stat_type) {
     case ItemUpgradeType::armor:
@@ -98,6 +99,10 @@ const Stat* ResolveStatConst(const Player& player, ItemUpgradeType stat_type) {
       return &player.stats_.movement_speed;
     case ItemUpgradeType::max_health:
       return &player.stats_.max_health;
+    case ItemUpgradeType::size:
+      // As player size is defined used class `StatSize`, the size is defined
+      // by only its `width_` property with class `Stat`.
+      return &player.stats_.size.width_;
     case ItemUpgradeType::global_damage_modifier:
       return &player.stats_.global_damage_modifier;
     case ItemUpgradeType::global_cooldown_modifier:

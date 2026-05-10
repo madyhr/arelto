@@ -338,8 +338,9 @@ class StatsSize {
     return CreateCenteredCollider(GetSize(), kSpriteColliderMargin);
   };
 
- private:
   Stat width_;
+
+ private:
   float aspect_ratio_ = 1.0f;
 };
 

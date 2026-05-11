@@ -43,7 +43,12 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
     return nullptr;
   }
 
-  SpellId random_spell_id = static_cast<SpellId>(std::rand() % spell_count);
+  SpellId spell_id = static_cast<SpellId>(std::rand() % spell_count);
+  const BaseProjectileSpell* spell = player.GetSpell(spell_id);
+  if (!spell) {
+    return nullptr;
+  }
+
   Rarity random_rarity =
       static_cast<Rarity>(std::rand() % static_cast<int>(Rarity::Count));
   int num_upgrades = static_cast<int>(random_rarity) + 1;
@@ -54,21 +59,6 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
         std::rand() % static_cast<int>(SpellUpgradeType::count));
     upgrade_types.push_back(type);
   }
-  SpellUpgradeType type = static_cast<SpellUpgradeType>(
-      std::rand() % static_cast<int>(SpellUpgradeType::count));
-
-  float current_value = 0.0f;
-  float new_value = 0.0f;
-
-  std::string spell_name = "Unknown Spell";
-  Size2D sprite_cell_size = {};
-  const BaseProjectileSpell* spell = player.GetSpell(random_spell_id);
-  if (spell) {
-    spell_name = spell->GetName();
-    sprite_cell_size = spell->GetSpriteCellSize();
-  }
-
-  const SpellStats& stats = player.spell_stats_;
 
   std::vector<SpellStatSpec> stat_specs;
   for (auto& upgrade_type : upgrade_types) {
@@ -77,7 +67,7 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
     stat_specs.push_back(spell_spec);
   }
 
-  SpellUpgrade spell_upgrade = {random_spell_id, random_rarity, stat_specs};
+  SpellUpgrade spell_upgrade = {spell_id, random_rarity, stat_specs};
 
   std::vector<SpellStatModifier> stat_modifiers;
   stat_modifiers.reserve(spell_upgrade.stat_specs.size());
@@ -95,7 +85,10 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
         IsHigherBetter(stat_spec.stat_type)});
   }
 
-  return std::make_unique<SpellStatUpgrade>(random_spell_id, spell_name,
+  std::string spell_name = spell->GetName();
+  Size2D sprite_cell_size = spell->GetSpriteCellSize();
+
+  return std::make_unique<SpellStatUpgrade>(spell_id, spell_name,
                                             stat_modifiers, sprite_cell_size);
 }
 

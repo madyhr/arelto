@@ -4,8 +4,6 @@
 
 namespace arelto {
 
-static std::mt19937 s_generator(std::random_device{}());
-
 int GenerateRandomInt(int min_val, int max_val) {
   std::uniform_int_distribution<int> distrib(min_val, max_val);
   return distrib(s_generator);

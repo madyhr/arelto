@@ -53,6 +53,8 @@ const Stat* ResolveSpellStat(const BaseProjectileSpell& player,
 Stat* ResolveSpellStat(BaseProjectileSpell& player, SpellUpgradeType stat_type);
 
 std::string ResolveSpellUpgradeDescription(SpellUpgradeType stat_type);
+ModifierType ResolveSpellUpgradeModifierType(SpellUpgradeType stat_type);
+float ResolveSpellUpgradeModifierValue(SpellUpgradeType stat_type);
 
 struct SpellStatSpec {
   SpellUpgradeType stat_type;

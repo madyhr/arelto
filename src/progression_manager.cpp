@@ -5,6 +5,7 @@
 #include "event_manager.h"
 #include "item_manager.h"
 #include "items.h"
+#include "random.h"
 #include "types.h"
 #include "upgrades.h"
 
@@ -52,18 +53,24 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
   Rarity random_rarity =
       static_cast<Rarity>(std::rand() % static_cast<int>(Rarity::Count));
   int num_upgrades = static_cast<int>(random_rarity) + 1;
-  std::vector<SpellUpgradeType> upgrade_types;
-  upgrade_types.reserve(num_upgrades);
-  for (int i = 0; i < num_upgrades; ++i) {
-    SpellUpgradeType type = static_cast<SpellUpgradeType>(
-        std::rand() % static_cast<int>(SpellUpgradeType::count));
-    upgrade_types.push_back(type);
+  int max_upgrade_types = static_cast<int>(SpellUpgradeType::count);
+  num_upgrades = std::min(num_upgrades, max_upgrade_types);
+  std::vector<SpellUpgradeType> available_upgrade_types;
+  available_upgrade_types.reserve(max_upgrade_types);
+  for (int i = 0; i < max_upgrade_types; ++i) {
+    available_upgrade_types.push_back(static_cast<SpellUpgradeType>(i));
   }
 
+  std::shuffle(available_upgrade_types.begin(), available_upgrade_types.end(),
+               s_generator);
+
   std::vector<SpellStatSpec> stat_specs;
-  for (auto& upgrade_type : upgrade_types) {
-    SpellStatSpec spell_spec = {upgrade_type, ModifierType::percent_mult, 0.05,
-                                ResolveSpellUpgradeDescription(upgrade_type)};
+  stat_specs.reserve(num_upgrades);
+  for (int i = 0; i < num_upgrades; ++i) {
+    SpellUpgradeType type = available_upgrade_types[i];
+    SpellStatSpec spell_spec = {type, ResolveSpellUpgradeModifierType(type),
+                                ResolveSpellUpgradeModifierValue(type),
+                                ResolveSpellUpgradeDescription(type)};
     stat_specs.push_back(spell_spec);
   }
 

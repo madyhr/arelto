@@ -43,4 +43,34 @@ std::string ResolveSpellUpgradeDescription(SpellUpgradeType stat_type) {
   return "";
 }
 
+ModifierType ResolveSpellUpgradeModifierType(SpellUpgradeType stat_type) {
+  switch (stat_type) {
+    case SpellUpgradeType::damage:
+      return ModifierType::flat;
+    case SpellUpgradeType::size:
+    case SpellUpgradeType::speed:
+    case SpellUpgradeType::cooldown:
+      return ModifierType::percent_mult;
+    case SpellUpgradeType::count:
+      return ModifierType::flat;
+  }
+  return ModifierType::flat;
+}
+
+float ResolveSpellUpgradeModifierValue(SpellUpgradeType stat_type) {
+  switch (stat_type) {
+    case SpellUpgradeType::damage:
+      return 5.0f;
+    case SpellUpgradeType::size:
+      return 1.05f;
+    case SpellUpgradeType::speed:
+      return 1.1f;
+    case SpellUpgradeType::cooldown:
+      return 0.9f;
+    case SpellUpgradeType::count:
+      return 0.0f;
+  }
+  return 0.0f;
+}
+
 }  // namespace arelto

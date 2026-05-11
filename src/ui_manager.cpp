@@ -516,8 +516,8 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
     icon->SetSize(ui_config_.cards.level_up_icon_size,
                   ui_config_.cards.level_up_icon_size);
     icon->SetTexture(resources_->projectiles[spell_id]);
-    icon->SetSrcRect({0, 0, static_cast<int>(upgrade.GetSpriteSize().width),
-                      static_cast<int>(upgrade.GetSpriteSize().height)});
+    icon->SetSrcRect({0, 0, static_cast<int>(upgrade.GetSpriteCellSize().width),
+                      static_cast<int>(upgrade.GetSpriteCellSize().height)});
     card->AddChild(icon);
   }
 

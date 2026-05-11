@@ -9,6 +9,7 @@
 #include "progression_manager.h"
 #include "scene.h"
 #include "test_helpers.h"
+#include "types.h"
 #include "upgrades.h"
 
 namespace arelto {
@@ -157,14 +158,19 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
   float initial_damage = scene_.player.spell_stats_.damage[target_spell];
   float new_damage = initial_damage + 10.0f;
 
-  auto upgrade = std::make_unique<SpellStatUpgrade>(
-      target_spell, spell_name, SpellUpgradeType::damage,
-      ValueRange{initial_damage, new_damage});
+  std::vector<SpellStatModifier> stat_modifiers;
+  stat_modifiers.push_back(
+      SpellStatModifier{SpellUpgradeType::damage, ModifierType::flat, 10.0f,
+                        ValueRange{initial_damage, new_damage}, "",
+                        IsHigherBetter(SpellUpgradeType::damage)});
+
+  auto upgrade = std::make_unique<SpellStatUpgrade>(target_spell, spell_name,
+                                                    stat_modifiers);
 
   scene_.level_up_options.clear();
-  scene_.level_up_options.push_back(std::move(upgrade));
 
   // Apply the upgrade (index 0)
+  scene_.level_up_options.push_back(std::move(upgrade));
   progression_manager_.ApplyLevelUpUpgrade(scene_, 0);
 
   // Verify

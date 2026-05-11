@@ -89,6 +89,7 @@ std::vector<std::string> SpellManager::GetSpellNames() const {
 void SpellManager::ResetSpellStats() {
   for (const auto& spell : spells_) {
     spell->ResetStatsToBase();
+    spell->ClearAllModifiers();
   }
 }
 

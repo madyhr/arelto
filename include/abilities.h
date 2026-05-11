@@ -14,10 +14,10 @@ using SpellTextureMapping = std::vector<std::pair<SpellId, std::string>>;
 class BaseSpell {
  private:
   SpellId id_ = -1;
-  Stat cooldown_;
   float time_of_last_use_ = -1.0f;
 
  public:
+  Stat cooldown_;
   BaseSpell() = default;
   virtual ~BaseSpell() = default;
   SpellId GetId() { return id_; };
@@ -30,10 +30,7 @@ class BaseSpell {
 
 class BaseProjectileSpell : public BaseSpell {
  private:
-  Stat speed_;
   float inv_mass_ = 0.0f;
-  Stat damage_;
-  StatsSize size_;
   Size2D sprite_cell_size_;
   std::string name_;
   float base_speed_ = 0.0f;
@@ -43,6 +40,9 @@ class BaseProjectileSpell : public BaseSpell {
   float base_width_ = 0.0f;
 
  public:
+  Stat speed_;
+  Stat damage_;
+  StatsSize size_;
   BaseProjectileSpell() = default;
   explicit BaseProjectileSpell(std::string name) : name_(std::move(name)) {};
   float GetSpeed() { return speed_.GetValue(); };
@@ -74,6 +74,13 @@ class BaseProjectileSpell : public BaseSpell {
     SetWidth(base_width_);
     SetTimeOfLastUse(-1.0f);
   }
+
+  void ClearAllModifiers() {
+    speed_.ClearModifiers();
+    damage_.ClearModifiers();
+    cooldown_.ClearModifiers();
+    size_.width_.ClearModifiers();
+  };
 
   virtual void ModifyStat(SpellUpgradeType type, float value) {
     switch (type) {

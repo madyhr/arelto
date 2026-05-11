@@ -1,6 +1,7 @@
 // Regression tests for full run state reset.
 
 #include <gtest/gtest.h>
+#include <vector>
 
 #include "config/entity_config.h"
 #include "items.h"
@@ -28,10 +29,19 @@ TEST(SceneResetTest, ResetRestoresSpellUpgradeStats) {
   BaseProjectileSpell* spell = scene.player.GetSpell(0);
   ASSERT_NE(spell, nullptr);
 
-  const int base_damage = spell->GetDamage();
-  SpellStatUpgrade upgrade(0, spell->GetName(), SpellUpgradeType::damage,
-                           ValueRange{static_cast<float>(base_damage),
-                                      static_cast<float>(base_damage + 10)});
+  const float base_damage = spell->GetDamage();
+  std::vector<SpellStatModifier> spell_stat_modifiers;
+  spell_stat_modifiers.push_back(
+      SpellStatModifier{SpellUpgradeType::damage, ModifierType::flat, 10.0f,
+                        ValueRange{base_damage, base_damage + 10.0f}, "",
+                        IsHigherBetter(SpellUpgradeType::damage)});
+
+  auto upgrade = SpellStatUpgrade{0, spell->GetName(), spell_stat_modifiers,
+                                  Size2D{60, 60}};
+
+  // SpellStatUpgrade upgrade(0, spell->GetName(), SpellUpgradeType::damage,
+  //                          ValueRange{static_cast<float>(base_damage),
+  //                                     static_cast<float>(base_damage + 10)});
   upgrade.Apply(scene.player);
   ASSERT_EQ(scene.player.spell_stats_.damage[0], base_damage + 10);
 
@@ -58,8 +68,7 @@ TEST(SceneResetTest, ResetClearsItemStatModifiersInventoryAndOptions) {
   scene.level_up_options.push_back(nullptr);
   scene.item_options.push_back(nullptr);
 
-  ASSERT_GT(scene.player.stats_.movement_speed.GetValue(),
-            base_movement_speed);
+  ASSERT_GT(scene.player.stats_.movement_speed.GetValue(), base_movement_speed);
   ASSERT_FLOAT_EQ(scene.player.stats_.armor.GetValue(), 5.0f);
   ASSERT_FALSE(scene.player.inventory_.empty());
   ASSERT_FALSE(scene.level_up_options.empty());

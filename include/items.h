@@ -70,6 +70,7 @@ enum class ItemUpgradeType : int {
 const Stat* ResolveItemStat(const Player& player, ItemUpgradeType stat_type);
 Stat* ResolveItemStat(Player& player, ItemUpgradeType stat_type);
 
+namespace {
 inline bool IsHigherBetter(ItemUpgradeType type) {
   switch (type) {
     case ItemUpgradeType::armor:
@@ -84,6 +85,7 @@ inline bool IsHigherBetter(ItemUpgradeType type) {
       return true;
   }
 }
+}  // namespace
 
 struct ItemStatSpec {
   ItemUpgradeType stat_type;

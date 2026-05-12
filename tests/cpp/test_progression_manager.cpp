@@ -5,10 +5,12 @@
 
 #include <memory>
 
+#include "config/progression_config.h"
 #include "constants/progression_manager.h"
 #include "progression_manager.h"
 #include "scene.h"
 #include "test_helpers.h"
+#include "types.h"
 #include "upgrades.h"
 
 namespace arelto {
@@ -87,6 +89,20 @@ TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_CreatesValidOptions) {
   }
 }
 
+TEST_F(ProgressionManagerTest,
+       GenerateLevelUpOptions_UsesConfiguredSpellUpgradeRarityWeights) {
+  progression_manager_.progression_config_.spell_upgrade.rarity_weights = {
+      0.0f, 0.0f, 0.0f, 1.0f};
+
+  progression_manager_.GenerateLevelUpOptions(scene_);
+
+  for (const auto& option : scene_.level_up_options) {
+    ASSERT_NE(option, nullptr);
+    EXPECT_EQ(option->GetDisplayRows().size(),
+              static_cast<size_t>(SpellUpgradeType::count));
+  }
+}
+
 // =============================================================================
 // ApplyUpgrade Tests
 // =============================================================================
@@ -154,23 +170,26 @@ TEST_F(ProgressionManagerTest, ApplyUpgrade_ChangesPlayerStats) {
   // We avoid using GenerateLevelUpOptions to remove RNG.
   SpellId target_spell = 0;
   std::string spell_name = "Fireball";
-  float initial_damage =
-      static_cast<float>(scene_.player.spell_stats_.damage[target_spell]);
+  float initial_damage = scene_.player.spell_stats_.damage[target_spell];
   float new_damage = initial_damage + 10.0f;
 
+  std::vector<SpellStatModifier> stat_modifiers;
+  stat_modifiers.push_back(
+      SpellStatModifier{SpellUpgradeType::damage, ModifierType::flat, 10.0f,
+                        ValueRange{initial_damage, new_damage}, "",
+                        IsHigherBetter(SpellUpgradeType::damage)});
+
   auto upgrade = std::make_unique<SpellStatUpgrade>(target_spell, spell_name,
-                                                    SpellUpgradeType::damage,
-                                                    ValueRange{initial_damage, new_damage});
+                                                    stat_modifiers);
 
   scene_.level_up_options.clear();
-  scene_.level_up_options.push_back(std::move(upgrade));
 
   // Apply the upgrade (index 0)
+  scene_.level_up_options.push_back(std::move(upgrade));
   progression_manager_.ApplyLevelUpUpgrade(scene_, 0);
 
   // Verify
-  float actual_damage =
-      static_cast<float>(scene_.player.spell_stats_.damage[target_spell]);
+  float actual_damage = scene_.player.spell_stats_.damage[target_spell];
   EXPECT_GT(actual_damage, initial_damage);
   EXPECT_FLOAT_EQ(actual_damage, new_damage);
 }

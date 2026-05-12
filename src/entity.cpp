@@ -144,6 +144,13 @@ void Player::UpdateAllSpellStats() {
   }
 };
 
+void Player::ResetSpellsToBase() {
+  if (!spell_manager_) {
+    return;
+  }
+  spell_manager_->ResetSpellStats();
+}
+
 std::optional<ProjectileData> Player::CastProjectileSpell(
     BaseProjectileSpell& spell, float time, Vector2D cursor_position) {
 
@@ -152,7 +159,7 @@ std::optional<ProjectileData> Player::CastProjectileSpell(
   }
   Vector2D player_centroid = GetCentroid(position_, stats_.size.GetSize());
   Vector2D spell_direction = (cursor_position - player_centroid).Normalized();
-  Size2D spell_size = spell.GetSpriteSize();
+  Size2D spell_size = spell.GetSize();
   Vector2D spell_position = player_centroid - (ToVector2D(spell_size) / 2.0f);
   ProjectileData projectile_spell = {static_cast<int>(entity_type_),
                                      spell_position,
@@ -203,10 +210,9 @@ void Player::AddToInventory(ItemId item_id) {
   inventory_.emplace_back(item_id, 1);
 }
 
-int Player::CalculateOutgoingDamage(int base_damage) {
+int Player::CalculateOutgoingDamage(float damage) {
   float global_dmg_mod = stats_.global_damage_modifier.GetValue();
-  int total_damage = static_cast<int>(
-      std::round(static_cast<float>(base_damage) * global_dmg_mod));
+  int total_damage = static_cast<int>(std::round(damage * global_dmg_mod));
   return total_damage;
 }
 

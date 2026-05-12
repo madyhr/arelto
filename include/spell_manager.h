@@ -22,6 +22,7 @@ class SpellManager {
   size_t GetSpellCount() const;
   std::vector<std::string> GetSpellNames() const;
   SpellTextureMapping GetSpellTextureMapping() const;
+  void ResetSpellStats();
 
  private:
   SpellList spells_;

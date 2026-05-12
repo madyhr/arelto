@@ -132,10 +132,13 @@ struct UICardConfig {
   float level_up_icon_size = 80.0f;
   float level_up_name_offset_y = 220.0f;
   float level_up_name_offset_x = 70.0f;
+  float level_up_name_label_height = 96.0f;
   float level_up_desc_offset_y = 300.0f;
   float level_up_desc_offset_x = 70.0f;
+  float level_up_desc_label_height = 15.0f;
   float level_up_stats_offset_y = 350.0f;
   float level_up_stats_offset_x = 70.0f;
+  float level_up_stats_label_height = 15.0f;
   float level_up_row_stride = 55.0f;
   float level_up_button_offset_y = 440.0f;
   float level_up_button_width = 200.0f;

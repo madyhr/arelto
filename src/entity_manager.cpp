@@ -180,7 +180,7 @@ void EntityManager::OnEnemyProjectileCollision(
     const EnemyProjectileCollisionEvent& event, EventContext& context) {
   context.scene.projectiles.to_be_destroyed_.insert(event.proj_idx);
   int proj_id = context.scene.projectiles.proj_type_[event.proj_idx];
-  int spell_damage = context.scene.player.spell_stats_.damage[proj_id];
+  float spell_damage = context.scene.player.spell_stats_.damage[proj_id];
   int total_damage = context.scene.player.CalculateOutgoingDamage(spell_damage);
   event_manager_->Emit(EnemyDamagedEvent{event.enemy_idx, total_damage});
 }

@@ -1,19 +1,29 @@
 // src/progression_manager.cpp
 #include "progression_manager.h"
-#include <algorithm>
+#include <vector>
 #include "abilities.h"
+#include "config/progression_config_yaml.h"  // IWYU pragma: keep
 #include "constants/progression_manager.h"
 #include "event_manager.h"
 #include "item_manager.h"
 #include "items.h"
+#include "random.h"
 #include "types.h"
+#include "upgrades.h"
 
 namespace arelto {
 
 ProgressionManager::ProgressionManager() {}
 ProgressionManager::~ProgressionManager() {}
 
+void ProgressionManager::LoadProgressionConfig() {
+  progression_config_ = MakeDefaultProgressionConfig();
+  config_manager_.LoadConfigSectionOrDefault(
+      "progression", "assets/config/progression.yaml", progression_config_);
+}
+
 void ProgressionManager::Initialize(EventManager& event_manager) {
+  LoadProgressionConfig();
   event_manager_ = &event_manager;
 }
 
@@ -44,48 +54,60 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
   }
 
   SpellId spell_id = static_cast<SpellId>(std::rand() % spell_count);
-  SpellUpgradeType type = static_cast<SpellUpgradeType>(
-      std::rand() % static_cast<int>(SpellUpgradeType::count));
-
-  float current_value = 0.0f;
-  float new_value = 0.0f;
-
-  std::string spell_name = "Unknown Spell";
-  Size2D sprite_size = {};
   const BaseProjectileSpell* spell = player.GetSpell(spell_id);
-  if (spell) {
-    spell_name = spell->GetName();
-    sprite_size = spell->GetSpriteCellSize();
+  if (!spell) {
+    return nullptr;
   }
 
-  const SpellStats& stats = player.spell_stats_;
+  const auto& rarity_weights = progression_config_.spell_upgrade.rarity_weights;
+  Rarity random_rarity = static_cast<Rarity>(SampleFromDiscreteDist(
+      std::vector<float>(rarity_weights.begin(), rarity_weights.end())));
 
-  switch (type) {
-    case SpellUpgradeType::damage:
-      current_value = static_cast<float>(stats.damage[spell_id]);
-      new_value = current_value + kDamageUpgradeValue;
-      break;
-    case SpellUpgradeType::speed:
-      current_value = stats.speed[spell_id];
-      new_value = current_value + kSpeedUpgradeValue;
-      break;
-    case SpellUpgradeType::cooldown:
-      current_value = stats.cooldown[spell_id];
-      // We use the max of (0.1, new_value) to ensure that ability cooldowns
-      // are always positive.
-      new_value = std::max(0.1f, current_value - kCooldownUpgradeValue);
-      break;
-    case SpellUpgradeType::size:
-      current_value = static_cast<float>(stats.sprite_size[spell_id].width);
-      new_value = current_value * kSizeUpgradeFactor;
-      break;
-    case SpellUpgradeType::count:
-      break;
+  int num_upgrades = static_cast<int>(random_rarity) + 1;
+  int max_upgrade_types = static_cast<int>(SpellUpgradeType::count);
+  num_upgrades = std::min(num_upgrades, max_upgrade_types);
+  std::vector<SpellUpgradeType> available_upgrade_types;
+  available_upgrade_types.reserve(max_upgrade_types);
+  for (int i = 0; i < max_upgrade_types; ++i) {
+    available_upgrade_types.push_back(static_cast<SpellUpgradeType>(i));
   }
 
-  return std::make_unique<SpellStatUpgrade>(
-      spell_id, spell_name, type, ValueRange{current_value, new_value},
-      sprite_size);
+  std::shuffle(available_upgrade_types.begin(), available_upgrade_types.end(),
+               s_generator);
+
+  std::vector<SpellStatSpec> stat_specs;
+  stat_specs.reserve(num_upgrades);
+  for (int i = 0; i < num_upgrades; ++i) {
+    SpellUpgradeType type = available_upgrade_types[i];
+    SpellStatSpec spell_spec = {type, ResolveSpellUpgradeModifierType(type),
+                                ResolveSpellUpgradeModifierValue(type),
+                                ResolveSpellUpgradeDescription(type)};
+    stat_specs.push_back(spell_spec);
+  }
+
+  SpellUpgrade spell_upgrade = {spell_id, random_rarity, stat_specs};
+
+  std::vector<SpellStatModifier> stat_modifiers;
+  stat_modifiers.reserve(spell_upgrade.stat_specs.size());
+  for (const SpellStatSpec& stat_spec : spell_upgrade.stat_specs) {
+    const Stat* stat = ResolveSpellStat(*spell, stat_spec.stat_type);
+    if (stat == nullptr) {
+      continue;
+    }
+    float current_value = stat->GetValue();
+    float updated_value =
+        stat->GetModifiedValue(stat_spec.value, stat_spec.modifier_type);
+    stat_modifiers.push_back(SpellStatModifier{
+        stat_spec.stat_type, stat_spec.modifier_type, stat_spec.value,
+        ValueRange{current_value, updated_value}, stat_spec.description,
+        IsHigherBetter(stat_spec.stat_type)});
+  }
+
+  std::string spell_name = spell->GetName();
+  Size2D sprite_cell_size = spell->GetSpriteCellSize();
+
+  return std::make_unique<SpellStatUpgrade>(spell_id, spell_name,
+                                            stat_modifiers, sprite_cell_size);
 }
 
 std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(

@@ -19,7 +19,7 @@ struct FieldDecoder {
     try {
       out = field.as<T>();
     } catch (const YAML::Exception& e) {
-      std::cerr << "Invalid UI config value for " << owner << "." << key << ": "
+      std::cerr << "Invalid config value for " << owner << "." << key << ": "
                 << e.what() << '\n';
     }
   }

@@ -527,7 +527,7 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
                           ui_config_.cards.level_up_name_offset_y);
   name_label->SetSize(ui_config_.cards.level_up_card_width -
                           2 * ui_config_.cards.level_up_name_offset_x,
-                      96);
+                      ui_config_.cards.level_up_name_label_height);
   name_label->SetText(upgrade.GetName());
   name_label->SetFont(resources_->font_large);
   name_label->SetColor({255, 255, 255, 255});
@@ -553,7 +553,7 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
                             row_desc_y);
     desc_label->SetSize(ui_config_.cards.level_up_card_width -
                             2 * ui_config_.cards.level_up_desc_offset_x,
-                        25);
+                        ui_config_.cards.level_up_desc_label_height);
     desc_label->SetText(row.description);
     desc_label->SetFont(resources_->font_medium);
     desc_label->SetColor({180, 180, 180, 255});
@@ -571,7 +571,7 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
                              row_stats_y);
     stats_label->SetSize(ui_config_.cards.level_up_card_width -
                              2 * ui_config_.cards.level_up_stats_offset_x,
-                         25);
+                         ui_config_.cards.level_up_stats_label_height);
     stats_label->SetText(stats_str);
     stats_label->SetFont(resources_->font_medium);
     // NOTE: The assumption here is that all stat upgrades are positive (e.g. "Damage: 10 -> 12").

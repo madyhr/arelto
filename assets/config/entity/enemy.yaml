@@ -1,4 +1,4 @@
-max_health_points: 10
+max_health_points: 100
 attack_damage: 5
 attack_cooldown_s: 0.1
 movement_speed: 40.0

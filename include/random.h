@@ -3,11 +3,13 @@
 #define RL2_RANDOM_H_
 
 #include <random>
+#include <vector>
 namespace arelto {
 
 static std::mt19937 s_generator(std::random_device{}());
 int GenerateRandomInt(int min_val, int max_val);
 float GenerateRandomFloat(float min_val, float max_val);
+int SampleFromDiscreteDist(std::vector<float> weights);
 
 }  // namespace arelto
 

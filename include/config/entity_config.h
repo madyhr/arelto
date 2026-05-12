@@ -36,15 +36,16 @@ struct ExpGemRarityConfig {
   int exp_value = 1;
   uint32_t width = 25;
   uint32_t height = 33;
+  float spawn_weighting = 1.0f;
 };
 
 inline std::array<ExpGemRarityConfig, Rarity::Count>
 MakeDefaultExpGemRarities() {
   std::array<ExpGemRarityConfig, Rarity::Count> rarities{};
-  rarities[Rarity::common] = {1, 25, 33};
-  rarities[Rarity::rare] = {2, 30, 40};
-  rarities[Rarity::epic] = {4, 35, 45};
-  rarities[Rarity::legendary] = {8, 45, 60};
+  rarities[Rarity::common] = {1, 25, 33, 16.0f};
+  rarities[Rarity::rare] = {2, 30, 40, 8.0f};
+  rarities[Rarity::epic] = {4, 35, 45, 2.0f};
+  rarities[Rarity::legendary] = {8, 45, 60, 0.5f};
   return rarities;
 }
 

@@ -4,13 +4,13 @@
   sprite_cell_width: 60
   sprite_cell_height: 60
   speed: 500.0
-  damage: 5
+  damage: 50
   cooldown: 1.0
 - name: "frostbolt"
-  width: 100
+  width: 120
   aspect_ratio: 1.0
   sprite_cell_width: 60
   sprite_cell_height: 60
   speed: 250.0
-  damage: 10
+  damage: 75
   cooldown: 2.0

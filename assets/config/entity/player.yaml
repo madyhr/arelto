@@ -6,7 +6,7 @@ width: 60
 height: 75
 aspect_ratio: 1.25
 inv_mass: 0.01
-initial_exp_requirement: 10
+initial_exp_requirement: 5
 exp_required_scale: 1.1
 invulnerable_window_s: 0.1
 global_damage_modifier: 1.0

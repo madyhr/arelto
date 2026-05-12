@@ -1,5 +1,6 @@
 // src/ui_manager.cpp
 #include "ui_manager.h"
+#include <algorithm>
 #include <functional>
 #include <string>
 #include "constants/chest.h"
@@ -506,13 +507,39 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
   card->SetBackground(resources_->level_up_option_card);
   card->SetBackgroundSrcRect({0, 0, 0, 0});  // full texture
 
+  std::vector<UpgradeDisplayRow> display_rows = upgrade.GetDisplayRows();
+  const float stats_delta_y = ui_config_.cards.level_up_stats_offset_y -
+                              ui_config_.cards.level_up_desc_offset_y;
+  const float row_pair_height =
+      stats_delta_y + ui_config_.cards.level_up_stats_label_height;
+  const float rows_height =
+      display_rows.empty()
+          ? 0.0f
+          : row_pair_height + static_cast<float>(display_rows.size() - 1) *
+                                  ui_config_.cards.level_up_row_stride;
+  const float name_bottom_y = ui_config_.cards.level_up_name_offset_y +
+                              ui_config_.cards.level_up_name_label_height;
+  const float rows_bottom_y =
+      display_rows.empty()
+          ? name_bottom_y
+          : ui_config_.cards.level_up_desc_offset_y + rows_height;
+  const float content_group_top_y = ui_config_.cards.level_up_icon_offset_y;
+  const float content_group_bottom_y = std::max(name_bottom_y, rows_bottom_y);
+  const float content_group_height =
+      content_group_bottom_y - content_group_top_y;
+  const float content_area_height =
+      ui_config_.cards.level_up_button_offset_y - content_group_top_y;
+  const float content_group_offset_y =
+      std::max(0.0f, (content_area_height - content_group_height) * 0.5f);
+
   int spell_id = upgrade.GetSpellID();
   if (spell_id >= 0 &&
       spell_id < static_cast<int>(resources_->projectiles.size())) {
     auto icon = std::make_shared<UIImage>();
     icon->SetId(card_id + "_icon");
     icon->SetAnchor(AnchorType::TopCenter);
-    icon->SetPosition(0, ui_config_.cards.level_up_icon_offset_y);
+    icon->SetPosition(
+        0, ui_config_.cards.level_up_icon_offset_y + content_group_offset_y);
     icon->SetSize(ui_config_.cards.level_up_icon_size,
                   ui_config_.cards.level_up_icon_size);
     icon->SetTexture(resources_->projectiles[spell_id]);
@@ -523,8 +550,9 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
 
   auto name_label = std::make_shared<UILabel>();
   name_label->SetId(card_id + "_name");
-  name_label->SetPosition(ui_config_.cards.level_up_name_offset_x,
-                          ui_config_.cards.level_up_name_offset_y);
+  name_label->SetPosition(
+      ui_config_.cards.level_up_name_offset_x,
+      ui_config_.cards.level_up_name_offset_y + content_group_offset_y);
   name_label->SetSize(ui_config_.cards.level_up_card_width -
                           2 * ui_config_.cards.level_up_name_offset_x,
                       ui_config_.cards.level_up_name_label_height);
@@ -537,15 +565,12 @@ void UIManager::BuildLevelUpCard(UIWidget* parent, int index,
                            2 * ui_config_.cards.level_up_name_offset_x);
   card->AddChild(name_label);
 
-  std::vector<UpgradeDisplayRow> display_rows = upgrade.GetDisplayRows();
   for (size_t row_index = 0; row_index < display_rows.size(); ++row_index) {
     const UpgradeDisplayRow& row = display_rows[row_index];
     const float row_desc_y =
-        ui_config_.cards.level_up_desc_offset_y +
+        ui_config_.cards.level_up_desc_offset_y + content_group_offset_y +
         static_cast<float>(row_index) * ui_config_.cards.level_up_row_stride;
-    const float row_stats_y =
-        ui_config_.cards.level_up_stats_offset_y +
-        static_cast<float>(row_index) * ui_config_.cards.level_up_row_stride;
+    const float row_stats_y = row_desc_y + stats_delta_y;
 
     auto desc_label = std::make_shared<UILabel>();
     desc_label->SetId(card_id + "_desc_" + std::to_string(row_index));

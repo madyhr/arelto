@@ -15,29 +15,51 @@
 #include "render_resources.h"
 #include "scene.h"
 #include "test_helpers.h"
+#include "types.h"
 #include "ui/containers.h"
 #include "ui/widgets.h"
 #include "ui_manager.h"
+#include "upgrades.h"
 
 namespace arelto {
 namespace {
 
 UpgradeOptions MakeSpellUpgradeOptions() {
   UpgradeOptions options;
-  options.push_back(std::make_unique<SpellStatUpgrade>(
-      0, "Fireball", SpellUpgradeType::damage, ValueRange{10.0f, 12.0f},
-      Size2D{60, 60}));
-  options.push_back(std::make_unique<SpellStatUpgrade>(
-      1, "Frostbolt", SpellUpgradeType::cooldown, ValueRange{1.50f, 1.00f},
-      Size2D{100, 100}));
+  std::vector<SpellStatModifier> fireball_stat_modifiers;
+  fireball_stat_modifiers.push_back(SpellStatModifier{
+      SpellUpgradeType::damage, ModifierType::flat, 2.0f,
+      ValueRange{10.0f, 12.0f}, "", IsHigherBetter(SpellUpgradeType::damage)});
+
+  auto fireball_option =
+      SpellStatUpgrade{0, "Fireball", fireball_stat_modifiers, Size2D{60, 60}};
+
+  std::vector<SpellStatModifier> frostbolt_stat_modifiers;
+  frostbolt_stat_modifiers.push_back(SpellStatModifier{
+      SpellUpgradeType::damage, ModifierType::flat, -0.5f,
+      ValueRange{1.50f, 1.0f}, "", IsHigherBetter(SpellUpgradeType::cooldown)});
+
+  auto frostbolt_option = SpellStatUpgrade{
+      1, "Frostbolt", frostbolt_stat_modifiers, Size2D{100, 100}};
+
+  options.push_back(std::make_unique<SpellStatUpgrade>(fireball_option));
+  options.push_back(std::make_unique<SpellStatUpgrade>(frostbolt_option));
   return options;
 }
 
 UpgradeOptions MakeSingleSpellUpgradeOption() {
   UpgradeOptions options;
-  options.push_back(std::make_unique<SpellStatUpgrade>(
-      0, "Fireball", SpellUpgradeType::damage, ValueRange{10.0f, 12.0f},
-      Size2D{60, 60}));
+  std::vector<SpellStatModifier> fireball_stat_modifiers;
+  SpellUpgradeType upgrade_type = SpellUpgradeType::damage;
+  fireball_stat_modifiers.push_back(SpellStatModifier{
+      upgrade_type, ModifierType::flat, 2.0f, ValueRange{10.0f, 12.0f},
+      ResolveSpellUpgradeDescription(upgrade_type),
+      IsHigherBetter(SpellUpgradeType::damage)});
+
+  auto fireball_option =
+      SpellStatUpgrade{0, "Fireball", fireball_stat_modifiers, Size2D{60, 60}};
+
+  options.push_back(std::make_unique<SpellStatUpgrade>(fireball_option));
   return options;
 }
 
@@ -567,7 +589,7 @@ TEST_F(UIManagerTest,
   ASSERT_NE(select_button, nullptr);
 
   EXPECT_EQ(name->GetText(), "Fireball");
-  EXPECT_EQ(description->GetText(), "Increase Damage");
+  EXPECT_EQ(description->GetText(), "Increase Spell Damage");
   EXPECT_EQ(stats->GetText(), "10.00 -> 12.00");
   EXPECT_EQ(select_button->GetLabel(), "SELECT");
 }

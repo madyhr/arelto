@@ -35,17 +35,58 @@ class Upgrade {
 
 using UpgradeOptions = std::vector<std::unique_ptr<Upgrade>>;
 
+namespace {
+inline bool IsHigherBetter(SpellUpgradeType type) {
+  switch (type) {
+    case SpellUpgradeType::size:
+    case SpellUpgradeType::cooldown:
+    case SpellUpgradeType::damage:
+    case SpellUpgradeType::speed:
+    default:
+      return true;
+  }
+}
+}  // namespace
+
+const Stat* ResolveSpellStat(const BaseProjectileSpell& player,
+                             SpellUpgradeType stat_type);
+Stat* ResolveSpellStat(BaseProjectileSpell& player, SpellUpgradeType stat_type);
+
+std::string ResolveSpellUpgradeDescription(SpellUpgradeType stat_type);
+ModifierType ResolveSpellUpgradeModifierType(SpellUpgradeType stat_type);
+float ResolveSpellUpgradeModifierValue(SpellUpgradeType stat_type);
+
+struct SpellStatSpec {
+  SpellUpgradeType stat_type;
+  ModifierType modifier_type;
+  float value;
+  std::string description;
+};
+
+struct SpellStatModifier {
+  SpellUpgradeType stat_type;
+  ModifierType modifier_type;
+  float raw_value;
+  ValueRange value_range;
+  std::string description;
+  bool is_higher_better;
+};
+
+struct SpellUpgrade {
+  SpellId id;
+  Rarity rarity;
+  std::vector<SpellStatSpec> stat_specs;
+};
+
 class SpellStatUpgrade : public Upgrade {
  public:
   SpellStatUpgrade(SpellId spell_id, std::string spell_name,
-                   SpellUpgradeType type, ValueRange value_range,
-                   Size2D sprite_size = {})
+                   std::vector<SpellStatModifier> stat_modifiers,
+                   Size2D sprite_cell_size = {})
       : spell_id_(spell_id),
         spell_name_(ToTitleCase(std::move(spell_name))),
-        type_(type),
-        current_value_(value_range.current),
-        updated_value_(value_range.updated),
-        sprite_size_(sprite_size) {}
+        stat_modifiers_(std::move(stat_modifiers)),
+        sprite_cell_size_(sprite_cell_size) {}
 
   void Apply(Player& player) override {
     BaseProjectileSpell* spell = player.GetSpell(spell_id_);
@@ -53,40 +94,42 @@ class SpellStatUpgrade : public Upgrade {
       return;
     }
 
-    spell->ModifyStat(type_, updated_value_);
-
+    for (const SpellStatModifier& stat_modifier : stat_modifiers_) {
+      Stat* stat_to_upgrade = ResolveSpellStat(*spell, stat_modifier.stat_type);
+      if (stat_to_upgrade == nullptr) {
+        continue;
+      }
+      Modifier modifier{stat_modifier.raw_value, stat_modifier.modifier_type,
+                        nullptr};
+      stat_to_upgrade->AddModifier(modifier);
+    }
     player.spell_stats_.SetProjectileSpellStats(*spell);
   }
 
   SpellUpgradeType GetType() const { return type_; }
   SpellId GetSpellID() const { return spell_id_; }
-  Size2D GetSpriteSize() const { return sprite_size_; }
+  Size2D GetSpriteCellSize() const { return sprite_cell_size_; }
 
   std::string GetName() const override { return spell_name_; }
 
   std::vector<UpgradeDisplayRow> GetDisplayRows() const override {
-    return {UpgradeDisplayRow{GetDescriptionForType(type_),
-                              FormatValue(current_value_),
-                              FormatValue(updated_value_)}};
+    std::vector<UpgradeDisplayRow> rows;
+    rows.reserve(stat_modifiers_.size());
+    for (const SpellStatModifier& stat_modifier : stat_modifiers_) {
+      bool value_increased =
+          stat_modifier.value_range.updated > stat_modifier.value_range.current;
+      bool is_improvement =
+          (value_increased && stat_modifier.is_higher_better) ||
+          (!value_increased && !stat_modifier.is_higher_better);
+      rows.push_back(UpgradeDisplayRow{
+          stat_modifier.description,
+          FormatValue(stat_modifier.value_range.current),
+          FormatValue(stat_modifier.value_range.updated), is_improvement});
+    }
+    return rows;
   }
 
  private:
-  static std::string GetDescriptionForType(SpellUpgradeType type) {
-    switch (type) {
-      case SpellUpgradeType::damage:
-        return "Increase Damage";
-      case SpellUpgradeType::speed:
-        return "Increase Speed";
-      case SpellUpgradeType::cooldown:
-        return "Decrease Cooldown";
-      case SpellUpgradeType::size:
-        return "Increase Size";
-      case SpellUpgradeType::count:
-        return "Unknown Upgrade";
-    }
-    return "Unknown Upgrade";
-  }
-
   static std::string FormatValue(float value) {
     std::stringstream ss;
     ss << std::fixed << std::setprecision(2) << value;
@@ -95,10 +138,11 @@ class SpellStatUpgrade : public Upgrade {
 
   SpellId spell_id_;
   std::string spell_name_;
-  SpellUpgradeType type_;
+  SpellUpgradeType type_ = SpellUpgradeType::damage;
+  std::vector<SpellStatModifier> stat_modifiers_;
   float current_value_;
   float updated_value_;
-  Size2D sprite_size_;
+  Size2D sprite_cell_size_;
 };
 
 }  // namespace arelto

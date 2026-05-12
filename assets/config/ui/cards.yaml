@@ -1,16 +1,19 @@
-level_up_card_width: 400
-level_up_card_height: 600
+level_up_card_width: 500
+level_up_card_height: 950
 level_up_card_gap: 100
-level_up_icon_offset_y: 120
+level_up_icon_offset_y: 145
 level_up_icon_size: 80
-level_up_name_offset_y: 220
+level_up_name_offset_y: 250
 level_up_name_offset_x: 70
-level_up_desc_offset_y: 300
+level_up_name_label_height: 5
+level_up_desc_offset_y: 320
 level_up_desc_offset_x: 70
-level_up_stats_offset_y: 350
+level_up_desc_label_height: 5
+level_up_stats_offset_y: 370
+level_up_stats_label_height: 5
 level_up_stats_offset_x: 70
-level_up_row_stride: 55
-level_up_button_offset_y: 440
+level_up_row_stride: 105
+level_up_button_offset_y: 765
 level_up_button_width: 200
 level_up_button_height: 50
 

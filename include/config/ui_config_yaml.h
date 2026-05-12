@@ -475,10 +475,13 @@ struct convert<arelto::UICardConfig> {
     node["level_up_icon_size"] = rhs.level_up_icon_size;
     node["level_up_name_offset_y"] = rhs.level_up_name_offset_y;
     node["level_up_name_offset_x"] = rhs.level_up_name_offset_x;
+    node["level_up_name_label_height"] = rhs.level_up_desc_label_height;
     node["level_up_desc_offset_y"] = rhs.level_up_desc_offset_y;
     node["level_up_desc_offset_x"] = rhs.level_up_desc_offset_x;
+    node["level_up_desc_label_height"] = rhs.level_up_desc_label_height;
     node["level_up_stats_offset_y"] = rhs.level_up_stats_offset_y;
     node["level_up_stats_offset_x"] = rhs.level_up_stats_offset_x;
+    node["level_up_stats_label_height"] = rhs.level_up_stats_label_height;
     node["level_up_row_stride"] = rhs.level_up_row_stride;
     node["level_up_button_offset_y"] = rhs.level_up_button_offset_y;
     node["level_up_button_width"] = rhs.level_up_button_width;
@@ -523,14 +526,20 @@ struct convert<arelto::UICardConfig> {
                  &arelto::UICardConfig::level_up_name_offset_y, kOwner);
     DecodeMember(node, "level_up_name_offset_x", rhs,
                  &arelto::UICardConfig::level_up_name_offset_x, kOwner);
+    DecodeMember(node, "level_up_name_label_height", rhs,
+                 &arelto::UICardConfig::level_up_name_label_height, kOwner);
     DecodeMember(node, "level_up_desc_offset_y", rhs,
                  &arelto::UICardConfig::level_up_desc_offset_y, kOwner);
     DecodeMember(node, "level_up_desc_offset_x", rhs,
                  &arelto::UICardConfig::level_up_desc_offset_x, kOwner);
+    DecodeMember(node, "level_up_desc_label_height", rhs,
+                 &arelto::UICardConfig::level_up_desc_label_height, kOwner);
     DecodeMember(node, "level_up_stats_offset_y", rhs,
                  &arelto::UICardConfig::level_up_stats_offset_y, kOwner);
     DecodeMember(node, "level_up_stats_offset_x", rhs,
                  &arelto::UICardConfig::level_up_stats_offset_x, kOwner);
+    DecodeMember(node, "level_up_stats_label_height", rhs,
+                 &arelto::UICardConfig::level_up_stats_label_height, kOwner);
     DecodeMember(node, "level_up_row_stride", rhs,
                  &arelto::UICardConfig::level_up_row_stride, kOwner);
     DecodeMember(node, "level_up_button_offset_y", rhs,

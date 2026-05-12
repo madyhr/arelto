@@ -51,7 +51,8 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
   }
 
   Rarity random_rarity =
-      static_cast<Rarity>(std::rand() % static_cast<int>(Rarity::Count));
+      static_cast<Rarity>(SampleFromDiscreteDist({16.0, 8.0, 2.0, 0.5}));
+
   int num_upgrades = static_cast<int>(random_rarity) + 1;
   int max_upgrade_types = static_cast<int>(SpellUpgradeType::count);
   num_upgrades = std::min(num_upgrades, max_upgrade_types);

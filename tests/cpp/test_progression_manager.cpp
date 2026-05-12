@@ -5,6 +5,7 @@
 
 #include <memory>
 
+#include "config/progression_config.h"
 #include "constants/progression_manager.h"
 #include "progression_manager.h"
 #include "scene.h"
@@ -85,6 +86,20 @@ TEST_F(ProgressionManagerTest, GenerateLevelUpOptions_CreatesValidOptions) {
     SpellUpgradeType type = spell_upgrade->GetType();
     EXPECT_LT(static_cast<int>(type),
               static_cast<int>(SpellUpgradeType::count));
+  }
+}
+
+TEST_F(ProgressionManagerTest,
+       GenerateLevelUpOptions_UsesConfiguredSpellUpgradeRarityWeights) {
+  progression_manager_.progression_config_.spell_upgrade.rarity_weights = {
+      0.0f, 0.0f, 0.0f, 1.0f};
+
+  progression_manager_.GenerateLevelUpOptions(scene_);
+
+  for (const auto& option : scene_.level_up_options) {
+    ASSERT_NE(option, nullptr);
+    EXPECT_EQ(option->GetDisplayRows().size(),
+              static_cast<size_t>(SpellUpgradeType::count));
   }
 }
 

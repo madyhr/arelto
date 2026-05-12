@@ -1,6 +1,8 @@
 // src/progression_manager.cpp
 #include "progression_manager.h"
+#include <vector>
 #include "abilities.h"
+#include "config/progression_config_yaml.h"  // IWYU pragma: keep
 #include "constants/progression_manager.h"
 #include "event_manager.h"
 #include "item_manager.h"
@@ -14,7 +16,14 @@ namespace arelto {
 ProgressionManager::ProgressionManager() {}
 ProgressionManager::~ProgressionManager() {}
 
+void ProgressionManager::LoadProgressionConfig() {
+  progression_config_ = MakeDefaultProgressionConfig();
+  config_manager_.LoadConfigSectionOrDefault(
+      "progression", "assets/config/progression.yaml", progression_config_);
+}
+
 void ProgressionManager::Initialize(EventManager& event_manager) {
+  LoadProgressionConfig();
   event_manager_ = &event_manager;
 }
 
@@ -50,8 +59,9 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
     return nullptr;
   }
 
-  Rarity random_rarity =
-      static_cast<Rarity>(SampleFromDiscreteDist({16.0, 8.0, 2.0, 0.5}));
+  const auto& rarity_weights = progression_config_.spell_upgrade.rarity_weights;
+  Rarity random_rarity = static_cast<Rarity>(SampleFromDiscreteDist(
+      std::vector<float>(rarity_weights.begin(), rarity_weights.end())));
 
   int num_upgrades = static_cast<int>(random_rarity) + 1;
   int max_upgrade_types = static_cast<int>(SpellUpgradeType::count);

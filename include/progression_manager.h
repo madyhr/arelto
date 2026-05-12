@@ -2,6 +2,8 @@
 #define RL2_PROGRESSION_MANAGER_H_
 
 #include <memory>
+#include "config/config_manager.h"
+#include "config/progression_config.h"
 #include "entity.h"
 #include "item_manager.h"
 #include "scene.h"
@@ -15,6 +17,7 @@ class ProgressionManager {
   ~ProgressionManager();
 
   EventManager* event_manager_ = nullptr;
+  ProgressionConfig progression_config_ = MakeDefaultProgressionConfig();
   void Initialize(EventManager& event_manager);
   bool CheckLevelUp(const Player& player);
   void GenerateLevelUpOptions(Scene& scene);
@@ -24,6 +27,9 @@ class ProgressionManager {
                         int option_index);
 
  private:
+  ConfigManager config_manager_;
+
+  void LoadProgressionConfig();
   std::unique_ptr<Upgrade> GenerateRandomSpellUpgrade(const Player& player);
   std::unique_ptr<Upgrade> GenerateRandomItem(const Scene& scene);
   bool ApplyUpgrade(Player& player, UpgradeOptions& upgrade_options,

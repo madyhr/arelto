@@ -21,6 +21,8 @@ PYBIND11_MODULE(arelto_py, m) {
       .value("in_quit_confirm", arelto::GameState::in_quit_confirm)
       .value("in_settings_menu", arelto::GameState::in_settings_menu)
       .value("in_level_up", arelto::GameState::in_level_up)
+      .value("in_chest_opening", arelto::GameState::in_chest_opening)
+      .value("in_item_selection", arelto::GameState::in_item_selection)
       .export_values();
 
   py::class_<arelto::Game>(m, "Game")
@@ -33,7 +35,7 @@ PYBIND11_MODULE(arelto_py, m) {
       .def("render", &arelto::Game::RenderGame)
       .def("reset", &arelto::Game::ResetGame)
       .def("fill_terminated_buffer",
-           [](arelto::Game& self, py::array_t<bool> buffer) {
+           [](arelto::Game& self, const py::array_t<bool>& buffer) {
              py::buffer_info info = buffer.request();
 
              if (info.ndim != 1) {
@@ -48,7 +50,7 @@ PYBIND11_MODULE(arelto_py, m) {
              }
            })
       .def("fill_truncated_buffer",
-           [](arelto::Game& self, py::array_t<bool> buffer) {
+           [](arelto::Game& self, const py::array_t<bool>& buffer) {
              py::buffer_info info = buffer.request();
 
              if (info.ndim != 1) {
@@ -63,7 +65,7 @@ PYBIND11_MODULE(arelto_py, m) {
              }
            })
       .def("fill_observation_buffer",
-           [](arelto::Game& self, py::array_t<float> buffer) {
+           [](arelto::Game& self, const py::array_t<float>& buffer) {
              py::buffer_info info = buffer.request();
 
              if (info.ndim != 2) {
@@ -76,10 +78,10 @@ PYBIND11_MODULE(arelto_py, m) {
            })
       .def("get_observation_size",
            [](arelto::Game& self) {
-             return self.obs_manager_.GetObservationSize(self.scene_);
+             return self.obs_manager_.GetObservationSize();
            })
       .def("apply_action",
-           [](arelto::Game& self, py::array_t<int> buffer) {
+           [](arelto::Game& self, const py::array_t<int>& buffer) {
              py::buffer_info info = buffer.request();
 
              if (info.ndim != 2) {
@@ -92,10 +94,10 @@ PYBIND11_MODULE(arelto_py, m) {
            })
       .def("get_action_size",
            [](arelto::Game& self) {
-             return self.action_manager_.GetActionSize(self.scene_);
+             return self.action_manager_.GetActionSize();
            })
       .def("fill_reward_buffer",
-           [](arelto::Game& self, py::array_t<float> buffer) {
+           [](arelto::Game& self, const py::array_t<float>& buffer) {
              py::buffer_info info = buffer.request();
 
              if (info.ndim != 1) {
@@ -103,17 +105,16 @@ PYBIND11_MODULE(arelto_py, m) {
              }
 
              self.reward_manager_.FillRewardBuffer(
-                 static_cast<float*>(info.ptr), static_cast<int>(info.size),
-                 self.scene_);
+                 static_cast<float*>(info.ptr), static_cast<int>(info.size));
            })
       .def("get_reward_size",
            [](arelto::Game& self) {
              return self.reward_manager_.GetRewardSize();
            })
       .def("get_enemy_num_rays",
-           [](arelto::Game& self) { return arelto::kNumRays; })
+           [](arelto::Game& /*self*/) { return arelto::kNumRays; })
       .def("get_enemy_ray_history_length",
-           [](arelto::Game& self) { return arelto::kRayHistoryLength; })
+           [](arelto::Game& /*self*/) { return arelto::kRayHistoryLength; })
       .def("shutdown", &arelto::Game::Shutdown)
       .def("set_game_state", &arelto::Game::SetGameState)
       .def("get_game_state", &arelto::Game::GetGameState);

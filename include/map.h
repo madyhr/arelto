@@ -1,8 +1,7 @@
 // include/map.h
 #ifndef RL2_MAP_H_
 #define RL2_MAP_H_
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_surface.h>
+#include <SDL2/SDL.h>
 #include <vector>
 #include "constants/map.h"
 #include "types.h"
@@ -11,13 +10,10 @@ namespace arelto {
 
 class TileManager {
  public:
-  SDL_Texture* tile_texture_;
-  SDL_Surface* tile_surface_;
   SDL_Rect tiles_[kNumTilesX][kNumTilesY];
   int tile_map_[kNumTilesX][kNumTilesY];
   std::vector<SDL_Rect> select_tiles_;
 
-  SDL_Texture* GetTileTexture(const char* file, SDL_Renderer* renderer);
   void SetupTileMap();
   void SetupTiles();
   void SetupTileSelector();
@@ -98,11 +94,11 @@ class FixedMap {
     }
   }
 
-  inline void SetGrid(int x, int y, int w, int h, EntityType type) {
+  inline void SetGrid(SDL_Rect rect, EntityType type) {
     // Sets a grid of cells to a certain entity type.
-    for (int i = 0; i < w + 1; ++i) {
-      for (int j = 0; j < h + 1; ++j) {
-        Set(x + i, y + j, type);
+    for (int i = 0; i < rect.w + 1; ++i) {
+      for (int j = 0; j < rect.h + 1; ++j) {
+        Set(rect.x + i, rect.y + j, type);
       }
     }
   }

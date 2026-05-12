@@ -1,0 +1,22 @@
+inv_mass: 1.0
+rarities:
+  common:
+    exp_value: 1
+    width: 25
+    height: 33
+    spawn_weighting: 16.0
+  rare:
+    exp_value: 2
+    width: 30
+    height: 40
+    spawn_weighting: 8.0
+  epic:
+    exp_value: 4
+    width: 35
+    height: 45
+    spawn_weighting: 2.0
+  legendary:
+    exp_value: 8
+    width: 45
+    height: 60
+    spawn_weighting: 0.5

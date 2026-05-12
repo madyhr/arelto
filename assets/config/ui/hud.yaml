@@ -1,0 +1,57 @@
+hud_padding: 50
+hud_bar_spacing: 8
+bar_text_offset_x: 50
+bar_text_offset_y: 0
+level_group_offset_y: 55
+timer_text_gap: 10
+level_text_gap: -2
+
+digit_sprite_width: 30
+digit_sprite_height: 50
+
+health_bar_container_sprite_offset_x: 0
+health_bar_container_sprite_offset_y: 0
+health_bar_container_sprite_width: 404
+health_bar_container_sprite_height: 92
+health_bar_rel_offset_x: 80.0
+health_bar_rel_offset_y: 32.0
+health_bar_sprite_offset_x: 0
+health_bar_sprite_offset_y: 128
+health_bar_sprite_width: 299
+health_bar_sprite_height: 28
+health_bar_text_rel_offset_x: 100
+health_bar_text_rel_offset_y: 32
+health_bar_text_char_width: 20
+health_bar_text_char_height: 25
+
+timer_hourglass_sprite_width: 50
+timer_hourglass_sprite_height: 72
+timer_text_char_width: 50
+timer_text_char_height: 72
+
+game_over_sprite_width: 610
+game_over_sprite_height: 88
+
+exp_bar_container_sprite_offset_x: 0
+exp_bar_container_sprite_offset_y: 0
+exp_bar_container_sprite_width: 404
+exp_bar_container_sprite_height: 92
+exp_bar_rel_offset_x: 80.0
+exp_bar_rel_offset_y: 30.0
+exp_bar_sprite_offset_x: 0
+exp_bar_sprite_offset_y: 128
+exp_bar_sprite_width: 299
+exp_bar_sprite_height: 28
+exp_bar_text_rel_offset_x: 100
+exp_bar_text_rel_offset_y: 32
+exp_bar_text_char_width: 20
+exp_bar_text_char_height: 25
+
+level_icon_sprite_offset_x: 0
+level_icon_sprite_offset_y: 0
+level_icon_sprite_width: 70
+level_icon_sprite_height: 74
+level_text_char_width: 50
+level_text_char_height: 72
+level_up_icon_margin: -10
+level_up_text_margin: -10

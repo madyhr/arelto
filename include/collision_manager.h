@@ -6,6 +6,7 @@
 #include <array>
 #include <vector>
 #include "entity.h"
+#include "event_manager.h"
 #include "scene.h"
 #include "types.h"
 
@@ -16,21 +17,22 @@ class CollisionManager {
  public:
   std::vector<AABB> entity_aabb_;
   std::vector<CollisionPair> collision_pairs_;
-  void HandleCollisionsSAP(Scene& scene);
+  void HandleCollisionsSAP(Scene& scene, EventManager& event_manager);
 
  private:
   void FindCollisionPairsSAP(std::vector<AABB>& sorted_aabb);
   CollisionType GetCollisionType(const CollisionPair& cp);
-  void ResolveCollisionPairsSAP(Scene& scene);
-  void ResolveEnemyProjectileCollision(const CollisionPair& cp, Enemy& enemy,
-                                       Projectiles& projectiles,
-                                       Player& player);
+  void ResolveCollisionPairsSAP(Scene& scene, EventManager& event_manager);
+  void ResolveEnemyProjectileCollision(const CollisionPair& cp,
+                                       EventManager& event_manager);
 
   void ResolveEnemyEnemyCollision(const CollisionPair& cp, Enemy& enemy);
   void ResolvePlayerEnemyCollision(const CollisionPair& cp, Player& player,
-                                   Enemy& enemy);
-  void ResolvePlayerGemCollision(const CollisionPair& cp, Player& player,
-                                 ExpGem& exp_gem);
+                                   Enemy& enemy, EventManager& event_manager);
+  void ResolvePlayerExpGemCollision(const CollisionPair& cp,
+                                    EventManager& event_manager);
+  void ResolvePlayerChestCollision(const CollisionPair& cp,
+                                   EventManager& event_manager);
   std::array<Vector2D, 2> GetDisplacementVectors(
       const std::array<AABB, 2>& aabbs,
       const std::array<Vector2D, 2>& centroids,

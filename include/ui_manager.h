@@ -7,53 +7,41 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "scene.h"
-#include "ui/containers.h"
+#include "config/ui_config.h"
+#include "event_manager.h"
+#include "items.h"
+#include "render_resources.h"
 #include "ui/widget.h"
-#include "ui/widgets.h"
+#include "upgrades.h"
 
 namespace arelto {
 
-struct UIResources {
-  SDL_Texture* digit_font_texture = nullptr;
-  SDL_Texture* health_bar_texture = nullptr;
-  SDL_Texture* exp_bar_texture = nullptr;
-  SDL_Texture* level_indicator_texture = nullptr;
-  SDL_Texture* timer_hourglass_texture = nullptr;
-  SDL_Texture* game_over_texture = nullptr;
-  SDL_Texture* start_screen_texture = nullptr;
-  TTF_Font* ui_font_medium = nullptr;
-  TTF_Font* ui_font_large = nullptr;
-  TTF_Font* ui_font_huge = nullptr;
-  SDL_Texture* level_up_option_card_texture = nullptr;
-  SDL_Texture* button_texture = nullptr;
-  SDL_Texture* begin_button_texture = nullptr;
-  SDL_Texture* settings_menu_background_texture = nullptr;
-  SDL_Texture* slider_texture = nullptr;
-  SDL_Texture* checkbox_texture = nullptr;
-  SDL_Texture* checkmark_texture = nullptr;
-  std::vector<SDL_Texture*> projectile_textures;
-};
-
 class UIManager {
  public:
-  void SetupUI(const UIResources& resources);
-  void Update(const Scene& scene, float time);
+  void SetupUI(const RenderResources& resources, const UIConfig& config,
+               EventManager& event_manager);
   void UpdateSettingsMenu(float volume, bool is_muted,
                           const GameStatus& game_status);
-  void BuildLevelUpMenu(const std::vector<std::unique_ptr<Upgrade>>& options);
+  void BuildLevelUpMenu(const UpgradeOptions& options);
   void UpdateLevelUpMenu();
   void BuildStartScreen();
   void UpdateStartScreen();
   void BuildGameOverScreen();
   void UpdateQuitConfirmMenu();
+  void BuildChestOpeningScreen();
+  void BuildItemMenu(const UpgradeOptions& options);
+  void UpdateItemMenu();
+  void BuildItemInventory();
+  void UpdateTimer(float time);
 
   UIWidget* GetRootWidget();
   UIWidget* GetSettingsRoot();
   UIWidget* GetLevelUpRoot();
+  UIWidget* GetItemMenuRoot();
   UIWidget* GetStartScreenRoot();
   UIWidget* GetGameOverScreenRoot();
   UIWidget* GetQuitConfirmRoot();
+  UIWidget* GetChestOpeningRoot();
 
   template <typename T>
   T* GetWidget(const std::string& id) {
@@ -65,12 +53,21 @@ class UIManager {
 
  private:
   std::shared_ptr<UIWidget> root_widget_;
-  const UIResources* resources_ = nullptr;
+  const RenderResources* resources_ = nullptr;
+  UIConfig ui_config_ = MakeDefaultUIConfig();
 
   void BuildHUD();
+  void UpdateExpBar(int current_exp_points, int exp_points_required);
+  void UpdateHealthBar(int health_points, int max_health_points);
+  void UpdateItemInventory(const Inventory& inventory);
+  void SetupUIEventSubscriptions(EventManager& event_manager);
   void BuildSettingsMenu();
   void BuildQuitConfirmMenu();
-  void BuildLevelUpCard(UIWidget* parent, int index, const Upgrade& upgrade);
+  void BuildLevelUpCard(UIWidget* parent, int index,
+                        const SpellStatUpgrade& upgrade);
+  void BuildItemCard(UIWidget* parent, int index, const ItemUpgrade& upgrade);
+  void BuildInventoryItem(UIWidget* parent, int index,
+                          const InventoryItem& inv_item);
 };
 
 }  // namespace arelto

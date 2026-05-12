@@ -70,6 +70,7 @@ cmake_test_discovery_*.json
 compile_commands.json
 CMakeInit.txt
 build.ninja
+rl/assets/*
 # Executables
 game_app
 arelto_tests

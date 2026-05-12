@@ -1,9 +1,10 @@
 #ifndef RL2_ENTITY_MANAGER_H_
 #define RL2_ENTITY_MANAGER_H_
 
-#include "constants/map.h"
-#include "entity.h"
-#include "map.h"
+#include <vector>
+#include "config/config_manager.h"
+#include "config/entity_config.h"
+#include "event_manager.h"
 #include "scene.h"
 
 namespace arelto {
@@ -13,22 +14,34 @@ class EntityManager {
   EntityManager();
   ~EntityManager();
 
-  void Update(Scene& scene, float dt);
-  bool IsPlayerDead(const Player& player);
+  void Initialize(EventManager& event_manager);
+  void Cleanup(Scene& scene);
+  void ProcessPendingSpawns(Scene& scene);
+  EntityConfig entity_config_ = MakeDefaultEntityConfig();
 
  private:
-  int physics_tick_count_ = 0;
+  EventManager* event_manager_ = nullptr;
+  ConfigManager config_manager_;
+  std::vector<ExpGemData> pending_exp_gem_spawns_;
+  std::vector<ChestData> pending_chest_spawns_;
+  std::vector<int> pending_enemy_respawns_;
 
-  void UpdateEnemyStatus(Scene& scene, float dt);
-  void UpdateProjectilesStatus(Scene& scene);
-  void UpdateGemStatus(Scene& scene);
-  void UpdateObservations(Scene& scene, float dt);
-  void UpdateWorldOccupancyMap(
-      FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map,
-      Player& player, Enemy& enemy, Projectiles& projectiles);
-  void UpdateEnemyRayCaster(
-      Enemy& enemy,
-      const FixedMap<kOccupancyMapWidth, kOccupancyMapHeight>& occupancy_map);
+  void LoadEntityConfig();
+  void ResolveProjectileDestruction(Scene& scene);
+  void ResolveExpGemDestruction(Scene& scene);
+  void ResolveChestDestruction(Scene& scene);
+
+  void OnEnemyKilled(const EnemyKilledEvent& event, EventContext& context);
+  void OnPlayerExpGemCollision(const PlayerExpGemCollisionEvent& event,
+                                EventContext& context);
+  void OnPlayerChestCollision(const PlayerChestCollisionEvent& event,
+                               EventContext& context);
+  void OnPlayerDamaged(const PlayerDamagedEvent& event, EventContext& context);
+  void OnPlayerEnemyCollision(const PlayerEnemyCollisionEvent& event,
+                               EventContext& context);
+  void OnEnemyDamaged(const EnemyDamagedEvent& event, EventContext& context);
+  void OnEnemyProjectileCollision(const EnemyProjectileCollisionEvent& event,
+                                   EventContext& context);
 };
 
 }  // namespace arelto

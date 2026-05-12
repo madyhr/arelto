@@ -6,7 +6,7 @@
 
 namespace arelto {
 
-int ActionManager::GetActionSize(const Scene& scene) {
+int ActionManager::GetActionSize() {
   return 2;  // enemy velocity (x,y)
 };
 
@@ -16,7 +16,7 @@ int ActionManager::GetActionSize(const Scene& scene) {
 // array is (num_actions, num_enemies).
 void ActionManager::ReadActionBuffer(int* buffer_ptr, int buffer_size,
                                      Scene& scene) {
-  if (buffer_size != (kNumEnemies * GetActionSize(scene))) {
+  if (buffer_size != (kNumEnemies * GetActionSize())) {
     throw std::runtime_error("Action buffer size mismatch");
   };
 

@@ -28,6 +28,7 @@ jobs:
             libsdl2-ttf-dev \
             libsdl2-mixer-dev \
             libomp-dev \
+            libyaml-cpp-dev \
             ninja-build
 
       - name: Set up Python

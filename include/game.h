@@ -8,15 +8,20 @@
 #include <SDL2/SDL_render.h>
 #include <SDL_events.h>
 #include <csignal>
+#include <vector>
 #include "action_manager.h"
 #include "audio_manager.h"
 #include "entity_manager.h"
+#include "event_manager.h"
+#include "item_manager.h"
+#include "items.h"
 #include "observation_manager.h"
 #include "physics_manager.h"
 #include "progression_manager.h"
 #include "render_manager.h"
 #include "reward_manager.h"
 #include "scene.h"
+#include "spell_manager.h"
 #include "types.h"
 
 namespace arelto {
@@ -46,6 +51,7 @@ class Game {
   PhysicsManager physics_manager_;
   EntityManager entity_manager_;
   ProgressionManager progression_manager_;
+  SpellManager spell_manager_;
   AudioManager audio_manager_;
   GameStatus game_status_;
   GameState game_state_;
@@ -55,17 +61,26 @@ class Game {
   GameState previous_game_state_ = in_start_screen;
   bool is_mouse_left_active_ = false;
   bool is_mouse_right_active_ = false;
+  std::vector<GameState> pending_transitions_;
+  ItemArchive item_archive_;
+  EventManager event_manager_;
+  ItemManager item_manager_;
 
   static volatile std::sig_atomic_t stop_request_;
   bool InitializeCamera();
-  void CheckGameStateRules();
+  void RegisterGameStateHandlers();
+  void RequestGameStateTransition(GameState target);
+  void ProcessGameStateTransitionQueue();
+  void ResolveCurrentGameStateTransition();
   void StepGamePhysics();
   Vector2D GetCursorPositionWorld();
   void ProcessPlayerInput();
   void ProcessLevelUpInput(const SDL_Event& e);
+  void ProcessItemSelectionInput(const SDL_Event& e);
   void ProcessSettingsMenuInput(uint32_t mouse_state);
   void ProcessSettingsMenuEvent(const SDL_Event& e);
   void ProcessQuitConfirmEvent(const SDL_Event& e);
+  void ProcessChestOpeningInput(const SDL_Event& e);
   void CachePreviousState();
   bool IsMouseOverWidget(UIWidget* root, const std::string& widget_id,
                          int mouse_x, int mouse_y);

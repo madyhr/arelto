@@ -2,7 +2,10 @@
 #define RL2_PROGRESSION_MANAGER_H_
 
 #include <memory>
+#include "config/config_manager.h"
+#include "config/progression_config.h"
 #include "entity.h"
+#include "item_manager.h"
 #include "scene.h"
 #include "upgrades.h"
 
@@ -13,13 +16,24 @@ class ProgressionManager {
   ProgressionManager();
   ~ProgressionManager();
 
+  EventManager* event_manager_ = nullptr;
+  ProgressionConfig progression_config_ = MakeDefaultProgressionConfig();
+  void Initialize(EventManager& event_manager);
   bool CheckLevelUp(const Player& player);
   void GenerateLevelUpOptions(Scene& scene);
-  void ApplyUpgrade(Scene& scene, int option_index);
-  int ApplyExpScalingLaw(const int& current_exp_req);
+  void GenerateItemOptions(Scene& scene);
+  void ApplyLevelUpUpgrade(Scene& scene, int option_index);
+  void ApplyItemUpgrade(Scene& scene, ItemManager& item_manager,
+                        int option_index);
 
  private:
-  std::unique_ptr<Upgrade> GenerateRandomOption(const Player& player);
+  ConfigManager config_manager_;
+
+  void LoadProgressionConfig();
+  std::unique_ptr<Upgrade> GenerateRandomSpellUpgrade(const Player& player);
+  std::unique_ptr<Upgrade> GenerateRandomItem(const Scene& scene);
+  bool ApplyUpgrade(Player& player, UpgradeOptions& upgrade_options,
+                    int option_index);
 };
 
 }  // namespace arelto

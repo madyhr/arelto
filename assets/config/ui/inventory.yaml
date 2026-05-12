@@ -1,0 +1,9 @@
+inventory_bar_y: 50
+inventory_icon_size: 60
+inventory_widget_height: 60
+inventory_label_width: 20
+inventory_item_gap: 15
+inventory_multiplier_size: 16
+inventory_multiplier_margin: 0
+inventory_container_padding: 20
+inventory_background_alpha: 64

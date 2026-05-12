@@ -1,0 +1,42 @@
+menu_content_padding: 100
+menu_item_spacing: 25
+menu_button_gap: 20
+menu_bottom_padding: 60
+
+generic_button_texture_width: 300
+generic_button_texture_height: 160
+
+begin_button_texture_width: 638
+begin_button_texture_height: 540
+begin_button_width: 450
+begin_button_height: 175
+
+settings_menu_width: 450
+settings_menu_height: 750
+settings_menu_background_sprite_width: 900
+settings_menu_background_sprite_height: 1000
+settings_menu_button_width: 150
+settings_menu_button_height: 50
+settings_menu_volume_slider_width: 300
+settings_menu_volume_slider_height: 30
+volume_slider_fill_offset_x: 15
+volume_slider_fill_offset_y: 5
+volume_slider_fill_width: 275
+volume_slider_fill_height: 20
+
+quit_menu_width: 550
+quit_menu_height: 300
+
+slider_container_sprite_offset_x: 0
+slider_container_sprite_offset_y: 0
+slider_container_sprite_width: 882
+slider_container_sprite_height: 48
+slider_bar_sprite_offset_x: 0
+slider_bar_sprite_offset_y: 48
+slider_bar_sprite_width: 806
+slider_bar_sprite_height: 29
+
+checkbox_sprite_width: 263
+checkbox_sprite_height: 526
+checkmark_sprite_width: 193
+checkmark_sprite_height: 164

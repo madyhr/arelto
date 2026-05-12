@@ -1,127 +1,138 @@
 // include/abilities.h
 #ifndef RL2_ABILITIES_H_
 #define RL2_ABILITIES_H_
-#include <SDL2/SDL_render.h>
-#include <array>
-#include <cstdint>
 #include <string>
-#include "constants/projectile.h"
+#include <utility>
+#include <vector>
 #include "types.h"
 
 namespace arelto {
 
-enum SpellId : int { FireballId, FrostboltId };
+using SpellId = int;
+using SpellTextureMapping = std::vector<std::pair<SpellId, std::string>>;
 
 class BaseSpell {
-  SpellId id_;
+ private:
+  SpellId id_ = -1;
+  float time_of_last_use_ = -1.0f;
 
  public:
-  float cooldown_ = 1.0f;
-  float time_of_last_use_ = -1.0f;
-  explicit BaseSpell(SpellId id) : id_(id) {};
+  Stat cooldown_;
+  BaseSpell() = default;
   virtual ~BaseSpell() = default;
-  virtual SpellId GetId() { return id_; };
-  virtual float GetCooldown() { return cooldown_; };
-  virtual void SetCooldown(float cooldown) { cooldown_ = cooldown; };
-  virtual void SetTimeOfLastUse(float time) { time_of_last_use_ = time; };
-  virtual float GetReadyTime() const { return cooldown_ + time_of_last_use_; };
+  SpellId GetId() { return id_; };
+  void SetId(SpellId id) { id_ = id; };
+  float GetCooldown() { return cooldown_.GetValue(); };
+  void SetCooldown(float cooldown) { cooldown_.SetBaseValue(cooldown); };
+  void SetTimeOfLastUse(float time) { time_of_last_use_ = time; };
+  float GetTimeOfLastUse() { return time_of_last_use_; };
 };
 
 class BaseProjectileSpell : public BaseSpell {
-  float speed_ = 0.0f;
+ private:
   float inv_mass_ = 0.0f;
-  uint32_t damage_ = 0;
-  Collider collider_;
-  Size2D sprite_size_;
+  Size2D sprite_cell_size_;
   std::string name_;
+  float base_speed_ = 0.0f;
+  float base_inv_mass_ = 0.0f;
+  float base_damage_ = 0.0f;
+  float base_cooldown_ = 1.0f;
+  float base_width_ = 0.0f;
 
  public:
-  BaseProjectileSpell(SpellId id, std::string name)
-      : BaseSpell(id), name_(name) {};
-  virtual float GetSpeed() { return speed_; };
-  virtual void SetSpeed(float speed) { speed_ = speed; };
-  virtual float GetInvMass() { return inv_mass_; };
-  virtual void SetInvMass(float inv_mass) { inv_mass_ = inv_mass; };
-  virtual uint32_t GetDamage() { return damage_; };
-  virtual void SetDamage(uint32_t damage) { damage_ = damage; };
-  virtual Collider GetCollider() { return collider_; };
-  virtual void SetCollider(Collider collider) { collider_ = collider; };
-  virtual Size2D GetSpriteSize() { return sprite_size_; };
-  virtual void SetSpriteSize(Size2D size) { sprite_size_ = size; };
+  Stat speed_;
+  Stat damage_;
+  StatsSize size_;
+  BaseProjectileSpell() = default;
+  explicit BaseProjectileSpell(std::string name) : name_(std::move(name)) {};
+  float GetSpeed() { return speed_.GetValue(); };
+  void SetSpeed(float speed) { speed_.SetBaseValue(speed); };
+  float GetInvMass() { return inv_mass_; };
+  void SetInvMass(float inv_mass) { inv_mass_ = inv_mass; };
+  float GetDamage() { return damage_.GetValue(); };
+  void SetDamage(float damage) { damage_.SetBaseValue(damage); };
+  Collider GetCollider() { return size_.GetCollider(); };
+  Size2D GetSize() const { return size_.GetSize(); };
+  void SetWidth(float width) { size_.SetBaseWidth(width); };
+  Size2D GetSpriteCellSize() const { return sprite_cell_size_; };
+  void SetSpriteCellSize(Size2D size) { sprite_cell_size_ = size; };
   std::string GetName() const { return name_; };
 
-  virtual void ModifyStat(UpgradeType type, float value) {
+  void CaptureBaseStats() {
+    base_speed_ = speed_.GetValue();
+    base_inv_mass_ = inv_mass_;
+    base_damage_ = damage_.GetValue();
+    base_cooldown_ = GetCooldown();
+    base_width_ = size_.width_.GetValue();
+  }
+
+  void ResetStatsToBase() {
+    SetSpeed(base_speed_);
+    SetInvMass(base_inv_mass_);
+    SetDamage(base_damage_);
+    SetCooldown(base_cooldown_);
+    SetWidth(base_width_);
+    SetTimeOfLastUse(-1.0f);
+  }
+
+  void ClearAllModifiers() {
+    speed_.ClearModifiers();
+    damage_.ClearModifiers();
+    cooldown_.ClearModifiers();
+    size_.width_.ClearModifiers();
+  };
+
+  virtual void ModifyStat(SpellUpgradeType type, float value) {
     switch (type) {
-      case UpgradeType::damage:
-        SetDamage(static_cast<uint32_t>(value));
+      case SpellUpgradeType::damage:
+        SetDamage(value);
         break;
-      case UpgradeType::speed:
+      case SpellUpgradeType::speed:
         SetSpeed(value);
         break;
-      case UpgradeType::cooldown:
+      case SpellUpgradeType::cooldown:
         SetCooldown(value);
         break;
-      case UpgradeType::size: {
-        float current_w = static_cast<float>(GetSpriteSize().width);
-        float current_h = static_cast<float>(GetSpriteSize().height);
+      case SpellUpgradeType::size: {
+        float current_w = static_cast<float>(GetSize().width);
+        float current_h = static_cast<float>(GetSize().height);
         if (current_w > 0) {
           float ratio = current_h / current_w;
           float new_w = value;
           float new_h = new_w * ratio;
-          SetSpriteSize(
-              {static_cast<uint32_t>(new_w), static_cast<uint32_t>(new_h)});
-          // TODO:This is a placeholder way to set the collider. May require
-          // reworking how Colliders are defined in the worst case.
-          SetCollider({{static_cast<float>(0.5f * new_w),
-                        static_cast<float>(0.5f * new_h)},
-                       {static_cast<uint32_t>(new_w * 0.8f),
-                        static_cast<uint32_t>(new_h * 0.8f)}});
+          SetWidth(new_w);
         }
         break;
       }
+      case SpellUpgradeType::count:
+        break;
     }
   }
 };
 
-class Fireball : public BaseProjectileSpell {
- public:
-  Fireball() : BaseProjectileSpell(SpellId::FireballId, "Fireball") {
-    SetCooldown(kFireballCooldown);
-    SetSpeed(kFireballSpeed);
-    SetCollider({{0.5 * kFireballSpriteWidth, 0.5 * kFireballSpriteHeight},
-                 {kFireballColliderWidth, kFireballColliderHeight}});
-    SetSpriteSize({kFireballSpriteWidth, kFireballSpriteHeight});
-    SetDamage(kFireBallDamage);
-  }
-};
-
-class Frostbolt : public BaseProjectileSpell {
- public:
-  Frostbolt() : BaseProjectileSpell(SpellId::FrostboltId, "Frostbolt") {
-    SetCooldown(kFrostboltCooldown);
-    SetSpeed(kFrostboltSpeed);
-    SetCollider({{0.5 * kFrostboltSpriteWidth, 0.5 * kFrostboltSpriteHeight},
-                 {kFrostboltColliderWidth, kFrostboltColliderHeight}});
-    SetSpriteSize({kFrostboltSpriteWidth, kFrostboltSpriteHeight});
-    SetDamage(kFrostboltDamage);
-  }
-};
-
-template <size_t N>
 struct SpellStats {
-  std::array<float, N> cooldown;
-  std::array<float, N> time_of_last_use;
-  std::array<float, N> speed;
-  std::array<Collider, N> collider;
-  std::array<Size2D, N> sprite_size;
-  std::array<int, N> damage;
+  std::vector<float> cooldown;
+  std::vector<float> time_of_last_use;
+  std::vector<float> speed;
+  std::vector<Collider> collider;
+  std::vector<Size2D> sprite_size;
+  std::vector<float> damage;
+
+  void Resize(size_t n) {
+    cooldown.resize(n);
+    time_of_last_use.resize(n);
+    speed.resize(n);
+    collider.resize(n);
+    sprite_size.resize(n);
+    damage.resize(n);
+  }
 
   void SetProjectileSpellStats(BaseProjectileSpell& spell) {
     SpellId id = spell.GetId();
     cooldown[id] = spell.GetCooldown();
     speed[id] = spell.GetSpeed();
     collider[id] = spell.GetCollider();
-    sprite_size[id] = spell.GetSpriteSize();
+    sprite_size[id] = spell.GetSize();
     damage[id] = spell.GetDamage();
   };
 
@@ -130,5 +141,6 @@ struct SpellStats {
     time_of_last_use[id] = 0.0f;
   }
 };
-};  // namespace arelto
+
+}  // namespace arelto
 #endif

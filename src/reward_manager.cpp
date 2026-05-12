@@ -2,6 +2,7 @@
 #include "reward_manager.h"
 #include <array>
 #include <stdexcept>
+#include <utility>
 #include "constants/enemy.h"
 #include "scene.h"
 
@@ -38,11 +39,10 @@ void RewardManager::UpdateRewardTerms(const Scene& scene) {
 
 void RewardManager::AddTerm(std::string name, float weight,
                             RewardFunction func) {
-  terms_.push_back(RewardTerm{name, weight, func});
+  terms_.push_back(RewardTerm{std::move(name), weight, std::move(func)});
 };
 
-std::array<float, kNumEnemies> RewardManager::CalculateTotalReward(
-    const Scene& scene) {
+std::array<float, kNumEnemies> RewardManager::CalculateTotalReward() {
   std::array<float, kNumEnemies> total_reward{};
 
   for (RewardTerm& term : terms_) {
@@ -83,14 +83,13 @@ int RewardManager::GetRewardSize() {
   return kNumEnemies;
 };
 
-void RewardManager::FillRewardBuffer(float* buffer_ptr, int buffer_size,
-                                     const Scene& scene) {
+void RewardManager::FillRewardBuffer(float* buffer_ptr, int buffer_size) {
   if (buffer_size != GetRewardSize()) {
     throw std::runtime_error("Buffer size mismatch");
   };
 
   int idx = 0;
-  std::array<float, kNumEnemies> total_rewards = CalculateTotalReward(scene);
+  std::array<float, kNumEnemies> total_rewards = CalculateTotalReward();
 
   for (int i = 0; i < kNumEnemies; ++i) {
     buffer_ptr[idx++] = total_rewards[i];

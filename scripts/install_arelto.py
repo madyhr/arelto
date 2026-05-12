@@ -6,6 +6,10 @@ import subprocess
 import sys
 
 
+VENV_DIRNAME = "arelto_venv"
+CONDA_ENV_NAME = "arelto"
+
+
 def run_command(command_list, console=None, cwd=None, env=None, show_error=True):
     """
     Runs a shell command silently, returning the exit code.
@@ -79,19 +83,63 @@ def require_virtual_environment():
     print("  dependencies. A virtual environment is required.")
     print()
     print("  Option A (venv):")
-    print("    python -m venv .venv")
-    print("    source .venv/bin/activate")
+    print(f"    python -m venv {VENV_DIRNAME}")
+    print(f"    source {VENV_DIRNAME}/bin/activate")
     print()
-    print("  Option B (Conda):")
-    print("    conda create -n arelto python=3.10")
-    print("    conda activate arelto")
+    print("  Option B (uv):")
+    print(f"    uv venv {VENV_DIRNAME}")
+    print(f"    source {VENV_DIRNAME}/bin/activate")
     print()
-    print("  Then re-run:  python scripts/install_arelto.py")
+    print("  Option C (Conda):")
+    print(f"    conda create -n {CONDA_ENV_NAME} python=3.10")
+    print(f"    conda activate {CONDA_ENV_NAME}")
+    print()
+    print("  Then re-run: python scripts/install_arelto.py")
     print("=" * 60)
     sys.exit(1)
 
 
-def bootstrap_rich():
+def is_uv_environment(prefix):
+    pyvenv_cfg = os.path.join(prefix, "pyvenv.cfg")
+    if not os.path.exists(pyvenv_cfg):
+        return False
+
+    with open(pyvenv_cfg, "r", encoding="utf-8") as handle:
+        for line in handle:
+            key, _, value = line.partition("=")
+            if key.strip() == "uv" and value.strip():
+                return True
+
+    return False
+
+
+def detect_active_environment_manager():
+    if "CONDA_PREFIX" in os.environ:
+        return "conda"
+
+    if sys.prefix != sys.base_prefix and is_uv_environment(sys.prefix):
+        return "uv"
+
+    return "venv"
+
+
+def build_pip_install_command(env_manager, *packages, quiet=False, editable=False):
+    if env_manager == "uv":
+        command = ["uv", "pip", "install", "--python", sys.executable]
+    else:
+        command = [sys.executable, "-m", "pip", "install"]
+
+    if quiet:
+        command.append("-q")
+
+    if editable:
+        command.append("-e")
+
+    command.extend(packages)
+    return command
+
+
+def bootstrap_rich(env_manager):
     """Bootstraps the 'rich' library silently and returns the UI components."""
     try:
         from rich.console import Console
@@ -103,7 +151,7 @@ def bootstrap_rich():
         print("--> Installing 'rich' for a nicer experience...")
         try:
             process = subprocess.run(
-                [sys.executable, "-m", "pip", "install", "-q", "rich"],
+                build_pip_install_command(env_manager, "rich", quiet=True),
                 capture_output=True,
                 text=True,
             )
@@ -124,12 +172,13 @@ def bootstrap_rich():
             sys.exit(1)
 
 
-def show_environment_info(console):
+def show_environment_info(console, env_manager):
     """Display the active environment using Rich."""
     if sys.prefix != sys.base_prefix:
         env_name = os.path.basename(sys.prefix)
+        label = "uv environment" if env_manager == "uv" else "Virtual environment"
         console.print(
-            f"[bold green]\u2713[/bold green] Virtual environment: [cyan]{env_name}[/cyan]"
+            f"[bold green]\u2713[/bold green] {label}: [cyan]{env_name}[/cyan]"
         )
     elif "CONDA_PREFIX" in os.environ:
         env_name = os.path.basename(os.environ["CONDA_PREFIX"])
@@ -216,8 +265,10 @@ def check_system_dependencies(console):
                 "Ensure SDL2 development libraries are installed.\n"
                 "Suggested commands:\n"
                 "  [cyan]Ubuntu/Debian:[/cyan] sudo apt install "
-                "libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev\n"
-                "  [cyan]Arch:[/cyan] sudo pacman -S sdl2 sdl2_image sdl2_ttf sdl2_mixer"
+                "libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-mixer-dev "
+                "libyaml-cpp-dev\n"
+                "  [cyan]Arch:[/cyan] sudo pacman -S sdl2 sdl2_image sdl2_ttf "
+                "sdl2_mixer yaml-cpp"
             )
             console.print(msg)
 
@@ -249,7 +300,30 @@ def clean_old_artifacts(console):
         console.print("[bold green]✓[/bold green] Workspace clean.")
 
 
-def install_package(console):
+def generate_stubs(console):
+    """Generate a .pyi stub for arelto_py using pybind11-stubgen.
+    The .so must already be installed into rl/ before calling this."""
+    with console.status("[bold cyan]Generating type stubs...", spinner="bouncingBar"):
+        ret = run_command(
+            [
+                sys.executable,
+                "-m",
+                "pybind11_stubgen",
+                "rl.arelto_py",
+                "--output-dir",
+                ".",
+            ],
+            console=console,
+        )
+        if ret != 0:
+            console.print("[bold yellow]⚠ WARNING: Stub generation failed. ")
+        else:
+            console.print(
+                "[bold green]✓[/bold green] Type stubs generated ([cyan]rl/arelto_py.pyi[/cyan])."
+            )
+
+
+def install_package(console, env_manager):
     with console.status("[bold cyan]Configuring CMake...", spinner="bouncingBar"):
         cmake_cmd = ["cmake", "-B", "build", "-G", "Ninja", "-DCMAKE_INSTALL_PREFIX=."]
         ret = run_command(cmake_cmd, console=console)
@@ -268,10 +342,12 @@ def install_package(console):
             sys.exit(1)
         console.print("[bold green]✓[/bold green] Build completed.")
 
+    generate_stubs(console)
+
     with console.status(
         "[bold cyan]Installing Python package (editable)...", spinner="bouncingBar"
     ):
-        pip_cmd = [sys.executable, "-m", "pip", "install", "-e", "."]
+        pip_cmd = build_pip_install_command(env_manager, ".", editable=True)
         ret = run_command(pip_cmd, console=console)
         if ret != 0:
             console.print(
@@ -281,18 +357,27 @@ def install_package(console):
             console.print("[bold green]✓[/bold green] Arelto installed successfully.")
 
 
+def get_post_install_message():
+    return (
+        "[bold green]Setup finished![/bold green]\n\n"
+        "You can now run the game using:\n"
+        "[cyan]python scripts/start_game_async.py[/cyan]"
+    )
+
+
 def main():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    root_dir = os.path.dirname(script_dir)
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.chdir(root_dir)
 
-    # A correct python version and an activate venv are hard requirements.
+    # A correct python version and an active environment are hard requirements.
     # Checking these first to ensure that the Rich formatted installation
     # procedure will be displayed as intended.
     check_python_version_simple()
     require_virtual_environment()
 
-    console, Panel, Confirm = bootstrap_rich()
+    active_manager = detect_active_environment_manager()
+
+    console, Panel, Confirm = bootstrap_rich(active_manager)
 
     console.print(
         Panel(
@@ -304,20 +389,19 @@ def main():
     console.print()
 
     # Pass console explicitly where needed
-    show_environment_info(console)
+    show_environment_info(console, active_manager)
+    check_python_version(console)
     check_system_dependencies(console)
     check_git_submodules(console)
     clean_old_artifacts(console)
 
     console.print()
-    install_package(console)
+    install_package(console, active_manager)
 
     console.print()
     console.print(
         Panel(
-            "[bold green]Setup finished![/bold green]\n\n"
-            "You can now run the game using:\n"
-            "[cyan]python scripts/start_game_async.py[/cyan]",
+            get_post_install_message(),
             border_style="green",
             expand=False,
         )

@@ -1,6 +1,7 @@
 // src/ui/widgets.cpp
 #include "ui/widgets.h"
 #include <algorithm>
+#include "items.h"
 
 namespace arelto {
 
@@ -22,6 +23,86 @@ SDL_Rect UIImage::GetSrcRect() const {
 }
 WidgetType UIImage::GetWidgetType() const {
   return WidgetType::Image;
+}
+
+// =============================================================================
+// UIAnimation
+// =============================================================================
+void UIAnimation::SetTexture(SDL_Texture* texture) {
+  texture_ = texture;
+}
+SDL_Texture* UIAnimation::GetTexture() const {
+  return texture_;
+}
+void UIAnimation::AddFrame(SDL_Rect src_rect) {
+  frames_.push_back(src_rect);
+}
+void UIAnimation::SetFrames(const std::vector<SDL_Rect>& frames) {
+  frames_ = frames;
+}
+const std::vector<SDL_Rect>& UIAnimation::GetFrames() const {
+  return frames_;
+}
+void UIAnimation::SetFrameDuration(float duration) {
+  frame_duration_ = duration;
+}
+float UIAnimation::GetFrameDuration() const {
+  return frame_duration_;
+}
+void UIAnimation::SetIsLoop(bool loop) {
+  is_loop_ = loop;
+}
+bool UIAnimation::GetIsLoop() const {
+  return is_loop_;
+}
+void UIAnimation::Play() {
+  is_playing_ = true;
+  is_finished_ = false;
+}
+void UIAnimation::Pause() {
+  is_playing_ = false;
+}
+void UIAnimation::Stop() {
+  is_playing_ = false;
+  Reset();
+}
+void UIAnimation::Reset() {
+  current_frame_idx_ = 0;
+  elapsed_time_ = 0.0f;
+  is_finished_ = false;
+}
+bool UIAnimation::IsFinished() const {
+  return is_finished_;
+}
+void UIAnimation::Update(float dt) {
+  UIWidget::Update(dt);
+  if (!is_playing_ || frames_.empty() || is_finished_) {
+    return;
+  }
+  elapsed_time_ += dt;
+  while (elapsed_time_ >= frame_duration_) {
+    elapsed_time_ -= frame_duration_;
+    current_frame_idx_++;
+    if (current_frame_idx_ >= static_cast<int>(frames_.size())) {
+      if (is_loop_) {
+        current_frame_idx_ = 0;
+      } else {
+        current_frame_idx_ = static_cast<int>(frames_.size()) - 1;
+        is_playing_ = false;
+        is_finished_ = true;
+        break;
+      }
+    }
+  }
+}
+SDL_Rect UIAnimation::GetCurrentSrcRect() const {
+  if (frames_.empty()) {
+    return {0, 0, 0, 0};
+  }
+  return frames_[current_frame_idx_];
+}
+WidgetType UIAnimation::GetWidgetType() const {
+  return WidgetType::Animation;
 }
 
 // =============================================================================
@@ -75,11 +156,18 @@ int UILabel::GetDigitSpriteHeight() const {
   return digit_sprite_height_;
 }
 
-void UILabel::SetCenterWidth(int width) {
+void UILabel::SetCenterWidth(float width) {
   center_width_ = width;
 }
-int UILabel::GetCenterWidth() const {
+float UILabel::GetCenterWidth() const {
   return center_width_;
+}
+
+void UILabel::SetWrapWidth(float width) {
+  wrap_width_ = width;
+}
+float UILabel::GetWrapWidth() const {
+  return wrap_width_;
 }
 
 WidgetType UILabel::GetWidgetType() const {
@@ -228,14 +316,14 @@ SDL_Rect UIProgressBar::GetFillSrcRect() const {
   return fill_src_rect_;
 }
 
-void UIProgressBar::SetFillOffset(int x, int y) {
+void UIProgressBar::SetFillOffset(float x, float y) {
   fill_offset_x_ = x;
   fill_offset_y_ = y;
 }
-int UIProgressBar::GetFillOffsetX() const {
+float UIProgressBar::GetFillOffsetX() const {
   return fill_offset_x_;
 }
-int UIProgressBar::GetFillOffsetY() const {
+float UIProgressBar::GetFillOffsetY() const {
   return fill_offset_y_;
 }
 
@@ -252,15 +340,15 @@ int UIProgressBar::GetMaxFillHeight() const {
 
 SDL_Rect UIProgressBar::GetClippedFillSrcRect() const {
   SDL_Rect clipped = fill_src_rect_;
-  clipped.w = static_cast<int>(fill_src_rect_.w * percent_);
+  clipped.w = static_cast<int>(static_cast<float>(fill_src_rect_.w) * percent_);
   return clipped;
 }
 
 SDL_Rect UIProgressBar::GetFillDestRect() const {
   SDL_Rect dest;
-  dest.x = computed_bounds_.x + fill_offset_x_;
-  dest.y = computed_bounds_.y + fill_offset_y_;
-  dest.w = static_cast<int>(max_fill_width_ * percent_);
+  dest.x = computed_bounds_.x + static_cast<int>(fill_offset_x_);
+  dest.y = computed_bounds_.y + static_cast<int>(fill_offset_y_);
+  dest.w = static_cast<int>(static_cast<float>(max_fill_width_) * percent_);
   dest.h = max_fill_height_;
   return dest;
 }
@@ -280,6 +368,35 @@ Spacer::Spacer(int width, int height) {
 
 WidgetType Spacer::GetWidgetType() const {
   return WidgetType::Spacer;
+}
+
+// =============================================================================
+// UIInventoryItem
+// =============================================================================
+
+void UIInventoryItem::SetItemId(ItemId item_id) {
+  item_id_ = item_id;
+}
+ItemId UIInventoryItem::GetItemId() const {
+  return item_id_;
+}
+
+void UIInventoryItem::SetItemCount(int count) {
+  item_count_ = count;
+}
+int UIInventoryItem::GetItemCount() const {
+  return item_count_;
+}
+
+void UIInventoryItem::SetItemTexture(SDL_Texture* texture) {
+  texture_ = texture;
+}
+SDL_Texture* UIInventoryItem::GetItemTexture() const {
+  return texture_;
+}
+
+WidgetType UIInventoryItem::GetWidgetType() const {
+  return WidgetType::InventoryItem;
 }
 
 }  // namespace arelto

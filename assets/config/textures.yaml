@@ -1,0 +1,39 @@
+game:
+  tile: "assets/dungeon_floor_tiles_tall.bmp"
+  player: "assets/textures/wizard_sprite_sheet_with_idle.png"
+  enemy: "assets/textures/tentacle_being_sprite_sheet.png"
+  gem_common: "assets/textures/exp_gem_common.png"
+  gem_rare: "assets/textures/exp_gem_rare.png"
+  gem_epic: "assets/textures/exp_gem_epic.png"
+  gem_legendary: "assets/textures/exp_gem_legendary.png"
+  chest: "assets/textures/chest_sprite_sheet.png"
+
+ui:
+  hourglass: "assets/textures/hourglass.png"
+  health_bar: "assets/textures/ui/health_bar.png"
+  exp_bar: "assets/textures/ui/exp_bar.png"
+  level_indicator: "assets/textures/ui/level_indicator.png"
+  start_screen: "assets/textures/ui/start_screen.png"
+  game_over: "assets/textures/ui/game_over.png"
+  level_up_option: "assets/textures/ui/level_up_option.png"
+  button: "assets/textures/ui/button_texture.png"
+  begin_button: "assets/textures/ui/begin_button_texture.png"
+  settings_menu_background: "assets/textures/ui/settings_menu_background.png"
+  slider: "assets/textures/ui/slider_texture.png"
+  checkbox: "assets/textures/ui/checkbox.png"
+  checkmark: "assets/textures/ui/checkmark.png"
+  digit_font: "assets/fonts/font_outlined_sprite_sheet.png"
+
+items:
+  elia_armor: "assets/textures/elia_skewersafe_armorplate.png"
+  damodei_claw: "assets/textures/damodei_claw.png"
+  volmnih_boots: "assets/textures/volmnih_boots.png"
+  sarto_button_bible: "assets/textures/sarto_button_bible.png"
+  aiayn_scale: "assets/textures/aiayn_scale.png"
+
+spells:
+  fireball: "assets/textures/fireball_sprite_sheet.png"
+  frostbolt: "assets/textures/frostbolt_sprite_sheet.png"
+
+fonts:
+  november: "assets/fonts/november/novem___.ttf"

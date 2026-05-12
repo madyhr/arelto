@@ -9,7 +9,7 @@ constexpr float kTexCoordTop = 0.0f;
 constexpr float kTexCoordBottom = 1.0f;
 constexpr float kTexCoordLeft = 0.0f;
 constexpr float kTexCoordRight = 1.0f;
-constexpr int kSpriteColliderMargin = 30;
+constexpr uint32_t kSpriteColliderMargin = 30;
 constexpr float kRenderCullPadding = 50.0f;
 
 // Colors

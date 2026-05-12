@@ -4,8 +4,7 @@
 #include <SDL_keycode.h>
 #include <SDL_mixer.h>
 #include <SDL_mouse.h>
-#include <SDL_render.h>
-#include <SDL_surface.h>
+#include <algorithm>
 #include <csignal>
 #include <cstdio>
 #include <iostream>
@@ -13,16 +12,18 @@
 #include "constants/game.h"
 #include "constants/progression_manager.h"
 #include "entity.h"
+#include "event_manager.h"
 #include "physics_manager.h"
 #include "render_manager.h"
 #include "types.h"
+#include "ui/widgets.h"
 #include "ui_manager.h"
 
 namespace arelto {
 
 volatile std::sig_atomic_t Game::stop_request_ = 0;
 
-void Game::SignalHandler(int signal) {
+void Game::SignalHandler(int /*signal*/) {
   stop_request_ = 1;
 }
 
@@ -35,9 +36,14 @@ bool Game::Initialize() {
   std::signal(SIGTERM, SignalHandler);
   game_status_.is_headless = false;
 
-  if (!(render_manager_.Initialize(game_status_.is_headless))) {
-    return false;
-  }
+  // NOTE: Initialization order matters.
+  // E.g.: Entity event subscribers should be initialized before the UI event
+  // subscribers as the UI would otherwise always be 1 step behind.
+  RegisterGameStateHandlers();
+  entity_manager_.Initialize(event_manager_);
+  item_manager_.Initialize(event_manager_);
+  progression_manager_.Initialize(event_manager_);
+  spell_manager_.Initialize();
 
   if (!(physics_manager_.Initialize())) {
     return false;
@@ -51,13 +57,26 @@ bool Game::Initialize() {
     return false;
   }
 
-  scene_.Reset();
+  // The render manager (and thereby the UI manager) are initialized last to
+  // ensure that all other handlers are called before the UI handlers are
+  // dispatched to update the UI. This ensure that the UI is always up to date.
+  if (!(render_manager_.Initialize(game_status_.is_headless, event_manager_,
+                                   spell_manager_.GetSpellTextureMapping()))) {
+    return false;
+  }
+
+  scene_.player.SetSpellManager(&spell_manager_);
+  scene_.player.spell_stats_.Resize(spell_manager_.GetSpellCount());
+  scene_.Reset(entity_manager_.entity_config_);
+  EventContext event_context{event_manager_, scene_};
+  event_manager_.DispatchImmediate(SceneResetEvent{}, event_context);
+  scene_.item_archive = &item_archive_;
 
   if (!(Game::InitializeCamera())) {
     return false;
   }
 
-  time_ = (float)(SDL_GetTicks64() / 1000.0f);
+  time_ = static_cast<float>(SDL_GetTicks64()) / 1000.0f;
   SetGameState(is_running);
 
   return true;
@@ -65,10 +84,8 @@ bool Game::Initialize() {
 
 bool Game::InitializeCamera() {
   Vector2D player_centroid =
-      GetCentroid(scene_.player.position_, scene_.player.stats_.sprite_size);
-  render_manager_.camera_.position_.x = player_centroid.x - 0.5f * kWindowWidth;
-  render_manager_.camera_.position_.y =
-      player_centroid.y - 0.5f * kWindowHeight;
+      GetCentroid(scene_.player.position_, scene_.player.stats_.size.GetSize());
+  render_manager_.camera_.UpdatePosition(player_centroid);
 
   return true;
 };
@@ -95,25 +112,109 @@ void Game::SetGameState(int game_state) {
 }
 
 void Game::StepGamePhysics() {
-  physics_manager_.StepPhysics(scene_);
-  entity_manager_.Update(scene_, physics_manager_.GetPhysicsDt());
+  event_manager_.Flush();
+
+  physics_manager_.StepPhysics(scene_, event_manager_);
+
+  EventContext event_context{event_manager_, scene_};
+  event_manager_.Dispatch(event_context);
+
+  entity_manager_.Cleanup(scene_);
+  obs_manager_.UpdateObservations(scene_);
+
+  ProcessGameStateTransitionQueue();
+
   time_ += physics_manager_.GetPhysicsDt();
-  CheckGameStateRules();
   reward_manager_.UpdateRewardTerms(scene_);
   CachePreviousState();
 };
 
-void Game::CheckGameStateRules() {
-  if (entity_manager_.IsPlayerDead(scene_.player)) {
-    SetGameState(is_gameover);
-    return;
+void Game::RequestGameStateTransition(GameState target) {
+  for (const auto& pending : pending_transitions_) {
+    if (pending == target) {
+      return;
+    }
   }
+  pending_transitions_.push_back(target);
+}
 
-  if (progression_manager_.CheckLevelUp(scene_.player)) {
-    SetGameState(in_level_up);
-    progression_manager_.GenerateLevelUpOptions(scene_);
-    render_manager_.GetUIManager().BuildLevelUpMenu(scene_.level_up_options);
+int GetGameStateTransitionPriority(GameState state) {
+  switch (state) {
+    case is_gameover:
+      return 0;
+    case in_level_up:
+      return 1;
+    case in_chest_opening:
+      return 2;
+    default:
+      return 99;
   }
+}
+
+// Processes events in the game state transition queue based on the game state transition priority.
+void Game::ProcessGameStateTransitionQueue() {
+  if (game_state_ != is_running || pending_transitions_.empty())
+    return;
+
+  auto highest_prio_transition =
+      std::min_element(pending_transitions_.begin(), pending_transitions_.end(),
+                       [](GameState a, GameState b) {
+                         return GetGameStateTransitionPriority(a) <
+                                GetGameStateTransitionPriority(b);
+                       });
+
+  GameState next_game_state = *highest_prio_transition;
+  pending_transitions_.erase(highest_prio_transition);
+
+  switch (next_game_state) {
+    case is_gameover:
+      SetGameState(is_gameover);
+      break;
+    case in_level_up:
+      SetGameState(in_level_up);
+      progression_manager_.GenerateLevelUpOptions(scene_);
+      render_manager_.GetUIManager().BuildLevelUpMenu(scene_.level_up_options);
+      break;
+    case in_chest_opening: {
+      SetGameState(in_chest_opening);
+      auto* root = render_manager_.GetUIManager().GetChestOpeningRoot();
+      if (root) {
+        auto* anim = root->FindWidgetAs<UIAnimation>("chest_animated_image");
+        if (anim) {
+          anim->Reset();
+          anim->Play();
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+void Game::ResolveCurrentGameStateTransition() {
+  SetGameState(is_running);
+  ProcessGameStateTransitionQueue();
+}
+
+// Sets up all handlers for events that cause a game state transition.
+void Game::RegisterGameStateHandlers() {
+  event_manager_.Subscribe<PlayerDeadEvent>(
+      [this](const PlayerDeadEvent&, EventContext&) {
+        RequestGameStateTransition(is_gameover);
+      });
+
+  event_manager_.Subscribe<ExpGemCollectedEvent>(
+      [this](const ExpGemCollectedEvent&, EventContext&) {
+        if (!progression_manager_.CheckLevelUp(scene_.player))
+          return;
+        RequestGameStateTransition(in_level_up);
+      });
+
+  event_manager_.Subscribe<ChestOpenedEvent>(
+      [this](const ChestOpenedEvent&, EventContext&) {
+        RequestGameStateTransition(in_chest_opening);
+      });
 }
 
 void Game::RenderGame(float alpha) {
@@ -121,27 +222,32 @@ void Game::RenderGame(float alpha) {
 };
 
 void Game::ResetGame() {
-  scene_.Reset();
+  scene_.Reset(entity_manager_.entity_config_);
+  EventContext event_context{event_manager_, scene_};
+  event_manager_.DispatchImmediate(SceneResetEvent{}, event_context);
+  item_manager_.RemoveAllItems();
   time_ = 0.0f;
   accumulator_step_ = 0.0f;
   is_mouse_left_active_ = false;
   is_mouse_right_active_ = false;
+  pending_transitions_.clear();
   SetGameState(is_running);
 };
 
 // Runs the game loop continuously.
 void Game::RunGameLoop() {
-  float current_time = static_cast<float>(SDL_GetTicks64() / 1000.0f);
+  float current_time = static_cast<float>(SDL_GetTicks64()) / 1000.0f;
   float accumulator = 0.0f;
 
   while (game_state_ != in_shutdown) {
 
     ProcessInput();
 
+    float new_time = static_cast<float>(SDL_GetTicks64()) / 1000.0f;
+
     switch (game_state_) {
 
       case is_running: {
-        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         float frame_time = new_time - current_time;
         current_time = new_time;
 
@@ -164,8 +270,7 @@ void Game::RunGameLoop() {
           break;
         }
 
-        scene_.SpawnExpGem();
-        RespawnEnemy(scene_.enemy, scene_.player);
+        entity_manager_.ProcessPendingSpawns(scene_);
         RenderGame(alpha);
         game_status_.frame_stats.print_fps_running_average(frame_time);
         break;
@@ -181,7 +286,6 @@ void Game::RunGameLoop() {
         break;
 
       case in_settings_menu: {
-        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         current_time = new_time;
 
         if (game_status_.is_headless) {
@@ -192,14 +296,12 @@ void Game::RunGameLoop() {
       }
 
       case in_level_up: {
-        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         current_time = new_time;
         RenderGame(0.0f);
         break;
       }
 
       case in_quit_confirm: {
-        float new_time = (float)(SDL_GetTicks64() / 1000.0f);
         current_time = new_time;
 
         if (game_status_.is_headless) {
@@ -208,7 +310,29 @@ void Game::RunGameLoop() {
         RenderGame(0.0f);
         break;
       }
+      case in_chest_opening: {
+        float dt = new_time - current_time;
+        current_time = new_time;
 
+        auto* chest_root = render_manager_.GetUIManager().GetChestOpeningRoot();
+        if (chest_root) {
+          chest_root->Update(dt);
+          auto* anim =
+              chest_root->FindWidgetAs<UIAnimation>("chest_animated_image");
+          if (anim && anim->IsFinished()) {
+            SetGameState(in_item_selection);
+            progression_manager_.GenerateItemOptions(scene_);
+            render_manager_.GetUIManager().BuildItemMenu(scene_.item_options);
+          }
+        }
+        render_manager_.Render(scene_, 0.0f, game_status_, time_, game_state_);
+        break;
+      }
+      case in_item_selection: {
+        current_time = new_time;
+        RenderGame(0.0f);
+        break;
+      }
       default:
         break;
     }
@@ -216,19 +340,32 @@ void Game::RunGameLoop() {
 };
 
 void Game::StepGame(float dt) {
-  accumulator_step_ += dt;
+  if (game_state_ == is_running) {
+    accumulator_step_ += dt;
 
-  while (accumulator_step_ >= physics_manager_.GetPhysicsDt()) {
-    StepGamePhysics();
-    accumulator_step_ -= physics_manager_.GetPhysicsDt();
+    while (accumulator_step_ >= physics_manager_.GetPhysicsDt()) {
+      StepGamePhysics();
+      accumulator_step_ -= physics_manager_.GetPhysicsDt();
+    }
+
+    // ProcessPendingSpawns is called outside the accumulator loop to ensure
+    // an enemy stays dead between StepGame() calls. Respawning inside the loop
+    // could corrupt RL termination signals if the same enemy died, respawned,
+    // and died again within a single call.
+    entity_manager_.ProcessPendingSpawns(scene_);
+  } else if (game_state_ == in_chest_opening) {
+    auto* chest_root = render_manager_.GetUIManager().GetChestOpeningRoot();
+    if (chest_root) {
+      chest_root->Update(dt);
+      auto* anim =
+          chest_root->FindWidgetAs<UIAnimation>("chest_animated_image");
+      if (anim && anim->IsFinished()) {
+        SetGameState(in_item_selection);
+        progression_manager_.GenerateItemOptions(scene_);
+        render_manager_.GetUIManager().BuildItemMenu(scene_.item_options);
+      }
+    }
   }
-
-  // The RespawnEnemy function is called outside of the accumulator loop to
-  // make sure that an enemy stays dead between calls of StepGame(). This
-  // could otherwise corrupt the termination signals if the enemy died,
-  // respawned and died again in the same accumulator loop.
-  scene_.SpawnExpGem();
-  RespawnEnemy(scene_.enemy, scene_.player);
 };
 
 void Game::ProcessInput() {
@@ -275,6 +412,14 @@ void Game::ProcessInput() {
 
     if (game_state_ == in_level_up) {
       ProcessLevelUpInput(e);
+      continue;
+    }
+    if (game_state_ == in_chest_opening) {
+      ProcessChestOpeningInput(e);
+      continue;
+    }
+    if (game_state_ == in_item_selection) {
+      ProcessItemSelectionInput(e);
       continue;
     }
 
@@ -353,8 +498,8 @@ void Game::ProcessInput() {
   }
 
   cursor_position_ = {
-      (float)(cursor_pos_x + render_manager_.camera_.position_.x),
-      (float)(cursor_pos_y + render_manager_.camera_.position_.y)};
+      static_cast<float>(cursor_pos_x) + render_manager_.camera_.position_.x,
+      static_cast<float>(cursor_pos_y) + render_manager_.camera_.position_.y};
 
   if (game_state_ == is_running) {
     ProcessPlayerInput();
@@ -377,19 +522,23 @@ void Game::ProcessPlayerInput() {
     scene_.player.velocity_.x += 1.0f;
   }
   if (is_mouse_left_active_) {
-    std::optional<ProjectileData> fireball = scene_.player.CastProjectileSpell(
-        scene_.player.fireball_, time_, cursor_position_);
-
-    if (fireball.has_value()) {
-      scene_.projectiles.AddProjectile(*fireball);
+    auto* spell = scene_.player.GetSpell(0);
+    if (spell) {
+      std::optional<ProjectileData> proj =
+          scene_.player.CastProjectileSpell(*spell, time_, cursor_position_);
+      if (proj.has_value()) {
+        scene_.projectiles.AddProjectile(*proj);
+      }
     }
   }
   if (is_mouse_right_active_) {
-    std::optional<ProjectileData> frostbolt = scene_.player.CastProjectileSpell(
-        scene_.player.frostbolt_, time_, cursor_position_);
-
-    if (frostbolt.has_value()) {
-      scene_.projectiles.AddProjectile(*frostbolt);
+    auto* spell = scene_.player.GetSpell(1);
+    if (spell) {
+      std::optional<ProjectileData> proj =
+          scene_.player.CastProjectileSpell(*spell, time_, cursor_position_);
+      if (proj.has_value()) {
+        scene_.projectiles.AddProjectile(*proj);
+      }
     }
   }
 }
@@ -495,8 +644,8 @@ void Game::ProcessSettingsMenuInput(uint32_t mouse_state) {
           mouse_x <= slider_bounds.x + slider_bounds.w &&
           mouse_y >= slider_bounds.y - 10 &&
           mouse_y <= slider_bounds.y + slider_bounds.h + 10) {
-        float percent =
-            static_cast<float>(mouse_x - slider_bounds.x) / slider_bounds.w;
+        float percent = static_cast<float>(mouse_x - slider_bounds.x) /
+                        static_cast<float>(slider_bounds.w);
         audio_manager_.SetMusicVolume(percent);
       }
     }
@@ -526,16 +675,62 @@ void Game::ProcessLevelUpInput(const SDL_Event& e) {
 
     UIManager& ui = render_manager_.GetUIManager();
 
-    for (int i = 0; i < kNumUpgradeOptions; ++i) {
+    for (int i = 0; i < kNumSpellUpgradeOptions; ++i) {
       std::string btn_id = "select_button_" + std::to_string(i);
 
-      if (IsMouseOverWidget(ui.GetRootWidget(), btn_id, mouse_x, mouse_y)) {
-        progression_manager_.ApplyUpgrade(scene_, i);
+      if (IsMouseOverWidget(ui.GetLevelUpRoot(), btn_id, mouse_x, mouse_y)) {
+        progression_manager_.ApplyLevelUpUpgrade(scene_, i);
+        EventContext event_context{event_manager_, scene_};
+        event_manager_.DispatchImmediate(PlayerLevelUpEvent{}, event_context);
         UIWidget* menu = ui.GetLevelUpRoot();
         if (menu) {
           menu->SetVisible(false);
         }
-        SetGameState(is_running);
+        ResolveCurrentGameStateTransition();
+        return;
+      }
+    }
+  }
+}
+
+void Game::ProcessChestOpeningInput(const SDL_Event& e) {
+  // During the animation phase, only allow quitting
+  if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_q) {
+    SetGameState(in_quit_confirm);
+    return;
+  }
+  return;
+}
+
+void Game::ProcessItemSelectionInput(const SDL_Event& e) {
+  if (e.type == SDL_KEYDOWN) {
+    switch (e.key.keysym.sym) {
+      case SDLK_q:
+        SetGameState(in_quit_confirm);
+        break;
+      default:
+        break;
+    }
+  } else if (e.type == SDL_MOUSEBUTTONDOWN &&
+             e.button.button == SDL_BUTTON_LEFT) {
+    int mouse_x = e.button.x;
+    int mouse_y = e.button.y;
+
+    UIManager& ui = render_manager_.GetUIManager();
+
+    for (int i = 0; i < kNumItemOptions; ++i) {
+      std::string btn_id = "select_button_" + std::to_string(i);
+
+      if (IsMouseOverWidget(ui.GetItemMenuRoot(), btn_id, mouse_x, mouse_y)) {
+        progression_manager_.ApplyItemUpgrade(scene_, item_manager_, i);
+        UIWidget* menu = ui.GetItemMenuRoot();
+        if (menu) {
+          menu->SetVisible(false);
+        }
+        EventContext event_context{event_manager_, scene_};
+        event_manager_.DispatchImmediate(PlayerClaimedItemEvent{},
+                                         event_context);
+        ResolveCurrentGameStateTransition();
         return;
       }
     }
@@ -555,6 +750,16 @@ void Game::CachePreviousState() {
   size_t num_proj = scene_.projectiles.GetNumProjectiles();
   for (size_t i = 0; i < num_proj; ++i) {
     scene_.projectiles.prev_position_[i] = scene_.projectiles.position_[i];
+  }
+
+  size_t num_gems = scene_.exp_gem.GetNumExpGems();
+  for (size_t i = 0; i < num_gems; ++i) {
+    scene_.exp_gem.prev_position_[i] = scene_.exp_gem.position_[i];
+  }
+
+  size_t num_chests = scene_.chest.GetNumChests();
+  for (size_t i = 0; i < num_chests; ++i) {
+    scene_.chest.prev_position_[i] = scene_.chest.position_[i];
   }
 
   render_manager_.camera_.prev_position_ = render_manager_.camera_.position_;

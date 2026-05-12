@@ -1,0 +1,147 @@
+// include/event_manager.h
+#ifndef RL2_EVENT_MANAGER_H_
+#define RL2_EVENT_MANAGER_H_
+
+#include <algorithm>
+#include <functional>
+#include <tuple>
+#include <variant>
+#include <vector>
+
+namespace arelto {
+
+// forward declarations for EventContext
+struct Scene;
+struct EventManager;
+
+using SubscriptionId = int;
+
+// -----------------------------------------------------------------------------
+// Typed event structs
+// -----------------------------------------------------------------------------
+
+struct EnemyKilledEvent {
+  int enemy_idx;
+};
+struct EnemyDamagedEvent {
+  int enemy_idx;
+  int damage;
+};
+struct PlayerDamagedEvent {
+  int enemy_idx;
+  int damage;
+};
+struct PlayerHealedEvent {
+  int healing;
+};
+struct ExpGemCollectedEvent {
+  int gem_idx;
+  int exp_value;
+};
+struct ProjectileDestroyedEvent {
+  int proj_idx;
+};
+struct ChestOpenedEvent {
+  int chest_idx;
+};
+struct PlayerDeadEvent {};
+struct PlayerLevelUpEvent {};
+struct PlayerClaimedItemEvent {};
+struct PlayerExpGemCollisionEvent {
+  int gem_idx;
+};
+struct PlayerChestCollisionEvent {
+  int chest_idx;
+};
+struct PlayerEnemyCollisionEvent {
+  int enemy_idx;
+};
+struct EnemyProjectileCollisionEvent {
+  int enemy_idx;
+  int proj_idx;
+};
+struct SceneResetEvent {};
+struct PlayerStatChangeEvent {};
+
+using GameEvent =
+    std::variant<EnemyKilledEvent, EnemyDamagedEvent, PlayerDamagedEvent,
+                 PlayerHealedEvent, ExpGemCollectedEvent,
+                 ProjectileDestroyedEvent, ChestOpenedEvent, PlayerDeadEvent,
+                 PlayerLevelUpEvent, PlayerExpGemCollisionEvent,
+                 PlayerChestCollisionEvent, PlayerClaimedItemEvent,
+                 PlayerEnemyCollisionEvent, EnemyProjectileCollisionEvent,
+                 SceneResetEvent, PlayerStatChangeEvent>;
+
+// The context that is passed to every handler during a Dispatch call.
+struct EventContext {
+  EventManager& event_manager;
+  Scene& scene;
+};
+
+// -----------------------------------------------------------------------------
+// EventManager
+// -----------------------------------------------------------------------------
+
+class EventManager {
+ public:
+  void Emit(GameEvent event);
+
+  // Adds an event handler to a specific event base type and returns a SubscriptionId
+  // that can be passed to Unsubscribe<T> to remove the handler.
+  template <typename T>
+  SubscriptionId Subscribe(
+      std::function<void(const T&, EventContext&)> handler) {
+    SubscriptionId id = next_subscription_id_++;
+    std::get<HandlerList<T>>(handlers_).emplace_back(id, std::move(handler));
+    return id;
+  }
+
+  // Removes the handler registered under the given id for event type T.
+  // NOTE: Calling Unsubscribe from within a handler during Dispatch is not supported.
+  template <typename T>
+  void Unsubscribe(SubscriptionId id) {
+    auto& handler_list = std::get<HandlerList<T>>(handlers_);
+    auto handler_to_unsubscribe_from = std::find_if(
+        handler_list.begin(), handler_list.end(),
+        [id](const HandlerEntry<T>& entry) { return entry.first == id; });
+    if (handler_to_unsubscribe_from != handler_list.end()) {
+      handler_list.erase(handler_to_unsubscribe_from);
+    }
+  }
+
+  void Dispatch(EventContext& event_context);
+  void DispatchImmediate(GameEvent event, EventContext& event_context);
+  void Flush();
+
+  const std::vector<GameEvent>& GetEvents() const;
+
+ private:
+  template <typename T>
+  using Handler = std::function<void(const T&, EventContext&)>;
+
+  template <typename T>
+  using HandlerEntry = std::pair<SubscriptionId, Handler<T>>;
+
+  template <typename T>
+  using HandlerList = std::vector<HandlerEntry<T>>;
+
+  std::vector<GameEvent> events_;
+  int next_subscription_id_ = 0;
+
+  std::tuple<
+      HandlerList<EnemyKilledEvent>, HandlerList<EnemyDamagedEvent>,
+      HandlerList<PlayerDamagedEvent>, HandlerList<PlayerHealedEvent>,
+      HandlerList<ExpGemCollectedEvent>, HandlerList<ProjectileDestroyedEvent>,
+      HandlerList<ChestOpenedEvent>, HandlerList<PlayerDeadEvent>,
+      HandlerList<PlayerLevelUpEvent>, HandlerList<PlayerClaimedItemEvent>,
+      HandlerList<PlayerExpGemCollisionEvent>,
+      HandlerList<PlayerChestCollisionEvent>,
+      HandlerList<PlayerEnemyCollisionEvent>,
+      HandlerList<EnemyProjectileCollisionEvent>, HandlerList<SceneResetEvent>,
+      HandlerList<PlayerStatChangeEvent>>
+      handlers_;
+};
+
+}  // namespace arelto
+
+#endif

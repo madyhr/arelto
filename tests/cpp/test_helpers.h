@@ -7,7 +7,9 @@
 #include <gtest/gtest.h>
 
 #include "entity.h"
+#include "event_manager.h"
 #include "scene.h"
+#include "spell_manager.h"
 #include "types.h"
 
 namespace arelto {
@@ -15,9 +17,22 @@ namespace testing {
 
 // Create a Scene with predictable initial state
 inline Scene CreateTestScene() {
+  static SpellManager spell_manager;
+  if (!spell_manager.GetSpellCount()) {
+    spell_manager.Initialize();
+  }
   Scene scene;
-  scene.Reset();
+  scene.player.SetSpellManager(&spell_manager);
+  scene.player.spell_stats_.Resize(spell_manager.GetSpellCount());
+  scene.Reset(MakeDefaultEntityConfig());
   return scene;
+}
+
+// Build an EventContext for tests. Centralized so future EventContext field
+// additions only require updating this helper.
+inline EventContext MakeEventContext(Scene& scene,
+                                     EventManager& event_manager) {
+  return EventContext{event_manager, scene};
 }
 
 // Deactivate all enemies
@@ -27,7 +42,8 @@ inline void DeactivateAllEnemies(Enemy& enemy) {
 
 // Create a projectile at specific position
 inline ProjectileData CreateProjectileAt(float x, float y, float vx, float vy,
-                                         float speed = 100.0f) {
+                                         float speed = 100.0f,
+                                         int proj_type = 0) {
   ProjectileData proj;
   proj.owner_id = 0;
   proj.position = {x, y};
@@ -36,7 +52,7 @@ inline ProjectileData CreateProjectileAt(float x, float y, float vx, float vy,
   proj.collider = {{8.0f, 8.0f}, {16, 16}};
   proj.sprite_size = {16, 16};
   proj.inv_mass = 1.0f;
-  proj.proj_type = 0;
+  proj.proj_type = proj_type;
   return proj;
 }
 

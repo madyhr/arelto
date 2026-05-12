@@ -29,7 +29,7 @@ class ObservationManagerTest : public ::testing::Test {
 
 TEST_F(ObservationManagerTest,
        FillObservationBuffer_ThrowsOnSizeMismatch_TooSmall) {
-  int size = obs_manager_.GetObservationSize(scene_);
+  int size = obs_manager_.GetObservationSize();
   std::vector<float> buffer(kNumEnemies * size - 1);  // One less than expected
 
   EXPECT_THROW(
@@ -39,7 +39,7 @@ TEST_F(ObservationManagerTest,
 
 TEST_F(ObservationManagerTest,
        FillObservationBuffer_ThrowsOnSizeMismatch_TooLarge) {
-  int size = obs_manager_.GetObservationSize(scene_);
+  int size = obs_manager_.GetObservationSize();
   std::vector<float> buffer(kNumEnemies * size + 1);  // One more than expected
 
   EXPECT_THROW(
@@ -49,7 +49,7 @@ TEST_F(ObservationManagerTest,
 
 TEST_F(ObservationManagerTest,
        FillObservationBuffer_DoesNotThrowOnCorrectSize) {
-  int size = obs_manager_.GetObservationSize(scene_);
+  int size = obs_manager_.GetObservationSize();
   std::vector<float> buffer(kNumEnemies * size);
 
   EXPECT_NO_THROW(
@@ -67,7 +67,7 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_ContainsTypeInformation) {
   scene_.enemy.ray_caster.ray_hit_types[history_idx][target_ray][target_enemy] =
       target_type;
 
-  int size = obs_manager_.GetObservationSize(scene_);
+  int size = obs_manager_.GetObservationSize();
   std::vector<float> buffer(kNumEnemies * size);
   obs_manager_.FillObservationBuffer(buffer.data(), buffer.size(), scene_);
   bool found_specific_type = false;
@@ -83,7 +83,7 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_ContainsTypeInformation) {
 
 TEST_F(ObservationManagerTest, FillObservationBuffer_BufferFullyPopulated) {
   // Initialize buffer with NaN to detect unpopulated values
-  int size = obs_manager_.GetObservationSize(scene_);
+  int size = obs_manager_.GetObservationSize();
   std::vector<float> buffer(kNumEnemies * size,
                             std::numeric_limits<float>::quiet_NaN());
 
@@ -93,6 +93,80 @@ TEST_F(ObservationManagerTest, FillObservationBuffer_BufferFullyPopulated) {
   for (size_t i = 0; i < buffer.size(); ++i) {
     EXPECT_FALSE(std::isnan(buffer[i])) << "Buffer index " << i << " is NaN";
   }
+}
+
+// =============================================================================
+// UpdateObservations Tests
+// =============================================================================
+
+TEST_F(ObservationManagerTest, UpdateObservations_UpdatesRayCaster) {
+  // Place an enemy and player nearby
+  scene_.player.position_ = {100.0f, 100.0f};
+  scene_.enemy.position[0] = {
+      250.0f,
+      100.0f};  // Further away to ensure ray start is outside player grid cell
+  scene_.enemy.is_alive[0] = true;
+
+  // Clear any existing ray data
+  int history_idx = scene_.enemy.ray_caster.history_idx;
+  for (int r = 0; r < kNumRays; ++r) {
+    scene_.enemy.ray_caster.ray_hit_distances[history_idx][r][0] = 0.0f;
+  }
+
+  obs_manager_.UpdateObservations(scene_);
+
+  // Check if ray caster data was updated
+  // We expect some non-zero distances since player is nearby
+  bool found_hit = false;
+  int new_history_idx = scene_.enemy.ray_caster.history_idx;
+  int checked_idx =
+      (new_history_idx - 1 + kRayHistoryLength) % kRayHistoryLength;
+
+  for (int r = 0; r < kNumRays; ++r) {
+    if (scene_.enemy.ray_caster.ray_hit_distances[checked_idx][r][0] > 0.0f) {
+      found_hit = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found_hit)
+      << "Ray caster did not detect the nearby player after update";
+}
+
+TEST_F(ObservationManagerTest,
+       UpdateObservations_UpdatesRayCaster_DetectsProjectiles) {
+  // Place an enemy and projectile nearby
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+
+  // Create a projectile to the right of the enemy
+  // Note: Must be placed outside the ray start offset radius
+  ProjectileData proj = testing::CreateProjectileAt(200.0f, 100.0f, 1.0f, 0.0f);
+  scene_.projectiles.AddProjectile(proj);
+
+  // Clear any existing ray data
+  int history_idx = scene_.enemy.ray_caster.history_idx;
+  for (int r = 0; r < kNumRays; ++r) {
+    scene_.enemy.ray_caster.non_blocking_ray_hit_distances[history_idx][r][0] =
+        0.0f;
+  }
+
+  obs_manager_.UpdateObservations(scene_);
+
+  // Check if ray caster data was updated for projectiles
+  bool found_hit = false;
+  int new_history_idx = scene_.enemy.ray_caster.history_idx;
+  int checked_idx =
+      (new_history_idx - 1 + kRayHistoryLength) % kRayHistoryLength;
+
+  for (int r = 0; r < kNumRays; ++r) {
+    if (scene_.enemy.ray_caster
+            .non_blocking_ray_hit_distances[checked_idx][r][0] > 0.0f) {
+      found_hit = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found_hit)
+      << "Ray caster did not detect the nearby projectile after update";
 }
 
 }  // namespace

@@ -2,11 +2,13 @@
 #ifndef RL2_UI_WIDGETS_H_
 #define RL2_UI_WIDGETS_H_
 
+#include "items.h"
 #include "ui/widget.h"
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
 #include <functional>
 #include <string>
+#include <vector>
 
 namespace arelto {
 
@@ -26,6 +28,49 @@ public:
 private:
   SDL_Texture *texture_ = nullptr;
   SDL_Rect src_rect_ = {0, 0, 0, 0};
+};
+
+// UIAnimation: renders an animation made up of individual frames from a
+// sequence of source rectangles on a texture.
+class UIAnimation : public UIWidget {
+public:
+  UIAnimation() = default;
+
+  void SetTexture(SDL_Texture *texture);
+  SDL_Texture *GetTexture() const;
+
+  void AddFrame(SDL_Rect src_rect);
+  void SetFrames(const std::vector<SDL_Rect> &frames);
+  const std::vector<SDL_Rect> &GetFrames() const;
+
+  void SetFrameDuration(float duration);
+  float GetFrameDuration() const;
+
+  void SetIsLoop(bool is_loop);
+  bool GetIsLoop() const;
+
+  void Play();
+  void Pause();
+  void Stop();
+  void Reset();
+
+  bool IsFinished() const;
+
+  void Update(float dt) override;
+
+  SDL_Rect GetCurrentSrcRect() const;
+
+  WidgetType GetWidgetType() const override;
+
+private:
+  SDL_Texture *texture_ = nullptr;
+  std::vector<SDL_Rect> frames_;
+  float frame_duration_ = 0.1f;
+  float elapsed_time_ = 0.0f;
+  int current_frame_idx_ = 0;
+  bool is_playing_ = false;
+  bool is_loop_ = false;
+  bool is_finished_ = false;
 };
 
 // UILabel: renders text using either TTF fonts or a digit sprite sheet.
@@ -56,8 +101,12 @@ public:
   int GetDigitSpriteHeight() const;
 
   // If > 0, text is centered within this width.
-  void SetCenterWidth(int width);
-  int GetCenterWidth() const;
+  void SetCenterWidth(float width);
+  float GetCenterWidth() const;
+
+  // If > 0, text wraps at this pixel width (multi-line).
+  void SetWrapWidth(float width);
+  float GetWrapWidth() const;
 
   WidgetType GetWidgetType() const override;
 
@@ -70,7 +119,8 @@ private:
   int char_height_ = 0;
   int digit_sprite_width_ = 0;
   int digit_sprite_height_ = 0;
-  int center_width_ = 0;
+  float center_width_ = 0;
+  float wrap_width_ = 0;
 };
 
 // UIButton: a texture with normal/hover states and an optional label + click
@@ -173,9 +223,9 @@ public:
   SDL_Rect GetFillSrcRect() const;
 
   // Fill offset relative to container
-  void SetFillOffset(int x, int y);
-  int GetFillOffsetX() const;
-  int GetFillOffsetY() const;
+  void SetFillOffset(float x, float y);
+  float GetFillOffsetX() const;
+  float GetFillOffsetY() const;
 
   // Max fill dimensions
   void SetMaxFillSize(int width, int height);
@@ -195,17 +245,40 @@ private:
   SDL_Rect container_src_rect_ = {0, 0, 0, 0};
   SDL_Texture *fill_texture_ = nullptr;
   SDL_Rect fill_src_rect_ = {0, 0, 0, 0};
-  int fill_offset_x_ = 0;
-  int fill_offset_y_ = 0;
+  float fill_offset_x_ = 0.0f;
+  float fill_offset_y_ = 0.0f;
   int max_fill_width_ = 0;
   int max_fill_height_ = 0;
 };
 
 // Spacer: a widget that does nothing but take up space.
 class Spacer : public UIWidget {
- public:
+public:
   Spacer(int width, int height);
   WidgetType GetWidgetType() const override;
+};
+
+// UIInventoryItem: displays an item icon together with a multiplier label
+// accounting for how many copies of that item the player posseses.
+class UIInventoryItem : public UIWidget {
+public:
+  UIInventoryItem() = default;
+
+  void SetItemId(ItemId item_id);
+  ItemId GetItemId() const;
+
+  void SetItemCount(int count);
+  int GetItemCount() const;
+
+  void SetItemTexture(SDL_Texture *texture);
+  SDL_Texture *GetItemTexture() const;
+
+  WidgetType GetWidgetType() const override;
+
+private:
+  ItemId item_id_;
+  int item_count_ = 1;
+  SDL_Texture *texture_ = nullptr;
 };
 
 } // namespace arelto

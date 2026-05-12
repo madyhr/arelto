@@ -3,9 +3,8 @@
 
 #include <gtest/gtest.h>
 
-#include "constants/enemy.h"
-#include "constants/ray_caster.h"
 #include "entity_manager.h"
+#include "event_manager.h"
 #include "scene.h"
 #include "test_helpers.h"
 
@@ -18,81 +17,15 @@ class EntityManagerTest : public ::testing::Test {
 
   Scene scene_;
   EntityManager entity_manager_;
+  EventManager event_manager_;
 };
 
 // =============================================================================
-// IsPlayerDead Tests
+// Cleanup - Projectile Tests
 // =============================================================================
 
-TEST_F(EntityManagerTest, IsPlayerDead_WorksCorrectly) {
-  // Dead cases
-  scene_.player.stats_.health = 0;
-  EXPECT_TRUE(entity_manager_.IsPlayerDead(scene_.player));
-
-  scene_.player.stats_.health = -10;
-  EXPECT_TRUE(entity_manager_.IsPlayerDead(scene_.player));
-
-  // Alive cases
-  scene_.player.stats_.health = 100;
-  EXPECT_FALSE(entity_manager_.IsPlayerDead(scene_.player));
-
-  scene_.player.stats_.health = 1;
-  EXPECT_FALSE(entity_manager_.IsPlayerDead(scene_.player));
-}
-
-// =============================================================================
-// Update - Enemy Status Tests
-// =============================================================================
-
-TEST_F(EntityManagerTest, Update_EnemyStatus_TransitionsCorrectly) {
-  // Test Alive -> Alive
-  scene_.enemy.health_points[0] = 100;
-  scene_.enemy.is_alive[0] = true;
-  scene_.enemy.is_done[0] = false;
-
-  entity_manager_.Update(scene_, 0.016f);
-  EXPECT_TRUE(scene_.enemy.is_alive[0]);
-  EXPECT_FALSE(scene_.enemy.is_done[0]);
-
-  // Test Alive -> Dead (Zero Health)
-  scene_.enemy.health_points[0] = 0;
-  entity_manager_.Update(scene_, 0.016f);
-  EXPECT_FALSE(scene_.enemy.is_alive[0]);
-  EXPECT_TRUE(scene_.enemy.is_done[0]);
-
-  // Test Alive -> Dead (Negative Health)
-  scene_.enemy.health_points[1] = -5;
-  scene_.enemy.is_alive[1] = true;
-  scene_.enemy.is_done[1] = false;
-
-  entity_manager_.Update(scene_, 0.016f);
-  EXPECT_FALSE(scene_.enemy.is_alive[1]);
-  EXPECT_TRUE(scene_.enemy.is_done[1]);
-}
-
-TEST_F(EntityManagerTest, Update_EnemyTimeoutTimerIncreases) {
-  float initial_timer = scene_.enemy.timeout_timer[0];
-
-  entity_manager_.Update(scene_, 0.016f);
-
-  EXPECT_GT(scene_.enemy.timeout_timer[0], initial_timer);
-}
-
-TEST_F(EntityManagerTest, Update_DeadEnemy_SetsTerminatedLatched) {
-  scene_.enemy.health_points[0] = 0;
-  scene_.enemy.is_alive[0] = true;
-  scene_.enemy.is_terminated_latched[0] = false;
-
-  entity_manager_.Update(scene_, 0.016f);
-
-  EXPECT_TRUE(scene_.enemy.is_terminated_latched[0]);
-}
-
-// =============================================================================
-// Update - Projectile Status Tests
-// =============================================================================
-
-TEST_F(EntityManagerTest, Update_ProjectileMarkedForDestruction_IsDestroyed) {
+TEST_F(EntityManagerTest, Cleanup_ProjectileMarkedForDestruction_IsDestroyed) {
+  entity_manager_.Initialize(event_manager_);
   // Add a projectile
   ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);
   scene_.projectiles.AddProjectile(proj);
@@ -100,157 +33,133 @@ TEST_F(EntityManagerTest, Update_ProjectileMarkedForDestruction_IsDestroyed) {
 
   // Mark it for destruction
   scene_.projectiles.to_be_destroyed_.insert(0);
-
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Cleanup(scene_);
 
   // Projectile should be removed
   EXPECT_EQ(scene_.projectiles.GetNumProjectiles(), 0);
 }
 
-TEST_F(EntityManagerTest, Update_NoMarkedProjectiles_CountUnchanged) {
+TEST_F(EntityManagerTest, Cleanup_NoMarkedProjectiles_CountUnchanged) {
+  entity_manager_.Initialize(event_manager_);
   // Add projectiles
   for (int i = 0; i < 3; ++i) {
-    ProjectileData proj =
-        testing::CreateProjectileAt(100.0f + i * 50.0f, 100.0f, 1.0f, 0.0f);
+    ProjectileData proj = testing::CreateProjectileAt(
+        100.0f + static_cast<float>(i) * 50.0f, 100.0f, 1.0f, 0.0f);
     scene_.projectiles.AddProjectile(proj);
   }
   ASSERT_EQ(scene_.projectiles.GetNumProjectiles(), 3);
-
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Cleanup(scene_);
 
   // All projectiles should still exist
   EXPECT_EQ(scene_.projectiles.GetNumProjectiles(), 3);
 }
 
 // =============================================================================
-// Update - Gem Status Tests
+// Cleanup - Gem Tests
 // =============================================================================
 
-TEST_F(EntityManagerTest, Update_GemMarkedForDestruction_IsDestroyed) {
+TEST_F(EntityManagerTest, Cleanup_GemMarkedForDestruction_IsDestroyed) {
+  entity_manager_.Initialize(event_manager_);
   // Add a gem
   ExpGemData gem_data{Rarity::common,
                       {100.0f, 100.0f},
                       {100.0f, 100.0f},
                       {{8.0f, 8.0f}, {16, 16}},
+                      5.0f,
                       {16, 16}};
   scene_.exp_gem.AddExpGem(gem_data);
   ASSERT_EQ(scene_.exp_gem.GetNumExpGems(), 1);
 
   // Mark it for destruction
   scene_.exp_gem.to_be_destroyed_.insert(0);
-
-  entity_manager_.Update(scene_, 0.016f);
+  entity_manager_.Cleanup(scene_);
 
   // Gem should be removed
   EXPECT_EQ(scene_.exp_gem.GetNumExpGems(), 0);
 }
 
 // =============================================================================
-// Update - Multiple Entities Tests
+// Event Emission Tests
 // =============================================================================
 
-TEST_F(EntityManagerTest, Update_MultipleDeadEnemies_AllMarkedCorrectly) {
-  // Kill multiple enemies
-  scene_.enemy.health_points[0] = 0;
-  scene_.enemy.health_points[2] = -5;
-  scene_.enemy.health_points[4] = 0;
-
-  for (int i = 0; i < kNumEnemies; ++i) {
-    scene_.enemy.is_alive[i] = true;
-    scene_.enemy.is_done[i] = false;
-  }
-
-  entity_manager_.Update(scene_, 0.016f);
-
-  // Check dead enemies
-  EXPECT_FALSE(scene_.enemy.is_alive[0]);
-  EXPECT_TRUE(scene_.enemy.is_done[0]);
-
-  EXPECT_FALSE(scene_.enemy.is_alive[2]);
-  EXPECT_TRUE(scene_.enemy.is_done[2]);
-
-  EXPECT_FALSE(scene_.enemy.is_alive[4]);
-  EXPECT_TRUE(scene_.enemy.is_done[4]);
-
-  // Check alive enemies
-  EXPECT_TRUE(scene_.enemy.is_alive[1]);
-  EXPECT_FALSE(scene_.enemy.is_done[1]);
-
-  EXPECT_TRUE(scene_.enemy.is_alive[3]);
-  EXPECT_FALSE(scene_.enemy.is_done[3]);
-}
-
-// =============================================================================
-// Update - Integration Tests
-// =============================================================================
-
-TEST_F(EntityManagerTest, Update_UpdatesRayCaster) {
-  // Place an enemy and player nearby
-  scene_.player.position_ = {100.0f, 100.0f};
-  scene_.enemy.position[0] = {
-      250.0f,
-      100.0f};  // Further away to ensure ray start is outside player grid cell
-  scene_.enemy.is_alive[0] = true;
-
-  // Clear any existing ray data
-  int history_idx = scene_.enemy.ray_caster.history_idx;
-  for (int r = 0; r < kNumRays; ++r) {
-    scene_.enemy.ray_caster.ray_hit_distances[history_idx][r][0] = 0.0f;
-  }
-
-  entity_manager_.Update(scene_, 0.016f);
-
-  // Check if ray caster data was updated
-  // We expect some non-zero distances since player is nearby
-  bool found_hit = false;
-  int new_history_idx = scene_.enemy.ray_caster.history_idx;
-  int checked_idx =
-      (new_history_idx - 1 + kRayHistoryLength) % kRayHistoryLength;
-
-  for (int r = 0; r < kNumRays; ++r) {
-    if (scene_.enemy.ray_caster.ray_hit_distances[checked_idx][r][0] > 0.0f) {
-      found_hit = true;
-      break;
-    }
-  }
-  EXPECT_TRUE(found_hit)
-      << "Ray caster did not detect the nearby player after update";
-}
-
-TEST_F(EntityManagerTest, Update_UpdatesRayCaster_DetectsProjectiles) {
-  // Place an enemy and projectile nearby
-  scene_.enemy.position[0] = {100.0f, 100.0f};
-  scene_.enemy.is_alive[0] = true;
-
-  // Create a projectile to the right of the enemy
-  // Note: Must be placed outside the ray start offset radius
-  ProjectileData proj = testing::CreateProjectileAt(200.0f, 100.0f, 1.0f, 0.0f);
+TEST_F(EntityManagerTest,
+       CleanupProjectilesStatus_EmitsProjectileDestroyedEvent) {
+  ProjectileData proj = testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f);
+  entity_manager_.Initialize(event_manager_);
+  scene_.projectiles.AddProjectile(proj);
   scene_.projectiles.AddProjectile(proj);
 
-  // Clear any existing ray data
-  int history_idx = scene_.enemy.ray_caster.history_idx;
-  for (int r = 0; r < kNumRays; ++r) {
-    scene_.enemy.ray_caster.non_blocking_ray_hit_distances[history_idx][r][0] =
-        0.0f;
-  }
+  // Mark both for destruction
+  scene_.projectiles.to_be_destroyed_.insert(0);
+  scene_.projectiles.to_be_destroyed_.insert(1);
+  entity_manager_.Cleanup(scene_);
 
-  entity_manager_.Update(scene_, 0.016f);
-
-  // Check if ray caster data was updated for projectiles
-  bool found_hit = false;
-  int new_history_idx = scene_.enemy.ray_caster.history_idx;
-  int checked_idx =
-      (new_history_idx - 1 + kRayHistoryLength) % kRayHistoryLength;
-
-  for (int r = 0; r < kNumRays; ++r) {
-    if (scene_.enemy.ray_caster
-            .non_blocking_ray_hit_distances[checked_idx][r][0] > 0.0f) {
-      found_hit = true;
-      break;
+  int destroyed_count = 0;
+  for (const auto& e : event_manager_.GetEvents()) {
+    if (std::holds_alternative<ProjectileDestroyedEvent>(e)) {
+      ++destroyed_count;
     }
   }
-  EXPECT_TRUE(found_hit)
-      << "Ray caster did not detect the nearby projectile after update";
+  EXPECT_EQ(destroyed_count, 2);
+}
+
+// =============================================================================
+// ProcessPendingSpawns - Enemy Respawn Tests
+// =============================================================================
+
+TEST_F(EntityManagerTest,
+       ProcessPendingSpawns_EnemyKilledEventEmitted_EnemyRespawns) {
+  entity_manager_.Initialize(event_manager_);
+
+  // Kill enemy at index 0
+  int enemy_idx = 0;
+  scene_.enemy.is_alive[enemy_idx] = false;
+  scene_.enemy.is_done[enemy_idx] = true;
+  scene_.enemy.health_points[enemy_idx] = 0;
+
+  // Emit the kill event and dispatch it so OnEnemyKilled queues the respawn
+  event_manager_.Emit(EnemyKilledEvent{enemy_idx});
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
+  event_manager_.Dispatch(event_context);
+
+  entity_manager_.ProcessPendingSpawns(scene_);
+
+  EXPECT_TRUE(scene_.enemy.is_alive[enemy_idx]);
+  EXPECT_FALSE(scene_.enemy.is_done[enemy_idx]);
+  EXPECT_EQ(scene_.enemy.health_points[enemy_idx],
+            entity_manager_.entity_config_.enemy.max_health_points);
+}
+
+TEST_F(EntityManagerTest, PlayerGlobalDamageModifier_MultipleSpells) {
+  entity_manager_.Initialize(event_manager_);
+  // Place enemy and projectile overlapping
+  scene_.enemy.position[0] = {100.0f, 100.0f};
+  scene_.enemy.is_alive[0] = true;
+  scene_.enemy.health_points[0] = 100;
+  ProjectileData proj_a =
+      testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f, 100.0f, 0);
+  ProjectileData proj_b =
+      testing::CreateProjectileAt(100.0f, 100.0f, 1.0f, 0.0f, 100.0f, 1);
+
+  scene_.projectiles.AddProjectile(proj_a);
+  scene_.projectiles.AddProjectile(proj_b);
+
+  // Set the spell damage of each spell to different values that together should deal 150 damage.
+  scene_.player.spell_stats_.damage[0] = 100;
+  scene_.player.spell_stats_.damage[1] = 50;
+
+  // Set global damage modifier of the player to 50%
+  scene_.player.stats_.global_damage_modifier.SetBaseValue(0.5f);
+
+  event_manager_.Emit(EnemyProjectileCollisionEvent{0, 0});
+  event_manager_.Emit(EnemyProjectileCollisionEvent{0, 1});
+  EventContext event_context =
+      testing::MakeEventContext(scene_, event_manager_);
+  event_manager_.Dispatch(event_context);
+
+  // Both projectiles deal less damage, i.e. 100 - (100*0.5 + 50*0.5) = 25
+  EXPECT_EQ(scene_.enemy.health_points[0], 25);
 }
 
 }  // namespace

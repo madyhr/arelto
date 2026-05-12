@@ -6,7 +6,11 @@ import time
 import torch
 
 from rl.algorithms.async_ppo import AsyncPPO
-from rl.arelto_env import AreltoEnv
+from rl.arelto_env import (
+    PAUSE_STATES,
+    AreltoEnv,
+    GameState,
+)
 
 TARGET_FPS = 60
 TARGET_FRAME_TIME = 1 / TARGET_FPS
@@ -20,7 +24,6 @@ def start_game(args):
     obs_size = env.game.get_observation_size()
     num_rays = env.game.get_enemy_num_rays()
     ray_history_length = env.game.get_enemy_ray_history_length()
-    game_state_dict = env.game_state_dict
 
     def create_agent() -> AsyncPPO:
         return AsyncPPO(
@@ -47,54 +50,55 @@ def start_game(args):
     if not env.game.initialize():
         return
 
-    env.game.set_game_state(game_state_dict["in_start_screen"])
+    env.game.set_game_state(GameState.IN_START_SCREEN)
 
     # We need to get the initial obs to infer first action.
     obs, _ = env.reset()
 
     # Main Game Loop
-    while env.game.get_game_state() != game_state_dict["in_shutdown"]:
-        if env.game.get_game_state() == game_state_dict["in_start_screen"]:
+    while env.game.get_game_state() != GameState.IN_SHUTDOWN:
+        state = env.game.get_game_state()
+
+        if state == GameState.IN_START_SCREEN:
             env.game.process_input()
             env.game.render(1.0)
-            if env.game.get_game_state() == game_state_dict["is_running"]:
+            if env.game.get_game_state() == GameState.IS_RUNNING:
                 print("Transitioning to Training Loop...")
                 # As we might have transitions stored in the rollout storage
                 # when we enter the start screen, we clear the storage screen
                 # to not go out of bounds when we begin filling it again.
                 ppo.inference_storage.clear()
 
-        elif (
-            env.game.get_game_state() == game_state_dict["is_running"]
-            or env.game.get_game_state() == game_state_dict["in_settings_menu"]
-            or env.game.get_game_state() == game_state_dict["in_level_up"]
-            or env.game.get_game_state() == game_state_dict["in_quit_confirm"]
-        ):
+        elif state == GameState.IS_RUNNING or state in PAUSE_STATES:
             # We keep track of the number of steps to handle pauses correctly.
             step = 0
             while True:
                 frame_start = time.perf_counter()
                 env.game.process_input()
                 state = env.game.get_game_state()
-                if state == game_state_dict["in_shutdown"]:
+
+                if state == GameState.IN_SHUTDOWN:
                     break
-                if state == game_state_dict["in_start_screen"]:
+
+                if state == GameState.IN_START_SCREEN:
                     print("Returned to Menu")
                     print("Resetting policy parameters...")
                     ppo = create_agent()
                     break
-                if (
-                    state == game_state_dict["in_settings_menu"]
-                    or state == game_state_dict["in_level_up"]
-                    or state == game_state_dict["in_quit_confirm"]
-                ):
+
+                if state in PAUSE_STATES:
+                    env.game.step(TARGET_FRAME_TIME)
                     env.game.render(1.0)
+
+                    elapsed_time = time.perf_counter() - frame_start
+                    sleep_time = TARGET_FRAME_TIME - elapsed_time
+                    if sleep_time > 0:
+                        time.sleep(sleep_time)
                     continue
 
                 with torch.inference_mode():
-                    env.game.process_input()
-
-                    if env.game.get_game_state() != game_state_dict["is_running"]:
+                    # We might have transitioned state during process_input
+                    if env.game.get_game_state() != GameState.IS_RUNNING:
                         continue
 
                     action = ppo.act(obs.to(device))

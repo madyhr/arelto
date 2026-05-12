@@ -44,8 +44,8 @@ struct convert<arelto::SpellUpgradeConfig> {
                        kOwner);
     DecodeRarityWeight(rarity_weights, "epic", arelto::Rarity::epic, rhs,
                        kOwner);
-    DecodeRarityWeight(rarity_weights, "legendary",
-                       arelto::Rarity::legendary, rhs, kOwner);
+    DecodeRarityWeight(rarity_weights, "legendary", arelto::Rarity::legendary,
+                       rhs, kOwner);
     return true;
   }
 

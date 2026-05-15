@@ -65,7 +65,7 @@ struct Enemy {
   EntityType entity_type = EntityType::enemy;
 };
 
-enum ItemId : int;
+enum class ItemId : int;
 
 struct InventoryItem {
   ItemId item_id;

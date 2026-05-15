@@ -48,7 +48,7 @@ class HealOnKillEffect : public ItemTriggerEffect {
   int heal_amount_;
 };
 
-enum ItemId : int {
+enum class ItemId : int {
   elia_armor_plate = 0,
   damodei_claw,
   volmnih_boots,

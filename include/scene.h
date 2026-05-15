@@ -15,7 +15,7 @@ namespace arelto {
 
 // forward declaration to avoid circular dependency with items.h
 class ItemArchive;
-enum ItemId : int;
+enum class ItemId : int;
 enum class ItemUpgradeType : int;
 
 struct Scene {

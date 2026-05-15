@@ -456,7 +456,7 @@ struct GameStatus {
   bool show_ray_caster = false;
 };
 
-enum GameState : int {
+enum class GameState : int {
   in_start_screen = 0,
   in_main_menu,
   is_running,
@@ -469,7 +469,10 @@ enum GameState : int {
   in_item_selection,
 };
 
-enum Rarity : int { common, rare, epic, legendary, Count };
+enum class Rarity : int { common, rare, epic, legendary, count };
+constexpr std::size_t to_index(Rarity rarity) {
+  return static_cast<std::size_t>(rarity);
+}
 
 struct ExpGemData {
   Rarity rarity;

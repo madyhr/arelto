@@ -112,7 +112,7 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomSpellUpgrade(
 
 std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(
     const Scene& scene) {
-  ItemId item_id = static_cast<ItemId>(std::rand() % ItemId::count);
+  ItemId item_id = static_cast<ItemId>(std::rand() % to_index(ItemId::count));
   const Item& item = scene.item_archive->GetItem(item_id);
 
   std::vector<ItemStatModifier> stat_modifiers;

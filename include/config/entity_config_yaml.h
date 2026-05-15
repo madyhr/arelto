@@ -3,6 +3,7 @@
 
 #include "config/config_decoding.h"
 #include "config/entity_config.h"
+#include "types.h"
 #include "yaml-cpp/yaml.h"
 namespace YAML {
 
@@ -132,10 +133,11 @@ struct convert<arelto::ExpGemConfig> {
   static Node encode(const arelto::ExpGemConfig& rhs) {
     Node node;
     node["inv_mass"] = rhs.inv_mass;
-    node["rarities"]["common"] = rhs.rarities[arelto::Rarity::common];
-    node["rarities"]["rare"] = rhs.rarities[arelto::Rarity::rare];
-    node["rarities"]["epic"] = rhs.rarities[arelto::Rarity::epic];
-    node["rarities"]["legendary"] = rhs.rarities[arelto::Rarity::legendary];
+    node["rarities"]["common"] = rhs.rarities[to_index(arelto::Rarity::common)];
+    node["rarities"]["rare"] = rhs.rarities[to_index(arelto::Rarity::rare)];
+    node["rarities"]["epic"] = rhs.rarities[to_index(arelto::Rarity::epic)];
+    node["rarities"]["legendary"] =
+        rhs.rarities[to_index(arelto::Rarity::legendary)];
     return node;
   }
 
@@ -170,8 +172,8 @@ struct convert<arelto::ExpGemConfig> {
     if (!rarity_node) {
       return true;
     }
-    return convert<arelto::ExpGemRarityConfig>::decode(rarity_node,
-                                                       rhs.rarities[rarity]);
+    return convert<arelto::ExpGemRarityConfig>::decode(
+        rarity_node, rhs.rarities[to_index(rarity)]);
   }
 };
 

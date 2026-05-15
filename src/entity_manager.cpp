@@ -75,8 +75,8 @@ namespace {
 
 Rarity SampleRandomExpGemRarity(const EntityConfig& entity_config) {
   std::vector<float> weights;
-  weights.reserve(Rarity::Count);
-  for (int i = 0; i < Rarity::Count; ++i) {
+  weights.reserve(to_index(Rarity::count));
+  for (int i = 0; i < to_index(Rarity::count); ++i) {
     weights.push_back(entity_config.exp_gem.rarities[i].spawn_weighting);
   }
 
@@ -99,7 +99,7 @@ void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
 
   Rarity random_rarity = SampleRandomExpGemRarity(entity_config_);
   const ExpGemRarityConfig& gem_config =
-      entity_config_.exp_gem.rarities[random_rarity];
+      entity_config_.exp_gem.rarities[to_index(random_rarity)];
   const Size2D gem_sprite_size = {gem_config.width, gem_config.height};
   pending_exp_gem_spawns_.push_back({random_rarity, gem_position, gem_position,
                                      CreateCenteredCollider(gem_sprite_size),
@@ -122,7 +122,7 @@ void EntityManager::OnEnemyKilled(const EnemyKilledEvent& event,
 void EntityManager::OnPlayerExpGemCollision(
     const PlayerExpGemCollisionEvent& event, EventContext& context) {
   const Rarity rarity = context.scene.exp_gem.rarity_[event.gem_idx];
-  int exp_value = entity_config_.exp_gem.rarities[rarity].exp_value;
+  int exp_value = entity_config_.exp_gem.rarities[to_index(rarity)].exp_value;
   context.scene.player.stats_.exp_points += exp_value;
   context.scene.exp_gem.to_be_destroyed_.insert(event.gem_idx);
   event_manager_->Emit(ExpGemCollectedEvent{event.gem_idx, exp_value});

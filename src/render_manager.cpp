@@ -337,7 +337,7 @@ void RenderManager::Render(const Scene& scene, float alpha,
   SetRenderColor(renderer_, kColorBlack);
   SDL_RenderClear(renderer_);
 
-  if (game_state == in_start_screen) {
+  if (game_state == GameState::in_start_screen) {
     ui_manager_.UpdateStartScreen();
     UIWidget* start_screen = ui_manager_.GetStartScreenRoot();
     if (start_screen) {
@@ -374,22 +374,22 @@ void RenderManager::Render(const Scene& scene, float alpha,
     }
 
     RenderUI(time);
-    if (game_state == is_gameover) {
+    if (game_state == GameState::is_gameover) {
       UIWidget* game_over_screen = ui_manager_.GetGameOverScreenRoot();
       if (game_over_screen) {
         game_over_screen->SetVisible(true);
         RenderUITree(game_over_screen);
         game_over_screen->SetVisible(false);
       }
-    } else if (game_state == in_settings_menu) {
+    } else if (game_state == GameState::in_settings_menu) {
       RenderSettingsMenuState();
-    } else if (game_state == in_level_up) {
+    } else if (game_state == GameState::in_level_up) {
       RenderLevelUp();
-    } else if (game_state == in_item_selection) {
+    } else if (game_state == GameState::in_item_selection) {
       RenderItemSelection();
-    } else if (game_state == in_quit_confirm) {
+    } else if (game_state == GameState::in_quit_confirm) {
       RenderQuitConfirmMenu();
-    } else if (game_state == in_chest_opening) {
+    } else if (game_state == GameState::in_chest_opening) {
       UIWidget* chest_screen = ui_manager_.GetChestOpeningRoot();
       if (chest_screen) {
         chest_screen->SetVisible(true);
@@ -698,7 +698,7 @@ void RenderManager::SetupGemGeometry(const ExpGem& exp_gem, float alpha) {
     float x = screen_pos.x;
     float y = screen_pos.y;
 
-    int texture_id = exp_gem.rarity_[i];
+    int texture_id = static_cast<int>(exp_gem.rarity_[i]);
 
     float u_left = 0.0f;
     float u_right = cell_uv_width;

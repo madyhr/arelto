@@ -23,7 +23,7 @@ struct PlayerConfig {
 };
 
 struct EnemyConfig {
-  int max_health_points = 10;
+  int max_health_points = 100;
   int attack_damage = 1;
   float attack_cooldown_s = 0.1f;
   float movement_speed = 40.0f;

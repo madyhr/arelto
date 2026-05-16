@@ -22,9 +22,9 @@ item_card_width: 650
 item_card_height: 1000
 item_card_gap: 150
 item_card_icon_offset_y: 180
-item_card_name_offset_y: 400
+item_card_name_offset_y: 390
 item_card_name_offset_x: 100
-item_card_flavor_text_offset_y: 525
+item_card_flavor_text_offset_y: 490
 item_card_flavor_text_offset_x: 100
 item_card_desc_offset_y: 600
 item_card_desc_offset_x: 70

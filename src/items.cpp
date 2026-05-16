@@ -15,7 +15,7 @@ const std::unordered_map<ItemId, std::string, ItemIdHash> ItemFlavorText{
     {ItemId::volmnih_boots,
      "Some say you should do things one step at a time - I don't."},
     {ItemId::sarto_button_bible,
-     "The 'Bible' started as a entry-point to the mastery of the Karmov "
+     "The 'Bible' started as an entry-point to the mastery of the Karmov "
      "schools of magic, but to many it became so much more."},
     {ItemId::aiayn_scale, "Pay attention now - this is no ordinary scale."}};
 

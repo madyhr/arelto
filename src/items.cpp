@@ -13,8 +13,8 @@ const std::unordered_map<ItemId, std::string, ItemIdHash> ItemFlavorText{
      "make."},
     {ItemId::volmnih_boots, "One step at a time? How cute."},
     {ItemId::sarto_button_bible,
-     "The 'Bible' started as an entry-point to the mastery of the Karmov "
-     "schools of magic, but to many it became so much more."},
+     "The 'Bible' began as an introduction to the Karmov schools of magic, but "
+     "to many, it became scripture."},
     {ItemId::aiayn_scale, "Pay attention now - this is no ordinary scale."}};
 
 const Stat* ResolveItemStat(const Player& player, ItemUpgradeType stat_type) {

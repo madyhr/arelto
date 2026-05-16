@@ -77,7 +77,7 @@ bool Game::Initialize() {
   }
 
   time_ = static_cast<float>(SDL_GetTicks64()) / 1000.0f;
-  SetGameState(is_running);
+  SetGameState(GameState::is_running);
 
   return true;
 }
@@ -94,10 +94,9 @@ int Game::GetGameState() {
   return static_cast<int>(game_state_);
 };
 
-void Game::SetGameState(int game_state) {
-  GameState new_state = static_cast<GameState>(game_state);
+void Game::SetGameState(GameState game_state) {
 
-  if (new_state == in_start_screen) {
+  if (game_state == GameState::in_start_screen) {
     audio_manager_.StopMusic();
   } else {
     audio_manager_.PlayMusic();
@@ -108,7 +107,7 @@ void Game::SetGameState(int game_state) {
   is_mouse_right_active_ = false;
 
   previous_game_state_ = game_state_;
-  game_state_ = new_state;
+  game_state_ = game_state;
 }
 
 void Game::StepGamePhysics() {
@@ -140,11 +139,11 @@ void Game::RequestGameStateTransition(GameState target) {
 
 int GetGameStateTransitionPriority(GameState state) {
   switch (state) {
-    case is_gameover:
+    case GameState::is_gameover:
       return 0;
-    case in_level_up:
+    case GameState::in_level_up:
       return 1;
-    case in_chest_opening:
+    case GameState::in_chest_opening:
       return 2;
     default:
       return 99;
@@ -153,7 +152,7 @@ int GetGameStateTransitionPriority(GameState state) {
 
 // Processes events in the game state transition queue based on the game state transition priority.
 void Game::ProcessGameStateTransitionQueue() {
-  if (game_state_ != is_running || pending_transitions_.empty())
+  if (game_state_ != GameState::is_running || pending_transitions_.empty())
     return;
 
   auto highest_prio_transition =
@@ -167,16 +166,16 @@ void Game::ProcessGameStateTransitionQueue() {
   pending_transitions_.erase(highest_prio_transition);
 
   switch (next_game_state) {
-    case is_gameover:
-      SetGameState(is_gameover);
+    case GameState::is_gameover:
+      SetGameState(GameState::is_gameover);
       break;
-    case in_level_up:
-      SetGameState(in_level_up);
+    case GameState::in_level_up:
+      SetGameState(GameState::in_level_up);
       progression_manager_.GenerateLevelUpOptions(scene_);
       render_manager_.GetUIManager().BuildLevelUpMenu(scene_.level_up_options);
       break;
-    case in_chest_opening: {
-      SetGameState(in_chest_opening);
+    case GameState::in_chest_opening: {
+      SetGameState(GameState::in_chest_opening);
       auto* root = render_manager_.GetUIManager().GetChestOpeningRoot();
       if (root) {
         auto* anim = root->FindWidgetAs<UIAnimation>("chest_animated_image");
@@ -193,7 +192,7 @@ void Game::ProcessGameStateTransitionQueue() {
 }
 
 void Game::ResolveCurrentGameStateTransition() {
-  SetGameState(is_running);
+  SetGameState(GameState::is_running);
   ProcessGameStateTransitionQueue();
 }
 
@@ -201,19 +200,19 @@ void Game::ResolveCurrentGameStateTransition() {
 void Game::RegisterGameStateHandlers() {
   event_manager_.Subscribe<PlayerDeadEvent>(
       [this](const PlayerDeadEvent&, EventContext&) {
-        RequestGameStateTransition(is_gameover);
+        RequestGameStateTransition(GameState::is_gameover);
       });
 
   event_manager_.Subscribe<ExpGemCollectedEvent>(
       [this](const ExpGemCollectedEvent&, EventContext&) {
         if (!progression_manager_.CheckLevelUp(scene_.player))
           return;
-        RequestGameStateTransition(in_level_up);
+        RequestGameStateTransition(GameState::in_level_up);
       });
 
   event_manager_.Subscribe<ChestOpenedEvent>(
       [this](const ChestOpenedEvent&, EventContext&) {
-        RequestGameStateTransition(in_chest_opening);
+        RequestGameStateTransition(GameState::in_chest_opening);
       });
 }
 
@@ -231,7 +230,7 @@ void Game::ResetGame() {
   is_mouse_left_active_ = false;
   is_mouse_right_active_ = false;
   pending_transitions_.clear();
-  SetGameState(is_running);
+  SetGameState(GameState::is_running);
 };
 
 // Runs the game loop continuously.
@@ -239,7 +238,7 @@ void Game::RunGameLoop() {
   float current_time = static_cast<float>(SDL_GetTicks64()) / 1000.0f;
   float accumulator = 0.0f;
 
-  while (game_state_ != in_shutdown) {
+  while (game_state_ != GameState::in_shutdown) {
 
     ProcessInput();
 
@@ -247,7 +246,7 @@ void Game::RunGameLoop() {
 
     switch (game_state_) {
 
-      case is_running: {
+      case GameState::is_running: {
         float frame_time = new_time - current_time;
         current_time = new_time;
 
@@ -276,16 +275,16 @@ void Game::RunGameLoop() {
         break;
       }
 
-      case in_start_screen: {
+      case GameState::in_start_screen: {
         RenderGame(0.0f);
         break;
       }
 
-      case is_gameover:
+      case GameState::is_gameover:
         RenderGame(0.0f);
         break;
 
-      case in_settings_menu: {
+      case GameState::in_settings_menu: {
         current_time = new_time;
 
         if (game_status_.is_headless) {
@@ -295,13 +294,13 @@ void Game::RunGameLoop() {
         break;
       }
 
-      case in_level_up: {
+      case GameState::in_level_up: {
         current_time = new_time;
         RenderGame(0.0f);
         break;
       }
 
-      case in_quit_confirm: {
+      case GameState::in_quit_confirm: {
         current_time = new_time;
 
         if (game_status_.is_headless) {
@@ -310,7 +309,7 @@ void Game::RunGameLoop() {
         RenderGame(0.0f);
         break;
       }
-      case in_chest_opening: {
+      case GameState::in_chest_opening: {
         float dt = new_time - current_time;
         current_time = new_time;
 
@@ -320,7 +319,7 @@ void Game::RunGameLoop() {
           auto* anim =
               chest_root->FindWidgetAs<UIAnimation>("chest_animated_image");
           if (anim && anim->IsFinished()) {
-            SetGameState(in_item_selection);
+            SetGameState(GameState::in_item_selection);
             progression_manager_.GenerateItemOptions(scene_);
             render_manager_.GetUIManager().BuildItemMenu(scene_.item_options);
           }
@@ -328,7 +327,7 @@ void Game::RunGameLoop() {
         render_manager_.Render(scene_, 0.0f, game_status_, time_, game_state_);
         break;
       }
-      case in_item_selection: {
+      case GameState::in_item_selection: {
         current_time = new_time;
         RenderGame(0.0f);
         break;
@@ -340,7 +339,7 @@ void Game::RunGameLoop() {
 };
 
 void Game::StepGame(float dt) {
-  if (game_state_ == is_running) {
+  if (game_state_ == GameState::is_running) {
     accumulator_step_ += dt;
 
     while (accumulator_step_ >= physics_manager_.GetPhysicsDt()) {
@@ -353,14 +352,14 @@ void Game::StepGame(float dt) {
     // could corrupt RL termination signals if the same enemy died, respawned,
     // and died again within a single call.
     entity_manager_.ProcessPendingSpawns(scene_);
-  } else if (game_state_ == in_chest_opening) {
+  } else if (game_state_ == GameState::in_chest_opening) {
     auto* chest_root = render_manager_.GetUIManager().GetChestOpeningRoot();
     if (chest_root) {
       chest_root->Update(dt);
       auto* anim =
           chest_root->FindWidgetAs<UIAnimation>("chest_animated_image");
       if (anim && anim->IsFinished()) {
-        SetGameState(in_item_selection);
+        SetGameState(GameState::in_item_selection);
         progression_manager_.GenerateItemOptions(scene_);
         render_manager_.GetUIManager().BuildItemMenu(scene_.item_options);
       }
@@ -372,7 +371,7 @@ void Game::ProcessInput() {
 
   // To be able to quit while in headless mode we need to capture ctrl+C signals
   if (stop_request_) {
-    SetGameState(in_shutdown);
+    SetGameState(GameState::in_shutdown);
     std::cout << "Signal received. Exiting..." << '\n';
     return;
   };
@@ -385,7 +384,7 @@ void Game::ProcessInput() {
 
   while (SDL_PollEvent(&e) != 0) {
     if (e.type == SDL_QUIT) {
-      SetGameState(in_shutdown);
+      SetGameState(GameState::in_shutdown);
       return;
     }
 
@@ -400,25 +399,25 @@ void Game::ProcessInput() {
       }
     }
 
-    if (game_state_ == in_quit_confirm) {
+    if (game_state_ == GameState::in_quit_confirm) {
       ProcessQuitConfirmEvent(e);
       continue;
     }
 
-    if (game_state_ == in_settings_menu) {
+    if (game_state_ == GameState::in_settings_menu) {
       ProcessSettingsMenuEvent(e);
       continue;
     }
 
-    if (game_state_ == in_level_up) {
+    if (game_state_ == GameState::in_level_up) {
       ProcessLevelUpInput(e);
       continue;
     }
-    if (game_state_ == in_chest_opening) {
+    if (game_state_ == GameState::in_chest_opening) {
       ProcessChestOpeningInput(e);
       continue;
     }
-    if (game_state_ == in_item_selection) {
+    if (game_state_ == GameState::in_item_selection) {
       ProcessItemSelectionInput(e);
       continue;
     }
@@ -426,28 +425,28 @@ void Game::ProcessInput() {
     if (e.type == SDL_KEYDOWN) {
       switch (e.key.keysym.sym) {
         case SDLK_q:
-          if (game_state_ == is_running) {
-            SetGameState(in_quit_confirm);
+          if (game_state_ == GameState::is_running) {
+            SetGameState(GameState::in_quit_confirm);
           } else {
-            SetGameState(in_shutdown);
+            SetGameState(GameState::in_shutdown);
             std::cout << "Key 'q' pressed! Exiting..." << '\n';
           }
           break;
 
         case SDLK_r:
-          if (game_state_ == is_gameover) {
+          if (game_state_ == GameState::is_gameover) {
             ResetGame();
           }
           break;
 
         case SDLK_ESCAPE:
-          if (game_state_ == is_running) {
-            SetGameState(in_settings_menu);
-          } else if (game_state_ == in_settings_menu) {
-            SetGameState(is_running);
+          if (game_state_ == GameState::is_running) {
+            SetGameState(GameState::in_settings_menu);
+          } else if (game_state_ == GameState::in_settings_menu) {
+            SetGameState(GameState::is_running);
           } else {
             ResetGame();
-            SetGameState(in_start_screen);
+            SetGameState(GameState::in_start_screen);
           }
           break;
 
@@ -468,17 +467,17 @@ void Game::ProcessInput() {
       }
 
     } else if (e.type == SDL_MOUSEBUTTONDOWN) {
-      if (game_state_ == in_start_screen) {
+      if (game_state_ == GameState::in_start_screen) {
         int mouse_x = e.button.x;
         int mouse_y = e.button.y;
 
         UIManager& ui = render_manager_.GetUIManager();
         if (IsMouseOverWidget(ui.GetStartScreenRoot(), "begin_button", mouse_x,
                               mouse_y)) {
-          SetGameState(is_running);
+          SetGameState(GameState::is_running);
           std::cout << "Game Started!" << '\n';
         }
-      } else if (game_state_ == is_running) {
+      } else if (game_state_ == GameState::is_running) {
         if (e.button.button == SDL_BUTTON_LEFT) {
           is_mouse_left_active_ = true;
         }
@@ -492,7 +491,7 @@ void Game::ProcessInput() {
   int cursor_pos_x, cursor_pos_y;
   uint32_t mouse_state = SDL_GetMouseState(&cursor_pos_x, &cursor_pos_y);
 
-  if (game_state_ == in_settings_menu) {
+  if (game_state_ == GameState::in_settings_menu) {
     ProcessSettingsMenuInput(mouse_state);
     return;
   }
@@ -501,7 +500,7 @@ void Game::ProcessInput() {
       static_cast<float>(cursor_pos_x) + render_manager_.camera_.position_.x,
       static_cast<float>(cursor_pos_y) + render_manager_.camera_.position_.y};
 
-  if (game_state_ == is_running) {
+  if (game_state_ == GameState::is_running) {
     ProcessPlayerInput();
   }
 }
@@ -547,11 +546,11 @@ void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
   if (e.type == SDL_KEYDOWN) {
     switch (e.key.keysym.sym) {
       case SDLK_q:
-        SetGameState(in_quit_confirm);
+        SetGameState(GameState::in_quit_confirm);
         std::cout << "Quit confirmation requested..." << '\n';
         break;
       case SDLK_ESCAPE:
-        SetGameState(is_running);
+        SetGameState(GameState::is_running);
         break;
       case SDLK_m:
         audio_manager_.ToggleMusic();
@@ -579,11 +578,11 @@ void Game::ProcessSettingsMenuEvent(const SDL_Event& e) {
     if (IsMouseOverWidget(settings_root, "main_menu_button", mouse_x,
                           mouse_y)) {
       ResetGame();
-      SetGameState(in_start_screen);
+      SetGameState(GameState::in_start_screen);
     }
 
     if (IsMouseOverWidget(settings_root, "resume_button", mouse_x, mouse_y)) {
-      SetGameState(is_running);
+      SetGameState(GameState::is_running);
     }
 
     if (IsMouseOverWidget(settings_root, "occupancy_map_checkbox", mouse_x,
@@ -602,7 +601,7 @@ void Game::ProcessQuitConfirmEvent(const SDL_Event& e) {
   if (e.type == SDL_KEYDOWN) {
     switch (e.key.keysym.sym) {
       case SDLK_y:
-        SetGameState(in_shutdown);
+        SetGameState(GameState::in_shutdown);
         std::cout << "Quit confirmed. Exiting..." << '\n';
         break;
       case SDLK_ESCAPE:
@@ -620,7 +619,7 @@ void Game::ProcessQuitConfirmEvent(const SDL_Event& e) {
     UIWidget* quit_root = ui.GetQuitConfirmRoot();
 
     if (IsMouseOverWidget(quit_root, "quit_yes_button", mouse_x, mouse_y)) {
-      SetGameState(in_shutdown);
+      SetGameState(GameState::in_shutdown);
       std::cout << "Quit confirmed. Exiting..." << '\n';
     }
 
@@ -663,7 +662,7 @@ void Game::ProcessLevelUpInput(const SDL_Event& e) {
   if (e.type == SDL_KEYDOWN) {
     switch (e.key.keysym.sym) {
       case SDLK_q:
-        SetGameState(in_quit_confirm);
+        SetGameState(GameState::in_quit_confirm);
         break;
       default:
         break;
@@ -696,7 +695,7 @@ void Game::ProcessLevelUpInput(const SDL_Event& e) {
 void Game::ProcessChestOpeningInput(const SDL_Event& e) {
   // During the animation phase, only allow quitting
   if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_q) {
-    SetGameState(in_quit_confirm);
+    SetGameState(GameState::in_quit_confirm);
     return;
   }
   return;
@@ -706,7 +705,7 @@ void Game::ProcessItemSelectionInput(const SDL_Event& e) {
   if (e.type == SDL_KEYDOWN) {
     switch (e.key.keysym.sym) {
       case SDLK_q:
-        SetGameState(in_quit_confirm);
+        SetGameState(GameState::in_quit_confirm);
         break;
       default:
         break;

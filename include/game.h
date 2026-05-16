@@ -38,7 +38,7 @@ class Game {
   void ResetGame();
   void Shutdown();
   int GetGameState();
-  void SetGameState(int game_state);
+  void SetGameState(GameState game_state);
   static void SignalHandler(int signal);
 
   Scene scene_;
@@ -58,7 +58,7 @@ class Game {
   Vector2D cursor_position_;
   float time_ = 0.0f;
   float accumulator_step_;
-  GameState previous_game_state_ = in_start_screen;
+  GameState previous_game_state_ = GameState::in_start_screen;
   bool is_mouse_left_active_ = false;
   bool is_mouse_right_active_ = false;
   std::vector<GameState> pending_transitions_;

@@ -15,11 +15,13 @@ struct convert<arelto::SpellUpgradeConfig> {
   static Node encode(const arelto::SpellUpgradeConfig& rhs) {
     Node node;
     node["rarity_weights"]["common"] =
-        rhs.rarity_weights[arelto::Rarity::common];
-    node["rarity_weights"]["rare"] = rhs.rarity_weights[arelto::Rarity::rare];
-    node["rarity_weights"]["epic"] = rhs.rarity_weights[arelto::Rarity::epic];
+        rhs.rarity_weights[to_index(arelto::Rarity::common)];
+    node["rarity_weights"]["rare"] =
+        rhs.rarity_weights[to_index(arelto::Rarity::rare)];
+    node["rarity_weights"]["epic"] =
+        rhs.rarity_weights[to_index(arelto::Rarity::epic)];
     node["rarity_weights"]["legendary"] =
-        rhs.rarity_weights[arelto::Rarity::legendary];
+        rhs.rarity_weights[to_index(arelto::Rarity::legendary)];
     return node;
   }
 
@@ -54,7 +56,8 @@ struct convert<arelto::SpellUpgradeConfig> {
                                  arelto::Rarity rarity,
                                  arelto::SpellUpgradeConfig& rhs,
                                  const char* owner) {
-    DecodeField(rarity_weights, key, rhs.rarity_weights[rarity], owner);
+    DecodeField(rarity_weights, key, rhs.rarity_weights[to_index(rarity)],
+                owner);
   }
 };
 

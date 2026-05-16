@@ -70,7 +70,7 @@ std::unique_ptr<Upgrade> MakeArmorItemUpgrade() {
                        ValueRange{1.0f, 2.0f}, "Increase Armor"});
   return std::make_unique<ItemUpgrade>(
       ItemId::elia_armor_plate, "Skewer-safe Armorplate of Elia",
-      std::move(stat_modifiers), std::vector<ItemTriggerModifier>{});
+      std::move(stat_modifiers), std::vector<ItemTriggerModifier>{}, "");
 }
 
 std::unique_ptr<Upgrade> MakeTriggerOnlyItemUpgrade() {
@@ -79,7 +79,7 @@ std::unique_ptr<Upgrade> MakeTriggerOnlyItemUpgrade() {
       "Heal 5 HP on kill", std::make_unique<HealOnKillEffect>(5)});
   return std::make_unique<ItemUpgrade>(ItemId::damodei_claw, "Claw of Damodei",
                                        std::vector<ItemStatModifier>{},
-                                       std::move(trigger_modifiers));
+                                       std::move(trigger_modifiers), "");
 }
 
 std::unique_ptr<Upgrade> MakeNegativeStatItemUpgrade() {
@@ -89,7 +89,7 @@ std::unique_ptr<Upgrade> MakeNegativeStatItemUpgrade() {
       ValueRange{1.0f, 0.95f}, "Slow Movement", true});
   return std::make_unique<ItemUpgrade>(
       ItemId::elia_armor_plate, "Skewer-safe Armorplate of Elia",
-      std::move(stat_modifiers), std::vector<ItemTriggerModifier>{});
+      std::move(stat_modifiers), std::vector<ItemTriggerModifier>{}, "");
 }
 
 UpgradeOptions MakeItemUpgradeOptions() {
@@ -604,6 +604,18 @@ TEST_F(UIManagerTest, BuildItemMenu_CreatesCardPerOption) {
   auto* cards = item_menu->FindWidgetAs<HBox>("item_cards");
   ASSERT_NE(cards, nullptr);
   EXPECT_EQ(cards->GetChildren().size(), 2u);
+}
+
+TEST_F(UIManagerTest, BuildItemMenu_CentersFlavorTextVertically) {
+  ui_manager_.BuildItemMenu(MakeItemUpgradeOptions());
+
+  auto* item_menu = ui_manager_.GetItemMenuRoot();
+  ASSERT_NE(item_menu, nullptr);
+
+  auto* flavor_text =
+      item_menu->FindWidgetAs<UILabel>("item_card_0_flavor_text");
+  ASSERT_NE(flavor_text, nullptr);
+  EXPECT_EQ(flavor_text->GetVerticalAlign(), TextVerticalAlign::center);
 }
 
 TEST_F(UIManagerTest, BuildItemMenu_ReplacesExistingMenu) {

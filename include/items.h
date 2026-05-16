@@ -1,11 +1,13 @@
 #ifndef RL2_ITEMS_H_
 #define RL2_ITEMS_H_
 
+#include <filesystem>
 #include <functional>
 #include <iomanip>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 #include "entity.h"
@@ -16,6 +18,7 @@
 
 namespace arelto {
 
+struct ItemConfig;
 class ItemManager;
 
 // Class for items whose effect trigger on events.
@@ -70,6 +73,14 @@ enum class ItemUpgradeType : int {
   count
 };
 
+struct ItemIdHash {
+  std::size_t operator()(ItemId id) const {
+    return std::hash<int>{}(static_cast<int>(id));
+  }
+};
+
+extern const std::unordered_map<ItemId, std::string, ItemIdHash> ItemFlavorText;
+
 const Stat* ResolveItemStat(const Player& player, ItemUpgradeType stat_type);
 Stat* ResolveItemStat(Player& player, ItemUpgradeType stat_type);
 
@@ -107,63 +118,20 @@ struct Item {
   std::string name;
   std::vector<ItemStatSpec> stat_specs;
   std::vector<ItemTriggerSpec> trigger_specs;
+  std::string flavor_text;
 };
 
 class ItemArchive {
  public:
-  ItemArchive() { LoadItems(); }
+  explicit ItemArchive(const std::filesystem::path& item_config_path =
+                           "assets/config/items.yaml");
 
-  const Item& GetItem(ItemId id) {
-    size_t index = static_cast<size_t>(id);
-    return archive_[index];
-  }
+  const Item& GetItem(ItemId id) const;
 
  private:
   std::vector<Item> archive_;
 
-  void LoadItems() {
-    archive_.resize(to_index(ItemId::count));
-    archive_[to_index(ItemId::elia_armor_plate)] = {
-        ItemId::elia_armor_plate,
-        "Skewer-safe Armorplate of Elia",
-        {ItemStatSpec{ItemUpgradeType::armor, ModifierType::flat, 1.0f,
-                      "Increase Armor"},
-         ItemStatSpec{ItemUpgradeType::movement_speed,
-                      ModifierType::percent_mult, -0.05f, "Slow Movement"}},
-        {}};
-    archive_[to_index(ItemId::damodei_claw)] = {
-        ItemId::damodei_claw,
-        "Claw of Damodei",
-        {},
-        {ItemTriggerSpec{"Heal 5 HP on kill", []() {
-                           return std::make_unique<HealOnKillEffect>(5);
-                         }}}};
-    archive_[to_index(ItemId::volmnih_boots)] = {
-        ItemId::volmnih_boots,
-        "Volmnih's Asynchronous Boots",
-        {ItemStatSpec{ItemUpgradeType::movement_speed,
-                      ModifierType::percent_mult, 0.1f,
-                      "Increase Movement Speed"}},
-        {}};
-    archive_[to_index(ItemId::sarto_button_bible)] = {
-        ItemId::sarto_button_bible,
-        "Bible of Sarto Button",
-        {ItemStatSpec{ItemUpgradeType::global_damage_modifier,
-                      ModifierType::percent_mult, -0.05f,
-                      "Decrease the damage of all spells."},
-         ItemStatSpec{ItemUpgradeType::global_cooldown_modifier,
-                      ModifierType::percent_mult, -0.1f,
-                      "Decrease the cooldown of all spells."}},
-        {}};
-    archive_[to_index(ItemId::aiayn_scale)] = {
-        ItemId::aiayn_scale,
-        "Aiayn's Ever- Transforming Scale",
-        {ItemStatSpec{ItemUpgradeType::max_health, ModifierType::flat, 50.0f,
-                      "Increase Max Health Points"},
-         ItemStatSpec{ItemUpgradeType::size, ModifierType::percent_mult, 0.05f,
-                      "Increase Player Size"}},
-        {}};
-  }
+  void LoadItems(const ItemConfig& item_config);
 };
 
 // A single stat change to apply to the player on pickup.
@@ -197,11 +165,13 @@ class ItemUpgrade : public Upgrade {
  public:
   ItemUpgrade(ItemId item_id, std::string name,
               std::vector<ItemStatModifier> stat_modifiers,
-              std::vector<ItemTriggerModifier> trigger_modifiers)
+              std::vector<ItemTriggerModifier> trigger_modifiers,
+              std::string flavor_text)
       : item_id_(item_id),
         name_(std::move(name)),
         stat_modifiers_(std::move(stat_modifiers)),
-        trigger_modifiers_(std::move(trigger_modifiers)) {}
+        trigger_modifiers_(std::move(trigger_modifiers)),
+        flavor_text_(std::move(flavor_text)) {}
 
   void Apply(Player&) override {}
 
@@ -211,6 +181,7 @@ class ItemUpgrade : public Upgrade {
 
   ItemId GetItemID() const { return item_id_; }
   std::string GetName() const override { return name_; }
+  std::string GetFlavorText() const { return flavor_text_; }
 
   // Returns the descriptions and values of the item upgrade's stat modifiers and trigger modifiers.
   // This is used for the UI system to display the upgrade's effects on the item selection card.
@@ -245,6 +216,7 @@ class ItemUpgrade : public Upgrade {
   std::string name_;
   std::vector<ItemStatModifier> stat_modifiers_;
   std::vector<ItemTriggerModifier> trigger_modifiers_;
+  std::string flavor_text_;
 };
 
 }  // namespace arelto

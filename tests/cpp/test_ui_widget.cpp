@@ -62,6 +62,14 @@ TEST(UIWidgetTest, SetVisible_TogglesVisibility) {
   EXPECT_TRUE(widget.IsVisible());
 }
 
+TEST(UILabelTest, VerticalAlign_DefaultsToTopAndCanBeChanged) {
+  UILabel label;
+  EXPECT_EQ(label.GetVerticalAlign(), TextVerticalAlign::top);
+
+  label.SetVerticalAlign(TextVerticalAlign::center);
+  EXPECT_EQ(label.GetVerticalAlign(), TextVerticalAlign::center);
+}
+
 TEST(VBoxTest, StacksChildrenVerticallyWithSpacing) {
   auto vbox = std::make_shared<VBox>();
   vbox->SetPosition(10, 20);

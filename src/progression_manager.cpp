@@ -138,9 +138,9 @@ std::unique_ptr<Upgrade> ProgressionManager::GenerateRandomItem(
         trigger_spec.description, trigger_spec.make_effect()});
   }
 
-  return std::make_unique<ItemUpgrade>(item_id, item.name,
-                                       std::move(stat_modifiers),
-                                       std::move(trigger_modifiers));
+  return std::make_unique<ItemUpgrade>(
+      item_id, item.name, std::move(stat_modifiers),
+      std::move(trigger_modifiers), item.flavor_text);
 }
 
 void ProgressionManager::ApplyLevelUpUpgrade(Scene& scene, int option_index) {

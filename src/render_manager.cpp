@@ -1029,7 +1029,8 @@ void RenderManager::RenderWidgetRecursive(UIWidget* widget) {
       } else if (lbl->GetFont()) {
         RenderText(lbl->GetText(), {bounds.x, bounds.y}, lbl->GetColor(),
                    lbl->GetFont(),
-                   {lbl->GetCenterWidth(), lbl->GetWrapWidth()});
+                   {lbl->GetCenterWidth(), lbl->GetWrapWidth(),
+                    static_cast<float>(bounds.h), lbl->GetVerticalAlign()});
       }
       break;
     }
@@ -1209,7 +1210,15 @@ void RenderManager::RenderText(const std::string& text, SDL_Point pos,
                                         2.0f);
   }
 
-  SDL_Rect dest = {render_x, pos.y, surface->w, surface->h};
+  int render_y = pos.y;
+  if (layout.vertical_align == TextVerticalAlign::center &&
+      layout.container_height > 0.0f) {
+    const float offset =
+        (layout.container_height - static_cast<float>(surface->h)) / 2.0f;
+    render_y += std::max(0, static_cast<int>(offset));
+  }
+
+  SDL_Rect dest = {render_x, render_y, surface->w, surface->h};
   SDL_RenderCopy(renderer_, texture, nullptr, &dest);
 
   SDL_DestroyTexture(texture);

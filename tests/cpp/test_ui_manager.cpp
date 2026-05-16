@@ -606,6 +606,18 @@ TEST_F(UIManagerTest, BuildItemMenu_CreatesCardPerOption) {
   EXPECT_EQ(cards->GetChildren().size(), 2u);
 }
 
+TEST_F(UIManagerTest, BuildItemMenu_CentersFlavorTextVertically) {
+  ui_manager_.BuildItemMenu(MakeItemUpgradeOptions());
+
+  auto* item_menu = ui_manager_.GetItemMenuRoot();
+  ASSERT_NE(item_menu, nullptr);
+
+  auto* flavor_text =
+      item_menu->FindWidgetAs<UILabel>("item_card_0_flavor_text");
+  ASSERT_NE(flavor_text, nullptr);
+  EXPECT_EQ(flavor_text->GetVerticalAlign(), TextVerticalAlign::center);
+}
+
 TEST_F(UIManagerTest, BuildItemMenu_ReplacesExistingMenu) {
   ui_manager_.BuildItemMenu(MakeItemUpgradeOptions());
   auto* item_menu = ui_manager_.GetItemMenuRoot();

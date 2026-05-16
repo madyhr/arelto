@@ -170,6 +170,13 @@ float UILabel::GetWrapWidth() const {
   return wrap_width_;
 }
 
+void UILabel::SetVerticalAlign(TextVerticalAlign align) {
+  vertical_align_ = align;
+}
+TextVerticalAlign UILabel::GetVerticalAlign() const {
+  return vertical_align_;
+}
+
 WidgetType UILabel::GetWidgetType() const {
   return WidgetType::Label;
 }

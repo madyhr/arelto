@@ -5,6 +5,20 @@
 
 namespace arelto {
 
+const std::unordered_map<ItemId, std::string, ItemIdHash> ItemFlavorText{
+    {ItemId::elia_armor_plate,
+     "The moment the world starts moving fast around you is exactly the moment "
+     "you should consider slowing down and taking safe, small steps."},
+    {ItemId::damodei_claw,
+     "Most of your kind may die out, but that is a sacrifice I am willing to "
+     "make."},
+    {ItemId::volmnih_boots,
+     "Some say you should do things one step at a time - I don't."},
+    {ItemId::sarto_button_bible,
+     "The 'Bible' started as a entry-point to the mastery of the Karmov "
+     "schools of magic, but to many it became so much more."},
+    {ItemId::aiayn_scale, "Pay attention now - this is no ordinary scale."}};
+
 const Stat* ResolveItemStat(const Player& player, ItemUpgradeType stat_type) {
   switch (stat_type) {
     case ItemUpgradeType::armor:

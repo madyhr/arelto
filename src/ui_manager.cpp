@@ -1135,6 +1135,24 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
                            2 * ui_config_.cards.item_card_name_offset_x);
   card->AddChild(name_label);
 
+  auto flavor_text_label = std::make_shared<UILabel>();
+  flavor_text_label->SetId(card_id + "_flavor_text");
+  flavor_text_label->SetPosition(
+      ui_config_.cards.item_card_flavor_text_offset_x,
+      ui_config_.cards.item_card_flavor_text_offset_y);
+  flavor_text_label->SetSize(ui_config_.cards.item_card_width -
+                                 2 * ui_config_.cards.item_card_name_offset_x,
+                             96);
+  flavor_text_label->SetText(upgrade.GetFlavorText());
+  flavor_text_label->SetFont(resources_->font_small);
+  flavor_text_label->SetColor({237, 179, 71, 255});
+  flavor_text_label->SetCenterWidth(
+      ui_config_.cards.item_card_width -
+      2 * ui_config_.cards.item_card_name_offset_x);
+  flavor_text_label->SetWrapWidth(ui_config_.cards.item_card_width -
+                                  2 * ui_config_.cards.item_card_name_offset_x);
+  card->AddChild(flavor_text_label);
+
   std::vector<UpgradeDisplayRow> display_rows = upgrade.GetDisplayRows();
   for (size_t row_index = 0; row_index < display_rows.size(); ++row_index) {
     const UpgradeDisplayRow& row = display_rows[row_index];

@@ -12,7 +12,7 @@ struct UIColorsConfig {
 };
 
 struct UIFontConfig {
-  int font_size_small = 14;
+  int font_size_small = 18;
   int font_size_medium = 26;
   int font_size_large = 40;
   int font_size_huge = 72;
@@ -149,9 +149,10 @@ struct UICardConfig {
   float item_card_height = 1000.0f;
   float item_card_gap = 150.0f;
   float item_card_icon_offset_y = 160.0f;
-  int item_card_icon_size = 80;
   float item_card_name_offset_x = 100.0f;
   float item_card_name_offset_y = 475.0f;
+  float item_card_flavor_text_offset_x = 100.0f;
+  float item_card_flavor_text_offset_y = 525.0f;
   float item_card_desc_offset_x = 70.0f;
   float item_card_desc_offset_y = 600.0f;
   float item_card_stats_offset_x = 70.0f;

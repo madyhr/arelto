@@ -127,7 +127,7 @@ TEST_F(ItemManagerTest,
       ItemUpgradeType::armor, ModifierType::flat, 2.0f,
       ValueRange{initial_armor, initial_armor + 2.0f}, "Increase Armor"});
   ItemUpgrade stat_only_item(ItemId::elia_armor_plate, "Armor",
-                             std::move(stat_modifiers), {});
+                             std::move(stat_modifiers), {}, "");
 
   stat_only_item.Apply(scene_.player, item_manager_);
 
@@ -147,7 +147,7 @@ TEST_F(ItemManagerTest,
   trigger_modifiers.push_back(ItemTriggerModifier{
       "Heal 5 HP on kill", std::make_unique<HealOnKillEffect>(5)});
   ItemUpgrade trigger_only_item(ItemId::damodei_claw, "Claw", {},
-                                std::move(trigger_modifiers));
+                                std::move(trigger_modifiers), "");
 
   trigger_only_item.Apply(scene_.player, item_manager_);
 
@@ -170,7 +170,7 @@ TEST_F(ItemManagerTest, Apply_HybridItem_AppliesStatAndRegistersTrigger) {
       "Heal 4 HP on kill", std::make_unique<HealOnKillEffect>(4)});
   ItemUpgrade hybrid_item(ItemId::elia_armor_plate, "Hybrid",
                           std::move(stat_modifiers),
-                          std::move(trigger_modifiers));
+                          std::move(trigger_modifiers), "");
 
   hybrid_item.Apply(scene_.player, item_manager_);
 

@@ -79,9 +79,6 @@ bool RenderManager::Initialize(
   if (!LoadTextures(manifest, spell_texture_mapping))
     return false;
 
-  if (!LoadFonts(manifest))
-    return false;
-
   if (!ValidateTextures())
     return false;
 
@@ -90,6 +87,9 @@ bool RenderManager::Initialize(
   tile_manager_.SetupTileSelector();
 
   LoadUIConfig();
+
+  if (!LoadFonts(manifest))
+    return false;
 
   ui_manager_.SetupUI(resources_, ui_config_, event_manager);
 

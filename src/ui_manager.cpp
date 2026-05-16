@@ -1133,6 +1133,7 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
                              2 * ui_config_.cards.item_card_name_offset_x);
   name_label->SetWrapWidth(ui_config_.cards.item_card_width -
                            2 * ui_config_.cards.item_card_name_offset_x);
+  name_label->SetVerticalAlign(TextVerticalAlign::center);
   card->AddChild(name_label);
 
   auto flavor_text_label = std::make_shared<UILabel>();
@@ -1151,6 +1152,7 @@ void UIManager::BuildItemCard(UIWidget* parent, int index,
       2 * ui_config_.cards.item_card_name_offset_x);
   flavor_text_label->SetWrapWidth(ui_config_.cards.item_card_width -
                                   2 * ui_config_.cards.item_card_name_offset_x);
+  flavor_text_label->SetVerticalAlign(TextVerticalAlign::center);
   card->AddChild(flavor_text_label);
 
   std::vector<UpgradeDisplayRow> display_rows = upgrade.GetDisplayRows();

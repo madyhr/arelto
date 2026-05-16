@@ -18,13 +18,16 @@
 #include "scene.h"
 #include "types.h"
 #include "ui/widget.h"
+#include "ui/widgets.h"
 #include "ui_manager.h"
 
 namespace arelto {
 
 struct TextLayout {
-  float center_width;
-  float wrap_width;
+  float center_width = 0.0f;
+  float wrap_width = 0.0f;
+  float container_height = 0.0f;
+  TextVerticalAlign vertical_align = TextVerticalAlign::top;
 };
 
 class RenderManager {

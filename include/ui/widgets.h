@@ -12,6 +12,11 @@
 
 namespace arelto {
 
+enum class TextVerticalAlign {
+  top,
+  center,
+};
+
 // UIImage: renders a texture or a region of a texture atlas.
 class UIImage : public UIWidget {
 public:
@@ -108,6 +113,9 @@ public:
   void SetWrapWidth(float width);
   float GetWrapWidth() const;
 
+  void SetVerticalAlign(TextVerticalAlign align);
+  TextVerticalAlign GetVerticalAlign() const;
+
   WidgetType GetWidgetType() const override;
 
 private:
@@ -121,6 +129,7 @@ private:
   int digit_sprite_height_ = 0;
   float center_width_ = 0;
   float wrap_width_ = 0;
+  TextVerticalAlign vertical_align_ = TextVerticalAlign::top;
 };
 
 // UIButton: a texture with normal/hover states and an optional label + click

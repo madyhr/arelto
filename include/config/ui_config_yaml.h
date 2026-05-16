@@ -491,9 +491,10 @@ struct convert<arelto::UICardConfig> {
     node["item_card_height"] = rhs.item_card_height;
     node["item_card_gap"] = rhs.item_card_gap;
     node["item_card_icon_offset_y"] = rhs.item_card_icon_offset_y;
-    node["item_card_icon_size"] = rhs.item_card_icon_size;
     node["item_card_name_offset_y"] = rhs.item_card_name_offset_y;
     node["item_card_name_offset_x"] = rhs.item_card_name_offset_x;
+    node["item_card_flavor_text_offset_y"] = rhs.item_card_flavor_text_offset_y;
+    node["item_card_flavor_text_offset_x"] = rhs.item_card_flavor_text_offset_x;
     node["item_card_desc_offset_y"] = rhs.item_card_desc_offset_y;
     node["item_card_desc_offset_x"] = rhs.item_card_desc_offset_x;
     node["item_card_stats_offset_y"] = rhs.item_card_stats_offset_y;
@@ -558,12 +559,14 @@ struct convert<arelto::UICardConfig> {
                  &arelto::UICardConfig::item_card_gap, kOwner);
     DecodeMember(node, "item_card_icon_offset_y", rhs,
                  &arelto::UICardConfig::item_card_icon_offset_y, kOwner);
-    DecodeMember(node, "item_card_icon_size", rhs,
-                 &arelto::UICardConfig::item_card_icon_size, kOwner);
     DecodeMember(node, "item_card_name_offset_y", rhs,
                  &arelto::UICardConfig::item_card_name_offset_y, kOwner);
     DecodeMember(node, "item_card_name_offset_x", rhs,
                  &arelto::UICardConfig::item_card_name_offset_x, kOwner);
+    DecodeMember(node, "item_card_flavor_text_offset_y", rhs,
+                 &arelto::UICardConfig::item_card_flavor_text_offset_y, kOwner);
+    DecodeMember(node, "item_card_flavor_text_offset_x", rhs,
+                 &arelto::UICardConfig::item_card_flavor_text_offset_x, kOwner);
     DecodeMember(node, "item_card_desc_offset_y", rhs,
                  &arelto::UICardConfig::item_card_desc_offset_y, kOwner);
     DecodeMember(node, "item_card_desc_offset_x", rhs,

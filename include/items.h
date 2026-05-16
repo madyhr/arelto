@@ -1,6 +1,7 @@
 #ifndef RL2_ITEMS_H_
 #define RL2_ITEMS_H_
 
+#include <filesystem>
 #include <functional>
 #include <iomanip>
 #include <memory>
@@ -17,6 +18,7 @@
 
 namespace arelto {
 
+struct ItemConfig;
 class ItemManager;
 
 // Class for items whose effect trigger on events.
@@ -121,64 +123,15 @@ struct Item {
 
 class ItemArchive {
  public:
-  ItemArchive() { LoadItems(); }
+  explicit ItemArchive(const std::filesystem::path& item_config_path =
+                           "assets/config/items.yaml");
 
-  const Item& GetItem(ItemId id) {
-    size_t index = static_cast<size_t>(id);
-    return archive_[index];
-  }
+  const Item& GetItem(ItemId id) const;
 
  private:
   std::vector<Item> archive_;
 
-  void LoadItems() {
-    archive_.resize(to_index(ItemId::count));
-    archive_[to_index(ItemId::elia_armor_plate)] = {
-        ItemId::elia_armor_plate,
-        "Skewer-safe Armorplate of Elia",
-        {ItemStatSpec{ItemUpgradeType::armor, ModifierType::flat, 1.0f,
-                      "Increase Armor"},
-         ItemStatSpec{ItemUpgradeType::movement_speed,
-                      ModifierType::percent_mult, -0.05f, "Slow Movement"}},
-        {},
-        ItemFlavorText.at(ItemId::elia_armor_plate)};
-    archive_[to_index(ItemId::damodei_claw)] = {
-        ItemId::damodei_claw,
-        "Claw of Damodei",
-        {},
-        {ItemTriggerSpec{
-            "Heal 5 HP on kill",
-            []() { return std::make_unique<HealOnKillEffect>(5); }}},
-        ItemFlavorText.at(ItemId::damodei_claw)};
-    archive_[to_index(ItemId::volmnih_boots)] = {
-        ItemId::volmnih_boots,
-        "Volmnih's Asynchronous Boots",
-        {ItemStatSpec{ItemUpgradeType::movement_speed,
-                      ModifierType::percent_mult, 0.1f,
-                      "Increase Movement Speed"}},
-        {},
-        ItemFlavorText.at(ItemId::volmnih_boots)};
-    archive_[to_index(ItemId::sarto_button_bible)] = {
-        ItemId::sarto_button_bible,
-        "Bible of Sarto Button",
-        {ItemStatSpec{ItemUpgradeType::global_damage_modifier,
-                      ModifierType::percent_mult, -0.05f,
-                      "Decrease the damage of all spells."},
-         ItemStatSpec{ItemUpgradeType::global_cooldown_modifier,
-                      ModifierType::percent_mult, -0.1f,
-                      "Decrease the cooldown of all spells."}},
-        {},
-        ItemFlavorText.at(ItemId::sarto_button_bible)};
-    archive_[to_index(ItemId::aiayn_scale)] = {
-        ItemId::aiayn_scale,
-        "Aiayn's Ever- Transforming Scale",
-        {ItemStatSpec{ItemUpgradeType::max_health, ModifierType::flat, 50.0f,
-                      "Increase Max Health Points"},
-         ItemStatSpec{ItemUpgradeType::size, ModifierType::percent_mult, 0.05f,
-                      "Increase Player Size"}},
-        {},
-        ItemFlavorText.at(ItemId::aiayn_scale)};
-  }
+  void LoadItems(const ItemConfig& item_config);
 };
 
 // A single stat change to apply to the player on pickup.

@@ -12,8 +12,7 @@ const std::unordered_map<ItemId, std::string, ItemIdHash> ItemFlavorText{
     {ItemId::damodei_claw,
      "Most of your kind may die out, but that is a sacrifice I am willing to "
      "make."},
-    {ItemId::volmnih_boots,
-     "Some say you should do things one step at a time - I don't."},
+    {ItemId::volmnih_boots, "One step at a time? How cute."},
     {ItemId::sarto_button_bible,
      "The 'Bible' started as an entry-point to the mastery of the Karmov "
      "schools of magic, but to many it became so much more."},

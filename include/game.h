@@ -37,7 +37,7 @@ class Game {
   void RenderGame(float alpha);
   void ResetGame();
   void Shutdown();
-  int GetGameState();
+  GameState GetGameState();
   void SetGameState(GameState game_state);
   static void SignalHandler(int signal);
 

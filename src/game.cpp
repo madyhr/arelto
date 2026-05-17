@@ -90,8 +90,8 @@ bool Game::InitializeCamera() {
   return true;
 };
 
-int Game::GetGameState() {
-  return static_cast<int>(game_state_);
+GameState Game::GetGameState() {
+  return game_state_;
 };
 
 void Game::SetGameState(GameState game_state) {

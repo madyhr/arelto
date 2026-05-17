@@ -1,5 +1,6 @@
 // src/bindings.cpp
 #include <pybind11/detail/common.h>
+#include <pybind11/native_enum.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <stdexcept>
@@ -12,18 +13,18 @@ namespace py = pybind11;
 PYBIND11_MODULE(arelto_py, m) {
   m.doc() = "Arelto Game Python Bindings";
 
-  py::enum_<arelto::GameState>(m, "GameState")
-      .value("in_start_screen", arelto::GameState::in_start_screen)
-      .value("in_main_menu", arelto::GameState::in_main_menu)
-      .value("is_running", arelto::GameState::is_running)
-      .value("is_gameover", arelto::GameState::is_gameover)
-      .value("in_shutdown", arelto::GameState::in_shutdown)
-      .value("in_quit_confirm", arelto::GameState::in_quit_confirm)
-      .value("in_settings_menu", arelto::GameState::in_settings_menu)
-      .value("in_level_up", arelto::GameState::in_level_up)
-      .value("in_chest_opening", arelto::GameState::in_chest_opening)
-      .value("in_item_selection", arelto::GameState::in_item_selection)
-      .export_values();
+  py::native_enum<arelto::GameState>(m, "GameState", "enum.IntEnum")
+      .value("IN_START_SCREEN", arelto::GameState::in_start_screen)
+      .value("IN_MAIN_MENU", arelto::GameState::in_main_menu)
+      .value("IS_RUNNING", arelto::GameState::is_running)
+      .value("IS_GAMEOVER", arelto::GameState::is_gameover)
+      .value("IN_SHUTDOWN", arelto::GameState::in_shutdown)
+      .value("IN_SETTINGS_MENU", arelto::GameState::in_settings_menu)
+      .value("IN_LEVEL_UP", arelto::GameState::in_level_up)
+      .value("IN_QUIT_CONFIRM", arelto::GameState::in_quit_confirm)
+      .value("IN_CHEST_OPENING", arelto::GameState::in_chest_opening)
+      .value("IN_ITEM_SELECTION", arelto::GameState::in_item_selection)
+      .finalize();
 
   py::class_<arelto::Game>(m, "Game")
       .def_readonly_static("num_enemies", &arelto::kNumEnemies)

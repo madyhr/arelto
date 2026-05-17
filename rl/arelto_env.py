@@ -1,6 +1,3 @@
-# python/rl2_env.py
-
-from enum import IntEnum
 from typing import Any, FrozenSet
 
 import numpy as np
@@ -8,12 +5,7 @@ import torch
 
 from . import arelto_py as arelto
 
-# Names are uppercased so they follow Python convention.
-GameState: Any = IntEnum(
-    "GameState",
-    {name.upper(): int(value) for name, value in arelto.GameState.__members__.items()},
-    start=0,
-)
+GameState: Any = arelto.GameState
 
 
 # All states where the game is paused / showing an overlay.

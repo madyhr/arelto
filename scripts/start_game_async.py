@@ -19,7 +19,7 @@ TARGET_FRAME_TIME = 1 / TARGET_FPS
 def start_game(args):
     checkpoint_path: str = args.load_checkpoint
     device: str = "cuda"
-    env = AreltoEnv(step_dt=0.02)
+    env = AreltoEnv(step_dt=TARGET_FRAME_TIME)
     num_envs = env.num_envs
     obs_size = env.game.get_observation_size()
     num_rays = env.game.get_enemy_num_rays()

@@ -5,6 +5,7 @@
 #include "ray_caster.h"
 #include "reward_manager.h"
 #include "scene.h"
+#include "types.h"
 
 namespace arelto {
 
@@ -43,6 +44,16 @@ void RewardManager::RegisterRewardTerms() {
             for (int i = 0; i < kNumEnemies; ++i) {
               value_array[i] =
                   static_cast<float>(scene.enemy.damage_dealt_sim_step[i]);
+            }
+            return value_array;
+          });
+
+  AddTerm("is_terminated", -100.0f,
+          [](const Scene& scene) -> std::array<float, kNumEnemies> {
+            std::array<float, kNumEnemies> value_array;
+            for (int i = 0; i < kNumEnemies; ++i) {
+              value_array[i] =
+                  static_cast<float>(scene.enemy.is_terminated_sim_step[i]);
             }
             return value_array;
           });

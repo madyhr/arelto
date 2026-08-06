@@ -55,9 +55,10 @@ void PhysicsManager::UpdateEnemyState(Enemy& enemy) {
       if (enemy.attack_cooldown_timer[i] >= 0.0f) {
         enemy.attack_cooldown_timer[i] -= physics_dt_;
       }
-
-      enemy.damage_dealt_sim_step[i] = 0;
     }
+
+    enemy.damage_dealt_sim_step[i] = 0;
+    enemy.is_terminated_sim_step[i] = false;
   }
 };
 

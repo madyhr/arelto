@@ -171,6 +171,7 @@ void EntityManager::OnEnemyDamaged(const EnemyDamagedEvent& event,
   if (context.scene.enemy.health_points[enemy_idx] <= 0) {
     context.scene.enemy.is_alive[enemy_idx] = false;
     context.scene.enemy.is_done[enemy_idx] = true;
+    context.scene.enemy.is_terminated_sim_step[enemy_idx] = true;
     context.scene.enemy.is_terminated_latched[enemy_idx] = true;
     event_manager_->Emit(EnemyKilledEvent{enemy_idx});
   }

@@ -72,6 +72,8 @@ struct Scene {
     const EnemyConfig& enemy_config = entity_config.enemy;
     std::fill(enemy.is_alive.begin(), enemy.is_alive.end(), false);
     std::fill(enemy.is_done.begin(), enemy.is_done.end(), false);
+    std::fill(enemy.is_terminated_sim_step.begin(),
+              enemy.is_terminated_sim_step.end(), false);
     std::fill(enemy.max_health_points.begin(), enemy.max_health_points.end(),
               enemy_config.max_health_points);
     std::fill(enemy.movement_speed.begin(), enemy.movement_speed.end(),

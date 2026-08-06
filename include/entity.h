@@ -59,6 +59,9 @@ struct Enemy {
   // this is used for enemy terminations that happen due to a timeout
   std::array<bool, kNumEnemies> is_truncated_latched;
   // this is used for enemy terminations that happen before a timeout
+  std::array<bool, kNumEnemies> is_terminated_sim_step;
+  // The latched variant is only read/written on every env step,
+  // not every sim step
   std::array<bool, kNumEnemies> is_terminated_latched;
 
   EnemyRayCaster ray_caster;

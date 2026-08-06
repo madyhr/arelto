@@ -93,6 +93,7 @@ struct Scene {
               enemy_config.attack_damage);
     SpawnAllEnemies(enemy, player);
     SetupEnemyRayCasterPattern(enemy.ray_caster);
+    enemy.ray_caster.Reset();
 
     // Add slight variation to each enemy to make it more interesting.
     for (int i = 0; i < kNumEnemies; ++i) {

@@ -51,6 +51,27 @@ struct EnemyRayCaster {
 
   // the current head of the history buffer
   int history_idx = 0;
+
+  void Reset() {
+    ray_hit_distances.fill({});
+    ray_hit_types.fill({});
+    non_blocking_ray_hit_distances.fill({});
+    non_blocking_ray_hit_types.fill({});
+    history_idx = 0;
+  }
+
+  void ResetEnemy(int enemy_idx) {
+    for (int history_idx = 0; history_idx < kRayHistoryLength; history_idx++) {
+      for (int ray = 0; ray < kNumRays; ray++) {
+
+        ray_hit_distances[history_idx][ray][enemy_idx] = 0.0f;
+        ray_hit_types[history_idx][ray][enemy_idx] = EntityType::None;
+        non_blocking_ray_hit_distances[history_idx][ray][enemy_idx] = 0.0f;
+        non_blocking_ray_hit_types[history_idx][ray][enemy_idx] =
+            EntityType::None;
+      }
+    }
+  }
 };
 
 struct Ray {

@@ -3,20 +3,18 @@ from modules.actor import MultiDiscreteActor
 
 
 def test_multi_discrete_actor_forward_shape(
-    dummy_input,
+    dummy_features,
     input_dim,
     multi_discrete_output_dims,
     hidden_size,
     batch_size,
-    dummy_encoder,
 ):
     actor = MultiDiscreteActor(
         input_dim,
         hidden_size,
         output_dim=multi_discrete_output_dims,
-        encoder=dummy_encoder,
     )
-    logits_tensor_tuple = actor(dummy_input)
+    logits_tensor_tuple = actor(dummy_features)
 
     assert isinstance(logits_tensor_tuple, tuple)
     assert len(logits_tensor_tuple) == len(multi_discrete_output_dims)
@@ -27,20 +25,18 @@ def test_multi_discrete_actor_forward_shape(
 
 
 def test_multi_discrete_actor_get_action(
-    dummy_input,
+    dummy_features,
     input_dim,
     multi_discrete_output_dims,
     hidden_size,
     batch_size,
-    dummy_encoder,
 ):
     actor = MultiDiscreteActor(
         input_dim,
         hidden_size,
         output_dim=multi_discrete_output_dims,
-        encoder=dummy_encoder,
     )
-    action, log_prob, entropy = actor.get_action(dummy_input)
+    action, log_prob, entropy = actor.get_action(dummy_features)
 
     assert action.shape == (batch_size, len(multi_discrete_output_dims))
     assert log_prob.shape == (batch_size, 1)

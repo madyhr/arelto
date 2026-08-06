@@ -56,6 +56,7 @@ void RespawnEnemyAtIndex(Enemy& enemy, const Player& player, int idx) {
   enemy.damage_dealt_sim_step[idx] = 0;
   enemy.is_alive[idx] = true;
   enemy.is_done[idx] = false;
+  enemy.ray_caster.ResetEnemy(idx);
 }
 
 void SpawnAllEnemies(Enemy& enemy, const Player& player) {

@@ -11,12 +11,9 @@ class BaseActor(nn.Module):
         input_dim: int,
         hidden_size: tuple[int] | list[int],
         output_dim: int | list[int],
-        encoder: RayEncoder,
         activation_func_class: type[nn.Module] = nn.Tanh,
     ) -> None:
         super().__init__()
-
-        mlp_input_dim = encoder.output_dim
 
         # As the MLP class expects a one-dimensional output dim, we have to sum
         # the output dimensions in case it is not one-dimensional.
@@ -25,10 +22,8 @@ class BaseActor(nn.Module):
         else:
             mlp_output_dim = output_dim
         self.network = MLP(
-            mlp_input_dim, hidden_size, mlp_output_dim, activation_func_class
+            input_dim, hidden_size, mlp_output_dim, activation_func_class
         )
-
-        self.encoder = encoder
 
     def forward(self, obs: torch.Tensor):
         raise NotImplementedError
@@ -43,7 +38,6 @@ class MultiDiscreteActor(BaseActor):
         input_dim: int,
         hidden_size: tuple[int] | list[int],
         output_dim: list[int],
-        encoder: RayEncoder,
         activation_func_class: type[nn.Module] = nn.Tanh,
     ) -> None:
 
@@ -52,12 +46,10 @@ class MultiDiscreteActor(BaseActor):
             input_dim,
             hidden_size,
             self.output_dim,
-            encoder,
             activation_func_class,
         )
 
     def forward(self, obs: torch.Tensor) -> tuple[torch.Tensor, ...]:
-        obs = self.encoder(obs)
         flat_logits = self.network(obs)
         split_logits = torch.split(flat_logits, self.output_dim, dim=-1)
         return split_logits

@@ -10,22 +10,16 @@ class ValueCritic(nn.Module):
         self,
         input_dim: int,
         hidden_size: tuple[int] | list[int],
-        encoder: RayEncoder,
         activation_func_class: type[nn.Module] = nn.Tanh,
     ) -> None:
         super().__init__()
 
-        mlp_input_dim = encoder.output_dim
-
         self.network = MLP(
-            input_dim=mlp_input_dim,
+            input_dim=input_dim,
             hidden_size=hidden_size,
             output_dim=1,
             activation_func_class=activation_func_class,
         )
 
-        self.encoder = encoder
-
     def forward(self, obs: torch.Tensor) -> torch.Tensor:
-        obs = self.encoder(obs)
         return self.network(obs)

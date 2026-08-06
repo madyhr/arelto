@@ -1,8 +1,6 @@
-// tests/cpp/test_ray_caster.cpp
-// Unit tests for RayCaster functions
+// Unit tests for ray-casting and ray-history behavior.
 
 #include <gtest/gtest.h>
-#include <cmath>
 
 #include "constants/map.h"
 #include "ray_caster.h"
@@ -11,220 +9,186 @@
 namespace arelto {
 namespace {
 
+constexpr float kCellSize = static_cast<float>(kOccupancyMapResolution);
+constexpr Vector2D kCellFourCenter = {4.5f * kCellSize, 4.5f * kCellSize};
+
 class RayCasterTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    // Initialize an empty map (all none)
-    // We can use a lambda or loop to set specific tiles for tests
     occupancy_map_.Clear();
-    AddBorders();
+    occupancy_map_.AddBorder(EntityType::terrain);
   }
-
-  void AddBorders() {
-    for (int x = 0; x < kOccupancyMapWidth; ++x) {
-      SetWall(x, 0);
-      SetWall(x, kOccupancyMapHeight - 1);
-    }
-    for (int y = 0; y < kOccupancyMapHeight; ++y) {
-      SetWall(0, y);
-      SetWall(kOccupancyMapWidth - 1, y);
-    }
-  }
-
-  void ClearMap() { occupancy_map_.Clear(); }
 
   void SetWall(int x, int y) { occupancy_map_.Set(x, y, EntityType::terrain); }
+
+  DualRayHit Cast(Vector2D start, Vector2D direction) const {
+    return CastRay({start, direction}, occupancy_map_);
+  }
 
   FixedMap<kOccupancyMapWidth, kOccupancyMapHeight> occupancy_map_;
 };
 
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-// Helper to check if a float is approximately equal
-bool FloatEq(float a, float b, float epsilon = 1e-4f) {
-  return std::abs(a - b) < epsilon;
+void FillHistory(EnemyRayCaster& ray_caster, float blocking_distance,
+                 float non_blocking_distance) {
+  for (auto& frame : ray_caster.ray_hit_distances) {
+    for (auto& ray : frame) {
+      ray.fill(blocking_distance);
+    }
+  }
+  for (auto& frame : ray_caster.ray_hit_types) {
+    for (auto& ray : frame) {
+      ray.fill(EntityType::player);
+    }
+  }
+  for (auto& frame : ray_caster.non_blocking_ray_hit_distances) {
+    for (auto& ray : frame) {
+      ray.fill(non_blocking_distance);
+    }
+  }
+  for (auto& frame : ray_caster.non_blocking_ray_hit_types) {
+    for (auto& ray : frame) {
+      ray.fill(EntityType::projectile);
+    }
+  }
 }
 
-// =============================================================================
-// CastRay Tests
-// =============================================================================
+TEST_F(RayCasterTest, EmptyInteriorHitsMapBorder) {
+  DualRayHit hit = Cast(kCellFourCenter, {1.0f, 0.0f});
 
-TEST_F(RayCasterTest, CastRay_NoObstacles_ReturnsLargeDistance) {
-  // Start in the middle of a large empty area
-  Vector2D start_pos = {100.0f, 100.0f};
-  Vector2D ray_dir = {1.0f, 0.0f};  // Right
-
-  // Since map is bounded, it should eventually hit the "virtual" world bounds
-  // or loop forever if the caster doesn't handle OOB.
-  // However, CastRay doc says: "This function assumes that the occupancy map is surrounded by grid cells that have an EntityType other than None."
-  // So we MUST set bounds to walls to prevent infinite loops if the implementation expects it.
-
-  // Let's protect our test by setting boundaries.
-  // No need to set manual borders here as SetUp does it.
-
-  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
-
-  // Should hit the right wall (from SetUp borders)
-  // Map width is kOccupancyMapWidth * Resolution.
-  // Bounds are at x=0 and x=Width-1.
-  // Ray goes Right -> Hits x=Width-1.
-  // Start x=100 (Grid 4). Wall at Width-1 (Grid 76).
-  // Dist approx (76 - 4) * 25 = 72 * 25 = 1800.
-
+  float expected_distance =
+      static_cast<float>(kOccupancyMapWidth - 1) * kCellSize -
+      kCellFourCenter.x;
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
-  EXPECT_GT(hit.blocking_hit.distance, 1000.0f);
+  EXPECT_NEAR(hit.blocking_hit.distance, expected_distance, 1e-4f);
+  EXPECT_EQ(hit.non_blocking_hit.entity_type, EntityType::None);
 }
 
-TEST_F(RayCasterTest, CastRay_OrthogonalX_DetectsWall) {
-  Vector2D start_pos = {100.0f, 100.0f};  // Grid (4, 4) with Res=25
-
-  // Place wall at Grid (6, 4)
+TEST_F(RayCasterTest, HorizontalRayDetectsWall) {
   SetWall(6, 4);
 
-  // Expected distance:
-  // Start x=100. Grid 4.
-  // Wall at Grid 6. Wall starts at x = 6 * 25 = 150.
-  // Distance = 150 - 100 = 50.
-
-  Vector2D ray_dir = {1.0f, 0.0f};  // Right
-
-  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
+  DualRayHit hit = Cast(kCellFourCenter, {1.0f, 0.0f});
 
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
-  EXPECT_NEAR(hit.blocking_hit.distance, 50.0f, 1.0f);
+  EXPECT_NEAR(hit.blocking_hit.distance, 1.5f * kCellSize, 1e-4f);
 }
 
-TEST_F(RayCasterTest, CastRay_OrthogonalY_DetectsWall) {
-  Vector2D start_pos = {100.0f, 100.0f};  // Grid (4, 4)
-  // Place wall at Grid (4, 6)
+TEST_F(RayCasterTest, VerticalRayDetectsWall) {
   SetWall(4, 6);
 
-  // Wall starts at y = 6 * 25 = 150.
-  // Dist = 150 - 100 = 50.
-
-  Vector2D ray_dir = {0.0f, 1.0f};  // Down
-
-  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
+  DualRayHit hit = Cast(kCellFourCenter, {0.0f, 1.0f});
 
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
-  EXPECT_NEAR(hit.blocking_hit.distance, 50.0f, 1.0f);
+  EXPECT_NEAR(hit.blocking_hit.distance, 1.5f * kCellSize, 1e-4f);
 }
 
-TEST_F(RayCasterTest, CastRay_NegativeDirection_DetectsWall) {
-  Vector2D start_pos = {100.0f, 100.0f};  // Grid (4, 4)
-  // Place wall at Grid (2, 4)
+TEST_F(RayCasterTest, NegativeDirectionDetectsWall) {
   SetWall(2, 4);
 
-  // Wall checks:
-  // Ray Left.
-  // Grid 4 -> 3 -> 2.
-  // Wall at 2. Wall (right edge) is at (2+1)*25 = 75?
-  // Or simply: Ray hits the side x=3 boundary of cell 2?
-  // Let's trace:
-  // Start 100. Dir -1.
-  // Next X line: 4 * 25 = 100. Distance 0?
-  // No, if start is exactly 100, might be tricky.
-  // Let's move start slightly to 110. Grid 4 (range 100-125).
-  start_pos = {112.5f, 112.5f};  // Center of cell (4,4)
-
-  // Wall at (2, 4).
-  // Wall right edge x = (2+1)*25 = 75.
-  // Dist = 112.5 - 75 = 37.5.
-
-  Vector2D ray_dir = {-1.0f, 0.0f};  // Left
-
-  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
+  DualRayHit hit = Cast(kCellFourCenter, {-1.0f, 0.0f});
 
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
-  EXPECT_NEAR(hit.blocking_hit.distance, 37.5f, 1.0f);
+  EXPECT_NEAR(hit.blocking_hit.distance, 1.5f * kCellSize, 1e-4f);
 }
 
-TEST_F(RayCasterTest, CastRay_Diagonal_DetectsWall) {
-  // Start at (4.5, 4.5) grid units -> 112.5
-  Vector2D start_pos = {112.5f, 112.5f};
-
-  // Wall at (6, 6).
+TEST_F(RayCasterTest, DiagonalRayDetectsWall) {
   SetWall(6, 6);
-  // Fill Corner gap
   SetWall(6, 5);
   SetWall(5, 6);
 
-  // Direction diagonal (1, 1).
-  Vector2D ray_dir = {1.0f, 1.0f};
-  ray_dir = ray_dir.Normalized();
-
-  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
+  DualRayHit hit = Cast(kCellFourCenter, Vector2D{1.0f, 1.0f}.Normalized());
 
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
   EXPECT_GT(hit.blocking_hit.distance, 0.0f);
 }
 
-TEST_F(RayCasterTest, CastRay_CloseProximity_DetectsImmediateWall) {
-  // Wall at (5, 4)
+TEST_F(RayCasterTest, DetectsWallAtCloseProximity) {
   SetWall(5, 4);
 
-  // Player at x=124.0 (Grid 4.96). Near right edge of 4.
-  // y=112.5 (Center of 4).
-  Vector2D start_pos = {124.0f, 112.5f};
-  Vector2D ray_dir = {1.0f, 0.0f};
-
-  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
+  DualRayHit hit =
+      Cast({5.0f * kCellSize - 1.0f, kCellFourCenter.y}, {1.0f, 0.0f});
 
   EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
-  // Wall starts at 5*25=125. Start=124. Dist=1.0.
-  EXPECT_NEAR(hit.blocking_hit.distance, 1.0f, 0.1f);
+  EXPECT_NEAR(hit.blocking_hit.distance, 1.0f, 1e-4f);
 }
 
-TEST_F(RayCasterTest, CastRay_ProjectileAndWall) {
-  // Scenario: Player at (4, 4), Projectile at (5, 4), Wall at (6, 4)
-  Vector2D start_pos = {112.5f, 112.5f};  // Center of (4, 4)
-  Vector2D ray_dir = {1.0f, 0.0f};        // Right
-
-  // Add Projectile at (5, 4)
+TEST_F(RayCasterTest, DetectsProjectileBeforeBlockingWall) {
   occupancy_map_.Add(5, 4, EntityType::projectile);
-
-  // Add Wall at (6, 4)
   SetWall(6, 4);
 
-  DualRayHit hit = CastRay({start_pos, ray_dir}, occupancy_map_);
+  DualRayHit hit = Cast(kCellFourCenter, {1.0f, 0.0f});
 
-  // Blocking hit should be the wall
-  EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
-  // Distance to wall: (6 * 25) - 112.5 = 150 - 112.5 = 37.5
-  EXPECT_NEAR(hit.blocking_hit.distance, 37.5f, 1.0f);
-
-  // Projectile hit should be the projectile
   EXPECT_EQ(hit.non_blocking_hit.entity_type, EntityType::projectile);
-  // Distance to projectile: (5 * 25) - 112.5 = 125 - 112.5 = 12.5
-  EXPECT_NEAR(hit.non_blocking_hit.distance, 12.5f, 1.0f);
+  EXPECT_NEAR(hit.non_blocking_hit.distance, 0.5f * kCellSize, 1e-4f);
+  EXPECT_EQ(hit.blocking_hit.entity_type, EntityType::terrain);
+  EXPECT_NEAR(hit.blocking_hit.distance, 1.5f * kCellSize, 1e-4f);
 }
 
-TEST_F(RayCasterTest, IsEntityTypePresent_Found) {
-  RayHistoryTypes history;
-  // Initialize with None
-  for (auto& frame : history) {
-    for (auto& ray : frame) {
-      ray.fill(EntityType::None);
-    }
-  }
+TEST(RayHistoryTest, FindsEntityTypeInSelectedFrameAndEnemy) {
+  RayHistoryTypes history{};
+  history[1][2][3] = EntityType::terrain;
 
-  // Set one to wall
-  history[0][0][0] = EntityType::terrain;
-
-  EXPECT_TRUE(IsEntityTypePresent(history, {0, 0}, EntityType::terrain));
+  EXPECT_TRUE(IsEntityTypePresent(history, {1, 3}, EntityType::terrain));
+  EXPECT_FALSE(IsEntityTypePresent(history, {0, 3}, EntityType::terrain));
+  EXPECT_FALSE(IsEntityTypePresent(history, {1, 4}, EntityType::terrain));
 }
 
-TEST_F(RayCasterTest, IsEntityTypePresent_NotFound) {
-  RayHistoryTypes history;
-  for (auto& frame : history) {
-    for (auto& ray : frame) {
-      ray.fill(EntityType::None);
+TEST(RayHistoryTest, ResetClearsAllHistoryAndRewindsHead) {
+  EnemyRayCaster ray_caster;
+  FillHistory(ray_caster, 10.0f, 20.0f);
+  ray_caster.history_idx = kRayHistoryLength - 1;
+
+  ray_caster.Reset();
+
+  EXPECT_EQ(ray_caster.ray_hit_distances, RayHistoryDistances{});
+  EXPECT_EQ(ray_caster.ray_hit_types, RayHistoryTypes{});
+  EXPECT_EQ(ray_caster.non_blocking_ray_hit_distances, RayHistoryDistances{});
+  EXPECT_EQ(ray_caster.non_blocking_ray_hit_types, RayHistoryTypes{});
+  EXPECT_EQ(ray_caster.history_idx, 0);
+}
+
+TEST(RayHistoryTest, ResetEnemyClearsOnlySelectedEnemy) {
+  constexpr int kResetEnemy = 0;
+  constexpr int kUnaffectedEnemy = kNumEnemies - 1;
+  constexpr float kBlockingDistance = 10.0f;
+  constexpr float kNonBlockingDistance = 20.0f;
+
+  EnemyRayCaster ray_caster;
+  FillHistory(ray_caster, kBlockingDistance, kNonBlockingDistance);
+  ray_caster.history_idx = kRayHistoryLength - 1;
+
+  ray_caster.ResetEnemy(kResetEnemy);
+
+  for (int history = 0; history < kRayHistoryLength; ++history) {
+    for (int ray = 0; ray < kNumRays; ++ray) {
+      SCOPED_TRACE(::testing::Message()
+                   << "history=" << history << ", ray=" << ray);
+
+      EXPECT_FLOAT_EQ(ray_caster.ray_hit_distances[history][ray][kResetEnemy],
+                      0.0f);
+      EXPECT_EQ(ray_caster.ray_hit_types[history][ray][kResetEnemy],
+                EntityType::None);
+      EXPECT_FLOAT_EQ(
+          ray_caster.non_blocking_ray_hit_distances[history][ray][kResetEnemy],
+          0.0f);
+      EXPECT_EQ(
+          ray_caster.non_blocking_ray_hit_types[history][ray][kResetEnemy],
+          EntityType::None);
+
+      EXPECT_FLOAT_EQ(
+          ray_caster.ray_hit_distances[history][ray][kUnaffectedEnemy],
+          kBlockingDistance);
+      EXPECT_EQ(ray_caster.ray_hit_types[history][ray][kUnaffectedEnemy],
+                EntityType::player);
+      EXPECT_FLOAT_EQ(
+          ray_caster
+              .non_blocking_ray_hit_distances[history][ray][kUnaffectedEnemy],
+          kNonBlockingDistance);
+      EXPECT_EQ(
+          ray_caster.non_blocking_ray_hit_types[history][ray][kUnaffectedEnemy],
+          EntityType::projectile);
     }
   }
-
-  EXPECT_FALSE(IsEntityTypePresent(history, {0, 0}, EntityType::terrain));
+  EXPECT_EQ(ray_caster.history_idx, kRayHistoryLength - 1);
 }
 
 }  // namespace

@@ -63,15 +63,8 @@ class RolloutStorage:
         self.returns = torch.zeros(
             (num_transitions_per_env, self.num_envs, 1), device=self.device
         )
-        if hidden_states is not None:
-            self.saved_hidden_state_a = torch.zeros(
-                (num_transitions_per_env, *hidden_states[0].shape),
-            )
-            self.saved_hidden_state_c = torch.zeros(
-                (num_transitions_per_env, *hidden_states[1].shape),
-            )
-
-            self.hidden_states = (self.saved_hidden_state_a, self.saved_hidden_state_c)
+        self.saved_hidden_state_a: torch.Tensor | None = None
+        self.saved_hidden_state_c: torch.Tensor | None = None
 
         self.step = 0
         self.batch_size = self.num_envs * self.num_transitions_per_env
@@ -99,20 +92,29 @@ class RolloutStorage:
         self.step += 1
 
     def _save_hidden_states(
-        self, hidden_states: tuple[torch.Tensor, torch.Tensor] | None
+        self, hidden_states: tuple[torch.Tensor | None, torch.Tensor | None]
     ) -> None:
 
         if hidden_states == (None, None) or hidden_states is None:
             return
 
-        hidden_state_a = hidden_states[0]
-        hidden_state_c = hidden_states[1]
-
+        actor_hidden, critic_hidden = hidden_states
         # Using index for current transition in the circular buffer
         idx = self.step % self.num_transitions_per_env
 
-        self.saved_hidden_state_a[idx].copy_(hidden_state_a)
-        self.saved_hidden_state_c[idx].copy_(hidden_state_c)
+        if actor_hidden is not None:
+            if self.saved_hidden_state_a is None:
+                self.saved_hidden_state_a = actor_hidden.new_zeros(
+                    self.num_transitions_per_env, *actor_hidden.shape
+                )
+            self.saved_hidden_state_a[idx].copy_(actor_hidden)
+
+        if critic_hidden is not None:
+            if self.saved_hidden_state_c is None:
+                self.saved_hidden_state_c = critic_hidden.new_zeros(
+                    self.num_transitions_per_env, *critic_hidden.shape
+                )
+            self.saved_hidden_state_c[idx].copy_(critic_hidden)
 
     def clear(self):
         self.step = 0

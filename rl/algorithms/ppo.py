@@ -29,6 +29,7 @@ class PPO:
         num_entity_types: int = 6,
         ray_history_length: int = 1,
         encoder_output_dim: int = 128,
+        is_recurrent: bool = True,
         device: str = "cpu",
     ) -> None:
         self.input_dim = input_dim
@@ -63,6 +64,7 @@ class PPO:
             self.output_dim,
             self.encoder,
             activation_func_class=torch.nn.ReLU,
+            is_recurrent=is_recurrent,
         )
 
         self.policy.to(self.device)
@@ -98,6 +100,13 @@ class PPO:
 
     def act(self, obs: torch.Tensor) -> torch.Tensor | None:
         obs = self._normalize_obs(obs)
+        if self.policy.is_recurrent:
+            actor_hidden = self.policy.actor.get_hidden_state()
+            critic_hidden = self.policy.critic.get_hidden_state()
+            self.transition.hidden_states = (
+                None if actor_hidden is None else actor_hidden.detach(),
+                None if critic_hidden is None else critic_hidden.detach(),
+            )
         self.transition.observation = obs
         action, log_prob, _, value = self.policy(obs)
         self.transition.action = action.detach()
@@ -118,6 +127,10 @@ class PPO:
 
         self.transition.clear()
 
+        if self.policy.is_recurrent:
+            self.policy.actor.reset_memory(dones)
+            self.policy.critic.reset_memory(dones)
+
     def compute_returns(
         self, obs: torch.Tensor, total_steps_collected: int | None = None
     ) -> None:
@@ -129,8 +142,19 @@ class PPO:
                 including the transitions overwritten while filling the circular buffer storage.
         """
         obs = self._normalize_obs(obs)
+        critic_hidden = None
+
+        if self.policy.is_recurrent:
+            critic_hidden = self.policy.critic.get_hidden_state()
+
+            if critic_hidden is not None:
+                critic_hidden = critic_hidden.clone()
+
         last_value = self.policy.get_value(obs).detach()
         advantage = 0
+
+        if self.policy.is_recurrent:
+            self.policy.critic.reset_memory(hidden_state=critic_hidden)
 
         if total_steps_collected is None:
             total_steps_collected = self.num_transitions_per_env
@@ -158,9 +182,14 @@ class PPO:
         self.storage.advantages = self.storage.returns - self.storage.values
 
     def update(self) -> dict[str, float]:
-        generator = self.storage.get_mini_batch_generator(
-            self.num_mini_batches, self.num_epochs
-        )
+        if self.policy.is_recurrent:
+            generator = self.storage.recurrent_get_mini_batch_generator(
+                self.num_mini_batches, self.num_epochs
+            )
+        else:
+            generator = self.storage.get_mini_batch_generator(
+                self.num_mini_batches, self.num_epochs
+            )
         metrics = {
             "loss/policy": [],
             "loss/value": [],
@@ -170,19 +199,40 @@ class PPO:
             "tech/clip_fraction": [],
         }
 
-        for (
-            obs_batch,
-            action_batch,
-            value_batch,
-            advantage_batch,
-            return_batch,
-            old_action_log_prob_batch,
-        ) in generator:
+        for batch in generator:
+            if self.policy.is_recurrent:
+                (
+                    obs_batch,
+                    action_batch,
+                    value_batch,
+                    advantage_batch,
+                    return_batch,
+                    old_action_log_prob_batch,
+                    hidden_states_batch,
+                    masks_batch,
+                ) = batch
+            else:
+                (
+                    obs_batch,
+                    action_batch,
+                    value_batch,
+                    advantage_batch,
+                    return_batch,
+                    old_action_log_prob_batch,
+                ) = batch
+                hidden_states_batch = None
+                masks_batch = None
+
             advantage_batch = (advantage_batch - advantage_batch.mean()) / (
                 advantage_batch.std() + 1e-8
             )
 
-            _, logprob, entropy, value = self.policy(obs_batch, action_batch)
+            _, logprob, entropy, value = self.policy(
+                obs_batch,
+                action_batch,
+                masks_batch,
+                hidden_states_batch,
+            )
             logratio = logprob - old_action_log_prob_batch
             ratio = logratio.exp()
             with torch.no_grad():

@@ -11,6 +11,7 @@ def mock_env_config():
         "ray_history_length": 1,
         "output_dim": [2],
         "device": "cpu",
+        "is_recurrent": True,
     }
 
 
@@ -26,6 +27,7 @@ def test_ppo_valid_initialization(mock_env_config):
         num_rays=mock_env_config["num_rays"],
         ray_history_length=mock_env_config["ray_history_length"],
         device=mock_env_config["device"],
+        is_recurrent=mock_env_config["is_recurrent"],
     )
 
     # Assert successful configuration

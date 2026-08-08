@@ -16,7 +16,7 @@ class Transition:
     done: torch.Tensor | None = None
     value: torch.Tensor | None = None
     action_log_prob: torch.Tensor | None = None
-    hidden_states: tuple[torch.Tensor, torch.Tensor] | None = None
+    hidden_states: tuple[torch.Tensor | None, torch.Tensor | None] = (None, None)
 
     def clear(self) -> None:
         """Resets the dataclass to its default values."""

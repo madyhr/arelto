@@ -5,7 +5,7 @@
 namespace arelto {
 
 // Raycaster constants
-constexpr int kRayHistoryLength = 4;
+constexpr int kRayHistoryLength = 1;
 constexpr int kNumRayTypes = 2;  //  2: blocking and non-blocking types
 constexpr int kNumRays = 72;
 constexpr int kNumRaysTotal = kNumRays * kNumRayTypes;  // includes types

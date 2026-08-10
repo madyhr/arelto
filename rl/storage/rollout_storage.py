@@ -29,11 +29,11 @@ class Batch:
     def __init__(
         self,
         observations: torch.Tensor | None,
-        actions: torch.Tensor | None = None,
-        returns: torch.Tensor | None = None,
-        values: torch.Tensor | None = None,
-        advantages: torch.Tensor | None = None,
-        action_log_prob: torch.Tensor | None = None,
+        actions: torch.Tensor,
+        returns: torch.Tensor,
+        values: torch.Tensor,
+        advantages: torch.Tensor,
+        action_log_prob: torch.Tensor,
         hidden_states: tuple[torch.Tensor | None, torch.Tensor | None] = (None, None),
         masks: torch.Tensor | None = None,
     ) -> None:

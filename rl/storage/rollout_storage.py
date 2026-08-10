@@ -31,7 +31,6 @@ class Batch:
         observations: torch.Tensor | None,
         actions: torch.Tensor | None = None,
         returns: torch.Tensor | None = None,
-        dones: torch.Tensor | None = None,
         values: torch.Tensor | None = None,
         advantages: torch.Tensor | None = None,
         action_log_prob: torch.Tensor | None = None,
@@ -42,7 +41,6 @@ class Batch:
         self.observations = observations
         self.actions = actions
         self.returns = returns
-        self.dones = dones
         self.values = values
         self.advantages = advantages
         self.action_log_prob = action_log_prob

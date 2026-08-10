@@ -23,6 +23,33 @@ class Transition:
         self.__init__()
 
 
+class Batch:
+    """Storage for multiple `Transition`'s."""
+
+    def __init__(
+        self,
+        observations: torch.Tensor | None,
+        actions: torch.Tensor | None = None,
+        returns: torch.Tensor | None = None,
+        dones: torch.Tensor | None = None,
+        values: torch.Tensor | None = None,
+        advantages: torch.Tensor | None = None,
+        action_log_prob: torch.Tensor | None = None,
+        hidden_states: tuple[torch.Tensor | None, torch.Tensor | None] = (None, None),
+        masks: torch.Tensor | None = None,
+    ) -> None:
+
+        self.observations = observations
+        self.actions = actions
+        self.returns = returns
+        self.dones = dones
+        self.values = values
+        self.advantages = advantages
+        self.action_log_prob = action_log_prob
+        self.hidden_states = hidden_states
+        self.masks = masks
+
+
 class RolloutStorage:
     def __init__(
         self,
@@ -121,7 +148,7 @@ class RolloutStorage:
 
     def get_mini_batch_generator(
         self, num_mini_batches: int, num_epochs: int
-    ) -> Generator:
+    ) -> Generator[Batch]:
         mini_batch_size = self.batch_size // num_mini_batches
         observations = self.observations.flatten(0, 1)
         actions = self.actions.flatten(0, 1)
@@ -141,18 +168,18 @@ class RolloutStorage:
                 end = (i + 1) * mini_batch_size
                 batch_idx = indices[begin:end]
 
-                yield (
-                    observations[batch_idx],
-                    actions[batch_idx],
-                    values[batch_idx],
-                    advantages[batch_idx],
-                    returns[batch_idx],
-                    old_action_log_probs[batch_idx],
+                yield Batch(
+                    observations=observations[batch_idx],
+                    actions=actions[batch_idx],
+                    values=values[batch_idx],
+                    advantages=advantages[batch_idx],
+                    returns=returns[batch_idx],
+                    action_log_prob=old_action_log_probs[batch_idx],
                 )
 
     def recurrent_get_mini_batch_generator(
         self, num_mini_batches: int, num_epochs: int
-    ) -> Generator:
+    ) -> Generator[Batch]:
         """Get mini-batch generator when using RNNs, where mini batches must be
         chronological.
 
@@ -218,18 +245,18 @@ class RolloutStorage:
                 traj_start = int(traj_offsets[env_start].item())
                 traj_stop = int(traj_offsets[env_stop].item())
 
-                yield (
-                    padded_obs[:, traj_start:traj_stop],
-                    actions[:, env_start:env_stop],
-                    values[:, env_start:env_stop],
-                    advantages[:, env_start:env_stop],
-                    returns[:, env_start:env_stop],
-                    old_action_log_probs[:, env_start:env_stop],
-                    (
+                yield Batch(
+                    observations=padded_obs[:, traj_start:traj_stop],
+                    actions=actions[:, env_start:env_stop],
+                    values=values[:, env_start:env_stop],
+                    advantages=advantages[:, env_start:env_stop],
+                    returns=returns[:, env_start:env_stop],
+                    action_log_prob=old_action_log_probs[:, env_start:env_stop],
+                    hidden_states=(
                         actor_hidden_initial[:, traj_start:traj_stop],
                         critic_hidden_initial[:, traj_start:traj_stop],
                     ),
-                    traj_masks[:, traj_start:traj_stop],
+                    masks=traj_masks[:, traj_start:traj_stop],
                 )
 
                 env_start = env_stop

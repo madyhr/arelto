@@ -200,40 +200,17 @@ class PPO:
         }
 
         for batch in generator:
-            if self.policy.is_recurrent:
-                (
-                    obs_batch,
-                    action_batch,
-                    value_batch,
-                    advantage_batch,
-                    return_batch,
-                    old_action_log_prob_batch,
-                    hidden_states_batch,
-                    masks_batch,
-                ) = batch
-            else:
-                (
-                    obs_batch,
-                    action_batch,
-                    value_batch,
-                    advantage_batch,
-                    return_batch,
-                    old_action_log_prob_batch,
-                ) = batch
-                hidden_states_batch = None
-                masks_batch = None
-
-            advantage_batch = (advantage_batch - advantage_batch.mean()) / (
-                advantage_batch.std() + 1e-8
+            advantage = (batch.advantages - batch.advantages.mean()) / (
+                batch.advantages.std() + 1e-8
             )
 
             _, logprob, entropy, value = self.policy(
-                obs_batch,
-                action_batch,
-                masks_batch,
-                hidden_states_batch,
+                batch.observations,
+                batch.actions,
+                batch.masks,
+                batch.hidden_states,
             )
-            logratio = logprob - old_action_log_prob_batch
+            logratio = logprob - batch.action_log_prob
             ratio = logratio.exp()
             with torch.no_grad():
                 # k3 estimation as described in http://joschu.net/blog/kl-approx.html
@@ -244,19 +221,19 @@ class PPO:
                 clip_frac = (torch.abs(ratio - 1.0) > self.clip_coef).float().mean()
                 metrics["tech/clip_fraction"].append(clip_frac)
 
-            pg_loss1 = -advantage_batch * ratio
-            pg_loss2 = -advantage_batch * torch.clamp(
+            pg_loss1 = -advantage * ratio
+            pg_loss2 = -advantage * torch.clamp(
                 ratio, 1 - self.clip_coef, 1 + self.clip_coef
             )
 
             pg_loss = torch.max(pg_loss1, pg_loss2).mean()
 
-            value_loss_unclipped = ((value - return_batch) ** 2).mean()
-            value_clipped = value_batch + torch.clamp(
-                value - value_batch, -self.clip_coef, self.clip_coef
+            value_loss_unclipped = ((value - batch.returns) ** 2).mean()
+            value_clipped = batch.values + torch.clamp(
+                value - batch.values, -self.clip_coef, self.clip_coef
             )
 
-            value_loss_clipped = ((value_clipped - return_batch) ** 2).mean()
+            value_loss_clipped = ((value_clipped - batch.returns) ** 2).mean()
             value_loss_max = torch.max(value_loss_unclipped, value_loss_clipped)
 
             value_loss = 0.5 * value_loss_max.mean()

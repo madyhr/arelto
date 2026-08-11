@@ -69,6 +69,10 @@ class AsyncPPO:
         self.transition.reward = rewards
         self.transition.done = dones
         self.inference_storage.add_transition(self.transition)
+        if self.inference_policy.is_recurrent:
+            self.inference_policy.actor.reset_memory(dones)
+            self.inference_policy.critic.reset_memory(dones)
+
         self.transition.clear()
 
     def async_update(self, obs: torch.Tensor) -> bool:

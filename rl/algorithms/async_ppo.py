@@ -3,6 +3,7 @@ import threading
 
 import torch
 
+from rl.modules.actor_critic import ActorCritic
 from rl.algorithms.ppo import PPO
 from rl.storage.rollout_storage import RolloutStorage, Transition
 
@@ -21,6 +22,8 @@ class AsyncPPO:
         self.inference_policy = copy.deepcopy(self.learner.policy)
         self.inference_policy.eval()
         self.inference_policy.to(self.device)
+
+        self.queued_policy = copy.deepcopy(self.inference_policy)
 
         # We define two rollout storages to be able to train with one while
         # populating the other.
@@ -45,13 +48,22 @@ class AsyncPPO:
         self.training_thread = None
         self.training_lock = threading.Lock()
         self.training_in_progress = False
+        self.is_new_policy_available = False
+        self.new_policy_ready_event = torch.cuda.Event()
 
         # The training stream has priority 1 so that GPU inference is always
         # prioritized as a stable game loop is more important than a shorter
         # training time.
         self.training_stream = torch.cuda.Stream(device=self.device, priority=1)
 
+        # Similarly, the copy stream that copies params from old to new policy
+        # is set to an even lower priority.
+        self.copy_stream = torch.cuda.Stream(device=self.device, priority=2)
+
     def act(self, obs: torch.Tensor) -> torch.Tensor | None:
+        if self.is_new_policy_available:
+            self._publish_new_policy()
+
         obs = self.learner._normalize_obs(obs)
 
         if self.inference_policy.is_recurrent:
@@ -89,7 +101,7 @@ class AsyncPPO:
         Returns early if training is already in progress."""
 
         with self.training_lock:
-            if self.training_in_progress:
+            if self.training_in_progress or self.is_new_policy_available:
                 return False
 
             total_steps_collected = self.inference_storage.step
@@ -163,6 +175,47 @@ class AsyncPPO:
 
         metrics = self.learner.update()
 
-        self.training_stream.synchronize()
+        with torch.cuda.stream(self.copy_stream):
+            self.copy_stream.wait_stream(self.training_stream)
+            self.queued_policy.load_state_dict(self.learner.policy.state_dict())
+            self.new_policy_ready_event.record(self.copy_stream)
 
-        self.inference_policy.load_state_dict(self.learner.policy.state_dict())
+        with self.training_lock:
+            self.is_new_policy_available = True
+
+    def _publish_new_policy(self) -> None:
+        with self.training_lock:
+            if not self.is_new_policy_available:
+                return
+
+            torch.cuda.current_stream(self.device).wait_event(
+                self.new_policy_ready_event
+            )
+
+            old_policy = self.inference_policy
+            new_policy = self.queued_policy
+
+            # `load_state_dict()` does not include the memory's states,
+            # so in case of a recurrent policy, these must be loaded separately.
+            if old_policy.is_recurrent:
+                self._load_recurrent_state(old_policy, new_policy)
+
+            self.inference_policy = new_policy
+            self.queued_policy = old_policy
+
+            self.is_new_policy_available = False
+
+    @staticmethod
+    def _load_recurrent_state(old_policy: ActorCritic, new_policy: ActorCritic) -> None:
+        for old_module, new_module in (
+            (old_policy.actor, new_policy.actor),
+            (old_policy.critic, new_policy.critic),
+        ):
+            old_memory = old_module.memory
+            new_memory = new_module.memory
+
+            if old_memory is None or new_memory is None:
+                return
+
+            new_memory.hidden_state = old_memory.hidden_state
+            old_memory.hidden_state = None

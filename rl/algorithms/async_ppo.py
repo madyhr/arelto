@@ -23,7 +23,7 @@ class AsyncPPO:
         self.inference_policy.eval()
         self.inference_policy.to(self.device)
 
-        self.queued_policy = copy.deepcopy(self.inference_policy)
+        self.queued_policy = copy.deepcopy(self.inference_policy).to(self.device)
         self.inference_obs_normalizer = copy.deepcopy(self.learner.obs_normalizer)
         self.queued_obs_normalizer = copy.deepcopy(self.inference_obs_normalizer)
         self.raw_obs_inference = torch.zeros(

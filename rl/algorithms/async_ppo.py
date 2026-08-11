@@ -228,6 +228,13 @@ class AsyncPPO:
                 self.inference_obs_normalizer,
             )
 
+            # We have to clear the inference storage when publishing a new
+            # policy as the inference storage might contain data collected
+            # in the time between training start and calling this function.
+            # This could cause the storage to potentially contain data from
+            # two different policies, which should not be the case.
+            self.inference_storage.clear()
+
             self.is_new_policy_available = False
 
     @staticmethod

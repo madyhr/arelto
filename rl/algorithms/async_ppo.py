@@ -3,6 +3,7 @@ import threading
 
 import torch
 
+from rl.modules.actor_critic import ActorCritic
 from rl.algorithms.ppo import PPO
 from rl.storage.rollout_storage import RolloutStorage, Transition
 
@@ -21,6 +22,18 @@ class AsyncPPO:
         self.inference_policy = copy.deepcopy(self.learner.policy)
         self.inference_policy.eval()
         self.inference_policy.to(self.device)
+
+        self.queued_policy = copy.deepcopy(self.inference_policy).to(self.device)
+        self.inference_obs_normalizer = copy.deepcopy(self.learner.obs_normalizer)
+        self.queued_obs_normalizer = copy.deepcopy(self.inference_obs_normalizer)
+        self.raw_obs_inference = torch.zeros(
+            (self.num_transitions_per_env, self.num_envs, self.input_dim),
+            device=self.device,
+        )
+        self.raw_obs_learner = torch.zeros(
+            (self.num_transitions_per_env, self.num_envs, self.input_dim),
+            device=self.device,
+        )
 
         # We define two rollout storages to be able to train with one while
         # populating the other.
@@ -45,17 +58,34 @@ class AsyncPPO:
         self.training_thread = None
         self.training_lock = threading.Lock()
         self.training_in_progress = False
+        self.is_new_policy_available = False
+        self.new_policy_ready_event = torch.cuda.Event()
 
         # The training stream has priority 1 so that GPU inference is always
         # prioritized as a stable game loop is more important than a shorter
         # training time.
         self.training_stream = torch.cuda.Stream(device=self.device, priority=1)
 
+        # Similarly, the copy stream that copies params from old to new policy
+        # is set to an even lower priority.
+        self.copy_stream = torch.cuda.Stream(device=self.device, priority=2)
+
     def act(self, obs: torch.Tensor) -> torch.Tensor | None:
-        obs = self.learner._normalize_obs(obs)
-        self.transition.observation = obs
+        if self.is_new_policy_available:
+            self._publish_new_policy()
+
+        if self.inference_policy.is_recurrent:
+            actor_hidden = self.inference_policy.actor.get_hidden_state()
+            critic_hidden = self.inference_policy.critic.get_hidden_state()
+            self.transition.hidden_states = (
+                None if actor_hidden is None else actor_hidden.detach(),
+                None if critic_hidden is None else critic_hidden.detach(),
+            )
+
+        normalized_obs = self._normalize_obs(obs)
+        self.transition.observation = normalized_obs
         with torch.no_grad():
-            action, log_prob, _, value = self.inference_policy(obs)
+            action, log_prob, _, value = self.inference_policy(normalized_obs)
 
         self.transition.action = action.detach()
         self.transition.action_log_prob = log_prob.detach()
@@ -65,10 +95,17 @@ class AsyncPPO:
     def process_env_step(
         self, obs: torch.Tensor, rewards: torch.Tensor, dones: torch.Tensor
     ) -> None:
-        self.learner.update_normalization(obs)
+        # Save raw obs in separate buffer for updating normalizer
+        idx = self.inference_storage.step % self.num_transitions_per_env
+        self.raw_obs_inference[idx].copy_(obs)
+
         self.transition.reward = rewards
         self.transition.done = dones
         self.inference_storage.add_transition(self.transition)
+        if self.inference_policy.is_recurrent:
+            self.inference_policy.actor.reset_memory(dones)
+            self.inference_policy.critic.reset_memory(dones)
+
         self.transition.clear()
 
     def async_update(self, obs: torch.Tensor) -> bool:
@@ -76,20 +113,29 @@ class AsyncPPO:
         Returns early if training is already in progress."""
 
         with self.training_lock:
-            if self.training_in_progress:
+            if self.training_in_progress or self.is_new_policy_available:
                 return False
 
             total_steps_collected = self.inference_storage.step
 
-            full_storage = self.inference_storage
-            empty_storage = self.training_storage
+            self.inference_storage, self.training_storage = (
+                self.training_storage,
+                self.inference_storage,
+            )
 
-            self.training_storage = full_storage
-            self.inference_storage = empty_storage
+            self.raw_obs_inference, self.raw_obs_learner = (
+                self.raw_obs_learner,
+                self.raw_obs_inference,
+            )
 
             self.inference_storage.clear()
 
             self.training_in_progress = True
+
+            obs = obs.clone()
+            bootstrap_value = self.inference_policy.get_bootstrap_value(
+                self._normalize_obs(obs)
+            ).clone()
 
             # We create a synchronization event to mark the completion of any buffer writes
             # (e.g., storage.add_transition()) that occurred on the inference CUDA stream
@@ -99,7 +145,12 @@ class AsyncPPO:
 
             self.training_thread = threading.Thread(
                 target=self._training_worker,
-                args=(obs.clone(), sync_event, total_steps_collected),
+                args=(
+                    obs,
+                    sync_event,
+                    total_steps_collected,
+                    bootstrap_value,
+                ),
             )
             self.training_thread.start()
 
@@ -110,11 +161,12 @@ class AsyncPPO:
         obs: torch.Tensor,
         sync_event: torch.cuda.Event,
         total_steps_collected: int,
+        bootstrap_value: torch.Tensor,
     ) -> None:
         try:
             with torch.cuda.stream(self.training_stream):
                 self.training_stream.wait_event(sync_event)  # pyright: ignore[reportArgumentType]
-                self._run_training(obs, total_steps_collected)
+                self._run_training(obs, total_steps_collected, bootstrap_value)
 
         except Exception as e:
             print(f"Exception in training thread: {e}")
@@ -126,14 +178,88 @@ class AsyncPPO:
             with self.training_lock:
                 self.training_in_progress = False
 
-    def _run_training(self, obs: torch.Tensor, total_steps_collected: int) -> None:
+    def _run_training(
+        self,
+        obs: torch.Tensor,
+        total_steps_collected: int,
+        bootstrap_value: torch.Tensor,
+    ) -> None:
         self.learner.storage = self.training_storage
+        self._update_learner_normalization(self.raw_obs_learner)
 
         with torch.inference_mode():
-            self.learner.compute_returns(obs, total_steps_collected)
+            self.learner.compute_returns(obs, total_steps_collected, bootstrap_value)
 
         metrics = self.learner.update()
 
-        self.training_stream.synchronize()
+        with torch.cuda.stream(self.copy_stream):
+            self.copy_stream.wait_stream(self.training_stream)
+            self.queued_policy.load_state_dict(self.learner.policy.state_dict())
+            self.queued_obs_normalizer.load_state_dict(
+                self.learner.obs_normalizer.state_dict()
+            )
+            self.new_policy_ready_event.record(self.copy_stream)
 
-        self.inference_policy.load_state_dict(self.learner.policy.state_dict())
+        with self.training_lock:
+            self.is_new_policy_available = True
+
+    def _publish_new_policy(self) -> None:
+        with self.training_lock:
+            if not self.is_new_policy_available:
+                return
+
+            torch.cuda.current_stream(self.device).wait_event(
+                self.new_policy_ready_event
+            )
+
+            old_policy = self.inference_policy
+            new_policy = self.queued_policy
+
+            # `load_state_dict()` does not include the memory's states,
+            # so in case of a recurrent policy, these must be loaded separately.
+            if old_policy.is_recurrent:
+                self._load_recurrent_state(old_policy, new_policy)
+
+            self.inference_policy = new_policy
+            self.queued_policy = old_policy
+
+            self.inference_obs_normalizer, self.queued_obs_normalizer = (
+                self.queued_obs_normalizer,
+                self.inference_obs_normalizer,
+            )
+
+            # We have to clear the inference storage when publishing a new
+            # policy as the inference storage might contain data collected
+            # in the time between training start and calling this function.
+            # This could cause the storage to potentially contain data from
+            # two different policies, which should not be the case.
+            self.inference_storage.clear()
+
+            self.is_new_policy_available = False
+
+    @staticmethod
+    def _load_recurrent_state(old_policy: ActorCritic, new_policy: ActorCritic) -> None:
+        for old_module, new_module in (
+            (old_policy.actor, new_policy.actor),
+            (old_policy.critic, new_policy.critic),
+        ):
+            old_memory = old_module.memory
+            new_memory = new_module.memory
+
+            if old_memory is None or new_memory is None:
+                return
+
+            new_memory.hidden_state = old_memory.hidden_state
+            old_memory.hidden_state = None
+
+    def _normalize_obs(self, obs: torch.Tensor) -> torch.Tensor:
+        continuous = obs[:, : self.learner.norm_dim]
+        categorical = obs[:, self.learner.norm_dim :]
+        continuous_normalized = self.inference_obs_normalizer(continuous)
+        return torch.cat([continuous_normalized, categorical], dim=-1)
+
+    def _update_learner_normalization(self, raw_obs: torch.Tensor) -> None:
+        # As the raw obs has shape (num_transitions, num_envs, num_inputs)
+        # we need to flatten to use the learner's `update_normalization` method
+        obs_flat = raw_obs.flatten(0, 1)
+        self.learner.update_normalization(obs_flat)

@@ -31,6 +31,12 @@ def batch_size():
 
 
 @pytest.fixture
+def dummy_features(batch_size, input_dim):
+    """Features already produced by an encoder or recurrent module."""
+    return torch.randn(batch_size, input_dim)
+
+
+@pytest.fixture
 def num_entity_types():
     return 3
 

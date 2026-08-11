@@ -29,6 +29,7 @@ class PPO:
         num_entity_types: int = 6,
         ray_history_length: int = 1,
         encoder_output_dim: int = 128,
+        is_recurrent: bool = True,
         device: str = "cpu",
     ) -> None:
         self.input_dim = input_dim
@@ -63,6 +64,7 @@ class PPO:
             self.output_dim,
             self.encoder,
             activation_func_class=torch.nn.ReLU,
+            is_recurrent=is_recurrent,
         )
 
         self.policy.to(self.device)
@@ -98,6 +100,13 @@ class PPO:
 
     def act(self, obs: torch.Tensor) -> torch.Tensor | None:
         obs = self._normalize_obs(obs)
+        if self.policy.is_recurrent:
+            actor_hidden = self.policy.actor.get_hidden_state()
+            critic_hidden = self.policy.critic.get_hidden_state()
+            self.transition.hidden_states = (
+                None if actor_hidden is None else actor_hidden.detach(),
+                None if critic_hidden is None else critic_hidden.detach(),
+            )
         self.transition.observation = obs
         action, log_prob, _, value = self.policy(obs)
         self.transition.action = action.detach()
@@ -118,8 +127,15 @@ class PPO:
 
         self.transition.clear()
 
+        if self.policy.is_recurrent:
+            self.policy.actor.reset_memory(dones)
+            self.policy.critic.reset_memory(dones)
+
     def compute_returns(
-        self, obs: torch.Tensor, total_steps_collected: int | None = None
+        self,
+        obs: torch.Tensor,
+        total_steps_collected: int | None = None,
+        bootstrap_value: torch.Tensor | None = None,
     ) -> None:
         """Computes the returns using Generalized Advantage Estimation (GAE).
 
@@ -127,9 +143,14 @@ class PPO:
             obs (torch.Tensor): The last observation collected during rollout.
             total_steps_collected (int, optional): The total number of steps collected
                 including the transitions overwritten while filling the circular buffer storage.
+            bootstrap_value (torch.Tensor, optional): Override for the value to bootstrap GAE from.
         """
-        obs = self._normalize_obs(obs)
-        last_value = self.policy.get_value(obs).detach()
+        if bootstrap_value is None:
+            obs = self._normalize_obs(obs)
+            last_value = self.policy.get_bootstrap_value(obs)
+        else:
+            last_value = bootstrap_value
+
         advantage = 0
 
         if total_steps_collected is None:
@@ -158,9 +179,14 @@ class PPO:
         self.storage.advantages = self.storage.returns - self.storage.values
 
     def update(self) -> dict[str, float]:
-        generator = self.storage.get_mini_batch_generator(
-            self.num_mini_batches, self.num_epochs
-        )
+        if self.policy.is_recurrent:
+            generator = self.storage.recurrent_get_mini_batch_generator(
+                self.num_mini_batches, self.num_epochs
+            )
+        else:
+            generator = self.storage.get_mini_batch_generator(
+                self.num_mini_batches, self.num_epochs
+            )
         metrics = {
             "loss/policy": [],
             "loss/value": [],
@@ -170,20 +196,18 @@ class PPO:
             "tech/clip_fraction": [],
         }
 
-        for (
-            obs_batch,
-            action_batch,
-            value_batch,
-            advantage_batch,
-            return_batch,
-            old_action_log_prob_batch,
-        ) in generator:
-            advantage_batch = (advantage_batch - advantage_batch.mean()) / (
-                advantage_batch.std() + 1e-8
+        for batch in generator:
+            advantage = (batch.advantages - batch.advantages.mean()) / (
+                batch.advantages.std() + 1e-8
             )
 
-            _, logprob, entropy, value = self.policy(obs_batch, action_batch)
-            logratio = logprob - old_action_log_prob_batch
+            _, logprob, entropy, value = self.policy(
+                batch.observations,
+                batch.actions,
+                batch.masks,
+                batch.hidden_states,
+            )
+            logratio = logprob - batch.action_log_prob
             ratio = logratio.exp()
             with torch.no_grad():
                 # k3 estimation as described in http://joschu.net/blog/kl-approx.html
@@ -194,19 +218,19 @@ class PPO:
                 clip_frac = (torch.abs(ratio - 1.0) > self.clip_coef).float().mean()
                 metrics["tech/clip_fraction"].append(clip_frac)
 
-            pg_loss1 = -advantage_batch * ratio
-            pg_loss2 = -advantage_batch * torch.clamp(
+            pg_loss1 = -advantage * ratio
+            pg_loss2 = -advantage * torch.clamp(
                 ratio, 1 - self.clip_coef, 1 + self.clip_coef
             )
 
             pg_loss = torch.max(pg_loss1, pg_loss2).mean()
 
-            value_loss_unclipped = ((value - return_batch) ** 2).mean()
-            value_clipped = value_batch + torch.clamp(
-                value - value_batch, -self.clip_coef, self.clip_coef
+            value_loss_unclipped = ((value - batch.returns) ** 2).mean()
+            value_clipped = batch.values + torch.clamp(
+                value - batch.values, -self.clip_coef, self.clip_coef
             )
 
-            value_loss_clipped = ((value_clipped - return_batch) ** 2).mean()
+            value_loss_clipped = ((value_clipped - batch.returns) ** 2).mean()
             value_loss_max = torch.max(value_loss_unclipped, value_loss_clipped)
 
             value_loss = 0.5 * value_loss_max.mean()

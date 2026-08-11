@@ -70,8 +70,6 @@ def start_game(args):
                 ppo.inference_storage.clear()
 
         elif state == GameState.IS_RUNNING or state in PAUSE_STATES:
-            # We keep track of the number of steps to handle pauses correctly.
-            step = 0
             while True:
                 frame_start = time.perf_counter()
                 env.game.process_input()
@@ -109,12 +107,9 @@ def start_game(args):
                     )
                     env.game.render(1.0)
 
-                step += 1
-
                 # We only want to update the policy once we have collected enough data.
-                if step >= ppo.num_transitions_per_env:
-                    if ppo.async_update(obs.to(device)):
-                        step = 0
+                if ppo.inference_storage.step >= ppo.num_transitions_per_env:
+                    ppo.async_update(obs.to(device))
 
                 elapsed_time = time.perf_counter() - frame_start
                 sleep_time = TARGET_FRAME_TIME - elapsed_time

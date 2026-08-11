@@ -24,6 +24,16 @@ class AsyncPPO:
         self.inference_policy.to(self.device)
 
         self.queued_policy = copy.deepcopy(self.inference_policy)
+        self.inference_obs_normalizer = copy.deepcopy(self.learner.obs_normalizer)
+        self.queued_obs_normalizer = copy.deepcopy(self.inference_obs_normalizer)
+        self.raw_obs_inference = torch.zeros(
+            (self.num_transitions_per_env, self.num_envs, self.input_dim),
+            device=self.device,
+        )
+        self.raw_obs_learner = torch.zeros(
+            (self.num_transitions_per_env, self.num_envs, self.input_dim),
+            device=self.device,
+        )
 
         # We define two rollout storages to be able to train with one while
         # populating the other.
@@ -64,8 +74,6 @@ class AsyncPPO:
         if self.is_new_policy_available:
             self._publish_new_policy()
 
-        obs = self.learner._normalize_obs(obs)
-
         if self.inference_policy.is_recurrent:
             actor_hidden = self.inference_policy.actor.get_hidden_state()
             critic_hidden = self.inference_policy.critic.get_hidden_state()
@@ -74,9 +82,10 @@ class AsyncPPO:
                 None if critic_hidden is None else critic_hidden.detach(),
             )
 
-        self.transition.observation = obs
+        normalized_obs = self._normalize_obs(obs)
+        self.transition.observation = normalized_obs
         with torch.no_grad():
-            action, log_prob, _, value = self.inference_policy(obs)
+            action, log_prob, _, value = self.inference_policy(normalized_obs)
 
         self.transition.action = action.detach()
         self.transition.action_log_prob = log_prob.detach()
@@ -86,7 +95,10 @@ class AsyncPPO:
     def process_env_step(
         self, obs: torch.Tensor, rewards: torch.Tensor, dones: torch.Tensor
     ) -> None:
-        self.learner.update_normalization(obs)
+        # Save raw obs in separate buffer for updating normalizer
+        idx = self.inference_storage.step % self.num_transitions_per_env
+        self.raw_obs_inference[idx].copy_(obs)
+
         self.transition.reward = rewards
         self.transition.done = dones
         self.inference_storage.add_transition(self.transition)
@@ -112,13 +124,18 @@ class AsyncPPO:
             self.training_storage = full_storage
             self.inference_storage = empty_storage
 
+            self.raw_obs_inference, self.raw_obs_learner = (
+                self.raw_obs_learner,
+                self.raw_obs_inference,
+            )
+
             self.inference_storage.clear()
 
             self.training_in_progress = True
 
             obs = obs.clone()
             bootstrap_value = self.inference_policy.get_bootstrap_value(
-                self.learner._normalize_obs(obs)
+                self._normalize_obs(obs)
             ).clone()
 
             # We create a synchronization event to mark the completion of any buffer writes
@@ -169,6 +186,7 @@ class AsyncPPO:
         bootstrap_value: torch.Tensor,
     ) -> None:
         self.learner.storage = self.training_storage
+        self._update_learner_normalization(self.raw_obs_learner)
 
         with torch.inference_mode():
             self.learner.compute_returns(obs, total_steps_collected, bootstrap_value)
@@ -178,6 +196,9 @@ class AsyncPPO:
         with torch.cuda.stream(self.copy_stream):
             self.copy_stream.wait_stream(self.training_stream)
             self.queued_policy.load_state_dict(self.learner.policy.state_dict())
+            self.queued_obs_normalizer.load_state_dict(
+                self.learner.obs_normalizer.state_dict()
+            )
             self.new_policy_ready_event.record(self.copy_stream)
 
         with self.training_lock:
@@ -203,6 +224,11 @@ class AsyncPPO:
             self.inference_policy = new_policy
             self.queued_policy = old_policy
 
+            self.inference_obs_normalizer, self.queued_obs_normalizer = (
+                self.queued_obs_normalizer,
+                self.inference_obs_normalizer,
+            )
+
             self.is_new_policy_available = False
 
     @staticmethod
@@ -219,3 +245,15 @@ class AsyncPPO:
 
             new_memory.hidden_state = old_memory.hidden_state
             old_memory.hidden_state = None
+
+    def _normalize_obs(self, obs: torch.Tensor) -> torch.Tensor:
+        continuous = obs[:, : self.learner.norm_dim]
+        categorical = obs[:, self.learner.norm_dim :]
+        continuous_normalized = self.inference_obs_normalizer(continuous)
+        return torch.cat([continuous_normalized, categorical], dim=-1)
+
+    def _update_learner_normalization(self, raw_obs: torch.Tensor) -> None:
+        # As the raw obs has shape (num_transitions, num_envs, num_inputs)
+        # we need to flatten to use the learner's `update_normalization` method
+        obs_flat = raw_obs.flatten(0, 1)
+        self.learner.update_normalization(obs_flat)

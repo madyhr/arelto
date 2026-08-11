@@ -118,11 +118,10 @@ class AsyncPPO:
 
             total_steps_collected = self.inference_storage.step
 
-            full_storage = self.inference_storage
-            empty_storage = self.training_storage
-
-            self.training_storage = full_storage
-            self.inference_storage = empty_storage
+            self.inference_storage, self.training_storage = (
+                self.training_storage,
+                self.inference_storage,
+            )
 
             self.raw_obs_inference, self.raw_obs_learner = (
                 self.raw_obs_learner,

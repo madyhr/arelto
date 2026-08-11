@@ -53,6 +53,15 @@ class AsyncPPO:
 
     def act(self, obs: torch.Tensor) -> torch.Tensor | None:
         obs = self.learner._normalize_obs(obs)
+
+        if self.inference_policy.is_recurrent:
+            actor_hidden = self.inference_policy.actor.get_hidden_state()
+            critic_hidden = self.inference_policy.critic.get_hidden_state()
+            self.transition.hidden_states = (
+                None if actor_hidden is None else actor_hidden.detach(),
+                None if critic_hidden is None else critic_hidden.detach(),
+            )
+
         self.transition.observation = obs
         with torch.no_grad():
             action, log_prob, _, value = self.inference_policy(obs)

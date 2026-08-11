@@ -104,6 +104,11 @@ class AsyncPPO:
 
             self.training_in_progress = True
 
+            obs = obs.clone()
+            bootstrap_value = self.inference_policy.get_bootstrap_value(
+                self.learner._normalize_obs(obs)
+            ).clone()
+
             # We create a synchronization event to mark the completion of any buffer writes
             # (e.g., storage.add_transition()) that occurred on the inference CUDA stream
             # to account for the potential read/write race condition.
@@ -112,7 +117,12 @@ class AsyncPPO:
 
             self.training_thread = threading.Thread(
                 target=self._training_worker,
-                args=(obs.clone(), sync_event, total_steps_collected),
+                args=(
+                    obs,
+                    sync_event,
+                    total_steps_collected,
+                    bootstrap_value,
+                ),
             )
             self.training_thread.start()
 
@@ -123,11 +133,12 @@ class AsyncPPO:
         obs: torch.Tensor,
         sync_event: torch.cuda.Event,
         total_steps_collected: int,
+        bootstrap_value: torch.Tensor,
     ) -> None:
         try:
             with torch.cuda.stream(self.training_stream):
                 self.training_stream.wait_event(sync_event)  # pyright: ignore[reportArgumentType]
-                self._run_training(obs, total_steps_collected)
+                self._run_training(obs, total_steps_collected, bootstrap_value)
 
         except Exception as e:
             print(f"Exception in training thread: {e}")
@@ -139,11 +150,16 @@ class AsyncPPO:
             with self.training_lock:
                 self.training_in_progress = False
 
-    def _run_training(self, obs: torch.Tensor, total_steps_collected: int) -> None:
+    def _run_training(
+        self,
+        obs: torch.Tensor,
+        total_steps_collected: int,
+        bootstrap_value: torch.Tensor,
+    ) -> None:
         self.learner.storage = self.training_storage
 
         with torch.inference_mode():
-            self.learner.compute_returns(obs, total_steps_collected)
+            self.learner.compute_returns(obs, total_steps_collected, bootstrap_value)
 
         metrics = self.learner.update()
 

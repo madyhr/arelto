@@ -75,3 +75,13 @@ class ActorCritic(nn.Module):
     def get_value(self, obs: torch.Tensor):
         latent_obs = self.encoder(obs)
         return self.critic(latent_obs)
+
+    @torch.no_grad()
+    def get_bootstrap_value(self, obs: torch.Tensor) -> torch.Tensor:
+        latent_obs = self.encoder(obs)
+
+        if not self.is_recurrent:
+            return self.critic(latent_obs)
+
+        with self.critic.preserved_hidden_state():
+            return self.critic(latent_obs)

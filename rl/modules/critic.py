@@ -1,7 +1,8 @@
+import contextlib
+
 import torch
 import torch.nn as nn
 
-from rl.modules.ray_encoder import RayEncoder
 from rl.modules.mlp import MLP
 from rl.modules.rnn import RNN
 
@@ -38,7 +39,10 @@ class ValueCritic(nn.Module):
         return self.network(obs)
 
     def get_hidden_state(self) -> torch.Tensor | None:
-        return self.memory.hidden_state  # type: ignore
+        if self.memory is None:
+            return None
+
+        return self.memory.hidden_state
 
     def reset_memory(
         self,
@@ -49,3 +53,12 @@ class ValueCritic(nn.Module):
             return
 
         self.memory.reset(dones, hidden_state)
+
+    @contextlib.contextmanager
+    def preserved_hidden_state(self):
+        hidden_state = self.get_hidden_state()
+        hidden_state_clone = hidden_state.clone() if hidden_state is not None else None
+        try:
+            yield
+        finally:
+            self.reset_memory(hidden_state=hidden_state_clone)

@@ -132,7 +132,10 @@ class PPO:
             self.policy.critic.reset_memory(dones)
 
     def compute_returns(
-        self, obs: torch.Tensor, total_steps_collected: int | None = None
+        self,
+        obs: torch.Tensor,
+        total_steps_collected: int | None = None,
+        bootstrap_value: torch.Tensor | None = None,
     ) -> None:
         """Computes the returns using Generalized Advantage Estimation (GAE).
 
@@ -140,21 +143,15 @@ class PPO:
             obs (torch.Tensor): The last observation collected during rollout.
             total_steps_collected (int, optional): The total number of steps collected
                 including the transitions overwritten while filling the circular buffer storage.
+            bootstrap_value (torch.Tensor, optional): Override for the value to bootstrap GAE from.
         """
-        obs = self._normalize_obs(obs)
-        critic_hidden = None
+        if bootstrap_value is None:
+            obs = self._normalize_obs(obs)
+            last_value = self.policy.get_bootstrap_value(obs)
+        else:
+            last_value = bootstrap_value
 
-        if self.policy.is_recurrent:
-            critic_hidden = self.policy.critic.get_hidden_state()
-
-            if critic_hidden is not None:
-                critic_hidden = critic_hidden.clone()
-
-        last_value = self.policy.get_value(obs).detach()
         advantage = 0
-
-        if self.policy.is_recurrent:
-            self.policy.critic.reset_memory(hidden_state=critic_hidden)
 
         if total_steps_collected is None:
             total_steps_collected = self.num_transitions_per_env

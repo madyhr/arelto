@@ -225,13 +225,15 @@ class PPO:
 
             pg_loss = torch.max(pg_loss1, pg_loss2).mean()
 
-            value_loss_unclipped = ((value - batch.returns) ** 2).mean()
+            value_loss_unclipped = (value - batch.returns).square()
             value_clipped = batch.values + torch.clamp(
-                value - batch.values, -self.clip_coef, self.clip_coef
+                value - batch.values,
+                -self.clip_coef,
+                self.clip_coef,
             )
 
-            value_loss_clipped = ((value_clipped - batch.returns) ** 2).mean()
-            value_loss_max = torch.max(value_loss_unclipped, value_loss_clipped)
+            value_loss_clipped = (value_clipped - batch.returns).square()
+            value_loss_max = torch.maximum(value_loss_unclipped, value_loss_clipped)
 
             value_loss = 0.5 * value_loss_max.mean()
 

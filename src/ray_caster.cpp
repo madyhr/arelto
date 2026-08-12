@@ -71,20 +71,19 @@ DualRayHit CastRay(
       } else {
         dist = side_dist_y - delta_dist_y;
       }
-      non_blocking_hit = {GridToWorld(dist), EntityType::projectile};
+      non_blocking_hit = {GridToWorld(dist), MaskToNonBlockingType(mask)};
       non_blocking_found = true;
     }
 
     // Check for blockers
     if (mask & kMaskRayHitBlockingTypes) {
-      EntityType type = MaskToEntityTypePrioritized(mask);
       float dist;
       if (hit_side_x) {
         dist = side_dist_x - delta_dist_x;
       } else {
         dist = side_dist_y - delta_dist_y;
       }
-      blocking_hit = {GridToWorld(dist), type};
+      blocking_hit = {GridToWorld(dist), MaskToBlockingType(mask)};
       blocking_found = true;
     }
   }

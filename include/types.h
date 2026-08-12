@@ -181,6 +181,11 @@ inline EntityType MaskToBlockingType(uint16_t mask) {
   return MaskToEntityTypePrioritized(mask & kMaskRayHitBlockingTypes);
 }
 
+// This function returns the highest priority non-blocking entity in the mask.
+inline EntityType MaskToNonBlockingType(uint16_t mask) {
+  return MaskToEntityTypePrioritized(mask & kMaskRayHitNonBlockingTypes);
+}
+
 struct Size2D {
   uint32_t width;
   uint32_t height;

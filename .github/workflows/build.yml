@@ -45,7 +45,10 @@ jobs:
           source .venv/bin/activate
           python scripts/install_arelto.py
 
-      - name: Run tests
+      - name: Run C++ tests
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Run Python tests
         run: |
           source .venv/bin/activate
           pip install -e ".[test]"

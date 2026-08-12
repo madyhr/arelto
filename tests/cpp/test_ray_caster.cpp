@@ -125,11 +125,11 @@ TEST_F(RayCasterTest, DetectsProjectileBeforeBlockingWall) {
 
 TEST(RayHistoryTest, FindsEntityTypeInSelectedFrameAndEnemy) {
   RayHistoryTypes history{};
-  history[1][2][3] = EntityType::terrain;
+  history[0][2][3] = EntityType::terrain;
 
-  EXPECT_TRUE(IsEntityTypePresent(history, {1, 3}, EntityType::terrain));
-  EXPECT_FALSE(IsEntityTypePresent(history, {0, 3}, EntityType::terrain));
-  EXPECT_FALSE(IsEntityTypePresent(history, {1, 4}, EntityType::terrain));
+  EXPECT_TRUE(IsEntityTypePresent(history, {0, 3}, EntityType::terrain));
+  EXPECT_FALSE(IsEntityTypePresent(history, {0, 4}, EntityType::terrain));
+  EXPECT_FALSE(IsEntityTypePresent(history, {0, 3}, EntityType::player));
 }
 
 TEST(RayHistoryTest, ResetClearsAllHistoryAndRewindsHead) {

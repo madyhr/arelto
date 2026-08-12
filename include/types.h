@@ -173,7 +173,8 @@ constexpr uint16_t kMaskRayHitBlockingTypes =
 
 // A bitmask of the EntityType's that do not block ray casts.
 // Note: Currently only the first non-blocking hit is registered.
-constexpr uint16_t kMaskRayHitNonBlockingTypes = kMaskTypeProjectile;
+constexpr uint16_t kMaskRayHitNonBlockingTypes =
+    kMaskTypeProjectile | kMaskTypeEnemy;
 
 // This function returns the highest priority blocking entity in the mask.
 inline EntityType MaskToBlockingType(uint16_t mask) {

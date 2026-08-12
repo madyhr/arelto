@@ -123,6 +123,16 @@ TEST_F(RayCasterTest, DetectsProjectileBeforeBlockingWall) {
   EXPECT_NEAR(hit.blocking_hit.distance, 1.5f * kCellSize, 1e-4f);
 }
 
+TEST_F(RayCasterTest, DetectsClosestEnemyAsNonBlockingHit) {
+  occupancy_map_.Add(5, 4, EntityType::enemy);
+  occupancy_map_.Add(6, 4, EntityType::projectile);
+
+  DualRayHit hit = Cast(kCellFourCenter, {1.0f, 0.0f});
+
+  EXPECT_EQ(hit.non_blocking_hit.entity_type, EntityType::enemy);
+  EXPECT_NEAR(hit.non_blocking_hit.distance, 0.5f * kCellSize, 1e-4f);
+}
+
 TEST(RayHistoryTest, FindsEntityTypeInSelectedFrameAndEnemy) {
   RayHistoryTypes history{};
   history[0][2][3] = EntityType::terrain;

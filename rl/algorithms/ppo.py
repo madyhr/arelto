@@ -177,6 +177,9 @@ class PPO:
             self.storage.returns[step_idx] = advantage + self.storage.values[step_idx]
 
         self.storage.advantages = self.storage.returns - self.storage.values
+        self.storage.advantages = (
+            self.storage.advantages - self.storage.advantages.mean()
+        ) / (self.storage.advantages.std() + 1e-8)
 
     def update(self) -> dict[str, float]:
         if self.policy.is_recurrent:
@@ -197,10 +200,6 @@ class PPO:
         }
 
         for batch in generator:
-            advantage = (batch.advantages - batch.advantages.mean()) / (
-                batch.advantages.std() + 1e-8
-            )
-
             _, logprob, entropy, value = self.policy(
                 batch.observations,
                 batch.actions,
@@ -218,6 +217,7 @@ class PPO:
                 clip_frac = (torch.abs(ratio - 1.0) > self.clip_coef).float().mean()
                 metrics["tech/clip_fraction"].append(clip_frac)
 
+            advantage = batch.advantages
             pg_loss1 = -advantage * ratio
             pg_loss2 = -advantage * torch.clamp(
                 ratio, 1 - self.clip_coef, 1 + self.clip_coef

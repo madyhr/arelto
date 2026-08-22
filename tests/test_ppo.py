@@ -122,7 +122,12 @@ class TestGAEComputation:
             ]
         )
         expected_returns = expected_advantages + values
-        torch.testing.assert_close(ppo.storage.advantages[:, 0, 0], expected_advantages)
+        expected_normalized_advantages = (
+            expected_advantages - expected_advantages.mean()
+        ) / (expected_advantages.std() + 1e-8)
+        torch.testing.assert_close(
+            ppo.storage.advantages[:, 0, 0], expected_normalized_advantages
+        )
         torch.testing.assert_close(ppo.storage.returns[:, 0, 0], expected_returns)
 
     def test_terminal_state_cuts_bootstrap(self) -> None:
@@ -140,8 +145,12 @@ class TestGAEComputation:
         ppo.compute_returns(_make_obs(1), bootstrap_value=torch.tensor([[3.0]]))
 
         # At step 0, done=1 removes both the value bootstrap and recursive GAE.
+        expected_advantages = torch.tensor([0.5, 3.97])
+        expected_normalized_advantages = (
+            expected_advantages - expected_advantages.mean()
+        ) / (expected_advantages.std() + 1e-8)
         torch.testing.assert_close(
-            ppo.storage.advantages[:, 0, 0], torch.tensor([0.5, 3.97])
+            ppo.storage.advantages[:, 0, 0], expected_normalized_advantages
         )
         torch.testing.assert_close(
             ppo.storage.returns[:, 0, 0], torch.tensor([1.0, 4.97])

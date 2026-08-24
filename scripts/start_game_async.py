@@ -18,6 +18,7 @@ TARGET_FRAME_TIME = 1 / TARGET_FPS
 
 def start_game(args):
     checkpoint_path: str = args.load_checkpoint
+    live_metrics_enabled: bool = args.live_metrics
     device: str = "cuda"
     env = AreltoEnv(step_dt=TARGET_FRAME_TIME)
     num_envs = env.num_envs
@@ -32,6 +33,7 @@ def start_game(args):
             num_rays=num_rays,
             ray_history_length=ray_history_length,
             device=device,
+            track_metrics=live_metrics_enabled,
         )
 
     ppo = create_agent()
@@ -50,6 +52,19 @@ def start_game(args):
     if not env.game.initialize():
         return
 
+    plotter = None
+    if live_metrics_enabled:
+        from rl.utils.live_metrics_plotter import LiveMetricsPlotter
+
+        plotter = LiveMetricsPlotter()
+
+    def update_live_metrics() -> None:
+        if plotter is None:
+            return
+        for metrics in ppo.drain_metrics():
+            plotter.add_metrics(metrics)
+        plotter.process_events()
+
     env.game.set_game_state(GameState.IN_START_SCREEN)
 
     # We need to get the initial obs to infer first action.
@@ -57,6 +72,7 @@ def start_game(args):
 
     # Main Game Loop
     while env.game.get_game_state() != GameState.IN_SHUTDOWN:
+        update_live_metrics()
         state = env.game.get_game_state()
 
         if state == GameState.IN_START_SCREEN:
@@ -72,6 +88,7 @@ def start_game(args):
         elif state == GameState.IS_RUNNING or state in PAUSE_STATES:
             while True:
                 frame_start = time.perf_counter()
+                update_live_metrics()
                 env.game.process_input()
                 state = env.game.get_game_state()
 
@@ -81,6 +98,8 @@ def start_game(args):
                 if state == GameState.IN_START_SCREEN:
                     print("Returned to Menu")
                     print("Resetting policy parameters...")
+                    if plotter is not None:
+                        plotter.reset()
                     ppo = create_agent()
                     break
 
@@ -123,6 +142,8 @@ def start_game(args):
     save_path = os.path.join(save_dir, save_filename)
     torch.save(ppo.learner.policy.state_dict(), save_path)
     print(f"Final policy saved to: {save_path}")
+    if plotter is not None:
+        plotter.close()
 
 
 if __name__ == "__main__":
@@ -132,6 +153,11 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="Path to a specific .pt file to load weights from",
+    )
+    parser.add_argument(
+        "--live-metrics",
+        action="store_true",
+        help="Show live policy loss, value loss, and reward graphs",
     )
     args = parser.parse_args()
     start_game(args)

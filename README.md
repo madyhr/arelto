@@ -81,6 +81,16 @@ To start the game with the asynchronous agent (default experience):
 python scripts/start_game_async.py
 ```
 
+To open live-updating graphs for policy loss, value loss, and mean total
+rollout reward, use:
+
+```bash
+python scripts/start_game_async.py --live-metrics
+```
+
+The graphs reset when returning to the menu. Closing the graph window does not
+stop training or reopen the window.
+
 Alternatively, there is also a synchronous agent variant. However, the game pauses during policy updates, so it is not as smooth an experience.
 
 ```bash

@@ -116,6 +116,39 @@ def test_new_update_is_rejected_until_the_previous_update_is_published(
     assert not ppo_with_unpublished_update.async_update(observation)
 
 
+def test_training_metrics_report_rollout_reward_and_losses(
+    observation: torch.Tensor,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async_ppo = AsyncPPO(**PPO_CONFIG, track_metrics=True)  # type: ignore
+    async_ppo.training_storage.rewards[0, :, 0] = torch.tensor(
+        [2.0, 4.0], device="cuda"
+    )
+    async_ppo.training_storage.step = 1
+
+    monkeypatch.setattr(async_ppo.learner, "compute_returns", lambda *_args: None)
+    monkeypatch.setattr(
+        async_ppo.learner,
+        "update",
+        lambda: {"loss/policy": 1.25, "loss/value": 2.5},
+    )
+
+    bootstrap_value = torch.zeros(NUM_ENVS, 1, device="cuda")
+    with torch.cuda.stream(async_ppo.training_stream):
+        async_ppo._run_training(observation, 1, bootstrap_value)
+    torch.cuda.synchronize()
+
+    metrics = async_ppo.drain_metrics()
+    assert len(metrics) == 1
+    assert metrics[0].trained_samples == (
+        NUM_ENVS * PPO_CONFIG["num_transitions_per_env"]
+    )
+    assert metrics[0].policy_loss == pytest.approx(1.25)
+    assert metrics[0].value_loss == pytest.approx(2.5)
+    assert metrics[0].mean_total_reward == pytest.approx(3.0)
+    assert async_ppo.drain_metrics() == []
+
+
 def test_policy_publication_is_ordered_across_cuda_streams() -> None:
     """CUDA sanitizer must see an ordered copy-to-inference handoff."""
 

@@ -12,6 +12,8 @@ dependencies = [
     "torch",
     "numpy",
     "rich",
+    "matplotlib",
+    "PyQt6",
 ]
 
 [project.optional-dependencies]

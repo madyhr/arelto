@@ -1,5 +1,7 @@
 import copy
+import queue
 import threading
+from dataclasses import dataclass
 
 import torch
 
@@ -8,9 +10,20 @@ from rl.algorithms.ppo import PPO
 from rl.storage.rollout_storage import RolloutStorage, Transition
 
 
+@dataclass(frozen=True)
+class TrainingMetrics:
+    trained_samples: int
+    policy_loss: float
+    value_loss: float
+    mean_total_reward: float
+
+
 class AsyncPPO:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, track_metrics: bool = False, **kwargs):
         self.learner = PPO(*args, **kwargs)
+        self.track_metrics = track_metrics
+        self.trained_samples = 0
+        self._completed_metrics: queue.SimpleQueue[TrainingMetrics] = queue.SimpleQueue()
 
         self.device = self.learner.device
         self.num_envs = self.learner.num_envs
@@ -187,10 +200,28 @@ class AsyncPPO:
         self.learner.storage = self.training_storage
         self._update_learner_normalization(self.raw_obs_learner)
 
+        mean_total_reward = 0.0
+        if self.track_metrics:
+            rollout_rewards = self.training_storage.to_chronological(
+                self.training_storage.rewards
+            )
+            mean_total_reward = rollout_rewards.sum(dim=0).mean().item()
+
         with torch.inference_mode():
             self.learner.compute_returns(obs, total_steps_collected, bootstrap_value)
 
         metrics = self.learner.update()
+        self.trained_samples += self.training_storage.batch_size
+
+        if self.track_metrics:
+            self._completed_metrics.put(
+                TrainingMetrics(
+                    trained_samples=self.trained_samples,
+                    policy_loss=metrics["loss/policy"],
+                    value_loss=metrics["loss/value"],
+                    mean_total_reward=mean_total_reward,
+                )
+            )
 
         with torch.cuda.stream(self.copy_stream):
             self.copy_stream.wait_stream(self.training_stream)
@@ -202,6 +233,15 @@ class AsyncPPO:
 
         with self.training_lock:
             self.is_new_policy_available = True
+
+    def drain_metrics(self) -> list[TrainingMetrics]:
+        """Returns all completed training metrics without blocking."""
+        metrics = []
+        while True:
+            try:
+                metrics.append(self._completed_metrics.get_nowait())
+            except queue.Empty:
+                return metrics
 
     def _publish_new_policy(self) -> None:
         with self.training_lock:
